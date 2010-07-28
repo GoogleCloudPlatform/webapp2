@@ -1,0 +1,15 @@
+TODO
+----
+- Configuration system
+- Lazy RequestHandlers (optional)
+- Easy unit testing
+- Better URL building
+
+
+DONE
+----
+- Use webapp.Request (extended webob.Request)
+- Use webob.Response
+- RequestHandler plugins
+- RequestHandler methods receive keyword arguments
+- Reversible URLs
