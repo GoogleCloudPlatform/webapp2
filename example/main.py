@@ -14,8 +14,9 @@ class ViewHandler(RequestHandler):
 
 
 app = WSGIApplication([
-    ('/',            'index', HomeHandler),
-    ('/view/{item}', 'view',  ViewHandler),
+    ('/',            'index',     HomeHandler),
+    ('/view/{item}', 'view',      ViewHandler),
+    ('/lazy',        'lazy-view', 'handlers.LazyHandler'),
 ], debug=True)
 
 

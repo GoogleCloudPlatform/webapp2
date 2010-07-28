@@ -6,7 +6,7 @@ import traceback
 import urlparse
 from wsgiref.handlers import CGIHandler
 
-from google.appengine.ext import webapp
+from google.appengine.ext.webapp import Request
 
 import webob
 
@@ -197,7 +197,20 @@ class RequestHandler(object):
                 quote=True)))
 
     def url_for(self, name, **kwargs):
-        return self.request.environ['router.build'](name, **kwargs)
+        return self.request.url_for(name, **kwargs)
+
+
+class LazyObject(object):
+    def __init__(self, import_name):
+        self.import_name = import_name
+        self.obj = None
+
+    def __call__(self, *args, **kwargs):
+        if self.obj is None:
+            module_name, handler_name = self.import_name.rsplit('.', 1)
+            self.obj = getattr(__import__(module_name), handler_name)
+
+        return self.obj(*args, **kwargs)
 
 
 class WSGIApplication(object):
@@ -209,12 +222,13 @@ class WSGIApplication(object):
 
     The URL mapping is first-match based on the list ordering.
     """
-    request_class = webapp.Request
+    request_class = Request
     response_class = Response
 
     def __init__(self, url_map, debug=False, config=None):
         self.set_router(url_map)
         self.debug = debug
+        self.handlers = {}
 
     def __call__(self, environ, start_response):
         """Shortcut for :meth:`WSGIApplication.wsgi_app`."""
@@ -256,19 +270,29 @@ class WSGIApplication(object):
                 self.router.add(*spec[:3], **spec[3])
 
     def match_url(self, request):
-        res = self.router.match(request.path)
-        request.environ['router.route'] = res
-        request.environ['router.build'] = self.router.build
-        if not res:
+        match = self.router.match(request)
+        request.url_route = match
+        request.url_for = self.router.build
+        if not match:
             return (None, None)
 
-        return res[0].handler, res[1]
+        route, kwargs = match
+        handler_class = route.handler
+
+        if isinstance(handler_class, basestring):
+            if handler_class not in self.handlers:
+                self.handlers[handler_class] = LazyObject(handler_class)
+
+            handler_class = self.handlers[handler_class]
+
+        return handler_class, kwargs
 
     def handle_exception(self, e):
         pass
 
 
 class Route(object):
+    """A URL route definition."""
     def __init__(self, path, handler, **defaults):
         self.path = path
         self.handler = handler
@@ -284,15 +308,17 @@ class Route(object):
             expr = match.group(2) or '[^/]+'
             last = match.end()
 
-            regex += re.escape(part) + '(?P<%s>%s)' % (name, expr)
+            regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
             template += '%s%%(%s)s' % (part, name)
             self.variables.append(name)
 
+        # The regex used to match URLs.
+        self.regex = re.compile('^%s%s$' % (regex, re.escape(path[last:])))
+        # The template used to build URLs.
         self.template = template + path[last:]
-        self.regex = re.compile('^%s$' % (regex + re.escape(path[last:]),))
 
-    def match(self, path):
-        match = self.regex.match(path)
+    def match(self, request):
+        match = self.regex.match(request.path)
         if match:
             values = self.defaults.copy()
             values.update(match.groupdict())
@@ -311,6 +337,15 @@ class Route(object):
 
 
 class Router(object):
+    """A simple URL router. This is used to match the current URL and build
+    URLs for other resources.
+
+    This router doesn't intend to do fancy things such as automatic URL
+    redirect or subdomain matching. It should stay as simple as possible.
+
+    Based on `Another Do-It-Yourself Framework <ttp://pythonpaste.org/webob/do-it-yourself.html#routing>`_
+    by Ian Bicking.
+    """
     def __init__(self):
         self.routes = []
         self.route_names = {}
@@ -320,9 +355,9 @@ class Router(object):
         self.routes.append(route)
         self.route_names[name] = route
 
-    def match(self, path):
+    def match(self, request):
         for route in self.routes:
-            match = route.match(path)
+            match = route.match(request)
             if match:
                 return match
 

@@ -1,15 +1,16 @@
 TODO
 ----
 - Configuration system
-- Lazy RequestHandlers (optional)
 - Easy unit testing
 - Better URL building
+- Simple exception handling
 
 
 DONE
 ----
 - Use webapp.Request (extended webob.Request)
 - Use webob.Response
+- Lazy RequestHandlers (optional)
 - RequestHandler plugins
 - RequestHandler methods receive keyword arguments
 - Reversible URLs
