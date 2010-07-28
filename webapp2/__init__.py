@@ -4,9 +4,9 @@ import re
 import sys
 import traceback
 import urlparse
-from wsgiref.handlers import CGIHandler
 
 from google.appengine.ext.webapp import Request
+from google.appengine.ext.webapp.utils import run_wsgi_app
 
 import webob
 
@@ -196,7 +196,12 @@ class RequestHandler(object):
             self.response.out.write('<pre>%s</pre>' % (cgi.escape(lines,
                 quote=True)))
 
-    def url_for(self, name, **kwargs):
+    def url_for(self, name, _full=False, _anchor=None, **kwargs):
+        # TODO:
+        # url encode values
+        # append extra values as arguments: ?foo=bar&baz=ding
+        # build full urls
+        # add encoded anchor
         return self.request.url_for(name, **kwargs)
 
 
@@ -361,12 +366,7 @@ class Router(object):
             if match:
                 return match
 
-    def build(self, name, _full=False, _anchor=None, **kwargs):
-        # TODO:
-        # url encode values
-        # append extra values as arguments: ?foo=bar&baz=ding
-        # build full urls
-        # add encoded anchor
+    def build(self, name, **kwargs):
         route = self.route_names.get(name, None)
         if not route:
             raise KeyError('Route %s is not defined.' % name)
@@ -374,5 +374,5 @@ class Router(object):
         return route.build(**kwargs)
 
 
-def run_wsgi_app(app):
-    CGIHandler().run(app)
+#def run_wsgi_app(app):
+#    CGIHandler().run(app)
