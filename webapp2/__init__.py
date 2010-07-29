@@ -64,10 +64,13 @@
 
          self.response.set_cookie('key', 'value', max_age=360)
 
-    Based on `webapp`_ with some functions and ideas borrowed from `Tornado`_.
+    Based on `webapp`_ with some functions and ideas borrowed from `WebOb`_
+    and `Tornado`_.
 
     .. _webapp: http://code.google.com/appengine/docs/python/tools/webapp/
+    .. _WebOb: http://pythonpaste.org/webob/
     .. _Tornado: http://www.tornadoweb.org/
+    .. _Another Do-It-Yourself Framework: http://pythonpaste.org/webob/do-it-yourself.html
 
     :copyright: 2010 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
@@ -101,6 +104,12 @@ _ROUTE_REGEX = re.compile(r'''
 
 #: Loaded lazy handlers.
 _HANDLERS = {}
+
+# Value used for required values.
+REQUIRED_VALUE = object()
+
+# Value used for missing default values.
+DEFAULT_VALUE = object()
 
 
 class Response(webob.Response):
@@ -221,13 +230,6 @@ class RequestHandler(object):
                 if rv is False:
                     break
 
-    def get(self, **kwargs):
-        """Handler method for GET requests."""
-        self.error(405)
-
-    # All other allowed methods, not implemented by default.
-    post = head = options = put = delete = trace = get
-
     def error(self, code):
         """Clears the response output stream and sets the given HTTP error
         code.
@@ -326,6 +328,13 @@ class RequestHandler(object):
             url += '#%s' % url_escape(_anchor)
 
         return url
+
+    def get_config(self, module, key=None, default=DEFAULT_VALUE):
+        """Returns a configuration value for a module.
+
+        See :meth:`WSGIApplication.get_config`.
+        """
+        return self.app.get_config(module, key=key, default=default)
 
     def handle_exception(self, exception, debug_mode):
         """Called if this handler throws an exception during execution.
@@ -444,6 +453,7 @@ class WSGIApplication(object):
             elif len(spec) == 3:
                 if not isinstance(spec[2], dict):
                     # (path, handler, name)
+                    self.router.add(*spec)
                 else:
                     # (path, handler, defaults)
                     self.router.add(*spec[:2], **spec[2])
@@ -478,6 +488,45 @@ class WSGIApplication(object):
 
     def handle_exception(self, e):
         pass
+
+    def get_config(self, module, key=None, default=DEFAULT_VALUE):
+        """Returns a configuration value for a module. If it is not already
+        set, loads a ``default_config`` variable from the given module,
+        updates the app configuration with those default values and returns
+        the value for the given key. If the key is still not available,
+        returns the provided default value or raises an exception if no
+        default was provided.
+
+        Every Webapp module that allows some kind of configuration sets a
+        ``default_config`` global variable that is loaded by this function,
+        cached and used in case the requested configuration was not defined
+        by the user.
+
+        :param module:
+            The configured module.
+        :param key:
+            The config key.
+        :returns:
+            A configuration value.
+        """
+        config = self.config
+        if module not in config.loaded:
+            # Load default configuration and update app config.
+            values = import_string(module + '.default_config', silent=True)
+            if values:
+                config.setdefault(module, values)
+
+            config.loaded.append(module)
+
+        value = config.get(module, key, default)
+        if value not in (DEFAULT_VALUE, REQUIRED_VALUE):
+            return value
+
+        if key is None:
+            raise KeyError('Module %s is not configured.' % module)
+        else:
+            raise KeyError('Module %s requires the config key "%s" to be '
+                'set.' % (module, key))
 
 
 class Route(object):
@@ -597,8 +646,8 @@ class Router(object):
     This router doesn't intend to do fancy things such as automatic URL
     redirect or subdomain matching. It should stay as simple as possible.
 
-    Based on `Another Do-It-Yourself Framework <ttp://pythonpaste.org/webob/do-it-yourself.html#routing>`_
-    by Ian Bicking. We added URL building and separate :class:`Route` objects.
+    Based on `Another Do-It-Yourself Framework`_ by Ian Bicking. We added
+    URL building and separate :class:`Route` objects.
     """
     def __init__(self):
         self.routes = []
@@ -655,7 +704,13 @@ class Router(object):
 
 
 class LazyObject(object):
-    """An object that is only imported when called."""
+    """An object that is only imported when called.
+
+    .. code-block:: python
+
+       handler_class = LazyObject('my.module.MyHandler')
+       handler = handler_class(app, request, response)
+    """
     def __init__(self, import_name):
         """"""
         self.import_name = import_name
@@ -663,10 +718,34 @@ class LazyObject(object):
 
     def __call__(self, *args, **kwargs):
         if self.obj is None:
-            module_name, handler_name = self.import_name.rsplit('.', 1)
-            self.obj = getattr(__import__(module_name), handler_name)
+            self.obj = import_string(self.import_name)
 
         return self.obj(*args, **kwargs)
+
+
+def import_string(import_name, silent=False):
+    """Imports an object based on a string. If `silent` is True the return
+    value will be `None` if the import fails.
+
+    Simplified version of the function from `Werkzeug <http://werkzeug.pocoo.org/>`.
+
+    :param import_name:
+        The dotted name for the object to import.
+    :param silent:
+        If True, import errors are ignored and None is returned instead.
+    :return:
+        The imported object
+    """
+    if '.' in import_name:
+        module, obj = to_utf8(import_name).rsplit('.', 1)
+    else:
+        return __import__(import_name)
+
+    try:
+        return getattr(__import__(module, None, None, [obj]), obj)
+    except (ImportError, AttributeError):
+        if not silent:
+            raise
 
 
 def json_encode(value):
