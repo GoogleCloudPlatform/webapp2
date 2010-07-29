@@ -1,9 +1,8 @@
-import os
-import sys
+# -*- coding: utf-8 -*-
+"""
+Tests for webapp2 router
+"""
 import unittest
-
-path = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
-sys.path.insert(0, path)
 
 from webapp2 import Request, Route, Router
 
@@ -72,7 +71,3 @@ class TestRoute(unittest.TestCase):
     def test_build_int_keyword(self):
         route = Route('/{year:\d\d\d\d}', 'my_handler')
         self.assertEqual(route.build(year=2010), '/2010')
-
-
-if __name__ == '__main__':
-    unittest.main()
