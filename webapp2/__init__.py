@@ -438,11 +438,17 @@ class WSGIApplication(object):
         """
         self.router = Router()
         for spec in url_map:
-            if len(spec) in (2, 3):
-                # path, handler, [name]
+            if len(spec) == 2:
+                # (path, handler)
                 self.router.add(*spec)
+            elif len(spec) == 3:
+                if not isinstance(spec[2], dict):
+                    # (path, handler, name)
+                else:
+                    # (path, handler, defaults)
+                    self.router.add(*spec[:2], **spec[2])
             elif len(spec) == 4:
-                # path, handler, name, defaults
+                # (path, handler, name, defaults)
                 self.router.add(*spec[:3], **spec[3])
 
     def match_route(self, request):
