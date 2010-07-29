@@ -64,6 +64,11 @@
 
          self.response.set_cookie('key', 'value', max_age=360)
 
+    Based on `webapp`_ with some functions and ideas borrowed from `Tornado`_.
+
+    .. _webapp: http://code.google.com/appengine/docs/python/tools/webapp/
+    .. _Tornado: http://www.tornadoweb.org/
+
     :copyright: 2010 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
@@ -87,7 +92,7 @@ _ALLOWED_METHODS = frozenset(['get', 'post', 'head', 'options', 'put',
     'delete', 'trace'])
 
 #: Regex for URL definitions.
-_URL_REGEX = re.compile(r'''
+_ROUTE_REGEX = re.compile(r'''
     \{            # The exact character "{"
     (\w+)         # The variable name (restricted to a-z, 0-9, _)
     (?::([^}]+))? # The optional :regex part
@@ -354,7 +359,7 @@ class RedirectHandler(RequestHandler):
            ('/old-url', RedirectHandler, 'legacy-url', {'url': '/new-url'}),
        ])
 
-    Based on idea from `Tornado <http://www.tornadoweb.org/>`_.
+    Based on idea from `Tornado`_.
     """
     def get(self, **kwargs):
         url = kwargs.get('url', '/')
@@ -491,15 +496,19 @@ class Route(object):
             values present in the route variables are used to build the URL
             if the value is not passed.
         """
+        # The path to be matched.
         self.path = path
+        # The handler that is executed when this route matches.
         self.handler = handler
+        # Default values to build the rule and extra values to be returned.
         self.defaults = defaults
+        # All variables in the rule mapping to the regex to validate them.
         self.variables = {}
 
         last = 0
         regex = ''
         template = ''
-        for match in _URL_REGEX.finditer(path):
+        for match in _ROUTE_REGEX.finditer(path):
             part = path[last:match.start()]
             name = match.group(1)
             expr = match.group(2) or '[^/]+'
@@ -520,7 +529,7 @@ class Route(object):
         :param request:
             A ``webapp.Request`` instance.
         :returns:
-            A tuple (route, route_values), including the default values.
+            A tuple (route, route_values), including the default values if any.
         """
         match = self.regex.match(request.path)
         if match:
@@ -655,7 +664,15 @@ class LazyObject(object):
 
 
 def json_encode(value):
-    """JSON-encodes the given Python object."""
+    """JSON-encodes the given Python object.
+
+    This function comes from `Tornado`_.
+
+    :param value:
+        Value to be JSON-encoded.
+    :returns:
+        A JSON string.
+    """
     # JSON permits but does not require forward slashes to be escaped.
     # This is useful when json data is emitted in a <script> tag
     # in HTML, as it prevents </script> tags from prematurely terminating
@@ -666,21 +683,54 @@ def json_encode(value):
 
 
 def json_decode(value):
-    """Returns Python objects for the given JSON string."""
+    """Returns Python objects for the given JSON string.
+
+    This function comes from `Tornado`_.
+
+    :param value:
+        Value to be JSON-decoded.
+    :returns:
+        A decoded object.
+    """
     return simplejson.loads(to_unicode(value))
 
 
 def url_escape(value):
-    """Returns a valid URL-encoded version of the given value."""
+    """Returns a valid URL-encoded version of the given value.
+
+    This function comes from `Tornado`_.
+
+    :param value:
+        A URL to be encoded.
+    :returns:
+        The encoded URL.
+    """
     return urllib.quote_plus(to_utf8(value))
 
 
 def url_unescape(value):
-    """Decodes the given value from a URL."""
+    """Decodes the given value from a URL.
+
+    This function comes from `Tornado`_.
+
+    :param value:
+        A URL to be decoded.
+    :returns:
+        The decoded URL.
+    """
     return to_unicode(urllib.unquote_plus(value))
 
 
 def to_utf8(value):
+    """Returns a string encoded using UTF-8.
+
+    This function comes from `Tornado`_.
+
+    :param value:
+        A unicode or string to be encoded.
+    :returns:
+        The encoded string.
+    """
     if isinstance(value, unicode):
         return value.encode('utf-8')
 
@@ -689,6 +739,15 @@ def to_utf8(value):
 
 
 def to_unicode(value):
+    """Returns a unicode string from a string, using UTF-8 to decode if needed.
+
+    This function comes from `Tornado`_.
+
+    :param value:
+        A unicode or string to be decoded.
+    :returns:
+        The decoded string.
+    """
     if isinstance(value, str):
         return value.decode('utf-8')
 
