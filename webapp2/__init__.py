@@ -5,6 +5,60 @@
 
     Taking webapp to the next level!
 
+    * Keyword based URLs:
+
+      .. code-block:: python
+
+         class BlogPostHandler(RequestHandler):
+             def get(self, year=None, month=None, slug=None):
+                 pass
+
+         app = WSGIApplication([
+             ('/{year:\d\d\d\d}/{month:\d\d}/{slug}', BlogPostHandler, 'blog-item'),
+         ]
+
+    * Fully reversible URLs:
+
+      .. code-block:: python
+
+         url = self.url_for('blog-item', year=2010, month=8, slug='hello')
+
+    * Automatic redirect for legacy URLs:
+
+      .. code-block:: python
+
+         app = WSGIApplication([
+             ('/old-url', RedirectHandler, 'legacy-url', {'url': '/new-url'}),
+         ])
+
+    * Lazy handlers:
+
+    .. code-block:: python
+
+         app = WSGIApplication([
+             ('/', 'my.module.MyHandler'),
+         ]
+
+    * Handler dispatching and handler plugins: the handler dispatches current
+      method, allowing before and after dispatch hooks.
+
+      .. code-block:: python
+
+         sessions = SessionPlugin()
+
+         class BlogPostHandler(RequestHandler):
+             plugins = [sessions]
+
+             def get(self, year=None, month=None, slug=None):
+                 pass
+
+    * Uses webob.Response: easy to set cookies, conditional responses with
+      automatic ETag checking.
+
+      .. code-block:: python
+
+         self.response.set_cookie('key', 'value', max_age=360)
+
     :copyright: 2010 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
@@ -272,7 +326,7 @@ class RedirectHandler(RequestHandler):
     .. code-block:: python
 
        app = WSGIApplication([
-           ('/old-url', 'legacy-url', RedirectHandler, {'url': '/new-url'}),
+           ('/old-url', RedirectHandler, 'legacy-url', {'url': '/new-url'}),
        ])
 
     Based on idea from `Tornado <http://www.tornadoweb.org/>`_.
@@ -401,7 +455,6 @@ class Route(object):
             Some examples:
 
             >>> Route('/blog', BlogHandler)
-            >>> Route('/blog/archive', BlogArchiveHandler)
             >>> Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
             >>> Route('/blog/archive/{year:\d\d\d\d}/{slug}', BlogItemHandler)
 
@@ -452,6 +505,16 @@ class Route(object):
 
     def build(self, **kwargs):
         """Builds a URL for this route.
+
+        >>> route = Route('/blog', BlogHandler)
+        >>> route.build()
+        >>> /blog
+        >>> Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
+        >>> route.build(year=2010)
+        >>> /blog/2010
+        >>> Route('/blog/archive/{year:\d\d\d\d}/{slug}', BlogItemHandler)
+        >>> route.build(year=2010, slug='my-blog-post')
+        >>> /blog/2010/my-blog-post
 
         :param kwargs:
             Keyword arguments to build the URL. All route variables that are
@@ -546,7 +609,7 @@ class Router(object):
         """
         route = self.route_names.get(name, None)
         if not route:
-            raise KeyError('Route %s is not defined.' % name)
+            raise KeyError('Route "%s" is not defined.' % name)
 
         return route.build(**kwargs)
 
