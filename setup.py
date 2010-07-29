@@ -5,6 +5,14 @@ webapp2
 
 Taking webapp to the next level! Here are the key features:
 
+- ``Request` and ``Response`` objects fully compatible with `webapp.Request`
+  and `webapp.Response`.
+
+- ``RequestHandler`` object is mostly compatible with ``webapp.RequestHandler``:
+  - Handler methods receive keyword arguments instead of positional ones.
+  - initialize() is replaced by a proper ``__init__()``.
+  - Everything else is implemented in the same way.
+
 - Keyword based URLs:
 
   .. code-block:: python
@@ -75,24 +83,6 @@ Taking webapp to the next level! Here are the key features:
   .. code-block:: python
 
      self.response.set_cookie('key', 'value', max_age=360)
-
-- ``Request`` and ``Response`` objects fully compatible with webapp's.
-
-- ``RequestHandler`` object mostly compatible with webapp's:
-
-  Two incompatibilities:
-
-  - Handler methods receive keyword arguments instead of positional ones.
-  - initialize() is replaced by a proper __init__().
-
-  And several goodies:
-
-  - url_for()
-  - redirect_to()
-  - configuration system
-  - plugin hooks
-  - cold start as fast as webapp's or even a bit faster
-  - etc.
 
 Based on `webapp`_ with some functions and ideas borrowed from `WebOb`_
 and `Tornado`_.
