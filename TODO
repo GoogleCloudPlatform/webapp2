@@ -1,9 +1,8 @@
 TODO
 ----
+- Simple exception handling
 - Configuration system
 - Easy unit testing
-- Better URL building
-- Simple exception handling
 
 
 DONE
@@ -14,4 +13,11 @@ DONE
 - RequestHandler plugins
 - RequestHandler methods receive keyword arguments
 - RedirectHandler (automatic redirect from old urls)
-- Reversible URLs
+- Reversible URLs:
+  - checks for missing keywords when building urls
+  - checks for keyword validity when building urls
+  - appends extra keywords as arguments:
+
+    >>> route = Route('/{foo}', 'my_handler')
+    >>> url = route.build(foo='bar', baz='ding')
+    >>> /bar?baz=ding

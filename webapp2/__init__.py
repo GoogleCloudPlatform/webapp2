@@ -216,11 +216,11 @@ class RequestHandler(object):
 
         For example, if you have these routes registered in the application:
 
-        .. code-block::
+        .. code-block:: python
 
            app = WSGIApplication([
-               ('/',     'home/main',  'handlers.HomeHandler'),
-               ('/wiki', 'wiki/start', 'handlers.WikiHandler'),
+               ('/',     'handlers.HomeHandler', 'home/main'),
+               ('/wiki', WikiHandler,            'wiki/start'),
            ])
 
         Here are some examples of how to generate URLs for them:
@@ -269,7 +269,7 @@ class RedirectHandler(RequestHandler):
     used when defining URL routes. You must provide the keyword argument
     *url* in the route. Example:
 
-    .. code-block::
+    .. code-block:: python
 
        app = WSGIApplication([
            ('/old-url', 'legacy-url', RedirectHandler, {'url': '/new-url'}),
@@ -281,7 +281,7 @@ class RedirectHandler(RequestHandler):
         url = kwargs.get('url', '/')
 
         if callable(url):
-            url = url(**kwargs)
+            url = url(self, **kwargs)
 
         self.redirect(url, permanent=kwargs.get('permanent', True))
 
@@ -322,10 +322,12 @@ class WSGIApplication(object):
 
     def wsgi_app(self, environ, start_response):
         """Called by WSGI when a request comes in."""
+        # TODO Exception handling is still unresolved.
+
         request = self.request_class(environ)
         response = self.response_class()
-
         method = environ['REQUEST_METHOD'].lower()
+
         if method not in _ALLOWED_METHODS:
             # TODO raise exception: 405 Method Not Allowed
             pass
@@ -352,9 +354,11 @@ class WSGIApplication(object):
         """
         self.router = Router()
         for spec in url_map:
-            if len(spec) == 3:
+            if len(spec) in (2, 3):
+                # path, handler, [name]
                 self.router.add(*spec)
             elif len(spec) == 4:
+                # path, handler, name, defaults
                 self.router.add(*spec[:3], **spec[3])
 
     def match_route(self, request):
@@ -389,10 +393,30 @@ class WSGIApplication(object):
 class Route(object):
     """A URL route definition."""
     def __init__(self, path, handler, **defaults):
+        """Initializes a URL route.
+
+        :param path:
+            A path to be matched. Paths can contain variables enclosed in
+            curly braces and an optional regular expression to be evaluated.
+            Some examples:
+
+            >>> Route('/blog', BlogHandler)
+            >>> Route('/blog/archive', BlogArchiveHandler)
+            >>> Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
+            >>> Route('/blog/archive/{year:\d\d\d\d}/{slug}', BlogItemHandler)
+
+        :param handler:
+            A :class:`RequestHandler` class to be executed when this route
+            matches.
+        :param defaults:
+            Default or extra keywords to be returned by this route. Default
+            values present in the route variables are used to build the URL
+            if the value is not passed.
+        """
         self.path = path
         self.handler = handler
         self.defaults = defaults
-        self.variables = []
+        self.variables = {}
 
         last = 0
         regex = ''
@@ -405,7 +429,7 @@ class Route(object):
 
             regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
             template += '%s%%(%s)s' % (part, name)
-            self.variables.append(name)
+            self.variables[name] = re.compile('^%s$' % expr)
 
         # The regex used to match URLs.
         self.regex = re.compile('^%s%s$' % (regex, re.escape(path[last:])))
@@ -413,6 +437,13 @@ class Route(object):
         self.template = template + path[last:]
 
     def match(self, request):
+        """Matches a route against the current request.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :returns:
+            A tuple (route, route_values), including the default values.
+        """
         match = self.regex.match(request.path)
         if match:
             values = self.defaults.copy()
@@ -420,18 +451,40 @@ class Route(object):
             return (self, values)
 
     def build(self, **kwargs):
-        # TODO:
-        # url encode values
-        # append extra values as arguments: ?foo=bar&baz=ding
-        values = self.defaults.copy()
-        values.update((str(k), str(v)) for k, v in kwargs.iteritems())
-        try:
-            res = self.template % values
-        except KeyError, e:
-            # TODO
-            raise
+        """Builds a URL for this route.
 
-        return res
+        :param kwargs:
+            Keyword arguments to build the URL. All route variables that are
+            not set as defaults must be passed, and they must conform to the
+            format set in the route. Extra keywords are appended as URL
+            arguments.
+        :returns:
+            A formatted URL.
+        """
+        required = self.variables.keys()
+        values = {}
+        for name in required:
+            value = kwargs.pop(name, self.defaults.get(name))
+            if not value:
+                raise ValueError('Missing keyword "%s" to build URL.' % name)
+
+            if not isinstance(value, basestring):
+                value = str(value)
+
+            value = url_escape(value)
+            match = self.variables[name].match(value)
+            if not match:
+                raise ValueError('URL buiding error: Value "%s" is not '
+                    'supported for keyword "%s".' % (value, name))
+
+            values[name] = value
+
+        url = self.template % values
+        if kwargs:
+            # Append extra keywords as URL arguments.
+            url += '?%s' % urllib.urlencode(kwargs)
+
+        return url
 
 
 class Router(object):
@@ -448,18 +501,49 @@ class Router(object):
         self.routes = []
         self.route_names = {}
 
-    def add(self, path, name, handler, **defaults):
-        route = Route(path, handler, **defaults)
+    def add(self, path, handler, _name=None, **kwargs):
+        """Adds a route to this router.
+
+        :param path:
+            The route path. See :meth:`Route.__init__`.
+        :param handler:
+            A :class:`RequestHandler` class to be executed when this route
+            matches.
+        :param _name:
+            The route name.
+        """
+        route = Route(path, handler, **kwargs)
         self.routes.append(route)
-        self.route_names[name] = route
+        if _name:
+            self.route_names[_name] = route
 
     def match(self, request):
+        """Matches all routes against the current request. The first one that
+        matches is returned.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :returns:
+            A tuple (route, route_values), including the default values.
+        """
         for route in self.routes:
             match = route.match(request)
             if match:
                 return match
 
     def build(self, name, **kwargs):
+        """Builds a URL for a named :class:`Route`.
+
+        :param name:
+            The route name, as registered in :meth:`add`.
+        :param kwargs:
+            Keyword arguments to build the URL. All route variables that are
+            not set as defaults must be passed, and they must conform to the
+            format set in the route. Extra keywords are appended as URL
+            arguments.
+        :returns:
+            A formatted URL.
+        """
         route = self.route_names.get(name, None)
         if not route:
             raise KeyError('Route %s is not defined.' % name)

@@ -14,16 +14,16 @@ class ViewHandler(RequestHandler):
         self.response.out.write('You are viewing item "%s".' % item)
 
 
-def get_redirect_url(**kwargs):
-    return '/view/i-am-a-redirect'
+def get_redirect_url(handler, **kwargs):
+    return handler.url_for('view', item='i-am-a-redirect')
 
 
 app = WSGIApplication([
-    ('/',             'index',      HomeHandler),
-    ('/view/{item}',  'view',       ViewHandler),
-    ('/lazy',         'lazy-view',  'handlers.LazyHandler'),
-    ('/redirect-me',  'legacy-url', RedirectHandler, {'url': '/lazy'}),
-    ('/redirect-me2', 'legacy-url', RedirectHandler, {'url': get_redirect_url}),
+    ('/',             HomeHandler,            'home'),
+    ('/view/{item}',  ViewHandler,            'view'),
+    ('/lazy',         'handlers.LazyHandler', 'lazy'),
+    ('/redirect-me',  RedirectHandler,        'legacy', {'url': '/lazy'}),
+    ('/redirect-me2', RedirectHandler,        'legacy', {'url': get_redirect_url}),
 ], debug=True)
 
 
