@@ -8,11 +8,8 @@
     :copyright: 2010 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
-import cgi
 import logging
 import re
-import sys
-import traceback
 import urllib
 import urlparse
 
@@ -48,7 +45,8 @@ DEFAULT_VALUE = object()
 class Response(webob.Response):
     """Abstraction for an HTTP response.
 
-    Implements most of ``webapp.Response`` interface, except ``wsgi_write()``.
+    Implements all of ``webapp.Response`` interface, except ``wsgi_write()``
+    as the response itself is returned by the WSGI application.
     """
     def __init__(self, *args, **kwargs):
         super(Response, self).__init__(*args, **kwargs)
@@ -283,11 +281,7 @@ class RequestHandler(object):
         self.error(500)
         logging.exception(exception)
         if debug_mode:
-            #raise
-            lines = ''.join(traceback.format_exception(*sys.exc_info()))
-            self.response.clear()
-            self.response.out.write('<pre>%s</pre>' % (cgi.escape(lines,
-                quote=True)))
+            raise
 
 
 class RedirectHandler(RequestHandler):
@@ -312,6 +306,15 @@ class RedirectHandler(RequestHandler):
         self.redirect(url, permanent=kwargs.get('permanent', True))
 
 
+class ErrorHandler(RequestHandler):
+    """Default error handler."""
+    def get(self, exception=None):
+        if isinstance(exception, HTTPError):
+            return self.error(exception.code)
+
+        self.error(500)
+
+
 class WSGIApplication(object):
     """Wraps a set of webapp RequestHandlers in a WSGI-compatible application.
 
@@ -325,6 +328,9 @@ class WSGIApplication(object):
     request_class = Request
     #: Default class used for the response object.
     response_class = Response
+    # A dictionary mapping HTTP error codes to :class:`RequestHandler`
+    # classes used to handle them, using :class:`ErrorHandler` by default.
+    error_handlers = {}
 
     def __init__(self, url_map, debug=False, config=None):
         """Initializes the WSGI application.
@@ -340,14 +346,12 @@ class WSGIApplication(object):
         self.debug = debug
         self.config = Config(config)
 
+
     def __call__(self, environ, start_response):
         """Called by WSGI when a request comes in. Calls
         :meth:`WSGIApplication.wsgi_app`.
         """
-        try:
-            return self.wsgi_app(environ, start_response)
-        except Exception, e:
-            logging.exception(e)
+        return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ, start_response):
         """This is the actual WSGI application.  This is not implemented in
@@ -369,29 +373,53 @@ class WSGIApplication(object):
             A callable accepting a status code, a list of headers and an
             optional exception context to start the response.
         """
-        # TODO Exception handling is still unresolved.
-
         request = self.request_class(environ)
         response = self.response_class()
         method = environ['REQUEST_METHOD'].lower()
 
-        if method not in _ALLOWED_METHODS:
-            # TODO raise exception: 405 Method Not Allowed
-            pass
+        try:
+            if method not in _ALLOWED_METHODS:
+                raise HTTPError(405)
 
-        handler_class, kwargs = self.match_route(request)
+            handler_class, kwargs = self.match_route(request)
 
-        if handler_class:
-            handler = handler_class(self, request, response)
-            try:
-                handler.dispatch(method, **kwargs)
-            except Exception, e:
-                # TODO handle exception
-                handler.handle_exception(e, self.debug)
-        else:
-            response.set_status(404)
+            if handler_class:
+                handler = handler_class(self, request, response)
+                try:
+                    handler.dispatch(method, **kwargs)
+                except Exception, e:
+                    handler.handle_exception(e, self.debug)
+            else:
+                raise HTTPError(404)
+        except Exception, e:
+            self.handle_exception(request, response, e)
 
         return response(environ, start_response)
+
+    def handle_exception(self, request, response, e):
+        """Handles a raised exception. If it is an :class:`HTTPError`,
+        searches in :attr:`error_handlers` for a handler to handle the
+        correspondent status code. Otherwise, handles it with
+        :class:`ErrorHandler`.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :param response:
+            A :class:`Response` instance.
+        :param e:
+            The raised ``Exception``.
+        """
+        logging.exception(e)
+        if self.debug:
+            raise
+
+        if isinstance(e, HTTPError):
+            code = e.code
+        else:
+            code = 500
+
+        handler = self.error_handlers.get(code, ErrorHandler)
+        handler(self, request, response).dispatch('get', exception=e)
 
     def set_router(self, url_map):
         """Sets a :class:`Router` instance for the given url_map.
@@ -440,9 +468,6 @@ class WSGIApplication(object):
 
         return handler_class, kwargs
 
-    def handle_exception(self, e):
-        pass
-
     def get_config(self, module, key=None, default=DEFAULT_VALUE):
         """Returns a configuration value for a module. If it is not already
         set, loads a ``default_config`` variable from the given module,
@@ -481,6 +506,23 @@ class WSGIApplication(object):
         else:
             raise KeyError('Module %s requires the config key "%s" to be '
                 'set.' % (module, key))
+
+
+class HTTPError(Exception):
+    """An HTTP exception."""
+    def __init__(self, code, message=None, *args):
+        self.code = code
+        self.message = message
+        self.args = args
+
+    def __str__(self):
+        message = 'HTTP %d: %s' % (self.code,
+            Response.http_status_message(self.code))
+
+        if self.message:
+            message += ' (%s)' % (self.message % self.args,)
+
+        return message
 
 
 class Route(object):
@@ -547,7 +589,7 @@ class Route(object):
             return (self, values)
 
     def build(self, **kwargs):
-        """Builds a URL for this route.
+        """Builds a URL for this route. Examples:
 
         >>> route = Route('/blog', BlogHandler)
         >>> route.build()
@@ -555,9 +597,9 @@ class Route(object):
         >>> Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
         >>> route.build(year=2010)
         >>> /blog/2010
-        >>> Route('/blog/archive/{year:\d\d\d\d}/{slug}', BlogItemHandler)
-        >>> route.build(year=2010, slug='my-blog-post')
-        >>> /blog/2010/my-blog-post
+        >>> Route('/blog/archive/{year:\d\d\d\d}/{month:\d\d}/{slug}', BlogItemHandler)
+        >>> route.build(year='2010', month='07', slug='my-blog-post')
+        >>> /blog/2010/07/my-blog-post
 
         :param kwargs:
             Keyword arguments to build the URL. All route variables that are
@@ -666,7 +708,12 @@ class LazyObject(object):
        handler = handler_class(app, request, response)
     """
     def __init__(self, import_name):
-        """"""
+        """Initializes a lazy object.
+
+        :param import_name:
+            The dotted name for the object to import, e.g.,
+            ``'my.module.MyClass``.
+        """
         self.import_name = import_name
         self.obj = None
 

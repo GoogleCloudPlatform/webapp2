@@ -1,6 +1,5 @@
 TODO
 ----
-- Simple exception handling
 - Easy unit testing
 - 100% test coverage
 
@@ -9,6 +8,7 @@ DONE
 ----
 - Use webapp.Request (extended webob.Request)
 - Use webob.Response
+- Simple exception handling
 - Configuration system
 - Lazy RequestHandlers (optional)
 - RequestHandler plugins
