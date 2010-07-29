@@ -501,7 +501,7 @@ class WSGIApplication(object):
 
         if isinstance(handler_class, basestring):
             if handler_class not in _HANDLERS:
-                _HANDLERS[handler_class] = LazyObject(handler_class)
+                _HANDLERS[handler_class] = import_string(handler_class)
 
             handler_class = _HANDLERS[handler_class]
 

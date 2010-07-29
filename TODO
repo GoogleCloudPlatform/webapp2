@@ -1,7 +1,6 @@
 TODO
 ----
 - Simple exception handling
-- Configuration system
 - Easy unit testing
 
 
@@ -9,6 +8,7 @@ DONE
 ----
 - Use webapp.Request (extended webob.Request)
 - Use webob.Response
+- Configuration system
 - Lazy RequestHandlers (optional)
 - RequestHandler plugins
 - RequestHandler methods receive keyword arguments
