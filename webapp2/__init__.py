@@ -328,9 +328,6 @@ class WSGIApplication(object):
     request_class = Request
     #: Default class used for the response object.
     response_class = Response
-    # A dictionary mapping HTTP error codes to :class:`RequestHandler`
-    # classes used to handle them, using :class:`ErrorHandler` by default.
-    error_handlers = {}
 
     def __init__(self, url_map, debug=False, config=None):
         """Initializes the WSGI application.
@@ -345,7 +342,9 @@ class WSGIApplication(object):
         self.set_router(url_map)
         self.debug = debug
         self.config = Config(config)
-
+        # A dictionary mapping HTTP error codes to the :class:`RequestHandler`
+        # classes used to handle them, using :class:`ErrorHandler` by default.
+        self.error_handlers = {}
 
     def __call__(self, environ, start_response):
         """Called by WSGI when a request comes in. Calls
