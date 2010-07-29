@@ -1,4 +1,5 @@
-from webapp2 import RequestHandler, WSGIApplication, run_wsgi_app
+from webapp2 import (RedirectHandler, RequestHandler, WSGIApplication,
+    run_wsgi_app)
 
 
 class HomeHandler(RequestHandler):
@@ -13,10 +14,16 @@ class ViewHandler(RequestHandler):
         self.response.out.write('You are viewing item "%s".' % item)
 
 
+def get_redirect_url(**kwargs):
+    return '/view/i-am-a-redirect'
+
+
 app = WSGIApplication([
-    ('/',            'index',     HomeHandler),
-    ('/view/{item}', 'view',      ViewHandler),
-    ('/lazy',        'lazy-view', 'handlers.LazyHandler'),
+    ('/',             'index',      HomeHandler),
+    ('/view/{item}',  'view',       ViewHandler),
+    ('/lazy',         'lazy-view',  'handlers.LazyHandler'),
+    ('/redirect-me',  'legacy-url', RedirectHandler, {'url': '/lazy'}),
+    ('/redirect-me2', 'legacy-url', RedirectHandler, {'url': get_redirect_url}),
 ], debug=True)
 
 

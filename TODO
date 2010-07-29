@@ -13,4 +13,5 @@ DONE
 - Lazy RequestHandlers (optional)
 - RequestHandler plugins
 - RequestHandler methods receive keyword arguments
+- RedirectHandler (automatic redirect from old urls)
 - Reversible URLs

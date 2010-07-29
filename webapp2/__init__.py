@@ -1,35 +1,48 @@
+# -*- coding: utf-8 -*-
+"""
+    webapp2
+    =======
+
+    Taking webapp to the next level!
+
+    :copyright: 2010 by tipfy.org.
+    :license: Apache Sotware License, see LICENSE for details.
+"""
 import cgi
 import logging
 import re
 import sys
 import traceback
+import urllib
 import urlparse
 
+from django.utils import simplejson
+
 from google.appengine.ext.webapp import Request
-from google.appengine.ext.webapp.utils import run_wsgi_app
+from google.appengine.ext.webapp.util import run_wsgi_app, run_bare_wsgi_app
 
 import webob
 
-# Allowed request methods.
-ALLOWED_METHODS = frozenset(['get', 'post', 'head', 'options', 'put', 'delete',
-    'trace'])
+#: Allowed request methods.
+_ALLOWED_METHODS = frozenset(['get', 'post', 'head', 'options', 'put',
+    'delete', 'trace'])
 
-url_regex = re.compile(r'''
+#: Regex for URL definitions.
+_URL_REGEX = re.compile(r'''
     \{            # The exact character "{"
     (\w+)         # The variable name (restricted to a-z, 0-9, _)
     (?::([^}]+))? # The optional :regex part
     \}            # The exact character "}"
     ''', re.VERBOSE)
 
+#: Loaded lazy handlers.
+_HANDLERS = {}
+
 
 class Response(webob.Response):
     """Abstraction for an HTTP response.
 
-    Implements ``webapp.Response`` interface, except ``wsgi_write()``.
-
-    Properties:
-        out: file pointer for the output stream
-        headers: wsgiref.headers.Headers instance representing the output headers
+    Implements most of ``webapp.Response`` interface, except ``wsgi_write()``.
     """
     def __init__(self, *args, **kwargs):
         super(Response, self).__init__(*args, **kwargs)
@@ -40,11 +53,11 @@ class Response(webob.Response):
     def set_status(self, code, message=None):
         """Sets the HTTP status code of this response.
 
-        Args:
-          message: the HTTP status string to use
-
-        If no status string is given, we use the default from the HTTP/1.1
-        specification.
+        :param message:
+            The HTTP status string to use
+        :param message:
+            A status string. If none is given, uses the default from the
+            HTTP/1.1 specification.
         """
         if message:
             self.status = '%d %s' % (code, message)
@@ -59,8 +72,8 @@ class Response(webob.Response):
     def http_status_message(code):
         """Returns the default HTTP status message for the given code.
 
-        Args:
-            code: the HTTP code for which we want a message
+        :param code:
+            The HTTP code for which we want a message.
         """
         message = webob.statusreasons.status_reasons.get(code, None)
         if not message:
@@ -70,10 +83,12 @@ class Response(webob.Response):
 
 
 class RequestHandler(object):
-    """Our base HTTP request handler. Clients should subclass this class.
+    """Base HTTP request handler. Clients should subclass this class.
 
     Subclasses should override get(), post(), head(), options(), etc to handle
     different HTTP methods.
+
+    Implements most of ``webapp.RequestHandler`` interface.
     """
     #: A list of plugin instances. A plugin can implement two methods that
     #: are called before and after the current request method is executed,
@@ -89,15 +104,33 @@ class RequestHandler(object):
     plugins = []
 
     def __init__(self, app, request, response):
+        """Initializes the handler.
+
+        :param app:
+            A :class:`WSGIApplication` instance.
+        :param request:
+            A ``webapp.Request`` instance.
+        :param response:
+            A :class:`Response` instance.
+        """
         self.app = app
         self.request = request
         self.response = response
 
-    def dispatch(self, *args, **kwargs):
+    def dispatch(self, _method_name, **kwargs):
         """Dispatches the requested method. If plugins are set, executes
         ``before_dispatch()`` and ``after_dispatch()`` plugin hooks.
+
+        :param _method_name:
+            The method to be dispatched: the request method in lower case
+            (e.g., 'get', 'post', 'head', 'put' etc).
+        :param kwargs:
+            Keyword arguments to be passed to the method, coming from the
+            matched :class:`Route`.
+        :returns:
+            None.
         """
-        method = getattr(self, args[0], None)
+        method = getattr(self, _method_name, None)
         if method is None:
             return self.error(405)
 
@@ -128,35 +161,15 @@ class RequestHandler(object):
         """Handler method for GET requests."""
         self.error(405)
 
-    def post(self, **kwargs):
-        """Handler method for POST requests."""
-        self.error(405)
+    # All other allowed methods, not implemented by default.
+    post = head = options = put = delete = trace = get
 
-    def head(self, **kwargs):
-        """Handler method for HEAD requests."""
-        self.error(405)
+    def error(self, code=500):
+        """Clears the response output stream and sets the given HTTP error
+        code.
 
-    def options(self, **kwargs):
-        """Handler method for OPTIONS requests."""
-        self.error(405)
-
-    def put(self, **kwargs):
-        """Handler method for PUT requests."""
-        self.error(405)
-
-    def delete(self, **kwargs):
-        """Handler method for DELETE requests."""
-        self.error(405)
-
-    def trace(self, **kwargs):
-        """Handler method for TRACE requests."""
-        self.error(405)
-
-    def error(self, code):
-        """Clears the response output stream and sets the given HTTP error code.
-
-        Args:
-            code: the HTTP status error code (e.g., 501)
+        :param code:
+            HTTP status error code (e.g., 500).
         """
         self.response.set_status(code)
         self.response.clear()
@@ -164,9 +177,10 @@ class RequestHandler(object):
     def redirect(self, uri, permanent=False):
         """Issues an HTTP redirect to the given relative URL.
 
-        Args:
-            uri: a relative or absolute URI (e.g., '../flowers.html')
-            permanent: if true, we use a 301 redirect instead of a 302 redirect
+        :param uri:
+            A relative or absolute URI (e.g., '../flowers.html').
+        :param permanent:
+            If True, uses a 301 redirect instead of a 302 redirect.
         """
         if permanent:
             self.response.set_status(301)
@@ -180,12 +194,13 @@ class RequestHandler(object):
     def handle_exception(self, exception, debug_mode):
         """Called if this handler throws an exception during execution.
 
-        The default behavior is to call self.error(500) and print a stack trace
-        if debug_mode is True.
+        The default behavior is to call self.error(500) and print a stack
+        trace if debug_mode is True.
 
-        Args:
-            exception: the exception that was thrown
-            debug_mode: True if the web application is running in debug mode
+        :param exception:
+            The exception that was thrown.
+        :debug_mode:
+            True if the web application is running in debug mode.
         """
         self.error(500)
         logging.exception(exception)
@@ -196,26 +211,79 @@ class RequestHandler(object):
             self.response.out.write('<pre>%s</pre>' % (cgi.escape(lines,
                 quote=True)))
 
-    def url_for(self, name, _full=False, _anchor=None, **kwargs):
-        # TODO:
-        # url encode values
-        # append extra values as arguments: ?foo=bar&baz=ding
-        # build full urls
-        # add encoded anchor
-        return self.request.url_for(name, **kwargs)
+    def url_for(self, name, _full=False, _secure=False, _anchor=None, **kwargs):
+        """Builds and returns a URL for a named :class:`Route`.
+
+        For example, if you have these routes registered in the application:
+
+        .. code-block::
+
+           app = WSGIApplication([
+               ('/',     'home/main',  'handlers.HomeHandler'),
+               ('/wiki', 'wiki/start', 'handlers.WikiHandler'),
+           ])
+
+        Here are some examples of how to generate URLs for them:
+
+        >>> url = self.url_for('home/main')
+        >>> '/'
+        >>> url = self.url_for('home/main', _full=True)
+        >>> 'http://localhost:8080/'
+        >>> url = self.url_for('wiki/start')
+        >>> '/wiki'
+        >>> url = self.url_for('wiki/start', _full=True)
+        >>> 'http://localhost:8080/wiki'
+        >>> url = self.url_for('wiki/start', _full=True, _anchor='my-heading')
+        >>> 'http://localhost:8080/wiki#my-heading'
+
+        :param name:
+            The route endpoint.
+        :param _full:
+            If True, returns an absolute URL. Otherwise returns a relative one.
+        :param _secure:
+            If True, returns an absolute URL using `https` scheme.
+        :param _anchor:
+            An anchor to append to the end of the URL.
+        :param kwargs:
+            Keyword arguments to build the URL.
+        :returns:
+            An absolute or relative URL.
+        """
+        url = self.request.url_for(name, **kwargs)
+
+        if _full or _secure:
+            scheme = 'http'
+            if _secure:
+                scheme += 's'
+
+            url = '%s://%s%s' % (scheme, self.request.host, url)
+
+        if _anchor:
+            url += '#%s' % url_escape(_anchor)
+
+        return url
 
 
-class LazyObject(object):
-    def __init__(self, import_name):
-        self.import_name = import_name
-        self.obj = None
+class RedirectHandler(RequestHandler):
+    """Redirects to the given URL for all GET requests. This is meant to be
+    used when defining URL routes. You must provide the keyword argument
+    *url* in the route. Example:
 
-    def __call__(self, *args, **kwargs):
-        if self.obj is None:
-            module_name, handler_name = self.import_name.rsplit('.', 1)
-            self.obj = getattr(__import__(module_name), handler_name)
+    .. code-block::
 
-        return self.obj(*args, **kwargs)
+       app = WSGIApplication([
+           ('/old-url', 'legacy-url', RedirectHandler, {'url': '/new-url'}),
+       ])
+
+    Based on idea from `Tornado <http://www.tornadoweb.org/>`_.
+    """
+    def get(self, **kwargs):
+        url = kwargs.get('url', '/')
+
+        if callable(url):
+            url = url(**kwargs)
+
+        self.redirect(url, permanent=kwargs.get('permanent', True))
 
 
 class WSGIApplication(object):
@@ -227,13 +295,23 @@ class WSGIApplication(object):
 
     The URL mapping is first-match based on the list ordering.
     """
+    #: Default class used for the request object.
     request_class = Request
+    #: Default class used for the response object.
     response_class = Response
 
     def __init__(self, url_map, debug=False, config=None):
+        """Initializes the WSGI application.
+
+        :param url_map:
+            A list of URL route definitions.
+        :param debug:
+            True if this is debug mode, False otherwise.
+        :param config:
+            A configuration dictionary for the application.
+        """
         self.set_router(url_map)
         self.debug = debug
-        self.handlers = {}
 
     def __call__(self, environ, start_response):
         """Shortcut for :meth:`WSGIApplication.wsgi_app`."""
@@ -248,11 +326,11 @@ class WSGIApplication(object):
         response = self.response_class()
 
         method = environ['REQUEST_METHOD'].lower()
-        if method not in ALLOWED_METHODS:
+        if method not in _ALLOWED_METHODS:
             # TODO raise exception: 405 Method Not Allowed
             pass
 
-        handler_class, kwargs = self.match_url(request)
+        handler_class, kwargs = self.match_route(request)
 
         if handler_class:
             handler = handler_class(self, request, response)
@@ -267,6 +345,11 @@ class WSGIApplication(object):
         return response(environ, start_response)
 
     def set_router(self, url_map):
+        """Sets a :class:`Router` instance for the given url_map.
+
+        :param url_map:
+            A list of URL route definitions.
+        """
         self.router = Router()
         for spec in url_map:
             if len(spec) == 3:
@@ -274,7 +357,14 @@ class WSGIApplication(object):
             elif len(spec) == 4:
                 self.router.add(*spec[:3], **spec[3])
 
-    def match_url(self, request):
+    def match_route(self, request):
+        """Matches a route against the current request.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :returns:
+            A tuple (handler_class, kwargs) for the matched route.
+        """
         match = self.router.match(request)
         request.url_route = match
         request.url_for = self.router.build
@@ -285,10 +375,10 @@ class WSGIApplication(object):
         handler_class = route.handler
 
         if isinstance(handler_class, basestring):
-            if handler_class not in self.handlers:
-                self.handlers[handler_class] = LazyObject(handler_class)
+            if handler_class not in _HANDLERS:
+                _HANDLERS[handler_class] = LazyObject(handler_class)
 
-            handler_class = self.handlers[handler_class]
+            handler_class = _HANDLERS[handler_class]
 
         return handler_class, kwargs
 
@@ -307,7 +397,7 @@ class Route(object):
         last = 0
         regex = ''
         template = ''
-        for match in url_regex.finditer(path):
+        for match in _URL_REGEX.finditer(path):
             part = path[last:match.start()]
             name = match.group(1)
             expr = match.group(2) or '[^/]+'
@@ -330,6 +420,9 @@ class Route(object):
             return (self, values)
 
     def build(self, **kwargs):
+        # TODO:
+        # url encode values
+        # append extra values as arguments: ?foo=bar&baz=ding
         values = self.defaults.copy()
         values.update((str(k), str(v)) for k, v in kwargs.iteritems())
         try:
@@ -349,7 +442,7 @@ class Router(object):
     redirect or subdomain matching. It should stay as simple as possible.
 
     Based on `Another Do-It-Yourself Framework <ttp://pythonpaste.org/webob/do-it-yourself.html#routing>`_
-    by Ian Bicking.
+    by Ian Bicking. We added URL building and separate :class:`Route` objects.
     """
     def __init__(self):
         self.routes = []
@@ -374,5 +467,58 @@ class Router(object):
         return route.build(**kwargs)
 
 
-#def run_wsgi_app(app):
-#    CGIHandler().run(app)
+class LazyObject(object):
+    """An object that is only imported when called."""
+    def __init__(self, import_name):
+        """"""
+        self.import_name = import_name
+        self.obj = None
+
+    def __call__(self, *args, **kwargs):
+        if self.obj is None:
+            module_name, handler_name = self.import_name.rsplit('.', 1)
+            self.obj = getattr(__import__(module_name), handler_name)
+
+        return self.obj(*args, **kwargs)
+
+
+def json_encode(value):
+    """JSON-encodes the given Python object."""
+    # JSON permits but does not require forward slashes to be escaped.
+    # This is useful when json data is emitted in a <script> tag
+    # in HTML, as it prevents </script> tags from prematurely terminating
+    # the javscript.  Some json libraries do this escaping by default,
+    # although python's standard library does not, so we do it here.
+    # http://stackoverflow.com/questions/1580647/json-why-are-forward-slashes-escaped
+    return simplejson.dumps(value).replace("</", "<\\/")
+
+
+def json_decode(value):
+    """Returns Python objects for the given JSON string."""
+    return simplejson.loads(to_unicode(value))
+
+
+def url_escape(value):
+    """Returns a valid URL-encoded version of the given value."""
+    return urllib.quote_plus(to_utf8(value))
+
+
+def url_unescape(value):
+    """Decodes the given value from a URL."""
+    return to_unicode(urllib.unquote_plus(value))
+
+
+def to_utf8(value):
+    if isinstance(value, unicode):
+        return value.encode('utf-8')
+
+    assert isinstance(value, str)
+    return value
+
+
+def to_unicode(value):
+    if isinstance(value, str):
+        return value.decode('utf-8')
+
+    assert isinstance(value, unicode)
+    return value
