@@ -52,8 +52,13 @@
              def get(self, year=None, month=None, slug=None):
                  pass
 
-    * Uses webob.Response: easy to set cookies, conditional responses with
-      automatic ETag checking.
+    * Uses webob.Response:
+
+      - Easy to set cookies.
+      - Easy headers.
+      - Several helpers such as conditional responses with automatic ETag
+        checking.
+      - etc.
 
       .. code-block:: python
 
@@ -218,12 +223,12 @@ class RequestHandler(object):
     # All other allowed methods, not implemented by default.
     post = head = options = put = delete = trace = get
 
-    def error(self, code=500):
+    def error(self, code):
         """Clears the response output stream and sets the given HTTP error
         code.
 
         :param code:
-            HTTP status error code (e.g., 500).
+            HTTP status error code (e.g., 501).
         """
         self.response.set_status(code)
         self.response.clear()
@@ -245,25 +250,25 @@ class RequestHandler(object):
         self.response.headers['Location'] = str(absolute_url)
         self.response.clear()
 
-    def handle_exception(self, exception, debug_mode):
-        """Called if this handler throws an exception during execution.
+    def redirect_to(self, name, _secure=False, _anchor=None, _permanent=False,
+        **kwargs):
+        """Convenience method mixing :meth:`redirect` and :meth:`url_for`:
+        Issues an HTTP redirect to a named URL build using :meth:`url_for`.
 
-        The default behavior is to call self.error(500) and print a stack
-        trace if debug_mode is True.
-
-        :param exception:
-            The exception that was thrown.
-        :debug_mode:
-            True if the web application is running in debug mode.
+        :param name:
+            The route name to redirect to.
+        :param _secure:
+            If True, redirects to a URL using `https` scheme.
+        :param _anchor:
+            An anchor to append to the end of the redirected URL.
+        :param _permanent:
+            If True, uses a 301 redirect instead of a 302 redirect.
+        :param kwargs:
+            Keyword arguments to build the URL.
         """
-        self.error(500)
-        logging.exception(exception)
-        if debug_mode:
-            #raise
-            lines = ''.join(traceback.format_exception(*sys.exc_info()))
-            self.response.clear()
-            self.response.out.write('<pre>%s</pre>' % (cgi.escape(lines,
-                quote=True)))
+        uri = self.url_for(name, _full=_full, _secure=_secure, _anchor=_anchor,
+            **kwargs)
+        self.redirect(uri, permanent=_permanent)
 
     def url_for(self, name, _full=False, _secure=False, _anchor=None, **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
@@ -291,7 +296,7 @@ class RequestHandler(object):
         >>> 'http://localhost:8080/wiki#my-heading'
 
         :param name:
-            The route endpoint.
+            The route name.
         :param _full:
             If True, returns an absolute URL. Otherwise returns a relative one.
         :param _secure:
@@ -316,6 +321,26 @@ class RequestHandler(object):
             url += '#%s' % url_escape(_anchor)
 
         return url
+
+    def handle_exception(self, exception, debug_mode):
+        """Called if this handler throws an exception during execution.
+
+        The default behavior is to call self.error(500) and print a stack
+        trace if debug_mode is True.
+
+        :param exception:
+            The exception that was thrown.
+        :debug_mode:
+            True if the web application is running in debug mode.
+        """
+        self.error(500)
+        logging.exception(exception)
+        if debug_mode:
+            #raise
+            lines = ''.join(traceback.format_exception(*sys.exc_info()))
+            self.response.clear()
+            self.response.out.write('<pre>%s</pre>' % (cgi.escape(lines,
+                quote=True)))
 
 
 class RedirectHandler(RequestHandler):

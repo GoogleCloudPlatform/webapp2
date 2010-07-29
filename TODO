@@ -18,6 +18,8 @@ DONE
   - checks for keyword validity when building urls
   - appends extra keywords as arguments:
 
-    >>> route = Route('/{foo}', 'my_handler')
+    >>> route = Route('/blog/{foo}', 'my_handler')
     >>> url = route.build(foo='bar', baz='ding')
-    >>> /bar?baz=ding
+    >>> /blog/bar?baz=ding
+
+- redirect_to(): redirects to a built URL.
