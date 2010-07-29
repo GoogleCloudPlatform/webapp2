@@ -3,74 +3,7 @@
     webapp2
     =======
 
-    Taking webapp to the next level!
-
-    * Keyword based URLs:
-
-      .. code-block:: python
-
-         class BlogPostHandler(RequestHandler):
-             def get(self, year=None, month=None, slug=None):
-                 pass
-
-         app = WSGIApplication([
-             ('/{year:\d\d\d\d}/{month:\d\d}/{slug}', BlogPostHandler, 'blog-item'),
-         ]
-
-    * Fully reversible URLs:
-
-      .. code-block:: python
-
-         url = self.url_for('blog-item', year=2010, month=8, slug='hello')
-
-    * Automatic redirect for legacy URLs:
-
-      .. code-block:: python
-
-         app = WSGIApplication([
-             ('/old-url', RedirectHandler, 'legacy-url', {'url': '/new-url'}),
-         ])
-
-    * Lazy handlers:
-
-    .. code-block:: python
-
-         app = WSGIApplication([
-             ('/', 'my.module.MyHandler'),
-         ]
-
-    * Handler dispatching and handler plugins: the handler dispatches current
-      method, allowing before and after dispatch hooks.
-
-      .. code-block:: python
-
-         sessions = SessionPlugin()
-
-         class BlogPostHandler(RequestHandler):
-             plugins = [sessions]
-
-             def get(self, year=None, month=None, slug=None):
-                 pass
-
-    * Uses webob.Response:
-
-      - Easy to set cookies.
-      - Easy headers.
-      - Several helpers such as conditional responses with automatic ETag
-        checking.
-      - etc.
-
-      .. code-block:: python
-
-         self.response.set_cookie('key', 'value', max_age=360)
-
-    Based on `webapp`_ with some functions and ideas borrowed from `WebOb`_
-    and `Tornado`_.
-
-    .. _webapp: http://code.google.com/appengine/docs/python/tools/webapp/
-    .. _WebOb: http://pythonpaste.org/webob/
-    .. _Tornado: http://www.tornadoweb.org/
-    .. _Another Do-It-Yourself Framework: http://pythonpaste.org/webob/do-it-yourself.html
+    Taking Google App Engine's webapp to the next level!
 
     :copyright: 2010 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
@@ -747,8 +680,8 @@ class LazyObject(object):
 class Config(dict):
     """A simple configuration dictionary keyed by module name. This is a
     dictionary of dictionaries. It requires all values to be dictionaries
-    and applies updates and default values to the inner dictionaries instead of
-    the first level one.
+    and applies updates and default values to the inner dictionaries instead
+    of the first level one.
     """
     #: Loaded module configurations.
     loaded = None
@@ -856,7 +789,8 @@ class Config(dict):
         default-value
 
         :param module:
-            The module to get a configuration from, e.g.: 'webapp2.plugins.i18n'.
+            The module to get a configuration from, e.g.:
+            'webapp2.plugins.i18n'.
         :param key:
             The key from the module configuration.
         :param default:
