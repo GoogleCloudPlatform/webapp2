@@ -405,16 +405,37 @@ class WSGIApplication(object):
         """
         self.set_router(url_map)
         self.debug = debug
+        self.config = Config(config)
 
     def __call__(self, environ, start_response):
-        """Shortcut for :meth:`WSGIApplication.wsgi_app`."""
+        """Called by WSGI when a request comes in. Calls
+        :meth:`WSGIApplication.wsgi_app`.
+        """
         try:
             return self.wsgi_app(environ, start_response)
         except Exception, e:
             logging.exception(e)
 
     def wsgi_app(self, environ, start_response):
-        """Called by WSGI when a request comes in."""
+        """This is the actual WSGI application.  This is not implemented in
+        :meth:`WSGIApplication.__call__` so that middlewares can be applied
+        without losing a reference to the class. So instead of doing this::
+
+            app = MyMiddleware(app)
+
+        It's a better idea to do this instead::
+
+            app.wsgi_app = MyMiddleware(app.wsgi_app)
+
+        Then you still have the original application object around and
+        can continue to call methods on it.
+
+        :param environ:
+            A WSGI environment.
+        :param start_response:
+            A callable accepting a status code, a list of headers and an
+            optional exception context to start the response.
+        """
         # TODO Exception handling is still unresolved.
 
         request = self.request_class(environ)
@@ -723,25 +744,159 @@ class LazyObject(object):
         return self.obj(*args, **kwargs)
 
 
+class Config(dict):
+    """A simple configuration dictionary keyed by module name. This is a
+    dictionary of dictionaries. It requires all values to be dictionaries
+    and applies updates and default values to the inner dictionaries instead of
+    the first level one.
+    """
+    #: Loaded module configurations.
+    loaded = None
+
+    def __init__(self, value=None, default=None, loaded=None):
+        """Initializes the configuration object.
+
+        :param value:
+            A dictionary of configuration dictionaries for modules.
+        :param default:
+            A dictionary of configuration dictionaries for default values.
+        :param loaded:
+            A list of modules to be marked as loaded.
+        """
+        self.loaded = loaded or []
+        if value is not None:
+            assert isinstance(value, dict)
+            for module in value.keys():
+                self.update(module, value[module])
+
+        if default is not None:
+            assert isinstance(default, dict)
+            for module in default.keys():
+                self.setdefault(module, default[module])
+
+    def __setitem__(self, module, value):
+        """Sets a configuration for a module, requiring it to be a dictionary.
+
+        :param module:
+            A module name for the configuration, e.g.: 'webapp2.plugins.i18n'.
+        :param value:
+            A dictionary of configurations for the module.
+        """
+        assert isinstance(value, dict)
+        super(Config, self).__setitem__(module, value)
+
+    def update(self, module, value):
+        """Updates the configuration dictionary for a module.
+
+        >>> cfg = Config({'webapp2.plugins.i18n': {'locale': 'pt_BR'})
+        >>> cfg.get('webapp2.plugins.i18n', 'locale')
+        pt_BR
+        >>> cfg.get('webapp2.plugins.i18n', 'foo')
+        None
+        >>> cfg.update('webapp2.plugins.i18n', {'locale': 'en_US', 'foo': 'bar'})
+        >>> cfg.get('webapp2.plugins.i18n', 'locale')
+        en_US
+        >>> cfg.get('webapp2.plugins.i18n', 'foo')
+        bar
+
+        :param module:
+            The module to update the configuration, e.g.:
+            'webapp2.plugins.i18n'.
+        :param value:
+            A dictionary of configurations for the module.
+        :returns:
+            None.
+        """
+        assert isinstance(value, dict)
+        if module not in self:
+            self[module] = {}
+
+        self[module].update(value)
+
+    def setdefault(self, module, value):
+        """Sets a default configuration dictionary for a module.
+
+        >>> cfg = Config({'webapp2.plugins.i18n': {'locale': 'pt_BR'})
+        >>> cfg.get('webapp2.plugins.i18n', 'locale')
+        pt_BR
+        >>> cfg.get('webapp2.plugins.i18n', 'foo')
+        None
+        >>> cfg.setdefault('webapp2.plugins.i18n', {'locale': 'en_US', 'foo': 'bar'})
+        >>> cfg.get('webapp2.plugins.i18n', 'locale')
+        pt_BR
+        >>> cfg.get('webapp2.plugins.i18n', 'foo')
+        bar
+
+        :param module:
+            The module to set default configuration, e.g.:
+            'webapp2.plugins.i18n'.
+        :param value:
+            A dictionary of configurations for the module.
+        :returns:
+            None.
+        """
+        assert isinstance(value, dict)
+        if module not in self:
+            self[module] = {}
+
+        for key in value.keys():
+            self[module].setdefault(key, value[key])
+
+    def get(self, module, key=None, default=None):
+        """Returns a configuration value for given key in a given module.
+
+        >>> cfg = Config({'webapp2.plugins.i18n': {'locale': 'pt_BR'})
+        >>> cfg.get('webapp2.plugins.i18n')
+        {'locale': 'pt_BR'}
+        >>> cfg.get('webapp2.plugins.i18n', 'locale')
+        pt_BR
+        >>> cfg.get('webapp2.plugins.i18n', 'invalid-key')
+        None
+        >>> cfg.get('webapp2.plugins.i18n', 'invalid-key', 'default-value')
+        default-value
+
+        :param module:
+            The module to get a configuration from, e.g.: 'webapp2.plugins.i18n'.
+        :param key:
+            The key from the module configuration.
+        :param default:
+            A default value to return in case the configuration for
+            the module/key is not set.
+        :returns:
+            The configuration value.
+        """
+        if module not in self:
+            return default
+
+        if key is None:
+            return self[module]
+        elif key not in self[module]:
+            return default
+
+        return self[module][key]
+
+
 def import_string(import_name, silent=False):
     """Imports an object based on a string. If `silent` is True the return
     value will be `None` if the import fails.
 
-    Simplified version of the function from `Werkzeug <http://werkzeug.pocoo.org/>`.
+    Simplified version of the function with same name from
+    `Werkzeug <http://werkzeug.pocoo.org/>`.
 
     :param import_name:
         The dotted name for the object to import.
     :param silent:
         If True, import errors are ignored and None is returned instead.
     :return:
-        The imported object
+        The imported object.
     """
-    if '.' in import_name:
-        module, obj = to_utf8(import_name).rsplit('.', 1)
-    else:
-        return __import__(import_name)
-
+    import_name = to_utf8(import_name)
     try:
+        if '.' in import_name:
+            module, obj = import_name.rsplit('.', 1)
+        else:
+            return __import__(import_name)
+
         return getattr(__import__(module, None, None, [obj]), obj)
     except (ImportError, AttributeError):
         if not silent:
