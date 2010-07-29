@@ -8,7 +8,7 @@ Taking webapp to the next level! Here are the key features:
 - ``Request` and ``Response`` objects fully compatible with `webapp.Request`
   and `webapp.Response`.
 
-- ``RequestHandler`` object is mostly compatible with ``webapp.RequestHandler``:
+- ``RequestHandler`` object mostly compatible with ``webapp.RequestHandler``:
   - Handler methods receive keyword arguments instead of positional ones.
   - initialize() is replaced by a proper ``__init__()``.
   - Everything else is implemented in the same way.
