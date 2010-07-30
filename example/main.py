@@ -15,7 +15,7 @@ class ViewHandler(RequestHandler):
 
 
 def get_redirect_url(handler, **kwargs):
-    return handler.url_for('view', item='i-am-a-redirect')
+    return handler.url_for('view', item='i-came-from-a-redirect')
 
 
 app = WSGIApplication([

@@ -23,8 +23,7 @@ DONE
 - Simple exception handling
 - Configuration system
 - Lazy RequestHandlers (optional)
-- RequestHandler plugins
-- RequestHandler methods receive keyword arguments
+- RequestHandler methods can receive keyword arguments
 - RedirectHandler (automatic redirect from old urls)
 - Reversible URLs:
   - checks for missing keywords when building urls
@@ -36,3 +35,75 @@ DONE
     >>> /blog/bar?baz=ding
 
 - redirect_to(): redirects to a built URL.
+
+
+REMOVED
+-------
+- RequestHandler plugins. Following Nick Johnson's suggestion, leave it up
+  to the implementation. A mixin can override ``__call__`` to implement hooks.
+  Original implementation looked like this::
+
+    class RequestHandler(object):
+        """Base HTTP request handler. Clients should subclass this class.
+
+        Subclasses should override get(), post(), head(), options(), etc to handle
+        different HTTP methods.
+
+        Implements most of ``webapp.RequestHandler`` interface.
+        """
+        #: A list of plugin instances. A plugin can implement two methods that
+        #: are called before and after the current request method is executed,
+        #: except if the chain is stopped.
+        #:
+        #: before_dispatch(handler)
+        #:     Called before the requested method is executed. If returns False,
+        #:     stops the plugin chain do not execute the requested method.
+        #:
+        #: after_dispatch(handler)
+        #:     Called after the requested method is executed. If returns False,
+        #:     stops the plugin chain. These are called in reverse order.
+        plugins = []
+
+        def __call__(self, _method_name, *args, **kwargs):
+            """Dispatches the requested method. If plugins are set, executes
+            ``before_dispatch()`` and ``after_dispatch()`` plugin hooks.
+
+            :param _method_name:
+                The method to be dispatched: the request method in lower case
+                (e.g., 'get', 'post', 'head', 'put' etc).
+            :param kwargs:
+                Keyword arguments to be passed to the method, coming from the
+                matched :class:`Route`.
+            :returns:
+                None.
+            """
+            method = getattr(self, _method_name, None)
+            if method is None:
+                # 405 Method Not Allowed.
+                # TODO: The response MUST include an Allow header containing a
+                # list of valid methods for the requested resource.
+                # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6
+                return self.error(405)
+
+            if not self.plugins:
+                # No plugins are set: just execute the method.
+                return method(*args, **kwargs)
+
+            # Execute before_dispatch plugins.
+            for plugin in self.plugins:
+                hook = getattr(plugin, 'before_dispatch', None)
+                if hook:
+                    rv = hook(self)
+                    if rv is False:
+                        break
+            else:
+                # Execute the requested method.
+                method(*args, **kwargs)
+
+            # Execute after_dispatch plugins.
+            for plugin in reversed(self.plugins):
+                hook = getattr(plugin, 'after_dispatch', None)
+                if hook:
+                    rv = hook(self)
+                    if rv is False:
+                        break

@@ -13,11 +13,11 @@ class HomeHandler(RequestHandler):
     def get(self, **kwargs):
         self.response.out.write('home sweet home')
 
-
-class MethodsHandler(HomeHandler):
     def post(self, **kwargs):
         self.response.out.write('home sweet home - POST')
 
+
+class MethodsHandler(HomeHandler):
     def put(self, **kwargs):
         self.response.out.write('home sweet home - PUT')
 
@@ -56,6 +56,7 @@ class Handle405(RequestHandler):
     def get(self, **kwargs):
         self.response.out.write('405 custom handler')
         self.response.set_status(405)
+        self.response.headers['Allow'] = 'GET'
 
 
 class Handle500(RequestHandler):
@@ -88,6 +89,7 @@ class TestHandler(unittest.TestCase):
         test_app = TestApp(app)
         res = test_app.put('/', status=405)
         self.assertEqual(res.status, '405 Method Not Allowed')
+        self.assertEqual(res.headers.get('Allow'), 'GET, POST')
 
     def test_500(self):
         test_app = TestApp(app)
@@ -121,6 +123,7 @@ class TestHandler(unittest.TestCase):
         res = test_app.put('/', status=405)
         self.assertEqual(res.status, '405 Method Not Allowed')
         self.assertEqual(res.body, '405 custom handler')
+        self.assertEqual(res.headers.get('Allow'), 'GET')
 
         res = test_app.get('/broken', status=500)
         self.assertEqual(res.status, '500 Internal Server Error')
@@ -145,4 +148,3 @@ class TestHandler(unittest.TestCase):
         res = test_app.delete('/methods')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'home sweet home - DELETE')
-

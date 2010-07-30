@@ -14,12 +14,13 @@ import sys
 import urllib
 import urlparse
 
-from django.utils import simplejson
-
 from google.appengine.ext.webapp import Request
 from google.appengine.ext.webapp.util import run_wsgi_app, run_bare_wsgi_app
 
+from django.utils import simplejson
+
 import webob
+import webob.exc
 
 #: Allowed request methods.
 _ALLOWED_METHODS = frozenset(['get', 'post', 'head', 'options', 'put',
@@ -36,10 +37,10 @@ _ROUTE_REGEX = re.compile(r'''
 #: Loaded lazy handlers.
 _HANDLERS = {}
 
-# Value used for required values.
+#: Value used for required values.
 REQUIRED_VALUE = object()
 
-# Value used for missing default values.
+#: Value used for missing default values.
 DEFAULT_VALUE = object()
 
 
@@ -95,19 +96,6 @@ class RequestHandler(object):
 
     Implements most of ``webapp.RequestHandler`` interface.
     """
-    #: A list of plugin instances. A plugin can implement two methods that
-    #: are called before and after the current request method is executed,
-    #: except if the chain is stopped.
-    #:
-    #: before_dispatch(handler)
-    #:     Called before the requested method is executed. If returns False,
-    #:     stops the plugin chain do not execute the requested method.
-    #:
-    #: after_dispatch(handler)
-    #:     Called after the requested method is executed. If returns False,
-    #:     stops the plugin chain. These are called in reverse order.
-    plugins = []
-
     def __init__(self, app, request, response):
         """Initializes the handler.
 
@@ -122,13 +110,15 @@ class RequestHandler(object):
         self.request = request
         self.response = response
 
-    def dispatch(self, _method_name, **kwargs):
-        """Dispatches the requested method. If plugins are set, executes
-        ``before_dispatch()`` and ``after_dispatch()`` plugin hooks.
+    def __call__(self, _method_name, *args, **kwargs):
+        """Dispatches the requested method.
 
         :param _method_name:
             The method to be dispatched: the request method in lower case
             (e.g., 'get', 'post', 'head', 'put' etc).
+        :param args:
+            Positional arguments to be passed to the method, coming from the
+            matched :class:`Route`.
         :param kwargs:
             Keyword arguments to be passed to the method, coming from the
             matched :class:`Route`.
@@ -138,41 +128,39 @@ class RequestHandler(object):
         method = getattr(self, _method_name, None)
         if method is None:
             # 405 Method Not Allowed.
-            # TODO: The response MUST include an Allow header containing a
+            # The response MUST include an Allow header containing a
             # list of valid methods for the requested resource.
             # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6
-            return self.error(405)
+            valid = ', '.join(get_valid_methods(self))
+            self.abort(405, headers=[('Allow', valid)])
 
-        if not self.plugins:
-            # No plugins are set: just execute the method.
-            return method(**kwargs)
+        # Execute the method.
+        method(*args, **kwargs)
 
-        # Execute before_dispatch plugins.
-        for plugin in self.plugins:
-            hook = getattr(plugin, 'before_dispatch', None)
-            if hook:
-                rv = hook(self)
-                if rv is False:
-                    break
-        else:
-            # Execute the requested method.
-            method(**kwargs)
-
-        # Execute after_dispatch plugins.
-        for plugin in reversed(self.plugins):
-            hook = getattr(plugin, 'after_dispatch', None)
-            if hook:
-                rv = hook(self)
-                if rv is False:
-                    break
-
-    def error(self, code, *args, **kwargs):
-        """Raises an :class:`HTTPError`.
+    def error(self, code):
+        """Clears the response output stream and sets the given HTTP error
+        code. This doesn't stop code execution; the response is still
+        available to be filled.
 
         :param code:
             HTTP status error code (e.g., 501).
         """
-        raise HTTPError(code, *args, **kwargs)
+        self.response.set_status(code)
+        self.response.clear()
+
+    def abort(self, code, *args, **kwargs):
+        """Raises an :class:`webob.exc.HTTPException`. This stops code
+        execution, leaving the HTTP exception to be handled by an exception
+        handler.
+
+        :param code:
+            HTTP status error code (e.g., 404).
+        :param args:
+            Positional arguments to be passed to the exception class.
+        :param kwargs:
+            Keyword arguments to be passed to the exception class.
+        """
+        abort(code, *args, **kwargs)
 
     def redirect(self, uri, permanent=False):
         """Issues an HTTP redirect to the given relative URL.
@@ -368,38 +356,40 @@ class WSGIApplication(object):
         try:
             if method not in _ALLOWED_METHODS:
                 # 501 Not Implemented.
-                raise HTTPError(501)
+                abort(501)
 
-            handler_class, kwargs = self.match_route(request)
+            handler_class, args, kwargs = self.match_route(request)
 
             if handler_class:
                 handler = handler_class(self, request, response)
                 try:
-                    handler.dispatch(method, **kwargs)
+                    handler(method, *args, **kwargs)
                 except Exception, e:
                     # If the handler implements exception handling,
                     # let it handle it.
                     handler.handle_exception(e, self.debug)
             else:
                 # 404 Not Found.
-                raise HTTPError(404)
+                abort(404)
         except Exception, e:
             try:
                 self.handle_exception(request, response, e)
+            except webob.exc.WSGIHTTPException, e:
+                # Use the exception as response.
+                response = e
             except Exception, e:
                 # Our last chance to handle the error.
                 if self.debug:
                     raise
 
-                # 500 Internal Server Error.
-                response.set_status(500)
-                response.clear()
+                # 500 Internal Server Error: nothing else to do.
+                response = webob.exc.HTTPInternalServerError()
 
         return response(environ, start_response)
 
     def handle_exception(self, request, response, e):
         """Handles an exception. Searches :attr:`error_handlers` for a handler
-        with the correspondent status code, if it is an :class:`HTTPError`,
+        with the eerror code, if it is a :class:`webob.exc.HTTPException`,
         or the 500 status code as fall back. Dispatches the handler if found,
         otherwise simply sets the error code in the response.
 
@@ -414,17 +404,18 @@ class WSGIApplication(object):
         if self.debug:
             raise
 
-        if isinstance(e, HTTPError):
+        if isinstance(e, webob.exc.HTTPException):
             code = e.code
         else:
             code = 500
 
         handler = self.error_handlers.get(code, self.error_handlers.get(500))
         if handler:
-            handler(self, request, response).dispatch('get', exception=e)
+            # Handle the exception using a custom handler.
+            handler(self, request, response)('get', exception=e)
         else:
-            response.set_status(code)
-            response.clear()
+            # No exception handler. Catch it in the WSGI app.
+            raise
 
     def set_router(self, url_map):
         """Sets a :class:`Router` instance for the given url_map.
@@ -454,13 +445,13 @@ class WSGIApplication(object):
         :param request:
             A ``webapp.Request`` instance.
         :returns:
-            A tuple (handler_class, kwargs) for the matched route.
+            A tuple (handler_class, args, kwargs) for the matched route.
         """
         match = self.router.match(request)
         request.url_route = match
         request.url_for = self.router.build
         if not match:
-            return (None, None)
+            return (None, None, None)
 
         route, kwargs = match
         handler_class = route.handler
@@ -472,7 +463,7 @@ class WSGIApplication(object):
 
             handler_class = _HANDLERS[handler_class]
 
-        return handler_class, kwargs
+        return handler_class, (), kwargs
 
     def get_config(self, module, key=None, default=DEFAULT_VALUE):
         """Returns a configuration value for a module. If it is not already
@@ -512,23 +503,6 @@ class WSGIApplication(object):
         else:
             raise KeyError('Module %s requires the config key "%s" to be '
                 'set.' % (module, key))
-
-
-class HTTPError(Exception):
-    """An HTTP exception."""
-    def __init__(self, code, message=None, *args):
-        self.code = code
-        self.message = message
-        self.args = args
-
-    def __str__(self):
-        message = 'HTTP %d: %s' % (self.code,
-            Response.http_status_message(self.code))
-
-        if self.message:
-            message += ' (%s)' % (self.message % self.args,)
-
-        return message
 
 
 class Route(object):
@@ -866,6 +840,44 @@ class Config(dict):
         return self[module][key]
 
 
+def abort(code, *args, **kwargs):
+    """Raises a ``webob.exc.HTTPException``. The exception is instantiated
+    passing *args* and *kwargs*.
+
+    :param code:
+        A valid HTTP error code.
+    :param args:
+        Arguments to be used to instantiate the exception.
+    :param kwargs:
+        Keyword arguments to be used to instantiate the exception.
+    """
+    cls = get_exception_class(code) or get_exception_class(500)
+    raise cls(*args, **kwargs)
+
+
+def get_valid_methods(handler):
+    """Returns a list of HTTP methods supported by a handler.
+
+    :param handler:
+        A :class:`RequestHandler` class or instance.
+    :returns:
+        A list of HTTP methods supported by the handler.
+    """
+    return [m.upper() for m in _ALLOWED_METHODS if getattr(handler, m, None)]
+
+
+def get_exception_class(code):
+    """Returns an exception class from ``webob.exc.status_map``, a dictionary
+    mapping status codes to subclasses of ``webob.exc.HTTPException``.
+
+    :param code:
+        A valid HTTP error code.
+    :returns:
+        A ``webob.exc.HTTPException`` class.
+    """
+    return webob.exc.status_map.get(code)
+
+
 def import_string(import_name, silent=False):
     """Imports an object based on a string. If `silent` is True the return
     value will be `None` if the import fails.
@@ -877,7 +889,7 @@ def import_string(import_name, silent=False):
         The dotted name for the object to import.
     :param silent:
         If True, import errors are ignored and None is returned instead.
-    :return:
+    :returns:
         The imported object.
     """
     import_name = to_utf8(import_name)
