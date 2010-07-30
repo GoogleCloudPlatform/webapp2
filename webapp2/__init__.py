@@ -366,6 +366,8 @@ class WSGIApplication(object):
         Then you still have the original application object around and
         can continue to call methods on it.
 
+        This idea comes from `Flask <http://flask.pocoo.org/>`_
+
         :param environ:
             A WSGI environment.
         :param start_response:
@@ -391,7 +393,11 @@ class WSGIApplication(object):
             else:
                 raise HTTPError(404)
         except Exception, e:
-            self.handle_exception(request, response, e)
+            try:
+                self.handle_exception(request, response, e)
+            except Exception, e:
+                # Our last chance to handle the error.
+                response.error(500)
 
         return response(environ, start_response)
 

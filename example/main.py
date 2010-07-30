@@ -24,7 +24,7 @@ app = WSGIApplication([
     ('/lazy',         'handlers.LazyHandler', 'lazy'),
     ('/redirect-me',  RedirectHandler,        'legacy', {'url': '/lazy'}),
     ('/redirect-me2', RedirectHandler,        'legacy', {'url': get_redirect_url}),
-], debug=True)
+], debug=False)
 
 
 def real_main():
