@@ -179,12 +179,12 @@ class RequestHandler(object):
         self.response.headers['Location'] = str(absolute_url)
         self.response.clear()
 
-    def redirect_to(self, name, _secure=False, _anchor=None, _permanent=False,
-        **kwargs):
+    def redirect_to(self, _route_name, _secure=False, _anchor=None,
+        _permanent=False, **kwargs):
         """Convenience method mixing :meth:`redirect` and :meth:`url_for`:
         Issues an HTTP redirect to a named URL build using :meth:`url_for`.
 
-        :param name:
+        :param _route_name:
             The route name to redirect to.
         :param _secure:
             If True, redirects to a URL using `https` scheme.
@@ -195,11 +195,11 @@ class RequestHandler(object):
         :param kwargs:
             Keyword arguments to build the URL.
         """
-        uri = self.url_for(name, _full=_full, _secure=_secure, _anchor=_anchor,
-            **kwargs)
+        uri = self.url_for(_route_name, _full=_full, _secure=_secure,
+            _anchor=_anchor, **kwargs)
         self.redirect(uri, permanent=_permanent)
 
-    def url_for(self, _name, _full=False, _secure=False, _anchor=None,
+    def url_for(self, _route_name, _full=False, _secure=False, _anchor=None,
         **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
@@ -223,7 +223,7 @@ class RequestHandler(object):
         >>> url = self.url_for('wiki/start', _full=True, _anchor='my-heading')
         http://localhost:8080/wiki#my-heading
 
-        :param _name:
+        :param _route_name:
             The route name.
         :param _full:
             If True, returns an absolute URL. Otherwise returns a relative one.
@@ -236,7 +236,7 @@ class RequestHandler(object):
         :returns:
             An absolute or relative URL.
         """
-        url = self.request.url_for(_name, **kwargs)
+        url = self.request.url_for(_route_name, **kwargs)
 
         if _full or _secure:
             scheme = 'http'
@@ -635,7 +635,7 @@ class Router(object):
         self.routes = []
         self.route_names = {}
 
-    def add(self, path, handler, _name=None, **kwargs):
+    def add(self, path, handler, _route_name=None, **kwargs):
         """Adds a route to this router.
 
         :param path:
@@ -643,13 +643,13 @@ class Router(object):
         :param handler:
             A :class:`RequestHandler` class to be executed when this route
             matches.
-        :param _name:
+        :param _route_name:
             The route name.
         """
         route = Route(path, handler, **kwargs)
         self.routes.append(route)
-        if _name:
-            self.route_names[_name] = route
+        if _route_name:
+            self.route_names[_route_name] = route
 
     def match(self, request):
         """Matches all routes against the current request. The first one that
@@ -665,10 +665,10 @@ class Router(object):
             if match:
                 return match
 
-    def build(self, _name, **kwargs):
+    def build(self, _route_name, **kwargs):
         """Builds a URL for a named :class:`Route`.
 
-        :param _name:
+        :param _route_name:
             The route name, as registered in :meth:`add`.
         :param kwargs:
             Keyword arguments to build the URL. All route variables that are
@@ -678,9 +678,9 @@ class Router(object):
         :returns:
             A formatted URL.
         """
-        route = self.route_names.get(_name, None)
+        route = self.route_names.get(_route_name, None)
         if not route:
-            raise KeyError('Route "%s" is not defined.' % _name)
+            raise KeyError('Route "%s" is not defined.' % _route_name)
 
         return route.build(**kwargs)
 
