@@ -302,15 +302,6 @@ class RedirectHandler(RequestHandler):
         self.redirect(url, permanent=kwargs.get('permanent', True))
 
 
-class ErrorHandler(RequestHandler):
-    """Default error handler."""
-    def get(self, exception=None):
-        if isinstance(exception, HTTPError):
-            return self.error(exception.code)
-
-        self.error(500)
-
-
 class WSGIApplication(object):
     """Wraps a set of webapp RequestHandlers in a WSGI-compatible application.
 
@@ -324,6 +315,10 @@ class WSGIApplication(object):
     request_class = Request
     #: Default class used for the response object.
     response_class = Response
+    #: A dictionary mapping HTTP error codes to :class:`RequestHandler`
+    #: classes used to handle them. The handler set for status 500 is used
+    #: as default if others are not set.
+    error_handlers = {}
 
     def __init__(self, url_map, debug=False, config=None):
         """Initializes the WSGI application.
@@ -338,9 +333,6 @@ class WSGIApplication(object):
         self.set_router(url_map)
         self.debug = debug
         self.config = Config(config)
-        # A dictionary mapping HTTP error codes to the :class:`RequestHandler`
-        # classes used to handle them, using :class:`ErrorHandler` by default.
-        self.error_handlers = {}
 
     def __call__(self, environ, start_response):
         """Called by WSGI when a request comes in. Calls :meth:`wsgi_app`."""
@@ -399,17 +391,17 @@ class WSGIApplication(object):
         return response(environ, start_response)
 
     def handle_exception(self, request, response, e):
-        """Handles a raised exception. If it is an :class:`HTTPError`,
-        searches in :attr:`error_handlers` for a handler to handle the
-        correspondent status code. Otherwise, handles it with
-        :class:`ErrorHandler`.
+        """Handles an exception. Searches :attr:`error_handlers` for a handler
+        with the correspondent status code, if it is an :class:`HTTPError`,
+        or the 500 status code as fall back. Dispatches the handler if found,
+        otherwise simply sets the error code in the response.
 
         :param request:
             A ``webapp.Request`` instance.
         :param response:
             A :class:`Response` instance.
         :param e:
-            The raised ``Exception``.
+            The raised exception.
         """
         logging.exception(e)
         if self.debug:
@@ -420,8 +412,11 @@ class WSGIApplication(object):
         else:
             code = 500
 
-        handler = self.error_handlers.get(code, ErrorHandler)
-        handler(self, request, response).dispatch('get', exception=e)
+        handler = self.error_handlers.get(code, self.error_handlers.get(500))
+        if handler:
+            handler(self, request, response).dispatch('get', exception=e)
+        else:
+            response.error(code)
 
     def set_router(self, url_map):
         """Sets a :class:`Router` instance for the given url_map.
@@ -631,6 +626,11 @@ class Route(object):
             values[name] = value
 
         url = self.template % values
+
+        # Cleanup and encode extra kwargs.
+        kwargs = [(to_utf8(k), to_utf8(v)) for k, v in kwargs.iteritems() \
+            if isinstance(v, basestring)]
+
         if kwargs:
             # Append extra keywords as URL arguments.
             url += '?%s' % urllib.urlencode(kwargs)

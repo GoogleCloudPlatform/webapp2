@@ -2,7 +2,14 @@ TODO
 ----
 - Easy unit testing
 - 100% test coverage
-
+- Docs:
+  - WSGIApplication
+  - URL routing
+  - RequestHandler
+  - Request
+  - Response
+  - Exception handling
+  - Configuration system
 
 DONE
 ----
