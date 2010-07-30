@@ -386,7 +386,8 @@ class WSGIApplication(object):
                 if self.debug:
                     raise
 
-                response.error(500)
+                response.set_status(500)
+                response.clear()
 
         return response(environ, start_response)
 
@@ -416,7 +417,8 @@ class WSGIApplication(object):
         if handler:
             handler(self, request, response).dispatch('get', exception=e)
         else:
-            response.error(code)
+            response.set_status(code)
+            response.clear()
 
     def set_router(self, url_map):
         """Sets a :class:`Router` instance for the given url_map.
