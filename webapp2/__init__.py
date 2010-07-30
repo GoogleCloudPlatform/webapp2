@@ -10,6 +10,7 @@
 """
 import logging
 import re
+import sys
 import urllib
 import urlparse
 
@@ -136,6 +137,10 @@ class RequestHandler(object):
         """
         method = getattr(self, _method_name, None)
         if method is None:
+            # 405 Method Not Allowed.
+            # TODO: The response MUST include an Allow header containing a
+            # list of valid methods for the requested resource.
+            # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6
             return self.error(405)
 
         if not self.plugins:
@@ -161,15 +166,13 @@ class RequestHandler(object):
                 if rv is False:
                     break
 
-    def error(self, code):
-        """Clears the response output stream and sets the given HTTP error
-        code.
+    def error(self, code, *args, **kwargs):
+        """Raises an :class:`HTTPError`.
 
         :param code:
             HTTP status error code (e.g., 501).
         """
-        self.response.set_status(code)
-        self.response.clear()
+        raise HTTPError(code, *args, **kwargs)
 
     def redirect(self, uri, permanent=False):
         """Issues an HTTP redirect to the given relative URL.
@@ -268,17 +271,15 @@ class RequestHandler(object):
     def handle_exception(self, exception, debug_mode):
         """Called if this handler throws an exception during execution.
 
-        The default behavior is to call self.error(500) and print a stack
-        trace if debug_mode is True.
+        The default behavior is to raise the exception to be handled by
+        :meth:`WSGIApplication.handle_exception`.
 
         :param exception:
             The exception that was thrown.
         :debug_mode:
             True if the web application is running in debug mode.
         """
-        self.error(500)
-        logging.exception(exception)
-        if debug_mode:
+        if sys.exc_info()[0]:
             raise
 
 
@@ -366,7 +367,8 @@ class WSGIApplication(object):
 
         try:
             if method not in _ALLOWED_METHODS:
-                raise HTTPError(405)
+                # 501 Not Implemented.
+                raise HTTPError(501)
 
             handler_class, kwargs = self.match_route(request)
 
@@ -375,8 +377,11 @@ class WSGIApplication(object):
                 try:
                     handler.dispatch(method, **kwargs)
                 except Exception, e:
+                    # If the handler implements exception handling,
+                    # let it handle it.
                     handler.handle_exception(e, self.debug)
             else:
+                # 404 Not Found.
                 raise HTTPError(404)
         except Exception, e:
             try:
@@ -386,6 +391,7 @@ class WSGIApplication(object):
                 if self.debug:
                     raise
 
+                # 500 Internal Server Error.
                 response.set_status(500)
                 response.clear()
 
@@ -715,7 +721,7 @@ class LazyObject(object):
 
         :param import_name:
             The dotted name for the object to import, e.g.,
-            ``'my.module.MyClass``.
+            ``my.module.MyClass``.
         """
         self.import_name = import_name
         self.obj = None

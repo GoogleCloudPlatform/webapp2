@@ -38,10 +38,6 @@ class BrokenHandler(RequestHandler):
     def get(self, **kwargs):
         raise ValueError('booo!')
 
-    def handle_exception(self, e, debug):
-        # This is really broken.
-        raise
-
 
 class BrokenButFixedHandler(BrokenHandler):
     def handle_exception(self, exception, debug_mode):
@@ -58,7 +54,7 @@ class Handle404(RequestHandler):
 
 class Handle405(RequestHandler):
     def get(self, **kwargs):
-        #self.response.out.write('405 custom handler')
+        self.response.out.write('405 custom handler')
         self.response.set_status(405)
 
 
@@ -122,10 +118,9 @@ class TestHandler(unittest.TestCase):
         self.assertEqual(res.status, '404 Not Found')
         self.assertEqual(res.body, '404 custom handler')
 
-        res = test_app.put('/broken', status=405)
+        res = test_app.put('/', status=405)
         self.assertEqual(res.status, '405 Method Not Allowed')
-        # body can't be set for 405?
-        #self.assertEqual(res.body, '405 custom handler')
+        self.assertEqual(res.body, '405 custom handler')
 
         res = test_app.get('/broken', status=500)
         self.assertEqual(res.status, '500 Internal Server Error')

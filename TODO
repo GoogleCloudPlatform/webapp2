@@ -10,6 +10,11 @@ TODO
   - Response
   - Exception handling
   - Configuration system
+- Nick Johnson's ideas:
+  - use RequestHandler.__call__() instead of RequestHandler.dispatch().
+  - allow positional arguments passed to RequestHandler methods for better
+    compatibility with webapp.
+
 
 DONE
 ----
