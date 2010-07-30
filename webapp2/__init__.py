@@ -357,7 +357,7 @@ class WSGIApplication(object):
         try:
             if method not in _ALLOWED_METHODS:
                 # 501 Not Implemented.
-                abort(501)
+                raise webob.exc.HTTPNotImplemented()
 
             handler_class, args, kwargs = self.match_route(request)
 
@@ -371,7 +371,7 @@ class WSGIApplication(object):
                     handler.handle_exception(e, self.debug)
             else:
                 # 404 Not Found.
-                abort(404)
+                raise webob.exc.HTTPNotFound()
         except Exception, e:
             try:
                 self.handle_exception(request, response, e)
