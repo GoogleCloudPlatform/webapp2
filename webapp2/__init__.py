@@ -10,17 +10,17 @@
 """
 import logging
 import re
-import sys
 import urllib
 import urlparse
 
 from google.appengine.ext.webapp import Request
-from google.appengine.ext.webapp.util import run_wsgi_app, run_bare_wsgi_app
-
-from django.utils import simplejson
+from google.appengine.ext.webapp.util import run_bare_wsgi_app, run_wsgi_app
 
 import webob
 import webob.exc
+
+#: Base HTTP exception, set here as public interface.
+HTTPException = webob.exc.HTTPException
 
 #: Allowed request methods.
 _ALLOWED_METHODS = frozenset(['get', 'post', 'head', 'options', 'put',
@@ -149,9 +149,8 @@ class RequestHandler(object):
         self.response.clear()
 
     def abort(self, code, *args, **kwargs):
-        """Raises an :class:`webob.exc.HTTPException`. This stops code
-        execution, leaving the HTTP exception to be handled by an exception
-        handler.
+        """Raises an :class:`HTTPException`. This stops code execution,
+        leaving the HTTP exception to be handled by an exception handler.
 
         :param code:
             HTTP status error code (e.g., 404).
@@ -268,8 +267,7 @@ class RequestHandler(object):
         :debug_mode:
             True if the web application is running in debug mode.
         """
-        if sys.exc_info()[0]:
-            raise
+        raise
 
 
 class RedirectHandler(RequestHandler):
@@ -390,9 +388,9 @@ class WSGIApplication(object):
 
     def handle_exception(self, request, response, e):
         """Handles an exception. Searches :attr:`error_handlers` for a handler
-        with the eerror code, if it is a :class:`webob.exc.HTTPException`,
-        or the 500 status code as fall back. Dispatches the handler if found,
-        otherwise simply sets the error code in the response.
+        with the eerror code, if it is a :class:`HTTPException`, or the 500
+        status code as fall back. Dispatches the handler if found, otherwise
+        simply sets the error code in the response.
 
         :param request:
             A ``webapp.Request`` instance.
@@ -405,7 +403,7 @@ class WSGIApplication(object):
         if self.debug:
             raise
 
-        if isinstance(e, webob.exc.HTTPException):
+        if isinstance(e, HTTPException):
             code = e.code
         else:
             code = 500
@@ -506,6 +504,70 @@ class WSGIApplication(object):
                 'set.' % (module, key))
 
 
+class Router(object):
+    """A simple URL router. This is used to match the current URL and build
+    URLs for other resources.
+
+    This router doesn't intend to do fancy things such as automatic URL
+    redirect or subdomain matching. It should stay as simple as possible.
+
+    Based on `Another Do-It-Yourself Framework`_ by Ian Bicking. We added
+    URL building and separate :class:`Route` objects.
+    """
+    def __init__(self):
+        self.routes = []
+        self.route_names = {}
+
+    def add(self, path, handler, _route_name=None, **kwargs):
+        """Adds a route to this router.
+
+        :param path:
+            The route path. See :meth:`Route.__init__`.
+        :param handler:
+            A :class:`RequestHandler` class to be executed when this route
+            matches.
+        :param _route_name:
+            The route name.
+        """
+        route = Route(path, handler, **kwargs)
+        self.routes.append(route)
+        if _route_name:
+            self.route_names[_route_name] = route
+
+    def match(self, request):
+        """Matches all routes against the current request. The first one that
+        matches is returned.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :returns:
+            A tuple (route, route_values), including the default values.
+        """
+        for route in self.routes:
+            match = route.match(request)
+            if match:
+                return match
+
+    def build(self, _route_name, **kwargs):
+        """Builds a URL for a named :class:`Route`.
+
+        :param _route_name:
+            The route name, as registered in :meth:`add`.
+        :param kwargs:
+            Keyword arguments to build the URL. All route variables that are
+            not set as defaults must be passed, and they must conform to the
+            format set in the route. Extra keywords are appended as URL
+            arguments.
+        :returns:
+            A formatted URL.
+        """
+        route = self.route_names.get(_route_name, None)
+        if not route:
+            raise KeyError('Route "%s" is not defined.' % _route_name)
+
+        return route.build(**kwargs)
+
+
 class Route(object):
     """A URL route definition."""
     def __init__(self, path, handler, **defaults):
@@ -575,10 +637,10 @@ class Route(object):
         >>> route = Route('/blog', BlogHandler)
         >>> route.build()
         /blog
-        >>> Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
+        >>> route = Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
         >>> route.build(year=2010)
         /blog/2010
-        >>> Route('/blog/archive/{year:\d\d\d\d}/{month:\d\d}/{slug}', BlogItemHandler)
+        >>> route = Route('/blog/archive/{year:\d\d\d\d}/{month:\d\d}/{slug}', BlogItemHandler)
         >>> route.build(year='2010', month='07', slug='my-blog-post')
         /blog/2010/07/my-blog-post
 
@@ -619,93 +681,6 @@ class Route(object):
             url += '?%s' % urllib.urlencode(kwargs)
 
         return url
-
-
-class Router(object):
-    """A simple URL router. This is used to match the current URL and build
-    URLs for other resources.
-
-    This router doesn't intend to do fancy things such as automatic URL
-    redirect or subdomain matching. It should stay as simple as possible.
-
-    Based on `Another Do-It-Yourself Framework`_ by Ian Bicking. We added
-    URL building and separate :class:`Route` objects.
-    """
-    def __init__(self):
-        self.routes = []
-        self.route_names = {}
-
-    def add(self, path, handler, _route_name=None, **kwargs):
-        """Adds a route to this router.
-
-        :param path:
-            The route path. See :meth:`Route.__init__`.
-        :param handler:
-            A :class:`RequestHandler` class to be executed when this route
-            matches.
-        :param _route_name:
-            The route name.
-        """
-        route = Route(path, handler, **kwargs)
-        self.routes.append(route)
-        if _route_name:
-            self.route_names[_route_name] = route
-
-    def match(self, request):
-        """Matches all routes against the current request. The first one that
-        matches is returned.
-
-        :param request:
-            A ``webapp.Request`` instance.
-        :returns:
-            A tuple (route, route_values), including the default values.
-        """
-        for route in self.routes:
-            match = route.match(request)
-            if match:
-                return match
-
-    def build(self, _route_name, **kwargs):
-        """Builds a URL for a named :class:`Route`.
-
-        :param _route_name:
-            The route name, as registered in :meth:`add`.
-        :param kwargs:
-            Keyword arguments to build the URL. All route variables that are
-            not set as defaults must be passed, and they must conform to the
-            format set in the route. Extra keywords are appended as URL
-            arguments.
-        :returns:
-            A formatted URL.
-        """
-        route = self.route_names.get(_route_name, None)
-        if not route:
-            raise KeyError('Route "%s" is not defined.' % _route_name)
-
-        return route.build(**kwargs)
-
-
-class LazyObject(object):
-    """An object that is only imported when called. Example::
-
-        handler_class = LazyObject('my.module.MyHandler')
-        handler = handler_class(app, request, response)
-    """
-    def __init__(self, import_name):
-        """Initializes a lazy object.
-
-        :param import_name:
-            The dotted name for the object to import, e.g.,
-            ``my.module.MyClass``.
-        """
-        self.import_name = import_name
-        self.obj = None
-
-    def __call__(self, *args, **kwargs):
-        if self.obj is None:
-            self.obj = import_string(self.import_name)
-
-        return self.obj(*args, **kwargs)
 
 
 class Config(dict):
@@ -842,30 +817,19 @@ class Config(dict):
 
 
 def abort(code, *args, **kwargs):
-    """Raises a ``webob.exc.HTTPException``. The exception is instantiated
-    passing *args* and *kwargs*.
+    """Raises a ``HTTPException``. The exception is instantiated passing
+    *args* and *kwargs*.
 
     :param code:
-        A valid HTTP error code.
+        A valid HTTP error code from ``webob.exc.status_map``, a dictionary
+        mapping status codes to subclasses of ``HTTPException``.
     :param args:
         Arguments to be used to instantiate the exception.
     :param kwargs:
         Keyword arguments to be used to instantiate the exception.
     """
-    cls = get_exception_class(code) or get_exception_class(500)
+    cls = webob.exc.status_map.get(code) or webob.exc.status_map.get(500)
     raise cls(*args, **kwargs)
-
-
-def get_exception_class(code):
-    """Returns an exception class from ``webob.exc.status_map``, a dictionary
-    mapping status codes to subclasses of ``webob.exc.HTTPException``.
-
-    :param code:
-        A valid HTTP error code.
-    :returns:
-        A ``webob.exc.HTTPException`` class.
-    """
-    return webob.exc.status_map.get(code)
 
 
 def get_valid_methods(handler):
@@ -904,38 +868,6 @@ def import_string(import_name, silent=False):
     except (ImportError, AttributeError):
         if not silent:
             raise
-
-
-def json_encode(value):
-    """JSON-encodes the given Python object.
-
-    This function comes from `Tornado`_.
-
-    :param value:
-        Value to be JSON-encoded.
-    :returns:
-        A JSON string.
-    """
-    # JSON permits but does not require forward slashes to be escaped.
-    # This is useful when json data is emitted in a <script> tag
-    # in HTML, as it prevents </script> tags from prematurely terminating
-    # the javscript.  Some json libraries do this escaping by default,
-    # although python's standard library does not, so we do it here.
-    # http://stackoverflow.com/questions/1580647/json-why-are-forward-slashes-escaped
-    return simplejson.dumps(value).replace("</", "<\\/")
-
-
-def json_decode(value):
-    """Returns Python objects for the given JSON string.
-
-    This function comes from `Tornado`_.
-
-    :param value:
-        Value to be JSON-decoded.
-    :returns:
-        A decoded object.
-    """
-    return simplejson.loads(to_unicode(value))
 
 
 def url_escape(value):

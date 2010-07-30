@@ -37,39 +37,37 @@ class MethodsHandler(HomeHandler):
 
 class UrlForHandler(RequestHandler):
     def get(self, **kwargs):
-        urls = [
-            self.url_for('home'),
-            self.url_for('home', foo='bar'),
-            self.url_for('home', _anchor='my-anchor', foo='bar'),
-            self.url_for('home', _anchor='my-anchor'),
-            self.url_for('home', _full=True),
-            self.url_for('home', _full=True, _anchor='my-anchor'),
-            self.url_for('home', _secure=True),
-            self.url_for('home', _secure=True, _full=False),
-            self.url_for('home', _secure=True, _anchor='my-anchor'),
+        assert self.url_for('home') == '/'
+        assert self.url_for('home', foo='bar') == '/?foo=bar'
+        assert self.url_for('home', _anchor='my-anchor', foo='bar') == '/?foo=bar#my-anchor'
+        assert self.url_for('home', _anchor='my-anchor') == '/#my-anchor'
+        assert self.url_for('home', _full=True) == 'http://localhost:80/'
+        assert self.url_for('home', _full=True, _anchor='my-anchor') == 'http://localhost:80/#my-anchor'
+        assert self.url_for('home', _secure=True) == 'https://localhost:80/'
+        assert self.url_for('home', _secure=True, _full=False) == 'https://localhost:80/'
+        assert self.url_for('home', _secure=True, _anchor='my-anchor') == 'https://localhost:80/#my-anchor'
 
-            self.url_for('methods'),
-            self.url_for('methods', foo='bar'),
-            self.url_for('methods', _anchor='my-anchor', foo='bar'),
-            self.url_for('methods', _anchor='my-anchor'),
-            self.url_for('methods', _full=True),
-            self.url_for('methods', _full=True, _anchor='my-anchor'),
-            self.url_for('methods', _secure=True),
-            self.url_for('methods', _secure=True, _full=False),
-            self.url_for('methods', _secure=True, _anchor='my-anchor'),
+        assert self.url_for('methods') == '/methods'
+        assert self.url_for('methods', foo='bar') == '/methods?foo=bar'
+        assert self.url_for('methods', _anchor='my-anchor', foo='bar') == '/methods?foo=bar#my-anchor'
+        assert self.url_for('methods', _anchor='my-anchor') == '/methods#my-anchor'
+        assert self.url_for('methods', _full=True) == 'http://localhost:80/methods'
+        assert self.url_for('methods', _full=True, _anchor='my-anchor') == 'http://localhost:80/methods#my-anchor'
+        assert self.url_for('methods', _secure=True) == 'https://localhost:80/methods'
+        assert self.url_for('methods', _secure=True, _full=False) == 'https://localhost:80/methods'
+        assert self.url_for('methods', _secure=True, _anchor='my-anchor') == 'https://localhost:80/methods#my-anchor'
 
-            self.url_for('route-test', year='2010', month='07', name='test'),
-            self.url_for('route-test', year='2010', month='07', name='test', foo='bar'),
-            self.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test', foo='bar'),
-            self.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test'),
-            self.url_for('route-test', _full=True, year='2010', month='07', name='test'),
-            self.url_for('route-test', _full=True, _anchor='my-anchor', year='2010', month='07', name='test'),
-            self.url_for('route-test', _secure=True, year='2010', month='07', name='test'),
-            self.url_for('route-test', _secure=True, _full=False, year='2010', month='07', name='test'),
-            self.url_for('route-test', _secure=True, _anchor='my-anchor', year='2010', month='07', name='test'),
-        ]
+        assert self.url_for('route-test', year='2010', month='07', name='test') == '/2010/07/test'
+        assert self.url_for('route-test', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar'
+        assert self.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar#my-anchor'
+        assert self.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test') == '/2010/07/test#my-anchor'
+        assert self.url_for('route-test', _full=True, year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test'
+        assert self.url_for('route-test', _full=True, _anchor='my-anchor', year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test#my-anchor'
+        assert self.url_for('route-test', _secure=True, year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
+        assert self.url_for('route-test', _secure=True, _full=False, year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
+        assert self.url_for('route-test', _secure=True, _anchor='my-anchor', year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test#my-anchor'
 
-        self.response.out.write('\n'.join(urls))
+        self.response.out.write('OK')
 
 
 class BrokenHandler(RequestHandler):
@@ -181,37 +179,9 @@ class TestHandler(unittest.TestCase):
         self.assertEqual(res.body, 'home sweet home - DELETE')
 
     def test_url_for(self):
-        expected = """
-/
-/?foo=bar
-/?foo=bar#my-anchor
-/#my-anchor
-http://localhost:80/
-http://localhost:80/#my-anchor
-https://localhost:80/
-https://localhost:80/
-https://localhost:80/#my-anchor
-/methods
-/methods?foo=bar
-/methods?foo=bar#my-anchor
-/methods#my-anchor
-http://localhost:80/methods
-http://localhost:80/methods#my-anchor
-https://localhost:80/methods
-https://localhost:80/methods
-https://localhost:80/methods#my-anchor
-/2010/07/test
-/2010/07/test?foo=bar
-/2010/07/test?foo=bar#my-anchor
-/2010/07/test#my-anchor
-http://localhost:80/2010/07/test
-http://localhost:80/2010/07/test#my-anchor
-https://localhost:80/2010/07/test
-https://localhost:80/2010/07/test
-https://localhost:80/2010/07/test#my-anchor
-"""
         res = test_app.get('/url-for')
-        self.assertEqual(res.body.splitlines(), expected.strip().splitlines())
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'OK')
 
 
 class TestHandlerHelpers(unittest.TestCase):

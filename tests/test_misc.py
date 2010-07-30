@@ -9,50 +9,11 @@ from webtest import TestApp
 import webob
 import webob.exc
 
-from webapp2 import RedirectHandler, RequestHandler, WSGIApplication, abort, get_exception_class, import_string
+from webapp2 import (RedirectHandler, RequestHandler, WSGIApplication, abort,
+    import_string)
 
 
-class TestMiscelaneous(unittest.TestCase):
-    def test_get_exception_class(self):
-        self.assertEqual(get_exception_class(200), webob.exc.HTTPOk)
-        self.assertEqual(get_exception_class(201), webob.exc.HTTPCreated)
-        self.assertEqual(get_exception_class(202), webob.exc.HTTPAccepted)
-        self.assertEqual(get_exception_class(203), webob.exc.HTTPNonAuthoritativeInformation)
-        self.assertEqual(get_exception_class(204), webob.exc.HTTPNoContent)
-        self.assertEqual(get_exception_class(205), webob.exc.HTTPResetContent)
-        self.assertEqual(get_exception_class(206), webob.exc.HTTPPartialContent)
-        self.assertEqual(get_exception_class(300), webob.exc.HTTPMultipleChoices)
-        self.assertEqual(get_exception_class(301), webob.exc.HTTPMovedPermanently)
-        self.assertEqual(get_exception_class(302), webob.exc.HTTPFound)
-        self.assertEqual(get_exception_class(303), webob.exc.HTTPSeeOther)
-        self.assertEqual(get_exception_class(304), webob.exc.HTTPNotModified)
-        self.assertEqual(get_exception_class(305), webob.exc.HTTPUseProxy)
-        self.assertEqual(get_exception_class(307), webob.exc.HTTPTemporaryRedirect)
-        self.assertEqual(get_exception_class(400), webob.exc.HTTPClientError)
-        self.assertEqual(get_exception_class(401), webob.exc.HTTPUnauthorized)
-        self.assertEqual(get_exception_class(402), webob.exc.HTTPPaymentRequired)
-        self.assertEqual(get_exception_class(403), webob.exc.HTTPForbidden)
-        self.assertEqual(get_exception_class(404), webob.exc.HTTPNotFound)
-        self.assertEqual(get_exception_class(405), webob.exc.HTTPMethodNotAllowed)
-        self.assertEqual(get_exception_class(406), webob.exc.HTTPNotAcceptable)
-        self.assertEqual(get_exception_class(407), webob.exc.HTTPProxyAuthenticationRequired)
-        self.assertEqual(get_exception_class(408), webob.exc.HTTPRequestTimeout)
-        self.assertEqual(get_exception_class(409), webob.exc.HTTPConflict)
-        self.assertEqual(get_exception_class(410), webob.exc.HTTPGone)
-        self.assertEqual(get_exception_class(411), webob.exc.HTTPLengthRequired)
-        self.assertEqual(get_exception_class(412), webob.exc.HTTPPreconditionFailed)
-        self.assertEqual(get_exception_class(413), webob.exc.HTTPRequestEntityTooLarge)
-        self.assertEqual(get_exception_class(414), webob.exc.HTTPRequestURITooLong)
-        self.assertEqual(get_exception_class(415), webob.exc.HTTPUnsupportedMediaType)
-        self.assertEqual(get_exception_class(416), webob.exc.HTTPRequestRangeNotSatisfiable)
-        self.assertEqual(get_exception_class(417), webob.exc.HTTPExpectationFailed)
-        self.assertEqual(get_exception_class(500), webob.exc.HTTPInternalServerError)
-        self.assertEqual(get_exception_class(501), webob.exc.HTTPNotImplemented)
-        self.assertEqual(get_exception_class(502), webob.exc.HTTPBadGateway)
-        self.assertEqual(get_exception_class(503), webob.exc.HTTPServiceUnavailable)
-        self.assertEqual(get_exception_class(504), webob.exc.HTTPGatewayTimeout)
-        self.assertEqual(get_exception_class(505), webob.exc.HTTPVersionNotSupported)
-
+class TestMiscellaneous(unittest.TestCase):
     def test_abort(self):
         self.assertRaises(webob.exc.HTTPOk, abort, 200)
         self.assertRaises(webob.exc.HTTPCreated, abort, 201)
