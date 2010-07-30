@@ -6,7 +6,8 @@ import unittest
 
 from webtest import TestApp
 
-from webapp2 import RedirectHandler, RequestHandler, WSGIApplication
+from webapp2 import (RedirectHandler, RequestHandler, WSGIApplication,
+    get_valid_methods)
 
 
 class HomeHandler(RequestHandler):
@@ -34,6 +35,43 @@ class MethodsHandler(HomeHandler):
         self.response.out.write('home sweet home - OPTIONS')
 
 
+class UrlForHandler(RequestHandler):
+    def get(self, **kwargs):
+        urls = [
+            self.url_for('home'),
+            self.url_for('home', foo='bar'),
+            self.url_for('home', _anchor='my-anchor', foo='bar'),
+            self.url_for('home', _anchor='my-anchor'),
+            self.url_for('home', _full=True),
+            self.url_for('home', _full=True, _anchor='my-anchor'),
+            self.url_for('home', _secure=True),
+            self.url_for('home', _secure=True, _full=False),
+            self.url_for('home', _secure=True, _anchor='my-anchor'),
+
+            self.url_for('methods'),
+            self.url_for('methods', foo='bar'),
+            self.url_for('methods', _anchor='my-anchor', foo='bar'),
+            self.url_for('methods', _anchor='my-anchor'),
+            self.url_for('methods', _full=True),
+            self.url_for('methods', _full=True, _anchor='my-anchor'),
+            self.url_for('methods', _secure=True),
+            self.url_for('methods', _secure=True, _full=False),
+            self.url_for('methods', _secure=True, _anchor='my-anchor'),
+
+            self.url_for('route-test', year='2010', month='07', name='test'),
+            self.url_for('route-test', year='2010', month='07', name='test', foo='bar'),
+            self.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test', foo='bar'),
+            self.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test'),
+            self.url_for('route-test', _full=True, year='2010', month='07', name='test'),
+            self.url_for('route-test', _full=True, _anchor='my-anchor', year='2010', month='07', name='test'),
+            self.url_for('route-test', _secure=True, year='2010', month='07', name='test'),
+            self.url_for('route-test', _secure=True, _full=False, year='2010', month='07', name='test'),
+            self.url_for('route-test', _secure=True, _anchor='my-anchor', year='2010', month='07', name='test'),
+        ]
+
+        self.response.out.write('\n'.join(urls))
+
+
 class BrokenHandler(RequestHandler):
     def get(self, **kwargs):
         raise ValueError('booo!')
@@ -55,7 +93,7 @@ class Handle404(RequestHandler):
 class Handle405(RequestHandler):
     def get(self, **kwargs):
         self.response.out.write('405 custom handler')
-        self.response.set_status(405)
+        self.response.set_status(405, 'Custom Error Message')
         self.response.headers['Allow'] = 'GET'
 
 
@@ -66,62 +104,57 @@ class Handle500(RequestHandler):
 
 
 app = WSGIApplication([
-    ('/', HomeHandler),
-    ('/methods', MethodsHandler),
-    ('/broken', BrokenHandler),
+    ('/',                 HomeHandler,            'home'),
+    ('/methods',          MethodsHandler,         'methods'),
+    ('/broken',           BrokenHandler),
     ('/broken-but-fixed', BrokenButFixedHandler),
+    ('/url-for',          UrlForHandler),
+    ('/{year:\d\d\d\d}/{month:\d\d}/{name}', None, 'route-test'),
 ], debug=False)
+
+test_app = TestApp(app)
 
 
 class TestHandler(unittest.TestCase):
+    def tearDown(self):
+        app.error_handlers = {}
+
     def test_200(self):
-        test_app = TestApp(app)
         res = test_app.get('/')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'home sweet home')
 
     def test_404(self):
-        test_app = TestApp(app)
         res = test_app.get('/nowhere', status=404)
         self.assertEqual(res.status, '404 Not Found')
 
     def test_405(self):
-        test_app = TestApp(app)
         res = test_app.put('/', status=405)
         self.assertEqual(res.status, '405 Method Not Allowed')
         self.assertEqual(res.headers.get('Allow'), 'GET, POST')
 
     def test_500(self):
-        test_app = TestApp(app)
         res = test_app.get('/broken', status=500)
         self.assertEqual(res.status, '500 Internal Server Error')
 
     def test_500_but_fixed(self):
-        test_app = TestApp(app)
         res = test_app.get('/broken-but-fixed')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'that was close!')
 
     def test_custom_error_handlers(self):
-        app = WSGIApplication([
-            ('/', HomeHandler),
-            ('/broken', BrokenHandler),
-        ], debug=False)
-
         app.error_handlers = {
             404: Handle404,
             405: Handle405,
             500: Handle500,
         }
 
-        test_app = TestApp(app)
-
         res = test_app.get('/nowhere', status=404)
         self.assertEqual(res.status, '404 Not Found')
         self.assertEqual(res.body, '404 custom handler')
 
         res = test_app.put('/', status=405)
-        self.assertEqual(res.status, '405 Method Not Allowed')
+        self.assertEqual(res.status, '405 Custom Error Message')
         self.assertEqual(res.body, '405 custom handler')
         self.assertEqual(res.headers.get('Allow'), 'GET')
 
@@ -131,8 +164,6 @@ class TestHandler(unittest.TestCase):
 
     def test_methods(self):
         """Can't test HEAD, OPTIONS and TRACE with webtest."""
-        test_app = TestApp(app)
-
         res = test_app.get('/methods')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'home sweet home')
@@ -148,3 +179,46 @@ class TestHandler(unittest.TestCase):
         res = test_app.delete('/methods')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'home sweet home - DELETE')
+
+    def test_url_for(self):
+        expected = """
+/
+/?foo=bar
+/?foo=bar#my-anchor
+/#my-anchor
+http://localhost:80/
+http://localhost:80/#my-anchor
+https://localhost:80/
+https://localhost:80/
+https://localhost:80/#my-anchor
+/methods
+/methods?foo=bar
+/methods?foo=bar#my-anchor
+/methods#my-anchor
+http://localhost:80/methods
+http://localhost:80/methods#my-anchor
+https://localhost:80/methods
+https://localhost:80/methods
+https://localhost:80/methods#my-anchor
+/2010/07/test
+/2010/07/test?foo=bar
+/2010/07/test?foo=bar#my-anchor
+/2010/07/test#my-anchor
+http://localhost:80/2010/07/test
+http://localhost:80/2010/07/test#my-anchor
+https://localhost:80/2010/07/test
+https://localhost:80/2010/07/test
+https://localhost:80/2010/07/test#my-anchor
+"""
+        res = test_app.get('/url-for')
+        self.assertEqual(res.body.splitlines(), expected.strip().splitlines())
+
+
+class TestHandlerHelpers(unittest.TestCase):
+    def test_get_valid_methods(self):
+        self.assertEqual(get_valid_methods(BrokenHandler).sort(),
+            ['GET'].sort())
+        self.assertEqual(get_valid_methods(HomeHandler).sort(),
+            ['GET', 'POST'].sort())
+        self.assertEqual(get_valid_methods(MethodsHandler).sort(),
+            ['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'TRACE'].sort())

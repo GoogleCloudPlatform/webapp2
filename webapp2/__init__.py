@@ -199,7 +199,8 @@ class RequestHandler(object):
             **kwargs)
         self.redirect(uri, permanent=_permanent)
 
-    def url_for(self, name, _full=False, _secure=False, _anchor=None, **kwargs):
+    def url_for(self, _name, _full=False, _secure=False, _anchor=None,
+        **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
         For example, if you have these routes registered in the application::
@@ -222,7 +223,7 @@ class RequestHandler(object):
         >>> url = self.url_for('wiki/start', _full=True, _anchor='my-heading')
         http://localhost:8080/wiki#my-heading
 
-        :param name:
+        :param _name:
             The route name.
         :param _full:
             If True, returns an absolute URL. Otherwise returns a relative one.
@@ -235,7 +236,7 @@ class RequestHandler(object):
         :returns:
             An absolute or relative URL.
         """
-        url = self.request.url_for(name, **kwargs)
+        url = self.request.url_for(_name, **kwargs)
 
         if _full or _secure:
             scheme = 'http'
@@ -664,10 +665,10 @@ class Router(object):
             if match:
                 return match
 
-    def build(self, name, **kwargs):
+    def build(self, _name, **kwargs):
         """Builds a URL for a named :class:`Route`.
 
-        :param name:
+        :param _name:
             The route name, as registered in :meth:`add`.
         :param kwargs:
             Keyword arguments to build the URL. All route variables that are
@@ -677,9 +678,9 @@ class Router(object):
         :returns:
             A formatted URL.
         """
-        route = self.route_names.get(name, None)
+        route = self.route_names.get(_name, None)
         if not route:
-            raise KeyError('Route "%s" is not defined.' % name)
+            raise KeyError('Route "%s" is not defined.' % _name)
 
         return route.build(**kwargs)
 
@@ -855,17 +856,6 @@ def abort(code, *args, **kwargs):
     raise cls(*args, **kwargs)
 
 
-def get_valid_methods(handler):
-    """Returns a list of HTTP methods supported by a handler.
-
-    :param handler:
-        A :class:`RequestHandler` class or instance.
-    :returns:
-        A list of HTTP methods supported by the handler.
-    """
-    return [m.upper() for m in _ALLOWED_METHODS if getattr(handler, m, None)]
-
-
 def get_exception_class(code):
     """Returns an exception class from ``webob.exc.status_map``, a dictionary
     mapping status codes to subclasses of ``webob.exc.HTTPException``.
@@ -876,6 +866,17 @@ def get_exception_class(code):
         A ``webob.exc.HTTPException`` class.
     """
     return webob.exc.status_map.get(code)
+
+
+def get_valid_methods(handler):
+    """Returns a list of HTTP methods supported by a handler.
+
+    :param handler:
+        A :class:`RequestHandler` instance.
+    :returns:
+        A list of HTTP methods supported by the handler.
+    """
+    return [m.upper() for m in _ALLOWED_METHODS if getattr(handler, m, None)]
 
 
 def import_string(import_name, silent=False):
