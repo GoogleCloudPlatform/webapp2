@@ -211,27 +211,25 @@ class RequestHandler(object):
     def url_for(self, name, _full=False, _secure=False, _anchor=None, **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
-        For example, if you have these routes registered in the application:
+        For example, if you have these routes registered in the application::
 
-        .. code-block:: python
-
-           app = WSGIApplication([
-               ('/',     'handlers.HomeHandler', 'home/main'),
-               ('/wiki', WikiHandler,            'wiki/start'),
-           ])
+            app = WSGIApplication([
+                ('/',     'handlers.HomeHandler', 'home/main'),
+                ('/wiki', WikiHandler,            'wiki/start'),
+            ])
 
         Here are some examples of how to generate URLs for them:
 
         >>> url = self.url_for('home/main')
-        >>> '/'
+        /
         >>> url = self.url_for('home/main', _full=True)
-        >>> 'http://localhost:8080/'
+        http://localhost:8080/
         >>> url = self.url_for('wiki/start')
-        >>> '/wiki'
+        /wiki
         >>> url = self.url_for('wiki/start', _full=True)
-        >>> 'http://localhost:8080/wiki'
+        http://localhost:8080/wiki
         >>> url = self.url_for('wiki/start', _full=True, _anchor='my-heading')
-        >>> 'http://localhost:8080/wiki#my-heading'
+        http://localhost:8080/wiki#my-heading
 
         :param name:
             The route name.
@@ -287,13 +285,11 @@ class RequestHandler(object):
 class RedirectHandler(RequestHandler):
     """Redirects to the given URL for all GET requests. This is meant to be
     used when defining URL routes. You must provide the keyword argument
-    *url* in the route. Example:
+    *url* in the route. Example::
 
-    .. code-block:: python
-
-       app = WSGIApplication([
-           ('/old-url', RedirectHandler, 'legacy-url', {'url': '/new-url'}),
-       ])
+        app = WSGIApplication([
+            ('/old-url', RedirectHandler, 'legacy-url', {'url': '/new-url'}),
+        ])
 
     Based on idea from `Tornado`_.
     """
@@ -347,15 +343,13 @@ class WSGIApplication(object):
         self.error_handlers = {}
 
     def __call__(self, environ, start_response):
-        """Called by WSGI when a request comes in. Calls
-        :meth:`WSGIApplication.wsgi_app`.
-        """
+        """Called by WSGI when a request comes in. Calls :meth:`wsgi_app`."""
         return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ, start_response):
         """This is the actual WSGI application.  This is not implemented in
-        :meth:`WSGIApplication.__call__` so that middlewares can be applied
-        without losing a reference to the class. So instead of doing this::
+        :meth:`__call__` so that middlewares can be applied without losing a
+        reference to the class. So instead of doing this::
 
             app = MyMiddleware(app)
 
@@ -366,7 +360,7 @@ class WSGIApplication(object):
         Then you still have the original application object around and
         can continue to call methods on it.
 
-        This idea comes from `Flask <http://flask.pocoo.org/>`_
+        This idea comes from `Flask <http://flask.pocoo.org/>`_.
 
         :param environ:
             A WSGI environment.
@@ -397,6 +391,9 @@ class WSGIApplication(object):
                 self.handle_exception(request, response, e)
             except Exception, e:
                 # Our last chance to handle the error.
+                if self.debug:
+                    raise
+
                 response.error(500)
 
         return response(environ, start_response)
@@ -466,6 +463,7 @@ class WSGIApplication(object):
         handler_class = route.handler
 
         if isinstance(handler_class, basestring):
+            # Lazy handler, set as a string. Import and store the class.
             if handler_class not in _HANDLERS:
                 _HANDLERS[handler_class] = import_string(handler_class)
 
@@ -538,11 +536,11 @@ class Route(object):
         :param path:
             A path to be matched. Paths can contain variables enclosed in
             curly braces and an optional regular expression to be evaluated.
-            Some examples:
+            Some examples::
 
-            >>> Route('/blog', BlogHandler)
-            >>> Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
-            >>> Route('/blog/archive/{year:\d\d\d\d}/{slug}', BlogItemHandler)
+                route = Route('/blog', BlogHandler)
+                route = Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
+                route = Route('/blog/archive/{year:\d\d\d\d}/{slug}', BlogItemHandler)
 
         :param handler:
             A :class:`RequestHandler` class to be executed when this route
@@ -598,13 +596,13 @@ class Route(object):
 
         >>> route = Route('/blog', BlogHandler)
         >>> route.build()
-        >>> /blog
+        /blog
         >>> Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
         >>> route.build(year=2010)
-        >>> /blog/2010
+        /blog/2010
         >>> Route('/blog/archive/{year:\d\d\d\d}/{month:\d\d}/{slug}', BlogItemHandler)
         >>> route.build(year='2010', month='07', slug='my-blog-post')
-        >>> /blog/2010/07/my-blog-post
+        /blog/2010/07/my-blog-post
 
         :param kwargs:
             Keyword arguments to build the URL. All route variables that are
@@ -705,12 +703,10 @@ class Router(object):
 
 
 class LazyObject(object):
-    """An object that is only imported when called.
+    """An object that is only imported when called. Example::
 
-    .. code-block:: python
-
-       handler_class = LazyObject('my.module.MyHandler')
-       handler = handler_class(app, request, response)
+        handler_class = LazyObject('my.module.MyHandler')
+        handler = handler_class(app, request, response)
     """
     def __init__(self, import_name):
         """Initializes a lazy object.
