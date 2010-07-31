@@ -175,12 +175,12 @@ class RequestHandler(object):
         self.response.headers['Location'] = str(absolute_url)
         self.response.clear()
 
-    def redirect_to(self, _route_name, _secure=False, _anchor=None,
+    def redirect_to(self, _name, _secure=False, _anchor=None,
         _permanent=False, **kwargs):
         """Convenience method mixing :meth:`redirect` and :meth:`url_for`:
         Issues an HTTP redirect to a named URL built using :meth:`url_for`.
 
-        :param _route_name:
+        :param _name:
             The route name to redirect to.
         :param _secure:
             If True, redirects to a URL using `https` scheme.
@@ -191,11 +191,11 @@ class RequestHandler(object):
         :param kwargs:
             Keyword arguments to build the URL.
         """
-        uri = self.url_for(_route_name, _secure=_secure, _anchor=_anchor,
+        uri = self.url_for(_name, _secure=_secure, _anchor=_anchor,
             **kwargs)
         self.redirect(uri, permanent=_permanent)
 
-    def url_for(self, _route_name, _full=False, _secure=False, _anchor=None,
+    def url_for(self, _name, _full=False, _secure=False, _anchor=None,
         **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
@@ -222,7 +222,7 @@ class RequestHandler(object):
         >>> url = self.url_for('wiki/page', page='my-first-page')
         /wiki/my-first-page
 
-        :param _route_name:
+        :param _name:
             The route name.
         :param _full:
             If True, returns an absolute URL. Otherwise returns a relative one.
@@ -235,7 +235,7 @@ class RequestHandler(object):
         :returns:
             An absolute or relative URL.
         """
-        url = self.request.url_for(_route_name, **kwargs)
+        url = self.request.url_for(_name, **kwargs)
 
         if _full or _secure:
             scheme = 'http'
@@ -576,21 +576,21 @@ class Router(object):
         self.routes = []
         self.route_names = {}
 
-    def add(self, path, handler, _route_name=None, **kwargs):
+    def add(self, _path, _handler, _name=None, **kwargs):
         """Adds a route to this router.
 
-        :param path:
+        :param _path:
             The route path. See :meth:`Route.__init__`.
-        :param handler:
+        :param _handler:
             A :class:`RequestHandler` class to be executed when this route
             matches.
-        :param _route_name:
+        :param _name:
             The route name.
         """
-        route = Route(path, handler, **kwargs)
+        route = Route(_path, _handler, **kwargs)
         self.routes.append(route)
-        if _route_name:
-            self.route_names[_route_name] = route
+        if _name:
+            self.route_names[_name] = route
 
     def match(self, request):
         """Matches all routes against the current request. The first one that
@@ -606,10 +606,10 @@ class Router(object):
             if match:
                 return match
 
-    def build(self, _route_name, **kwargs):
+    def build(self, _name, **kwargs):
         """Builds a URL for a named :class:`Route`.
 
-        :param _route_name:
+        :param _name:
             The route name, as registered in :meth:`add`.
         :param kwargs:
             Keyword arguments to build the URL. All route variables that are
@@ -619,16 +619,16 @@ class Router(object):
         :returns:
             A formatted URL.
         """
-        route = self.route_names.get(_route_name, None)
+        route = self.route_names.get(_name, None)
         if not route:
-            raise KeyError('Route "%s" is not defined.' % _route_name)
+            raise KeyError('Route "%s" is not defined.' % _name)
 
         return route.build(**kwargs)
 
 
 class Route(object):
     """A URL route definition."""
-    def __init__(self, path, handler, **defaults):
+    def __init__(self, _path, _handler, **defaults):
         """Initializes a URL route. The route path can combine several regular
         expression using a special syntax with each matched variable is
         enclosed by curly braces. The variable can have only a name, only a
@@ -656,7 +656,7 @@ class Route(object):
            both name and regular expression is preferable. Set names for all
            variables if you intend to use :meth:`RequestHandler.url_for`.
 
-        :param path:
+        :param _path:
             A path to be matched. Paths can contain variables enclosed in
             curly braces with optional name and regular expression to be
             evaluated. Some examples::
@@ -665,7 +665,7 @@ class Route(object):
                 route = Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
                 route = Route('/blog/archive/{year:\d\d\d\d}/{slug:\w+}', BlogItemHandler)
 
-        :param handler:
+        :param _handler:
             A :class:`RequestHandler` class to be executed when this route
             matches.
         :param defaults:
@@ -674,9 +674,9 @@ class Route(object):
             if the value is not passed.
         """
         # The path to be matched.
-        self.path = path
+        self.path = _path
         # The handler that is executed when this route matches.
-        self.handler = handler
+        self.handler = _handler
         # Default values to build the URL and extra values to be returned.
         self.defaults = defaults
         # Named variables mapping to the regex to validate them.
@@ -687,8 +687,8 @@ class Route(object):
         last = 0
         regex = ''
         template = ''
-        for group, match in enumerate(_ROUTE_REGEX.finditer(path)):
-            part = path[last:match.start()]
+        for group, match in enumerate(_ROUTE_REGEX.finditer(_path)):
+            part = _path[last:match.start()]
             name = match.group(1)
             expr = match.group(2) or '[^/]+'
             last = match.end()
@@ -704,11 +704,11 @@ class Route(object):
                 self.unnamed_variables.append(group + 1)
 
         # The raw regex, for testing and debugging purposes.
-        self.regex_raw = '^%s%s$' % (regex, re.escape(path[last:]))
+        self.regex_raw = '^%s%s$' % (regex, re.escape(_path[last:]))
         # The regex used to match URLs.
         self.regex = re.compile(self.regex_raw)
         # The template used to build URLs.
-        self.template = template + path[last:]
+        self.template = template + _path[last:]
 
     def match(self, request):
         """Matches a route against the current request.
