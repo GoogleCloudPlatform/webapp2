@@ -30,7 +30,7 @@ app = WSGIApplication([
     ('/redirect-me',  RedirectHandler,        {'url': '/lazy'}),
     ('/redirect-me2', RedirectHandler,        {'url': get_redirect_url}),
     ('/exception',    HandlerWithError),
-], debug=False)
+])
 
 
 def main():

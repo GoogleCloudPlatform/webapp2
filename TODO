@@ -8,6 +8,7 @@ TODO
   - Response
   - Exception handling
   - Configuration system
+  - Unit testing
 
 
 DONE
@@ -15,6 +16,7 @@ DONE
 - 100% test coverage
 - Use webapp.Request (extended webob.Request)
 - Use webob.Response
+- HTTP exceptions
 - Simple exception handling
 - Configuration system
 - Lazy RequestHandlers (optional)

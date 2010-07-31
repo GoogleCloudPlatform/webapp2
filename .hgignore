@@ -3,6 +3,6 @@
 \.coverage
 \.egg-info
 dist
-docs/build
+docs/_build
 docs/project
 tests/project

@@ -275,17 +275,29 @@ class RedirectHandler(RequestHandler):
     used when defining URL routes. You must provide the keyword argument
     *url* in the route. Example::
 
+        def get_redirect_url(handler, *args, **kwargs):
+            return handler.url_for('new-route-name')
+
         app = WSGIApplication([
-            ('/old-url', RedirectHandler, 'legacy-url', {'url': '/new-url'}),
+            ('/old-url', RedirectHandler, {'url': '/new-url'}),
+            ('/other-old-url', RedirectHandler, {'url': get_redirect_url}),
         ])
 
     Based on idea from `Tornado`_.
     """
-    def get(self, **kwargs):
+    def get(self, *args, **kwargs):
+        """Performs the redirect. Two keyword arguments can be passed through
+        the URL route:
+
+        - *url*: A URL string or a callable that returns a URL. The callable
+          is called passing ``(handler, *args, **kwargs)`` as arguments.
+        - *permanent*: If False, uses a 301 redirect instead of a 302 redirect
+          Default is True.
+        """
         url = kwargs.get('url', '/')
 
         if callable(url):
-            url = url(self, **kwargs)
+            url = url(self, *args, **kwargs)
 
         self.redirect(url, permanent=kwargs.get('permanent', True))
 
@@ -293,11 +305,35 @@ class RedirectHandler(RequestHandler):
 class WSGIApplication(object):
     """Wraps a set of webapp RequestHandlers in a WSGI-compatible application.
 
-    To use this class, pass a list of (URI regular expression, RequestHandler)
-    pairs to the constructor, and pass the class instance to a WSGI handler.
-    See the example in the module comments for details.
+    To use this class, pass a list of ``(route path, RequestHandler)``
+    to the constructor, and pass the class instance to a WSGI handler.
+    Example::
 
-    The URL mapping is first-match based on the list ordering.
+        from webapp2 import RequestHandler, WSGIApplication, run_wsgi_app
+
+        class HelloWorldHandler(RequestHandler):
+            def get(self):
+                self.response.out.write('Hello, World!')
+
+        app = WSGIApplication([
+            ('/', HelloWorldHandler),
+        ])
+
+        def main():
+            run_wsgi_app(app)
+
+        if __name__ == '__main__':
+            main()
+
+    The URL mapping is first-match based on the list ordering. URL definitions
+    can have an optional name passed as a third argument, which is used to
+    build it, and an optional dictionary of default values passed as
+    fourth argument. Example::
+
+        app = WSGIApplication([
+            ('/articles', ArticlesHandler, 'articles'),
+            ('/articles/{article_id:[\d]+}', ArticleHandler, 'article', {'id': '1'}),
+        ])
     """
     #: Default class used for the request object.
     request_class = Request
@@ -709,6 +745,33 @@ class Config(dict):
     dictionary of dictionaries. It requires all values to be dictionaries
     and applies updates and default values to the inner dictionaries instead
     of the first level one.
+
+    The configuration object is available as a ``config`` attribute of the
+    :class:`WSGIApplication`. If is instantiated and populated when the app is
+    built::
+
+        config = {}
+
+        config['my.module'] = {
+            'foo': 'bar',
+            'baz': 'ding',
+        }
+
+        config['my.other.module'] = {
+            'secret_key': 'try to guess me!',
+        }
+
+        app = WSGIApplication(config=config)
+
+    Then to read configuration values, use :meth:`RequestHandler.get_config`::
+
+        class MyHandler(RequestHandler):
+            def get(self):
+                foo = self.get_config('my.module', 'foo')
+
+                secret_key = self.get_config('my.other.module', 'secret_key')
+
+                # ...
     """
     #: Loaded module configurations.
     loaded = None
@@ -869,7 +932,7 @@ def import_string(import_name, silent=False):
     value will be `None` if the import fails.
 
     Simplified version of the function with same name from
-    `Werkzeug <http://werkzeug.pocoo.org/>`.
+    `Werkzeug <http://werkzeug.pocoo.org/>`_.
 
     :param import_name:
         The dotted name for the object to import.
