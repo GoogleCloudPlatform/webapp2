@@ -29,8 +29,8 @@ _ALLOWED_METHODS = frozenset(['get', 'post', 'head', 'options', 'put',
 #: Regex for URL definitions.
 _ROUTE_REGEX = re.compile(r'''
     \{            # The exact character "{"
-    (\w+)         # The variable name (restricted to a-z, 0-9, _)
-    (?::([^}]+))? # The optional :regex part
+    (\w*)         # The variable name (restricted to a-z, 0-9, _)
+    (?::([^}]*))? # The optional :regex part
     \}            # The exact character "}"
     ''', re.VERBOSE)
 
@@ -452,7 +452,7 @@ class WSGIApplication(object):
         if not match:
             return (None, None, None)
 
-        route, kwargs = match
+        route, args, kwargs = match
         handler_class = route.handler
 
         if isinstance(handler_class, basestring):
@@ -462,7 +462,7 @@ class WSGIApplication(object):
 
             handler_class = _HANDLERS[handler_class]
 
-        return handler_class, (), kwargs
+        return handler_class, args, kwargs
 
     def get_config(self, module, key=None, default=DEFAULT_VALUE):
         """Returns a configuration value for a module. If it is not already
@@ -598,7 +598,12 @@ class Route(object):
         self.defaults = defaults
         # All variables in the rule mapping to the regex to validate them.
         self.variables = {}
+        # Unnamed groups
+        self.groups = []
+        # Is this rule reversible?
+        self.reversible = True
 
+        group = 1
         last = 0
         regex = ''
         template = ''
@@ -608,12 +613,22 @@ class Route(object):
             expr = match.group(2) or '[^/]+'
             last = match.end()
 
-            regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
-            template += '%s%%(%s)s' % (part, name)
-            self.variables[name] = re.compile('^%s$' % expr)
+            if name:
+                regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
+                if self.reversible:
+                    self.variables[name] = re.compile('^%s$' % expr)
+                    template += '%s%%(%s)s' % (part, name)
+            else:
+                self.reversible = False
+                regex += '%s(%s)' % (re.escape(part), expr)
+                self.groups.append(group)
 
+            group += 1
+
+        # The raw regex, for testing and debugging purposes.
+        self.regex_raw = '^%s%s$' % (regex, re.escape(path[last:]))
         # The regex used to match URLs.
-        self.regex = re.compile('^%s%s$' % (regex, re.escape(path[last:])))
+        self.regex = re.compile(self.regex_raw)
         # The template used to build URLs.
         self.template = template + path[last:]
 
@@ -627,9 +642,13 @@ class Route(object):
         """
         match = self.regex.match(request.path)
         if match:
-            values = self.defaults.copy()
-            values.update(match.groupdict())
-            return (self, values)
+            kwargs = self.defaults.copy()
+            kwargs.update(match.groupdict())
+            if self.groups:
+                args = match.group(*self.groups)
+            else:
+                args = []
+            return (self, args, kwargs)
 
     def build(self, **kwargs):
         """Builds a URL for this route. Examples:
@@ -652,6 +671,10 @@ class Route(object):
         :returns:
             A formatted URL.
         """
+        if not self.reversible:
+            raise ValueError("This route contains unnamed variables and "
+                "can't be built.")
+
         required = self.variables.keys()
         values = {}
         for name in required:

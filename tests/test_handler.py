@@ -101,6 +101,11 @@ class Handle500(RequestHandler):
         self.response.set_status(500)
 
 
+class PositionalHandler(RequestHandler):
+    def get(self, month, day, slug=None):
+        self.response.out.write('%s:%s:%s' % (month, day, slug))
+
+
 app = WSGIApplication([
     ('/',                 HomeHandler,            'home'),
     ('/methods',          MethodsHandler,         'methods'),
@@ -108,6 +113,7 @@ app = WSGIApplication([
     ('/broken-but-fixed', BrokenButFixedHandler),
     ('/url-for',          UrlForHandler),
     ('/{year:\d\d\d\d}/{month:\d\d}/{name}', None, 'route-test'),
+    ('/{:\d\d}/{:\d\d}/{slug}', PositionalHandler, 'positional'),
 ], debug=False)
 
 test_app = TestApp(app)
@@ -182,6 +188,15 @@ class TestHandler(unittest.TestCase):
         res = test_app.get('/url-for')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'OK')
+
+    def test_positional(self):
+        res = test_app.get('/07/31/test')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, '07:31:test')
+
+        res = test_app.get('/10/18/wooohooo')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, '10:18:wooohooo')
 
 
 class TestHandlerHelpers(unittest.TestCase):
