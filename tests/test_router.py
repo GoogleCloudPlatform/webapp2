@@ -88,3 +88,10 @@ class TestRoute(unittest.TestCase):
     def test_build_int_keyword(self):
         route = Route('/{year:\d\d\d\d}', 'my_handler')
         self.assertEqual(route.build(year=2010), '/2010')
+
+    def test_router_build_error(self):
+        router = Router()
+        router.add('/{year:\d\d\d\d}', 'my_handler', 'year-page')
+        self.assertEqual(router.build('year-page', year='2010'), '/2010')
+
+        self.assertRaises(KeyError, router.build, 'i-dont-exist')

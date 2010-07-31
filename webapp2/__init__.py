@@ -37,11 +37,8 @@ _ROUTE_REGEX = re.compile(r'''
 #: Loaded lazy handlers.
 _HANDLERS = {}
 
-#: Value used for required values.
+#: Value used for required arguments.
 REQUIRED_VALUE = object()
-
-#: Value used for missing default values.
-DEFAULT_VALUE = object()
 
 
 class Response(webob.Response):
@@ -83,7 +80,7 @@ class Response(webob.Response):
         """
         message = webob.statusreasons.status_reasons.get(code, None)
         if not message:
-            raise Error('Invalid HTTP status code: %d' % code)
+            raise KeyError('Invalid HTTP status code: %d' % code)
 
         return message
 
@@ -194,8 +191,8 @@ class RequestHandler(object):
         :param kwargs:
             Keyword arguments to build the URL.
         """
-        uri = self.url_for(_route_name, _full=_full, _secure=_secure,
-            _anchor=_anchor, **kwargs)
+        uri = self.url_for(_route_name, _secure=_secure, _anchor=_anchor,
+            **kwargs)
         self.redirect(uri, permanent=_permanent)
 
     def url_for(self, _route_name, _full=False, _secure=False, _anchor=None,
@@ -252,7 +249,7 @@ class RequestHandler(object):
 
         return url
 
-    def get_config(self, module, key=None, default=DEFAULT_VALUE):
+    def get_config(self, module, key=None, default=REQUIRED_VALUE):
         """Returns a configuration value for a module.
 
         See :meth:`WSGIApplication.get_config`.
@@ -311,7 +308,7 @@ class WSGIApplication(object):
     #: as default if others are not set.
     error_handlers = {}
 
-    def __init__(self, url_map, debug=False, config=None):
+    def __init__(self, url_map=None, debug=False, config=None):
         """Initializes the WSGI application.
 
         :param url_map:
@@ -426,20 +423,21 @@ class WSGIApplication(object):
             A list of URL route definitions.
         """
         self.router = Router()
-        for spec in url_map:
-            if len(spec) == 2:
-                # (path, handler)
-                self.router.add(*spec)
-            elif len(spec) == 3:
-                if not isinstance(spec[2], dict):
-                    # (path, handler, name)
+        if url_map:
+            for spec in url_map:
+                if len(spec) == 2:
+                    # (path, handler)
                     self.router.add(*spec)
-                else:
-                    # (path, handler, defaults)
-                    self.router.add(*spec[:2], **spec[2])
-            elif len(spec) == 4:
-                # (path, handler, name, defaults)
-                self.router.add(*spec[:3], **spec[3])
+                elif len(spec) == 3:
+                    if not isinstance(spec[2], dict):
+                        # (path, handler, name)
+                        self.router.add(*spec)
+                    else:
+                        # (path, handler, defaults)
+                        self.router.add(*spec[:2], **spec[2])
+                elif len(spec) == 4:
+                    # (path, handler, name, defaults)
+                    self.router.add(*spec[:3], **spec[3])
 
     def match_route(self, request):
         """Matches a route against the current request.
@@ -467,7 +465,7 @@ class WSGIApplication(object):
 
         return handler_class, args, kwargs
 
-    def get_config(self, module, key=None, default=DEFAULT_VALUE):
+    def get_config(self, module, key=None, default=REQUIRED_VALUE):
         """Returns a configuration value for a module. If it is not already
         set, loads a ``default_config`` variable from the given module,
         updates the app configuration with those default values and returns
@@ -497,7 +495,7 @@ class WSGIApplication(object):
             config.loaded.append(module)
 
         value = config.get(module, key, default)
-        if value not in (DEFAULT_VALUE, REQUIRED_VALUE):
+        if value is not REQUIRED_VALUE:
             return value
 
         if key is None:

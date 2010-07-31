@@ -14,6 +14,11 @@ class ViewHandler(RequestHandler):
         self.response.out.write('You are viewing item "%s".' % item)
 
 
+class HandlerWithError(RequestHandler):
+    def get(self, **kwargs):
+        raise ValueError('Oops!')
+
+
 def get_redirect_url(handler, **kwargs):
     return handler.url_for('view', item='i-came-from-a-redirect')
 
@@ -22,32 +27,14 @@ app = WSGIApplication([
     ('/',             HomeHandler,            'home'),
     ('/view/{item}',  ViewHandler,            'view'),
     ('/lazy',         'handlers.LazyHandler', 'lazy'),
-    ('/redirect-me',  RedirectHandler,        'legacy', {'url': '/lazy'}),
-    ('/redirect-me2', RedirectHandler,        'legacy', {'url': get_redirect_url}),
+    ('/redirect-me',  RedirectHandler,        {'url': '/lazy'}),
+    ('/redirect-me2', RedirectHandler,        {'url': get_redirect_url}),
+    ('/exception',    HandlerWithError),
 ], debug=False)
 
 
-def real_main():
+def main():
     run_wsgi_app(app)
-
-
-def profile_main():
-    # This is the main function for profiling
-    # We've renamed our original main() above to real_main()
-    import cProfile, pstats
-    prof = cProfile.Profile()
-    prof = prof.runctx("real_main()", globals(), locals())
-    print "<pre>"
-    stats = pstats.Stats(prof)
-    stats.sort_stats("time")  # Or cumulative
-    stats.print_stats(80)  # 80 = how many to print
-    # The rest is optional.
-    # stats.print_callees()
-    # stats.print_callers()
-    print "</pre>"
-
-
-main = real_main
 
 
 if __name__ == '__main__':

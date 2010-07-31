@@ -6,7 +6,7 @@ import unittest
 
 from webtest import TestApp
 
-from webapp2 import (RedirectHandler, RequestHandler, WSGIApplication,
+from webapp2 import (RedirectHandler, Request, RequestHandler, WSGIApplication,
     get_valid_methods)
 
 
@@ -70,6 +70,12 @@ class UrlForHandler(RequestHandler):
         self.response.out.write('OK')
 
 
+class RedirectToHandler(RequestHandler):
+    def get(self, **kwargs):
+        self.redirect_to('route-test', _anchor='my-anchor', year='2010',
+            month='07', name='test', foo='bar')
+
+
 class BrokenHandler(RequestHandler):
     def get(self, **kwargs):
         raise ValueError('booo!')
@@ -106,6 +112,16 @@ class PositionalHandler(RequestHandler):
         self.response.out.write('%s:%s:%s' % (month, day, slug))
 
 
+class HandlerWithError(RequestHandler):
+    def get(self, **kwargs):
+        self.response.out.write('bla bla bla bla bla bla')
+        self.error(403)
+
+
+def get_redirect_url(handler, **kwargs):
+    return handler.url_for('methods')
+
+
 app = WSGIApplication([
     ('/',                 HomeHandler,            'home'),
     ('/methods',          MethodsHandler,         'methods'),
@@ -114,6 +130,13 @@ app = WSGIApplication([
     ('/url-for',          UrlForHandler),
     ('/{year:\d\d\d\d}/{month:\d\d}/{name}', None, 'route-test'),
     ('/{:\d\d}/{:\d\d}/{slug}', PositionalHandler, 'positional'),
+    ('/redirect-me',      RedirectHandler,         {'url': '/broken'}),
+    ('/redirect-me2',     RedirectHandler,         {'url': get_redirect_url}),
+    ('/redirect-me3',     RedirectHandler,         'legacy', {'url': '/broken', 'permanent': False}),
+    ('/redirect-me4',     RedirectHandler,         'legacy', {'url': get_redirect_url, 'permanent': False}),
+    ('/redirect-me5',     RedirectToHandler),
+    ('/lazy',             'resources.handlers.LazyHandler'),
+    ('/error',            HandlerWithError),
 ], debug=False)
 
 test_app = TestApp(app)
@@ -122,6 +145,24 @@ test_app = TestApp(app)
 class TestHandler(unittest.TestCase):
     def tearDown(self):
         app.error_handlers = {}
+
+    def test_lazy_handler(self):
+        res = test_app.get('/lazy')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'I am a laaazy view.')
+
+    def test_handler_with_error(self):
+        res = test_app.get('/error', status=403)
+        self.assertEqual(res.status, '403 Forbidden')
+        self.assertEqual(res.body, '')
+
+    def test_debug_mode(self):
+        app = WSGIApplication([
+            ('/broken',           BrokenHandler),
+        ], debug=True)
+
+        test_app = TestApp(app)
+        self.assertRaises(ValueError, test_app.get, '/broken')
 
     def test_200(self):
         res = test_app.get('/')
@@ -167,7 +208,7 @@ class TestHandler(unittest.TestCase):
         self.assertEqual(res.body, '500 custom handler')
 
     def test_methods(self):
-        """Can't test HEAD, OPTIONS and TRACE with webtest."""
+        """Can't test HEAD, OPTIONS and TRACE with webtest?"""
         res = test_app.get('/methods')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'home sweet home')
@@ -184,6 +225,30 @@ class TestHandler(unittest.TestCase):
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'home sweet home - DELETE')
 
+        req = Request.blank('/methods')
+        req.method = 'HEAD'
+        res = req.get_response(app)
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, '')
+
+        req = Request.blank('/methods')
+        req.method = 'OPTIONS'
+        res = req.get_response(app)
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'home sweet home - OPTIONS')
+
+        req = Request.blank('/methods')
+        req.method = 'TRACE'
+        res = req.get_response(app)
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'home sweet home - TRACE')
+
+        # 501 Not Implemented
+        req = Request.blank('/methods')
+        req.method = 'FOOBAR'
+        res = req.get_response(app)
+        self.assertEqual(res.status, '501 Not Implemented')
+
     def test_url_for(self):
         res = test_app.get('/url-for')
         self.assertEqual(res.status, '200 OK')
@@ -197,6 +262,36 @@ class TestHandler(unittest.TestCase):
         res = test_app.get('/10/18/wooohooo')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, '10:18:wooohooo')
+
+    def test_redirect(self):
+        res = test_app.get('/redirect-me')
+        self.assertEqual(res.status, '301 Moved Permanently')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/broken')
+
+    def test_redirect_with_callable(self):
+        res = test_app.get('/redirect-me2')
+        self.assertEqual(res.status, '301 Moved Permanently')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/methods')
+
+    def test_redirect_not_permanent(self):
+        res = test_app.get('/redirect-me3')
+        self.assertEqual(res.status, '302 Found')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/broken')
+
+    def test_redirect_with_callable_not_permanent(self):
+        res = test_app.get('/redirect-me4')
+        self.assertEqual(res.status, '302 Found')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/methods')
+
+    def test_redirect_to(self):
+        res = test_app.get('/redirect-me5')
+        self.assertEqual(res.status, '302 Found')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/2010/07/test?foo=bar#my-anchor')
 
 
 class TestHandlerHelpers(unittest.TestCase):

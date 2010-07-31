@@ -9,8 +9,9 @@ from webtest import TestApp
 import webob
 import webob.exc
 
-from webapp2 import (RedirectHandler, RequestHandler, WSGIApplication, abort,
-    import_string)
+from webapp2 import (RedirectHandler, RequestHandler, Response,
+    WSGIApplication, abort, import_string, url_escape, url_unescape,
+    to_unicode, to_utf8)
 
 
 class TestMiscellaneous(unittest.TestCase):
@@ -68,3 +69,31 @@ class TestMiscellaneous(unittest.TestCase):
 
         self.assertRaises(ImportError, import_string, 'dfasfasdfdsfsd')
         self.assertRaises(AttributeError, import_string, 'webob.dfasfasdfdsfsd')
+
+    def test_url_escape(self):
+        self.assertEqual(url_escape('url with spaces!'), 'url+with+spaces%21')
+        self.assertEqual(url_escape('%now, this is weird'), '%25now%2C+this+is+weird')
+
+    def test_url_unescape(self):
+        self.assertEqual(url_unescape('url+with+spaces%21'), 'url with spaces!')
+        self.assertEqual(url_unescape('%25now%2C+this+is+weird'), '%now, this is weird')
+
+    def to_utf8(self):
+        res = to_utf8(unicode('éééé'))
+        self.assertEqual(isinstance(res, string), True)
+
+        res = to_utf8('abcdef')
+        self.assertEqual(isinstance(res, string), True)
+
+    def test_to_unicode(self):
+        res = to_unicode(unicode('foo'))
+        self.assertEqual(isinstance(res, unicode), True)
+
+        res = to_unicode('foo')
+        self.assertEqual(isinstance(res, unicode), True)
+
+    def test_http_status_message(self):
+        self.assertEqual(Response.http_status_message(404), 'Not Found')
+        self.assertEqual(Response.http_status_message(500), 'Internal Server Error')
+        self.assertRaises(KeyError, Response.http_status_message, 9999)
+
