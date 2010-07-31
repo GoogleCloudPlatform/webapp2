@@ -181,7 +181,7 @@ class RequestHandler(object):
     def redirect_to(self, _route_name, _secure=False, _anchor=None,
         _permanent=False, **kwargs):
         """Convenience method mixing :meth:`redirect` and :meth:`url_for`:
-        Issues an HTTP redirect to a named URL build using :meth:`url_for`.
+        Issues an HTTP redirect to a named URL built using :meth:`url_for`.
 
         :param _route_name:
             The route name to redirect to.
@@ -207,6 +207,7 @@ class RequestHandler(object):
             app = WSGIApplication([
                 ('/',     'handlers.HomeHandler', 'home/main'),
                 ('/wiki', WikiHandler,            'wiki/start'),
+                ('/wiki/{page}', WikiHandler,     'wiki/page'),
             ])
 
         Here are some examples of how to generate URLs for them:
@@ -221,6 +222,8 @@ class RequestHandler(object):
         http://localhost:8080/wiki
         >>> url = self.url_for('wiki/start', _full=True, _anchor='my-heading')
         http://localhost:8080/wiki#my-heading
+        >>> url = self.url_for('wiki/page', page='my-first-page')
+        /wiki/my-first-page
 
         :param _route_name:
             The route name.
@@ -541,7 +544,7 @@ class Router(object):
         :param request:
             A ``webapp.Request`` instance.
         :returns:
-            A tuple (route, route_values), including the default values.
+            A tuple ``(route, args, kwargs)``.
         """
         for route in self.routes:
             match = route.match(request)
@@ -594,20 +597,17 @@ class Route(object):
         self.path = path
         # The handler that is executed when this route matches.
         self.handler = handler
-        # Default values to build the rule and extra values to be returned.
+        # Default values to build the URL and extra values to be returned.
         self.defaults = defaults
-        # All variables in the rule mapping to the regex to validate them.
+        # Named variables mapping to the regex to validate them.
         self.variables = {}
-        # Unnamed groups
-        self.groups = []
-        # Is this rule reversible?
-        self.reversible = True
+        # Positions of unnamed variables.
+        self.unnamed_variables = []
 
-        group = 1
         last = 0
         regex = ''
         template = ''
-        for match in _ROUTE_REGEX.finditer(path):
+        for group, match in enumerate(_ROUTE_REGEX.finditer(path)):
             part = path[last:match.start()]
             name = match.group(1)
             expr = match.group(2) or '[^/]+'
@@ -615,15 +615,13 @@ class Route(object):
 
             if name:
                 regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
-                if self.reversible:
+                if self.variables is not None:
                     self.variables[name] = re.compile('^%s$' % expr)
                     template += '%s%%(%s)s' % (part, name)
             else:
-                self.reversible = False
+                self.variables = None
                 regex += '%s(%s)' % (re.escape(part), expr)
-                self.groups.append(group)
-
-            group += 1
+                self.unnamed_variables.append(group + 1)
 
         # The raw regex, for testing and debugging purposes.
         self.regex_raw = '^%s%s$' % (regex, re.escape(path[last:]))
@@ -638,16 +636,17 @@ class Route(object):
         :param request:
             A ``webapp.Request`` instance.
         :returns:
-            A tuple (route, route_values), including the default values if any.
+            A tuple ``(route, args, kwargs)``.
         """
         match = self.regex.match(request.path)
         if match:
             kwargs = self.defaults.copy()
             kwargs.update(match.groupdict())
-            if self.groups:
-                args = match.group(*self.groups)
+            if self.unnamed_variables:
+                args = match.group(*self.unnamed_variables)
             else:
-                args = []
+                args = ()
+
             return (self, args, kwargs)
 
     def build(self, **kwargs):
@@ -656,6 +655,8 @@ class Route(object):
         >>> route = Route('/blog', BlogHandler)
         >>> route.build()
         /blog
+        >>> route.build(page='2', format='atom')
+        /blog?page=2&format=atom
         >>> route = Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
         >>> route.build(year=2010)
         /blog/2010
@@ -671,16 +672,15 @@ class Route(object):
         :returns:
             A formatted URL.
         """
-        if not self.reversible:
-            raise ValueError("This route contains unnamed variables and "
-                "can't be built.")
+        if self.variables is None:
+            raise NotImplementedError("This route contains unnamed "
+                "variables and can't be built.")
 
-        required = self.variables.keys()
         values = {}
-        for name in required:
+        for name in self.variables.keys():
             value = kwargs.pop(name, self.defaults.get(name))
             if not value:
-                raise ValueError('Missing keyword "%s" to build URL.' % name)
+                raise KeyError('Missing keyword "%s" to build URL.' % name)
 
             if not isinstance(value, basestring):
                 value = str(value)
@@ -840,7 +840,7 @@ class Config(dict):
 
 
 def abort(code, *args, **kwargs):
-    """Raises a ``HTTPException``. The exception is instantiated passing
+    """Raises an ``HTTPException``. The exception is instantiated passing
     *args* and *kwargs*.
 
     :param code:

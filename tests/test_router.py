@@ -39,14 +39,14 @@ class TestRoute(unittest.TestCase):
     def test_simple_variable(self):
         route = Route('/{foo}', 'my_handler')
         self.assertEqual(route.match(Request.blank('/bar')),
-            (route, [], {'foo': 'bar'}))
+            (route, (), {'foo': 'bar'}))
         self.assertEqual(route.build(foo='baz'), '/baz')
 
     def test_expr_variable(self):
         route = Route('/{year:\d\d\d\d}', 'my_handler')
         self.assertEqual(route.match(Request.blank('/bar')), None)
-        self.assertEqual(route.match(Request.blank('/2010')), (route, [], {'year': '2010'}))
-        self.assertEqual(route.match(Request.blank('/1900')), (route, [], {'year': '1900'}))
+        self.assertEqual(route.match(Request.blank('/2010')), (route, (), {'year': '2010'}))
+        self.assertEqual(route.match(Request.blank('/1900')), (route, (), {'year': '1900'}))
         self.assertEqual(route.build(year='2010'), '/2010')
 
     def test_expr_variable2(self):
@@ -63,11 +63,15 @@ class TestRoute(unittest.TestCase):
 
     def test_build_missing_keyword(self):
         route = Route('/{year:\d\d\d\d}', 'my_handler')
-        self.assertRaises(ValueError, route.build)
+        self.assertRaises(KeyError, route.build)
 
     def test_build_missing_keyword2(self):
         route = Route('/{year:\d\d\d\d}/{month:\d\d}', 'my_handler')
-        self.assertRaises(ValueError, route.build, year='2010')
+        self.assertRaises(KeyError, route.build, year='2010')
+
+    def test_build_with_unnamed_variable(self):
+        route = Route('/{:\d\d\d\d}/{month:\d\d}', 'my_handler')
+        self.assertRaises(NotImplementedError, route.build, month='10')
 
     def test_build_default_keyword(self):
         route = Route('/{year:\d\d\d\d}/{month:\d\d}', 'my_handler', month=10)
