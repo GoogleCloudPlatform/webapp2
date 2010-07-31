@@ -1,5 +1,4 @@
-from webapp2 import (RedirectHandler, RequestHandler, WSGIApplication,
-    run_wsgi_app)
+from webapp2 import RedirectHandler, RequestHandler, WSGIApplication
 
 
 class HomeHandler(RequestHandler):
@@ -34,7 +33,7 @@ app = WSGIApplication([
 
 
 def main():
-    run_wsgi_app(app)
+    app.run()
 
 
 if __name__ == '__main__':

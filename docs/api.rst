@@ -11,7 +11,8 @@ WSGI App
 --------
 .. autoclass:: WSGIApplication
    :members: request_class, response_class, error_handlers, __init__, __call__,
-             wsgi_app, handle_exception, set_router, match_route, get_config
+             wsgi_app, handle_exception, set_router, match_route, get_config,
+             run
 
 
 Request Handlers

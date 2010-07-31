@@ -6,7 +6,12 @@
 Welcome to webapp2's documentation!
 ===================================
 
+This is the manual for `webapp2 <http://code.google.com/p/webapp-improved/>`_,
+an attempt to improve Google App Engine's webapp framework keeping maximum
+compatibility.
+
 This is a work in progress. For now, only the API reference is available.
+
 
 API Reference
 -------------

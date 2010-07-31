@@ -29,7 +29,7 @@ _ALLOWED_METHODS = frozenset(['get', 'post', 'head', 'options', 'put',
 #: Regex for URL definitions.
 _ROUTE_REGEX = re.compile(r'''
     \{            # The exact character "{"
-    (\w*)         # The variable name (restricted to a-z, 0-9, _)
+    (\w*)         # The optional variable name (restricted to a-z, 0-9, _)
     (?::([^}]*))? # The optional :regex part
     \}            # The exact character "}"
     ''', re.VERBOSE)
@@ -309,7 +309,7 @@ class WSGIApplication(object):
     to the constructor, and pass the class instance to a WSGI handler.
     Example::
 
-        from webapp2 import RequestHandler, WSGIApplication, run_wsgi_app
+        from webapp2 import RequestHandler, WSGIApplication
 
         class HelloWorldHandler(RequestHandler):
             def get(self):
@@ -320,20 +320,22 @@ class WSGIApplication(object):
         ])
 
         def main():
-            run_wsgi_app(app)
+            app.run()
 
         if __name__ == '__main__':
             main()
 
     The URL mapping is first-match based on the list ordering. URL definitions
-    can have an optional name passed as a third argument, which is used to
-    build it, and an optional dictionary of default values passed as
-    fourth argument. Example::
+    can have an optional name passed as third argument, which is used to
+    build it, and an optional dictionary of default values passed as fourth
+    argument. Example::
 
         app = WSGIApplication([
             ('/articles', ArticlesHandler, 'articles'),
             ('/articles/{article_id:[\d]+}', ArticleHandler, 'article', {'id': '1'}),
         ])
+
+    See :class:`Route` for a complete explanation of the route syntax.
     """
     #: Default class used for the request object.
     request_class = Request
@@ -540,6 +542,25 @@ class WSGIApplication(object):
             raise KeyError('Module %s requires the config key "%s" to be '
                 'set.' % (module, key))
 
+    def run(self):
+        """Runs the app using ``google.appengine.ext.webapp.util.run_wsgi_app``.
+        This is generally called inside a ``main()`` function of the file
+        mapped in *app.yaml* to run the application::
+
+            # ...
+
+            app = WSGIApplication([
+                ('/', HelloWorldHandler),
+            ])
+
+            def main():
+                app.run()
+
+            if __name__ == '__main__':
+                main()
+        """
+        run_wsgi_app(self)
+
 
 class Router(object):
     """A simple URL router. This is used to match the current URL and build
@@ -608,16 +629,41 @@ class Router(object):
 class Route(object):
     """A URL route definition."""
     def __init__(self, path, handler, **defaults):
-        """Initializes a URL route.
+        """Initializes a URL route. The route path can combine several regular
+        expression using a special syntax with each matched variable is
+        enclosed by curly braces. The variable can have only a name, only a
+        regular expression or both:
+
+            =============================  ====================
+            Format                         Example
+            =============================  ====================
+            ``{name}``                     ``/{year}``
+            ``{:regular expression}``      ``/{:\d\d\d\d}``
+            ``{name:regular expression}``  ``/{year:\d\d\d\d}``
+            =============================  ====================
+
+        The name is passed as keyword argument to the :class:`RequestHandler`,
+        with the value of the matched regular expression, and is used to build
+        a URL for this route. Here are some path examples::
+
+            /article/{article_id:[\d]+}
+            /wiki/{page_name:\w+}
+            /blog/{year:\d\d\d\d}/{month:\d\d}/{day:\d\d}/{slug:\w+}
+
+        .. note::
+           If the path contains any unnamed variables (only the regex part is
+           set), URLs can't be built from this route. Because of this, defining
+           both name and regular expression is preferable. Set names for all
+           variables if you intend to use :meth:`RequestHandler.url_for`.
 
         :param path:
             A path to be matched. Paths can contain variables enclosed in
-            curly braces and an optional regular expression to be evaluated.
-            Some examples::
+            curly braces with optional name and regular expression to be
+            evaluated. Some examples::
 
                 route = Route('/blog', BlogHandler)
                 route = Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
-                route = Route('/blog/archive/{year:\d\d\d\d}/{slug}', BlogItemHandler)
+                route = Route('/blog/archive/{year:\d\d\d\d}/{slug:\w+}', BlogItemHandler)
 
         :param handler:
             A :class:`RequestHandler` class to be executed when this route
@@ -694,9 +740,9 @@ class Route(object):
         >>> route = Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
         >>> route.build(year=2010)
         /blog/2010
-        >>> route = Route('/blog/archive/{year:\d\d\d\d}/{month:\d\d}/{slug}', BlogItemHandler)
-        >>> route.build(year='2010', month='07', slug='my-blog-post')
-        /blog/2010/07/my-blog-post
+        >>> route = Route('/blog/archive/{year:\d\d\d\d}/{month:\d\d}/{slug:\w+}', BlogItemHandler)
+        >>> route.build(year='2010', month='07', slug='my_blog_post')
+        /blog/2010/07/my_blog_post
 
         :param kwargs:
             Keyword arguments to build the URL. All route variables that are
