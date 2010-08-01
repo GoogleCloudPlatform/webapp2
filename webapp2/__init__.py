@@ -386,15 +386,15 @@ class Route(object):
         :param regex_template:
             A regex template to be matched. A regex template is enclosed
             by ``<>`` and  can have only a name, only a regular expression
-            or both::
+            or both:
 
-                =============================  ===================
+                =============================  =================
                 Format                         Example
-                =============================  ===================
-                ``<name>``                     '``/<year>``'
-                ``<:regular expression>``      '``/<:\d{4}>``'
-                ``<name:regular expression>``  '``/<year:\d{4}>``'
-                =============================  ===================
+                =============================  =================
+                ``<name>``                     ``/<year>``
+                ``<:regular expression>``      ``/<:\d{4}>``
+                ``<name:regular expression>``  ``/<year:\d{4}>``
+                =============================  =================
 
             If the name is set, the value of the matched regular expression
             is passed as keyword argument to the :class:`RequestHandler`.

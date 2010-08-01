@@ -23,3 +23,7 @@ class TestWebappRoute(unittest.TestCase):
         self.assertEqual(args, ('2007', '10'))
         self.assertEqual(kwargs, {})
         self.assertEqual(matched_route.handler, 'my_handler')
+
+    def test_build(self):
+        route = WebappRoute('/', None)
+        self.assertRaises(NotImplementedError, route.build)
