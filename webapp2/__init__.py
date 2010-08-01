@@ -371,7 +371,52 @@ class Router(object):
         return route.build(**kwargs)
 
 
-class Route(object):
+class BaseRoute(object):
+    """Base class for routes"""
+    def __init__(self, handler):
+        if callable(handler):
+            self._handler = handler
+        else:
+            self._handler = None
+            self._handler_str = handler
+
+    @property
+    def handler(self):
+        if self._handler is None:
+            self._handler = import_string(self._handler_str)
+
+        return self._handler
+
+    def match(self, request):
+        raise NotImplementedError()
+
+    def build(self, *args, **kwargs):
+        raise NotImplementedError()
+
+
+class WebappRoute(BaseRoute):
+    """A route that is compatible with webapp's routing. URL building is not
+    implemented as webapp has rudimentar support for it, and this is the most
+    unknown webapp feature anyway.
+    """
+    def __init__(self, regex, handler):
+        BaseRoute.__init__(self, handler)
+        if not regex.startswith('^'):
+            regex = '^' + regex
+
+        if not regex.endswith('$'):
+            regex += '$'
+
+        self.regex = re.compile(regex)
+        self.name = None
+
+    def match(self, request):
+        match = self.regex.match(request.path)
+        if match:
+            return self, match.groups(), {}
+
+
+class Route(BaseRoute):
     """A URL route definition. A route definition contains regular expressions
     enclosed by ``<>`` and is used to match requested URLs. Here are some
     examples::
@@ -410,6 +455,7 @@ class Route(object):
             values present in the route variables are used to build the URL
             if the value is not passed.
         """
+        BaseRoute.__init__(self, handler)
         self.regex_template = regex_template
         self.name = name
         self.defaults = defaults or {}
@@ -417,12 +463,6 @@ class Route(object):
         self._regex = None
         self._variables = None
         self._reverse_template = None
-
-        if callable(handler):
-            self._handler = handler
-        else:
-            self._handler = None
-            self._handler_str = handler
 
     def parse_regex_template(self):
         self._variables = {}
@@ -468,13 +508,6 @@ class Route(object):
             self.parse_regex_template()
 
         return self._reverse_template
-
-    @property
-    def handler(self):
-        if self._handler is None:
-            self._handler = import_string(self._handler_str)
-
-        return self._handler
 
     def match(self, request):
         """Matches a route against the current request.
@@ -561,31 +594,6 @@ class Route(object):
             url += '?%s' % urllib.urlencode(kwargs)
 
         return url
-
-
-class WebappRoute(object):
-    """A route that is compatible with webapp's routing. URL building is not
-    implemented as webapp has rudimentar support for it, and this is the most
-    unknown webapp feature anyway.
-    """
-    def __init__(self, regex, handler):
-        if not regex.startswith('^'):
-            regex = '^' + regex
-
-        if not regex.endswith('$'):
-            regex += '$'
-
-        self.regex = re.compile(regex)
-        self.handler = handler
-        self.name = None
-
-    def match(self, request):
-        match = self.regex.match(request.path)
-        if match:
-            return self, match.groups(), {}
-
-    def build(self, *args, **kwargs):
-        raise NotImplementedError()
 
 
 class Config(dict):
