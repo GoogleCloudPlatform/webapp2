@@ -1,4 +1,4 @@
-from webapp2 import RedirectHandler, RequestHandler, WSGIApplication
+from webapp2 import RedirectHandler, RequestHandler, Route, WSGIApplication
 
 
 class HomeHandler(RequestHandler):
@@ -23,12 +23,12 @@ def get_redirect_url(handler, **kwargs):
 
 
 app = WSGIApplication([
-    ('/',             HomeHandler,            'home'),
-    ('/view/{item}',  ViewHandler,            'view'),
-    ('/lazy',         'handlers.LazyHandler', 'lazy'),
-    ('/redirect-me',  RedirectHandler,        {'url': '/lazy'}),
-    ('/redirect-me2', RedirectHandler,        {'url': get_redirect_url}),
-    ('/exception',    HandlerWithError),
+    Route('/', HomeHandler, name='home'),
+    Route('/view/<item>', ViewHandler, name='view'),
+    Route('/lazy', 'handlers.LazyHandler', name='lazy'),
+    Route('/redirect-me', RedirectHandler, defaults={'url': '/lazy'}),
+    Route('/redirect-me2', RedirectHandler, defaults={'url': get_redirect_url}),
+    Route('/exception', HandlerWithError),
 ])
 
 

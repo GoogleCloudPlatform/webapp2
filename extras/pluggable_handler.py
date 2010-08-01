@@ -37,10 +37,6 @@ class PluggableRequestHandler(RequestHandler):
             valid = ', '.join(get_valid_methods(self))
             self.abort(405, headers=[('Allow', valid)])
 
-        if not self.plugins:
-            # No plugins are set: just execute the method.
-            return method(*args, **kwargs)
-
         # Execute before_dispatch plugins.
         for plugin in self.plugins:
             hook = getattr(plugin, 'before_dispatch', None)

@@ -6,8 +6,8 @@ import unittest
 
 from webtest import TestApp
 
-from webapp2 import (RedirectHandler, Request, RequestHandler, WSGIApplication,
-    get_valid_methods)
+from webapp2 import (RedirectHandler, Request, RequestHandler, Route,
+    WSGIApplication, get_valid_methods)
 
 
 class HomeHandler(RequestHandler):
@@ -123,20 +123,20 @@ def get_redirect_url(handler, **kwargs):
 
 
 app = WSGIApplication([
-    ('/',                 HomeHandler,            'home'),
-    ('/methods',          MethodsHandler,         'methods'),
-    ('/broken',           BrokenHandler),
-    ('/broken-but-fixed', BrokenButFixedHandler),
-    ('/url-for',          UrlForHandler),
-    ('/{year:\d\d\d\d}/{month:\d\d}/{name}', None, 'route-test'),
-    ('/{:\d\d}/{:\d\d}/{slug}', PositionalHandler, 'positional'),
-    ('/redirect-me',      RedirectHandler,         {'url': '/broken'}),
-    ('/redirect-me2',     RedirectHandler,         {'url': get_redirect_url}),
-    ('/redirect-me3',     RedirectHandler,         'legacy', {'url': '/broken', 'permanent': False}),
-    ('/redirect-me4',     RedirectHandler,         'legacy', {'url': get_redirect_url, 'permanent': False}),
-    ('/redirect-me5',     RedirectToHandler),
-    ('/lazy',             'resources.handlers.LazyHandler'),
-    ('/error',            HandlerWithError),
+    Route('/', HomeHandler, name='home'),
+    Route('/methods', MethodsHandler, name='methods'),
+    Route('/broken', BrokenHandler),
+    Route('/broken-but-fixed', BrokenButFixedHandler),
+    Route('/url-for', UrlForHandler),
+    Route('/<year:\d{4}>/<month:\d\d>/<name>', None, name='route-test'),
+    Route('/<:\d\d>/<:\d{2}>/<slug>', PositionalHandler, name='positional'),
+    Route('/redirect-me', RedirectHandler, defaults={'url': '/broken'}),
+    Route('/redirect-me2', RedirectHandler, defaults={'url': get_redirect_url}),
+    Route('/redirect-me3', RedirectHandler, defaults={'url': '/broken', 'permanent': False}),
+    Route('/redirect-me4', RedirectHandler, defaults={'url': get_redirect_url, 'permanent': False}),
+    Route('/redirect-me5', RedirectToHandler),
+    Route('/lazy', 'resources.handlers.LazyHandler'),
+    Route('/error', HandlerWithError),
 ], debug=False)
 
 test_app = TestApp(app)
@@ -158,7 +158,7 @@ class TestHandler(unittest.TestCase):
 
     def test_debug_mode(self):
         app = WSGIApplication([
-            ('/broken',           BrokenHandler),
+            Route('/broken', BrokenHandler),
         ], debug=True)
 
         test_app = TestApp(app)

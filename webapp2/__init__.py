@@ -28,14 +28,11 @@ _ALLOWED_METHODS = frozenset(['get', 'post', 'head', 'options', 'put',
 
 #: Regex for URL definitions.
 _ROUTE_REGEX = re.compile(r'''
-    \{            # The exact character "{"
+    \<            # The exact character "<"
     (\w*)         # The optional variable name (restricted to a-z, 0-9, _)
-    (?::([^}]*))? # The optional :regex part
-    \}            # The exact character "}"
+    (?::([^>]*))? # The optional :regex part
+    \>            # The exact character ">"
     ''', re.VERBOSE)
-
-#: Loaded lazy handlers.
-_HANDLERS = {}
 
 #: Value used for required arguments.
 REQUIRED_VALUE = object()
@@ -202,9 +199,9 @@ class RequestHandler(object):
         For example, if you have these routes registered in the application::
 
             app = WSGIApplication([
-                ('/',     'handlers.HomeHandler', 'home/main'),
-                ('/wiki', WikiHandler,            'wiki/start'),
-                ('/wiki/{page}', WikiHandler,     'wiki/page'),
+                Route('/', 'handlers.HomeHandler', 'home/main'),
+                Route('/wiki', WikiHandler, 'wiki/start'),
+                Route('/wiki/<page>', WikiHandler, 'wiki/page'),
             ])
 
         Here are some examples of how to generate URLs for them:
@@ -235,7 +232,7 @@ class RequestHandler(object):
         :returns:
             An absolute or relative URL.
         """
-        url = self.request.url_for(_name, **kwargs)
+        url = self.app.router.build(_name, **kwargs)
 
         if _full or _secure:
             scheme = 'http'
@@ -279,8 +276,8 @@ class RedirectHandler(RequestHandler):
             return handler.url_for('new-route-name')
 
         app = WSGIApplication([
-            ('/old-url', RedirectHandler, {'url': '/new-url'}),
-            ('/other-old-url', RedirectHandler, {'url': get_redirect_url}),
+            Route('/old-url', RedirectHandler, defaults={'url': '/new-url'}),
+            Route('/other-old-url', RedirectHandler, defaults={'url': get_redirect_url}),
         ])
 
     Based on idea from `Tornado`_.
@@ -302,266 +299,6 @@ class RedirectHandler(RequestHandler):
         self.redirect(url, permanent=kwargs.get('permanent', True))
 
 
-class WSGIApplication(object):
-    """Wraps a set of webapp RequestHandlers in a WSGI-compatible application.
-
-    To use this class, pass a list of ``(route path, RequestHandler)``
-    to the constructor, and pass the class instance to a WSGI handler.
-    Example::
-
-        from webapp2 import RequestHandler, WSGIApplication
-
-        class HelloWorldHandler(RequestHandler):
-            def get(self):
-                self.response.out.write('Hello, World!')
-
-        app = WSGIApplication([
-            ('/', HelloWorldHandler),
-        ])
-
-        def main():
-            app.run()
-
-        if __name__ == '__main__':
-            main()
-
-    The URL mapping is first-match based on the list ordering. URL definitions
-    can have an optional name passed as third argument, which is used to
-    build it, and an optional dictionary of default values passed as fourth
-    argument. Example::
-
-        app = WSGIApplication([
-            ('/articles', ArticlesHandler, 'articles'),
-            ('/articles/{article_id:[\d]+}', ArticleHandler, 'article', {'id': '1'}),
-        ])
-
-    See :class:`Route` for a complete explanation of the route syntax.
-    """
-    #: Default class used for the request object.
-    request_class = Request
-    #: Default class used for the response object.
-    response_class = Response
-    #: A dictionary mapping HTTP error codes to :class:`RequestHandler`
-    #: classes used to handle them. The handler set for status 500 is used
-    #: as default if others are not set.
-    error_handlers = {}
-
-    def __init__(self, url_map=None, debug=False, config=None):
-        """Initializes the WSGI application.
-
-        :param url_map:
-            A list of URL route definitions.
-        :param debug:
-            True if this is debug mode, False otherwise.
-        :param config:
-            A configuration dictionary for the application.
-        """
-        self.set_router(url_map)
-        self.debug = debug
-        self.config = Config(config)
-
-    def __call__(self, environ, start_response):
-        """Called by WSGI when a request comes in. Calls :meth:`wsgi_app`."""
-        return self.wsgi_app(environ, start_response)
-
-    def wsgi_app(self, environ, start_response):
-        """This is the actual WSGI application.  This is not implemented in
-        :meth:`__call__` so that middlewares can be applied without losing a
-        reference to the class. So instead of doing this::
-
-            app = MyMiddleware(app)
-
-        It's a better idea to do this instead::
-
-            app.wsgi_app = MyMiddleware(app.wsgi_app)
-
-        Then you still have the original application object around and
-        can continue to call methods on it.
-
-        This idea comes from `Flask <http://flask.pocoo.org/>`_.
-
-        :param environ:
-            A WSGI environment.
-        :param start_response:
-            A callable accepting a status code, a list of headers and an
-            optional exception context to start the response.
-        """
-        request = self.request_class(environ)
-        response = self.response_class()
-        method = environ['REQUEST_METHOD'].lower()
-
-        try:
-            if method not in _ALLOWED_METHODS:
-                # 501 Not Implemented.
-                raise webob.exc.HTTPNotImplemented()
-
-            handler_class, args, kwargs = self.match_route(request)
-
-            if handler_class:
-                handler = handler_class(self, request, response)
-                try:
-                    handler(method, *args, **kwargs)
-                except Exception, e:
-                    # If the handler implements exception handling,
-                    # let it handle it.
-                    handler.handle_exception(e, self.debug)
-            else:
-                # 404 Not Found.
-                raise webob.exc.HTTPNotFound()
-        except Exception, e:
-            try:
-                self.handle_exception(request, response, e)
-            except webob.exc.WSGIHTTPException, e:
-                # Use the exception as response.
-                response = e
-            except Exception, e:
-                # Our last chance to handle the error.
-                if self.debug:
-                    raise
-
-                # 500 Internal Server Error: nothing else to do.
-                response = webob.exc.HTTPInternalServerError()
-
-        return response(environ, start_response)
-
-    def handle_exception(self, request, response, e):
-        """Handles an exception. Searches :attr:`error_handlers` for a handler
-        with the eerror code, if it is a :class:`HTTPException`, or the 500
-        status code as fall back. Dispatches the handler if found, otherwise
-        simply sets the error code in the response.
-
-        :param request:
-            A ``webapp.Request`` instance.
-        :param response:
-            A :class:`Response` instance.
-        :param e:
-            The raised exception.
-        """
-        logging.exception(e)
-        if self.debug:
-            raise
-
-        if isinstance(e, HTTPException):
-            code = e.code
-        else:
-            code = 500
-
-        handler = self.error_handlers.get(code, self.error_handlers.get(500))
-        if handler:
-            # Handle the exception using a custom handler.
-            handler(self, request, response)('get', exception=e)
-        else:
-            # No exception handler. Catch it in the WSGI app.
-            raise
-
-    def set_router(self, url_map):
-        """Sets a :class:`Router` instance for the given url_map.
-
-        :param url_map:
-            A list of URL route definitions.
-        """
-        self.router = Router()
-        if url_map:
-            for spec in url_map:
-                if len(spec) == 2:
-                    # (path, handler)
-                    self.router.add(*spec)
-                elif len(spec) == 3:
-                    if not isinstance(spec[2], dict):
-                        # (path, handler, name)
-                        self.router.add(*spec)
-                    else:
-                        # (path, handler, defaults)
-                        self.router.add(*spec[:2], **spec[2])
-                elif len(spec) == 4:
-                    # (path, handler, name, defaults)
-                    self.router.add(*spec[:3], **spec[3])
-
-    def match_route(self, request):
-        """Matches a route against the current request.
-
-        :param request:
-            A ``webapp.Request`` instance.
-        :returns:
-            A tuple (handler_class, args, kwargs) for the matched route.
-        """
-        match = self.router.match(request)
-        request.url_route = match
-        request.url_for = self.router.build
-        if not match:
-            return (None, None, None)
-
-        route, args, kwargs = match
-        handler_class = route.handler
-
-        if isinstance(handler_class, basestring):
-            # Lazy handler, set as a string. Import and store the class.
-            if handler_class not in _HANDLERS:
-                _HANDLERS[handler_class] = import_string(handler_class)
-
-            handler_class = _HANDLERS[handler_class]
-
-        return handler_class, args, kwargs
-
-    def get_config(self, module, key=None, default=REQUIRED_VALUE):
-        """Returns a configuration value for a module. If it is not already
-        set, loads a ``default_config`` variable from the given module,
-        updates the app configuration with those default values and returns
-        the value for the given key. If the key is still not available,
-        returns the provided default value or raises an exception if no
-        default was provided.
-
-        Every Webapp module that allows some kind of configuration sets a
-        ``default_config`` global variable that is loaded by this function,
-        cached and used in case the requested configuration was not defined
-        by the user.
-
-        :param module:
-            The configured module.
-        :param key:
-            The config key.
-        :returns:
-            A configuration value.
-        """
-        config = self.config
-        if module not in config.loaded:
-            # Load default configuration and update app config.
-            values = import_string(module + '.default_config', silent=True)
-            if values:
-                config.setdefault(module, values)
-
-            config.loaded.append(module)
-
-        value = config.get(module, key, default)
-        if value is not REQUIRED_VALUE:
-            return value
-
-        if key is None:
-            raise KeyError('Module %s is not configured.' % module)
-        else:
-            raise KeyError('Module %s requires the config key "%s" to be '
-                'set.' % (module, key))
-
-    def run(self):
-        """Runs the app using ``google.appengine.ext.webapp.util.run_wsgi_app``.
-        This is generally called inside a ``main()`` function of the file
-        mapped in *app.yaml* to run the application::
-
-            # ...
-
-            app = WSGIApplication([
-                ('/', HelloWorldHandler),
-            ])
-
-            def main():
-                app.run()
-
-            if __name__ == '__main__':
-                main()
-        """
-        run_wsgi_app(self)
-
-
 class Router(object):
     """A simple URL router. This is used to match the current URL and build
     URLs for other resources.
@@ -572,25 +309,31 @@ class Router(object):
     Based on `Another Do-It-Yourself Framework`_ by Ian Bicking. We added
     URL building and separate :class:`Route` objects.
     """
-    def __init__(self):
-        self.routes = []
-        self.route_names = {}
+    def __init__(self, routes=None):
+        """Initializes the router.
 
-    def add(self, _path, _handler, _name=None, **kwargs):
+        :param routes:
+            A list of :class:`Route` to initialize the router.
+        """
+        self.routes = []
+        self.route_map = {}
+        if routes:
+            for route in routes:
+                # Compatibility with webapp.
+                if isinstance(route, tuple):
+                    route = WebappRoute(route[0], route[1])
+
+                self.add(route)
+
+    def add(self, route):
         """Adds a route to this router.
 
-        :param _path:
-            The route path. See :meth:`Route.__init__`.
-        :param _handler:
-            A :class:`RequestHandler` class to be executed when this route
-            matches.
-        :param _name:
-            The route name.
+        :param route:
+            A :class:`Route` instance.
         """
-        route = Route(_path, _handler, **kwargs)
         self.routes.append(route)
-        if _name:
-            self.route_names[_name] = route
+        if route.name:
+            self.route_map[route.name] = route
 
     def match(self, request):
         """Matches all routes against the current request. The first one that
@@ -606,6 +349,8 @@ class Router(object):
             if match:
                 return match
 
+        return (None, None, None)
+
     def build(self, _name, **kwargs):
         """Builds a URL for a named :class:`Route`.
 
@@ -619,7 +364,7 @@ class Router(object):
         :returns:
             A formatted URL.
         """
-        route = self.route_names.get(_name, None)
+        route = self.route_map.get(_name, None)
         if not route:
             raise KeyError('Route "%s" is not defined.' % _name)
 
@@ -627,88 +372,109 @@ class Router(object):
 
 
 class Route(object):
-    """A URL route definition."""
-    def __init__(self, _path, _handler, **defaults):
-        """Initializes a URL route. The route path can combine several regular
-        expression using a special syntax with each matched variable is
-        enclosed by curly braces. The variable can have only a name, only a
-        regular expression or both:
+    """A URL route definition. A route definition contains regular expressions
+    enclosed by ``<>`` and is used to match requested URLs. Here are some
+    examples::
 
-            =============================  ====================
-            Format                         Example
-            =============================  ====================
-            ``{name}``                     ``/{year}``
-            ``{:regular expression}``      ``/{:\d\d\d\d}``
-            ``{name:regular expression}``  ``/{year:\d\d\d\d}``
-            =============================  ====================
+        route = Route(r'/article/<article_id:[\d]+>', ArticleViewHandler)
+        route = Route(r'/wiki/<page_name:\w+>', WikiPAgeHandler)
+        route = Route(r'/blog/<year:\d{4}>/<month:\d{2}>/<day:\d{2}>/<slug:\w+>', BlogItemHandler)
+    """
+    def __init__(self, regex_template, handler, name=None, defaults=None):
+        """Initializes a URL route.
 
-        The name is passed as keyword argument to the :class:`RequestHandler`,
-        with the value of the matched regular expression, and is used to build
-        a URL for this route. Here are some path examples::
+        :param regex_template:
+            A regex template to be matched. A regex template is enclosed
+            by ``<>`` and  can have only a name, only a regular expression
+            or both::
 
-            /article/{article_id:[\d]+}
-            /wiki/{page_name:\w+}
-            /blog/{year:\d\d\d\d}/{month:\d\d}/{day:\d\d}/{slug:\w+}
+                =============================  ===================
+                Format                         Example
+                =============================  ===================
+                ``<name>``                     '``/<year>``'
+                ``<:regular expression>``      '``/<:\d{4}>``'
+                ``<name:regular expression>``  '``/<year:\d{4}>``'
+                =============================  ===================
 
-        .. note::
-           If the path contains any unnamed variables (only the regex part is
-           set), URLs can't be built from this route. Because of this, defining
-           both name and regular expression is preferable. Set names for all
-           variables if you intend to use :meth:`RequestHandler.url_for`.
-
-        :param _path:
-            A path to be matched. Paths can contain variables enclosed in
-            curly braces with optional name and regular expression to be
-            evaluated. Some examples::
-
-                route = Route('/blog', BlogHandler)
-                route = Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
-                route = Route('/blog/archive/{year:\d\d\d\d}/{slug:\w+}', BlogItemHandler)
-
-        :param _handler:
+            If the name is set, the value of the matched regular expression
+            is passed as keyword argument to the :class:`RequestHandler`.
+            Otherwise it is passed as positional argument.
+        :param handler:
             A :class:`RequestHandler` class to be executed when this route
-            matches.
+            matches, or a string representing the path to a module and a
+            handler class, e.g., ``my.module.MyHandler``.
+        :param name:
+            The name of this route, used to build URLs based on it.
         :param defaults:
             Default or extra keywords to be returned by this route. Default
             values present in the route variables are used to build the URL
             if the value is not passed.
         """
-        # The path to be matched.
-        self.path = _path
-        # The handler that is executed when this route matches.
-        self.handler = _handler
-        # Default values to build the URL and extra values to be returned.
-        self.defaults = defaults
-        # Named variables mapping to the regex to validate them.
-        self.variables = {}
-        # Positions of unnamed variables.
-        self.unnamed_variables = []
+        self.regex_template = regex_template
+        self.name = name
+        self.defaults = defaults or {}
+        # Lazy properties.
+        self._regex = None
+        self._variables = None
+        self._reverse_template = None
 
+        if callable(handler):
+            self._handler = handler
+        else:
+            self._handler = None
+            self._handler_str = handler
+
+    def parse_regex_template(self):
+        self._variables = {}
         last = 0
+        count = 0
         regex = ''
         template = ''
-        for group, match in enumerate(_ROUTE_REGEX.finditer(_path)):
-            part = _path[last:match.start()]
+        for match in _ROUTE_REGEX.finditer(self.regex_template):
+            part = self.regex_template[last:match.start()]
             name = match.group(1)
             expr = match.group(2) or '[^/]+'
             last = match.end()
 
-            if name:
-                regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
-                if self.variables is not None:
-                    self.variables[name] = re.compile('^%s$' % expr)
-                    template += '%s%%(%s)s' % (part, name)
-            else:
-                self.variables = None
-                regex += '%s(%s)' % (re.escape(part), expr)
-                self.unnamed_variables.append(group + 1)
+            if not name:
+                name = '__%d__' % count
+                count += 1
 
-        # The raw regex, for testing and debugging purposes.
-        self.regex_raw = '^%s%s$' % (regex, re.escape(_path[last:]))
-        # The regex used to match URLs.
-        self.regex = re.compile(self.regex_raw)
-        # The template used to build URLs.
-        self.template = template + _path[last:]
+            template += '%s%%(%s)s' % (part, name)
+            regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
+            self._variables[name] = re.compile('^%s$' % expr)
+
+        regex = '^%s%s$' % (regex, re.escape(self.regex_template[last:]))
+        self._regex = re.compile(regex)
+        self._reverse_template = template + self.regex_template[last:]
+
+    @property
+    def regex(self):
+        if self._regex is None:
+            self.parse_regex_template()
+
+        return self._regex
+
+    @property
+    def variables(self):
+        if self._variables is None:
+            self.parse_regex_template()
+
+        return self._variables
+
+    @property
+    def reverse_template(self):
+        if self._reverse_template is None:
+            self.parse_regex_template()
+
+        return self._reverse_template
+
+    @property
+    def handler(self):
+        if self._handler is None:
+            self._handler = import_string(self._handler_str)
+
+        return self._handler
 
     def match(self, request):
         """Matches a route against the current request.
@@ -722,14 +488,14 @@ class Route(object):
         if match:
             kwargs = self.defaults.copy()
             kwargs.update(match.groupdict())
-            if self.unnamed_variables:
-                args = match.group(*self.unnamed_variables)
-            else:
-                args = ()
+            args = []
+            for key in kwargs.keys():
+                if key.startswith('__'):
+                    args.insert(int(key[2:-2]), kwargs.pop(key))
 
-            return (self, args, kwargs)
+            return self, args, kwargs
 
-    def build(self, **kwargs):
+    def build(self, *args, **kwargs):
         """Builds a URL for this route. Examples:
 
         >>> route = Route('/blog', BlogHandler)
@@ -737,13 +503,19 @@ class Route(object):
         /blog
         >>> route.build(page='2', format='atom')
         /blog?page=2&format=atom
-        >>> route = Route('/blog/archive/{year:\d\d\d\d}', BlogArchiveHandler)
+        >>> route = Route('/blog/archive/<year:\d{4}>', BlogArchiveHandler)
         >>> route.build(year=2010)
         /blog/2010
-        >>> route = Route('/blog/archive/{year:\d\d\d\d}/{month:\d\d}/{slug:\w+}', BlogItemHandler)
+        >>> route = Route('/blog/archive/<year:\d{4}>/<month:\d{2}>/<slug:\w+>', BlogItemHandler)
         >>> route.build(year='2010', month='07', slug='my_blog_post')
         /blog/2010/07/my_blog_post
+        >>> route = Route('/blog/archive/<:\d{4}>/<:\d{2}>/<slug:\w+>', BlogItemHandler)
+        >>> route.build('2010', '07', slug='my_blog_post')
+        /blog/2010/07/my_blog_post
 
+        :param args:
+            Positional arguments to build the URL. All positional variables
+            defined in the route must be passed.
         :param kwargs:
             Keyword arguments to build the URL. All route variables that are
             not set as defaults must be passed, and they must conform to the
@@ -752,28 +524,33 @@ class Route(object):
         :returns:
             A formatted URL.
         """
-        if self.variables is None:
-            raise NotImplementedError("This route contains unnamed "
-                "variables and can't be built.")
+        if args:
+            kwargs.update(('__%d__' % k, v) for k, v in enumerate(args))
 
         values = {}
-        for name in self.variables.keys():
+        for name, regex in self.variables.iteritems():
             value = kwargs.pop(name, self.defaults.get(name))
             if not value:
-                raise KeyError('Missing keyword "%s" to build URL.' % name)
+                if name.startswith('__'):
+                    name = name[2:-2]
+
+                raise KeyError('Missing argument "%s" to build URL.' % name)
 
             if not isinstance(value, basestring):
                 value = str(value)
 
             value = url_escape(value)
-            match = self.variables[name].match(value)
-            if not match:
+
+            if not regex.match(value):
+                if name.startswith('__'):
+                    name = name[2:-2]
+
                 raise ValueError('URL buiding error: Value "%s" is not '
-                    'supported for keyword "%s".' % (value, name))
+                    'supported for argument "%s".' % (value, name))
 
             values[name] = value
 
-        url = self.template % values
+        url = self.reverse_template % values
 
         # Cleanup and encode extra kwargs.
         kwargs = [(to_utf8(k), to_utf8(v)) for k, v in kwargs.iteritems() \
@@ -784,6 +561,31 @@ class Route(object):
             url += '?%s' % urllib.urlencode(kwargs)
 
         return url
+
+
+class WebappRoute(object):
+    """A route that is compatible with webapp's routing. URL building is not
+    implemented as webapp has rudimentar support for it, and this is the most
+    unknown webapp feature anyway.
+    """
+    def __init__(self, regex, handler):
+        if not regex.startswith('^'):
+            regex = '^' + regex
+
+        if not regex.endswith('$'):
+            regex += '$'
+
+        self.regex = re.compile(regex)
+        self.handler = handler
+        self.name = None
+
+    def match(self, request):
+        match = self.regex.match(request.path)
+        if match:
+            return self, match.groups(), {}
+
+    def build(self, *args, **kwargs):
+        raise NotImplementedError()
 
 
 class Config(dict):
@@ -944,6 +746,221 @@ class Config(dict):
             return default
 
         return self[module][key]
+
+
+class WSGIApplication(object):
+    """Wraps a set of webapp RequestHandlers in a WSGI-compatible application.
+
+    To use this class, pass a list of ``(route path, RequestHandler)``
+    to the constructor, and pass the class instance to a WSGI handler.
+    Example::
+
+        from webapp2 import RequestHandler, WSGIApplication
+
+        class HelloWorldHandler(RequestHandler):
+            def get(self):
+                self.response.out.write('Hello, World!')
+
+        app = WSGIApplication([
+            Route('/', HelloWorldHandler),
+        ])
+
+        def main():
+            app.run()
+
+        if __name__ == '__main__':
+            main()
+
+    The URL mapping is first-match based on the list ordering. URL definitions
+    can have an optional name passed as third argument, which is used to
+    build it, and an optional dictionary of default values passed as fourth
+    argument. Example::
+
+        app = WSGIApplication([
+            Route('/articles', ArticlesHandler, 'articles'),
+            Route('/articles/<article_id:[\d]+>', ArticleHandler, 'article', {'id': '1'}),
+        ])
+
+    See :class:`Route` for a complete explanation of the route syntax.
+    """
+    #: Default class used for the request object.
+    request_class = Request
+    #: Default class used for the response object.
+    response_class = Response
+    #: Default class used for the router object.
+    router_class = Router
+    #: Default class used for the config object.
+    config_class = Config
+    #: A dictionary mapping HTTP error codes to :class:`RequestHandler`
+    #: classes used to handle them. The handler set for status 500 is used
+    #: as default if others are not set.
+    error_handlers = {}
+
+    def __init__(self, routes=None, debug=False, config=None):
+        """Initializes the WSGI application.
+
+        :param routes:
+            A list of URL route definitions.
+        :param debug:
+            True if this is debug mode, False otherwise.
+        :param config:
+            A configuration dictionary for the application.
+        """
+        self.debug = debug
+        self.router = self.router_class(routes)
+        self.config = self.config_class(config)
+
+    def __call__(self, environ, start_response):
+        """Called by WSGI when a request comes in. Calls :meth:`wsgi_app`."""
+        return self.wsgi_app(environ, start_response)
+
+    def wsgi_app(self, environ, start_response):
+        """This is the actual WSGI application.  This is not implemented in
+        :meth:`__call__` so that middlewares can be applied without losing a
+        reference to the class. So instead of doing this::
+
+            app = MyMiddleware(app)
+
+        It's a better idea to do this instead::
+
+            app.wsgi_app = MyMiddleware(app.wsgi_app)
+
+        Then you still have the original application object around and
+        can continue to call methods on it.
+
+        This idea comes from `Flask <http://flask.pocoo.org/>`_.
+
+        :param environ:
+            A WSGI environment.
+        :param start_response:
+            A callable accepting a status code, a list of headers and an
+            optional exception context to start the response.
+        """
+        request = self.request_class(environ)
+        response = self.response_class()
+        method = environ['REQUEST_METHOD'].lower()
+
+        try:
+            if method not in _ALLOWED_METHODS:
+                # 501 Not Implemented.
+                raise webob.exc.HTTPNotImplemented()
+
+            route, args, kwargs = request.url_route = self.router.match(request)
+
+            if route:
+                handler = route.handler(self, request, response)
+                try:
+                    handler(method, *args, **kwargs)
+                except Exception, e:
+                    # If the handler implements exception handling,
+                    # let it handle it.
+                    handler.handle_exception(e, self.debug)
+            else:
+                # 404 Not Found.
+                raise webob.exc.HTTPNotFound()
+        except Exception, e:
+            try:
+                self.handle_exception(request, response, e)
+            except webob.exc.WSGIHTTPException, e:
+                # Use the exception as response.
+                response = e
+            except Exception, e:
+                # Our last chance to handle the error.
+                if self.debug:
+                    raise
+
+                # 500 Internal Server Error: nothing else to do.
+                response = webob.exc.HTTPInternalServerError()
+
+        return response(environ, start_response)
+
+    def handle_exception(self, request, response, e):
+        """Handles an exception. Searches :attr:`error_handlers` for a handler
+        with the eerror code, if it is a :class:`HTTPException`, or the 500
+        status code as fall back. Dispatches the handler if found, otherwise
+        simply sets the error code in the response.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :param response:
+            A :class:`Response` instance.
+        :param e:
+            The raised exception.
+        """
+        logging.exception(e)
+        if self.debug:
+            raise
+
+        if isinstance(e, HTTPException):
+            code = e.code
+        else:
+            code = 500
+
+        handler = self.error_handlers.get(code, self.error_handlers.get(500))
+        if handler:
+            # Handle the exception using a custom handler.
+            handler(self, request, response)('get', exception=e)
+        else:
+            # No exception handler. Catch it in the WSGI app.
+            raise
+
+    def get_config(self, module, key=None, default=REQUIRED_VALUE):
+        """Returns a configuration value for a module. If it is not already
+        set, loads a ``default_config`` variable from the given module,
+        updates the app configuration with those default values and returns
+        the value for the given key. If the key is still not available,
+        returns the provided default value or raises an exception if no
+        default was provided.
+
+        Every Webapp module that allows some kind of configuration sets a
+        ``default_config`` global variable that is loaded by this function,
+        cached and used in case the requested configuration was not defined
+        by the user.
+
+        :param module:
+            The configured module.
+        :param key:
+            The config key.
+        :returns:
+            A configuration value.
+        """
+        config = self.config
+        if module not in config.loaded:
+            # Load default configuration and update app config.
+            values = import_string(module + '.default_config', silent=True)
+            if values:
+                config.setdefault(module, values)
+
+            config.loaded.append(module)
+
+        value = config.get(module, key, default)
+        if value is not REQUIRED_VALUE:
+            return value
+
+        if key is None:
+            raise KeyError('Module %s is not configured.' % module)
+        else:
+            raise KeyError('Module %s requires the config key "%s" to be '
+                'set.' % (module, key))
+
+    def run(self):
+        """Runs the app using ``google.appengine.ext.webapp.util.run_wsgi_app``.
+        This is generally called inside a ``main()`` function of the file
+        mapped in *app.yaml* to run the application::
+
+            # ...
+
+            app = WSGIApplication([
+                Route('/', HelloWorldHandler),
+            ])
+
+            def main():
+                app.run()
+
+            if __name__ == '__main__':
+                main()
+        """
+        run_wsgi_app(self)
 
 
 def abort(code, *args, **kwargs):
