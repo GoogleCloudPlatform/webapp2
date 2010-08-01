@@ -11,5 +11,8 @@ handlers:
   static_files: static/\1
   upload: static/.*
 
+- url: /test.*
+  script: test.py
+
 - url: /.*
   script: main.py

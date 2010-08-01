@@ -107,10 +107,10 @@ class RequestHandler(object):
         self.request = request
         self.response = response
 
-    def __call__(self, _method_name, *args, **kwargs):
+    def __call__(self, _method, *args, **kwargs):
         """Dispatches the requested method.
 
-        :param _method_name:
+        :param _method:
             The method to be dispatched: the request method in lower case
             (e.g., 'get', 'post', 'head', 'put' etc).
         :param args:
@@ -122,7 +122,7 @@ class RequestHandler(object):
         :returns:
             None.
         """
-        method = getattr(self, _method_name, None)
+        method = getattr(self, _method, None)
         if method is None:
             # 405 Method Not Allowed.
             # The response MUST include an Allow header containing a
