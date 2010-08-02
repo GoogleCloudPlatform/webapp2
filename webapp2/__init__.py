@@ -781,6 +781,9 @@ class Config(dict):
             The configured module.
         :param key:
             The config key.
+        :param default:
+            A default value to return in case the configuration for
+            the module/key is not set.
         :returns:
             A configuration value.
         """
