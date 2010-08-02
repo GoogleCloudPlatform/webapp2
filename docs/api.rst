@@ -10,8 +10,9 @@ API Reference
 WSGI App
 --------
 .. autoclass:: WSGIApplication
-   :members: request_class, response_class, error_handlers, __init__, __call__,
-             wsgi_app, handle_exception, get_config, run
+   :members: request_class, response_class, router_class, config_class,
+             error_handlers, __init__, __call__, wsgi_app, handle_exception,
+             run
 
 
 Request Handlers

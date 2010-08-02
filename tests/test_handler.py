@@ -2,6 +2,8 @@
 """
 Tests for webapp2 RequestHandler
 """
+import os
+import sys
 import unittest
 
 from webtest import TestApp
@@ -141,6 +143,15 @@ app = WSGIApplication([
 
 test_app = TestApp(app)
 
+DEFAULT_RESPONSE = """Status: 404 Not Found
+content-type: text/html; charset=utf8
+Content-Length: 52
+
+404 Not Found
+
+The resource could not be found.
+
+   """
 
 class TestHandler(unittest.TestCase):
     def tearDown(self):
@@ -293,6 +304,17 @@ class TestHandler(unittest.TestCase):
         self.assertEqual(res.body, '')
         self.assertEqual(res.headers['Location'], 'http://localhost/2010/07/test?foo=bar#my-anchor')
 
+    def test_run(self):
+        os.environ['REQUEST_METHOD'] = 'GET'
+
+        app.run()
+        self.assertEqual(sys.stdout.getvalue(), DEFAULT_RESPONSE)
+
+    def test_run_bare(self):
+        os.environ['REQUEST_METHOD'] = 'GET'
+        app.run(bare=True)
+
+        self.assertEqual(sys.stdout.getvalue(), DEFAULT_RESPONSE)
 
 class TestHandlerHelpers(unittest.TestCase):
     def test_get_valid_methods(self):

@@ -151,28 +151,28 @@ class TestConfig(unittest.TestCase):
 
 class TestGetConfig(unittest.TestCase):
     def test_default_config(self):
-        app = WSGIApplication()
+        config = Config()
 
-        from resources.template import default_config as jinja2_config
+        from resources.template import default_config as template_config
         from resources.i18n import default_config as i18n_config
 
-        assert app.get_config('resources.template', 'templates_dir') == jinja2_config['templates_dir']
-        assert app.get_config('resources.i18n', 'locale') == i18n_config['locale']
-        assert app.get_config('resources.i18n', 'timezone') == i18n_config['timezone']
+        assert config.load_and_get('resources.template', 'templates_dir') == template_config['templates_dir']
+        assert config.load_and_get('resources.i18n', 'locale') == i18n_config['locale']
+        assert config.load_and_get('resources.i18n', 'timezone') == i18n_config['timezone']
 
     def test_default_config_with_non_existing_key(self):
-        app = WSGIApplication()
+        config = Config()
 
         from resources.i18n import default_config as i18n_config
 
         # In the first time the module config will be loaded normally.
-        assert app.get_config('resources.i18n', 'locale') == i18n_config['locale']
+        assert config.load_and_get('resources.i18n', 'locale') == i18n_config['locale']
 
         # In the second time it won't be loaded, but won't find the value and then use the default.
-        assert app.get_config('resources.i18n', 'i_dont_exist', 'foo') == 'foo'
+        assert config.load_and_get('resources.i18n', 'i_dont_exist', 'foo') == 'foo'
 
     def test_override_config(self):
-        app = WSGIApplication(config={
+        config = Config({
             'resources.template': {
                 'templates_dir': 'apps/templates'
             },
@@ -182,70 +182,68 @@ class TestGetConfig(unittest.TestCase):
             },
         })
 
-        assert app.get_config('resources.template', 'templates_dir') == 'apps/templates'
-        assert app.get_config('resources.i18n', 'locale') == 'pt_BR'
-        assert app.get_config('resources.i18n', 'timezone') == 'America/Sao_Paulo'
+        assert config.load_and_get('resources.template', 'templates_dir') == 'apps/templates'
+        assert config.load_and_get('resources.i18n', 'locale') == 'pt_BR'
+        assert config.load_and_get('resources.i18n', 'timezone') == 'America/Sao_Paulo'
 
     def test_override_config2(self):
-        app = WSGIApplication(config={
+        config = Config({
             'resources.i18n': {
                 'timezone': 'America/Sao_Paulo',
             },
         })
 
-        assert app.get_config('resources.i18n', 'locale') == 'en_US'
-        assert app.get_config('resources.i18n', 'timezone') == 'America/Sao_Paulo'
+        assert config.load_and_get('resources.i18n', 'locale') == 'en_US'
+        assert config.load_and_get('resources.i18n', 'timezone') == 'America/Sao_Paulo'
 
     def test_get(self):
-        app = WSGIApplication(config={'foo': {
+        config = Config({'foo': {
             'bar': 'baz',
         }})
 
-        assert app.get_config('foo', 'bar') == 'baz'
+        assert config.load_and_get('foo', 'bar') == 'baz'
 
     def test_get_with_default(self):
-        app = WSGIApplication()
+        config = Config()
 
-        assert app.get_config('resources.i18n', 'bar', 'baz') == 'baz'
+        assert config.load_and_get('resources.i18n', 'bar', 'baz') == 'baz'
 
     def test_get_with_default_and_none(self):
-        app = WSGIApplication(config={'foo': {
+        config = Config({'foo': {
             'bar': None,
         }})
 
-        assert app.get_config('foo', 'bar', 'ooops') is None
+        assert config.load_and_get('foo', 'bar', 'ooops') is None
 
     def test_get_with_default_and_module_load(self):
-        app = WSGIApplication()
-        assert app.get_config('resources.i18n', 'locale') == 'en_US'
-
-        app = WSGIApplication()
-        assert app.get_config('resources.i18n', 'locale', 'foo') == 'en_US'
+        config = Config()
+        assert config.load_and_get('resources.i18n', 'locale') == 'en_US'
+        assert config.load_and_get('resources.i18n', 'locale', 'foo') == 'en_US'
 
     @raises(KeyError)
     def test_required_config(self):
-        app = WSGIApplication()
-        app.get_config('resources.i18n', 'required')
+        config = Config()
+        config.load_and_get('resources.i18n', 'required')
 
     @raises(KeyError)
     def test_missing_module(self):
-        app = WSGIApplication()
-        assert app.get_config('i_dont_exist', 'i_dont_exist') == 'baz'
+        config = Config()
+        assert config.load_and_get('i_dont_exist', 'i_dont_exist') == 'baz'
 
     @raises(KeyError)
     def test_missing_module2(self):
-        app = WSGIApplication()
-        assert app.get_config('i_dont_exist') == 'baz'
+        config = Config()
+        assert config.load_and_get('i_dont_exist') == 'baz'
 
     @raises(KeyError)
     def test_missing_key(self):
-        app = WSGIApplication()
-        app.get_config('resources.i18n', 'i_dont_exist')
+        config = Config()
+        config.load_and_get('resources.i18n', 'i_dont_exist')
 
     @raises(KeyError)
     def test_missing_default_config(self):
-        app = WSGIApplication()
-        assert app.get_config('webapp2', 'foo') == 'baz'
+        config = Config()
+        assert config.load_and_get('webapp2', 'foo') == 'baz'
 
     def test_request_handler_get_config(self):
         app = WSGIApplication()
