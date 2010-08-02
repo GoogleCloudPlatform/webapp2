@@ -566,11 +566,14 @@ class Route(BaseRoute):
         :returns:
             A formatted URL.
         """
-        if args:
-            kwargs.update(('__%d__' % k, v) for k, v in enumerate(args))
+        variables = self.variables
+        for index, value in enumerate(args):
+            key = '__%d__' % index
+            if key in variables:
+                kwargs[key] = value
 
         values = {}
-        for name, regex in self.variables.iteritems():
+        for name, regex in variables.iteritems():
             value = kwargs.pop(name, self.defaults.get(name))
             if not value:
                 if name.startswith('__'):

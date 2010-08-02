@@ -125,9 +125,19 @@ class TestRoute(unittest.TestCase):
         self.assertEqual(route.build(year='2010', foo='bar', baz='ding'),
             '/2010?foo=bar&baz=ding')
 
+    def test_build_extra_positional_keyword(self):
+        route = Route(r'/<year:\d{4}>/<:\d{2}>', 'my_handler')
+        self.assertEqual(route.build('08', 'i-should-be-ignored', 'me-too', year='2010', foo='bar'), '/2010/08?foo=bar')
+        self.assertEqual(route.build('08', 'i-should-be-ignored', 'me-too', year='2010', foo='bar', baz='ding'),
+            '/2010/08?foo=bar&baz=ding')
+
     def test_build_int_keyword(self):
         route = Route(r'/<year:\d{4}>', 'my_handler')
         self.assertEqual(route.build(year=2010), '/2010')
+
+    def test_build_int_variable(self):
+        route = Route(r'/<:\d{4}>', 'my_handler')
+        self.assertEqual(route.build(2010), '/2010')
 
     def test_router_build_error(self):
         router = Router()
