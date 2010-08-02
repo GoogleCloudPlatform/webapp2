@@ -1,7 +1,19 @@
-from webapp2 import RequestHandler, get_valid_methods
+# -*- coding: utf-8 -*-
+"""
+    Plugin extension
+    ~~~~~~~~~~~~~~~~
+
+    Extends ``RequestHandler``, ``Request`` and ``WSGIApplication`` to
+    add minimal infra-structure for plugins and extensions:
+
+    - ``RequestHandler`` dispatch hooks.
+    - ``Request`` registry and context.
+    - ``WSGIApplication`` registry.
+"""
+import webapp2
 
 
-class PluggableRequestHandler(RequestHandler):
+class RequestHandler(webapp2.RequestHandler):
     #: A list of plugin instances. A plugin can implement two methods that
     #: are called before and after the current request method is executed,
     #: except if the chain is stopped.
@@ -34,7 +46,7 @@ class PluggableRequestHandler(RequestHandler):
             # The response MUST include an Allow header containing a
             # list of valid methods for the requested resource.
             # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6
-            valid = ', '.join(get_valid_methods(self))
+            valid = ', '.join(webapp2.get_valid_methods(self))
             self.abort(405, headers=[('Allow', valid)])
 
         # Execute before_dispatch plugins.
@@ -55,3 +67,22 @@ class PluggableRequestHandler(RequestHandler):
                 rv = hook(self)
                 if rv is False:
                     break
+
+
+class Request(webapp2.Request):
+    def __init__(self, *args, **kwargs):
+        super(Request, self)__init__(*args, **kwargs)
+        # A registry for objects in use during a request.
+        self.registry = {}
+        # A context for template variables.
+        self.context = {}
+
+
+class WSGIApplication(webapp2.WSGIApplication):
+    #: Default class used for the request object.
+    request_class = Request
+
+    def __init__(self, *args, **kwargs):
+        super(WSGIApplication, self)__init__(*args, **kwargs)
+        # A registry for objects instantiated for this app.
+        self.registry = {}
