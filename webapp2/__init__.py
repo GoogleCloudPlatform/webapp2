@@ -304,9 +304,9 @@ class Route(object):
     enclosed by ``<>`` and is used to match requested URLs. Here are some
     examples::
 
-        route = Route(r'/article/<article_id:[\d]+>', ArticleViewHandler)
-        route = Route(r'/wiki/<page_name:\w+>', WikiPageHandler)
-        route = Route(r'/blog/<year:\d{4}>/<month:\d{2}>/<day:\d{2}>/<slug:\w+>', BlogItemHandler)
+        route = Route(r'/article/<article_id:[\d]+>')
+        route = Route(r'/wiki/<page_name:\w+>')
+        route = Route(r'/blog/<year:\d{4}>/<month:\d{2}>/<day:\d{2}>/<slug:\w+>')
 
     Based on `Another Do-It-Yourself Framework`_, by Ian Bicking. We added
     URL building, non-keyword variables and other improvements.
