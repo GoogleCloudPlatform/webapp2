@@ -333,10 +333,6 @@ class Route(object):
 
             The same template can mix parts with only name, only regular
             expression or both.
-        :param handler:
-            A :class:`RequestHandler` class to be executed when this route
-            matches, or a string representing the path to a module and a
-            handler class, e.g., ``my.module.MyHandler``.
         :param name:
             The name of this route, used to build URLs based on it.
         :param defaults:
