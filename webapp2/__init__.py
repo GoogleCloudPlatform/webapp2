@@ -23,8 +23,8 @@ import webob.exc
 HTTPException = webob.exc.HTTPException
 
 #: Allowed request methods.
-_ALLOWED_METHODS = frozenset(['get', 'post', 'head', 'options', 'put',
-    'delete', 'trace'])
+_ALLOWED_METHODS = frozenset(['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT',
+    'DELETE', 'TRACE'])
 
 #: Regex for URL definitions.
 _ROUTE_REGEX = re.compile(r'''
@@ -195,60 +195,15 @@ class RequestHandler(object):
         **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
-        For example, if you have these routes registered in the application::
-
-            app = WSGIApplication([
-                Route(r'/', 'handlers.HomeHandler', 'home/main'),
-                Route(r'/wiki', WikiHandler, 'wiki/start'),
-                Route(r'/wiki/<page>', WikiHandler, 'wiki/page'),
-            ])
-
-        Here are some examples of how to generate URLs for them:
-
-        >>> url = self.url_for('home/main')
-        /
-        >>> url = self.url_for('home/main', _full=True)
-        http://localhost:8080/
-        >>> url = self.url_for('wiki/start')
-        /wiki
-        >>> url = self.url_for('wiki/start', _full=True)
-        http://localhost:8080/wiki
-        >>> url = self.url_for('wiki/start', _full=True, _anchor='my-heading')
-        http://localhost:8080/wiki#my-heading
-        >>> url = self.url_for('wiki/page', page='my-first-page')
-        /wiki/my-first-page
-
-        :param _name:
-            The route name.
-        :param _full:
-            If True, returns an absolute URL. Otherwise returns a relative one.
-        :param _secure:
-            If True, returns an absolute URL using `https` scheme.
-        :param _anchor:
-            An anchor to append to the end of the URL.
-        :param kwargs:
-            Keyword arguments to build the URL.
-        :returns:
-            An absolute or relative URL.
+        .. seealso:: :meth:`Router.build`.
         """
-        url = self.app.router.build(_name, **kwargs)
-
-        if _full or _secure:
-            scheme = 'http'
-            if _secure:
-                scheme += 's'
-
-            url = '%s://%s%s' % (scheme, self.request.host, url)
-
-        if _anchor:
-            url += '#%s' % url_escape(_anchor)
-
-        return url
+        return self.app.router.build(_name, _full=_full, _secure=_secure,
+            _anchor=_anchor, _request=self.request, **kwargs)
 
     def get_config(self, module, key=None, default=REQUIRED_VALUE):
         """Returns a configuration value for a module.
 
-        See :meth:`Config.load_and_get`.
+        .. seealso:: :meth:`Config.load_and_get`.
         """
         return self.app.config.load_and_get(module, key=key, default=default)
 
@@ -275,8 +230,8 @@ class RedirectHandler(RequestHandler):
             return handler.url_for('new-route-name')
 
         app = WSGIApplication([
-            Route(r'/old-url', RedirectHandler, defaults={'url': '/new-url'}),
-            Route(r'/other-old-url', RedirectHandler, defaults={'url': get_redirect_url}),
+            (Route(r'/old-url', defaults={'url': '/new-url'}), RedirectHandler),
+            (Route(r'/other-old-url', defaults={'url': get_redirect_url}), RedirectHandler),
         ])
 
     Based on idea from `Tornado`_.
@@ -298,132 +253,53 @@ class RedirectHandler(RequestHandler):
         self.redirect(url, permanent=kwargs.get('permanent', True))
 
 
-class Router(object):
-    """A simple URL router. This is used to match the current URL and build
-    URLs for other resources.
-
-    This router doesn't intend to do fancy things such as automatic URL
-    redirect or subdomain matching. It should stay as simple as possible.
-
-    Based on `Another Do-It-Yourself Framework`_ by Ian Bicking. We added
-    URL building and separate :class:`Route` objects.
-    """
-    def __init__(self, routes=None):
-        """Initializes the router.
-
-        :param routes:
-            A list of :class:`Route` to initialize the router.
-        """
-        self.routes = []
-        self.route_map = {}
-        if routes:
-            for route in routes:
-                # Compatibility with webapp.
-                if isinstance(route, tuple):
-                    route = WebappRoute(route[0], route[1])
-
-                self.add(route)
-
-    def add(self, route):
-        """Adds a route to this router.
-
-        :param route:
-            A :class:`Route` instance.
-        """
-        self.routes.append(route)
-        if route.name:
-            self.route_map[route.name] = route
-
-    def match(self, request):
-        """Matches all routes against the current request. The first one that
-        matches is returned.
-
-        :param request:
-            A ``webapp.Request`` instance.
-        :returns:
-            A tuple ``(route, args, kwargs)``.
-        """
-        for route in self.routes:
-            match = route.match(request)
-            if match:
-                return match
-
-        return (None, None, None)
-
-    def build(self, _name, **kwargs):
-        """Builds a URL for a named :class:`Route`.
-
-        :param _name:
-            The route name, as registered in :meth:`add`.
-        :param kwargs:
-            Keyword arguments to build the URL. All route variables that are
-            not set as defaults must be passed, and they must conform to the
-            format set in the route. Extra keywords are appended as URL
-            arguments.
-        :returns:
-            A formatted URL.
-        """
-        route = self.route_map.get(_name, None)
-        if not route:
-            raise KeyError('Route "%s" is not defined.' % _name)
-
-        return route.build(**kwargs)
-
-
-class BaseRoute(object):
-    """Base class for routes"""
-    def __init__(self, template, handler):
-        self.template = template
-        if callable(handler):
-            self._handler = handler
-        else:
-            self._handler = None
-            self._handler_str = handler
-
-    @property
-    def handler(self):
-        if self._handler is None:
-            self._handler = import_string(self._handler_str)
-
-        return self._handler
-
-    def match(self, request):
-        raise NotImplementedError()
-
-    def build(self, *args, **kwargs):
-        raise NotImplementedError()
-
-
-class WebappRoute(BaseRoute):
+class SimpleRoute(object):
     """A route that is compatible with webapp's routing. URL building is not
     implemented as webapp has rudimentar support for it, and this is the most
     unknown webapp feature anyway.
     """
-    def __init__(self, template, handler):
-        if not template.startswith('^'):
-            template = '^' + template
+    #: Route name, used to build URLs. Always None for this route class.
+    name = None
 
-        if not template.endswith('$'):
-            template += '$'
+    def __init__(self, template):
+        """Initializes a URL route.
 
-        BaseRoute.__init__(self, template, handler)
-        self.name = None
+        :param template:
+            A route regex to be matched.
+        """
+        self.template = template
         self._regex = None
 
     @property
     def regex(self):
         if self._regex is None:
+            if not self.template.startswith('^'):
+                self.template = '^' + self.template
+
+            if not self.template.endswith('$'):
+                self.template += '$'
+
             self._regex = re.compile(self.template)
 
         return self._regex
 
     def match(self, request):
+        """Matches this route against the current request.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :returns:
+            A tuple ``(route, args, kwargs)`` if the route matches, or None.
+        """
         match = self.regex.match(request.path)
         if match:
             return self, match.groups(), {}
 
+    def build(self, *args, **kwargs):
+        raise NotImplementedError()
 
-class Route(BaseRoute):
+
+class Route(object):
     """A URL route definition. A route template contains regular expressions
     enclosed by ``<>`` and is used to match requested URLs. Here are some
     examples::
@@ -431,8 +307,11 @@ class Route(BaseRoute):
         route = Route(r'/article/<article_id:[\d]+>', ArticleViewHandler)
         route = Route(r'/wiki/<page_name:\w+>', WikiPageHandler)
         route = Route(r'/blog/<year:\d{4}>/<month:\d{2}>/<day:\d{2}>/<slug:\w+>', BlogItemHandler)
+
+    Based on `Another Do-It-Yourself Framework`_, by Ian Bicking. We added
+    URL building, non-keyword variables and other improvements.
     """
-    def __init__(self, template, handler, name=None, defaults=None):
+    def __init__(self, template, name=None, defaults=None):
         """Initializes a URL route.
 
         :param template:
@@ -465,7 +344,7 @@ class Route(BaseRoute):
             values present in the route variables are used to build the URL
             if the value is not passed.
         """
-        BaseRoute.__init__(self, template, handler)
+        self.template = template
         self.name = name
         self.defaults = defaults or {}
         # Lazy properties.
@@ -519,12 +398,12 @@ class Route(BaseRoute):
         return self._reverse_template
 
     def match(self, request):
-        """Matches a route against the current request.
+        """Matches this route against the current request.
 
         :param request:
             A ``webapp.Request`` instance.
         :returns:
-            A tuple ``(route, args, kwargs)``.
+            A tuple ``(route, args, kwargs)`` if the route matches, or None.
         """
         match = self.regex.match(request.path)
         if match:
@@ -540,18 +419,18 @@ class Route(BaseRoute):
     def build(self, *args, **kwargs):
         """Builds a URL for this route. Examples:
 
-        >>> route = Route(r'/blog', BlogHandler)
+        >>> route = Route(r'/blog')
         >>> route.build()
         /blog
         >>> route.build(page='2', format='atom')
         /blog?page=2&format=atom
-        >>> route = Route(r'/blog/archive/<year:\d{4}>', BlogArchiveHandler)
+        >>> route = Route(r'/blog/archive/<year:\d{4}>')
         >>> route.build(year=2010)
         /blog/2010
-        >>> route = Route(r'/blog/archive/<year:\d{4}>/<month:\d{2}>/<slug:\w+>', BlogItemHandler)
+        >>> route = Route(r'/blog/archive/<year:\d{4}>/<month:\d{2}>/<slug:\w+>')
         >>> route.build(year='2010', month='07', slug='my_blog_post')
         /blog/2010/07/my_blog_post
-        >>> route = Route(r'/blog/archive/<:\d{4}>/<:\d{2}>/<slug:\w+>', BlogItemHandler)
+        >>> route = Route(r'/blog/archive/<:\d{4}>/<:\d{2}>/<slug:\w+>')
         >>> route.build('2010', '07', slug='my_blog_post')
         /blog/2010/07/my_blog_post
 
@@ -604,6 +483,157 @@ class Route(BaseRoute):
         if kwargs:
             # Append extra keywords as URL arguments.
             url += '?%s' % urllib.urlencode(kwargs)
+
+        return url
+
+
+class Router(object):
+    """A simple URL router used to match the current URL, dispatch the handler
+    and build URLs for other resources.
+    """
+    #: Default class used when the route is a string, compatible with webapp.
+    route_class = SimpleRoute
+
+    def __init__(self, routes=None):
+        """Initializes the router.
+
+        :param routes:
+            A list of tuples ``(route, handler)`` to initialize the router.
+        """
+        self.routes = []
+        self.route_map = {}
+        if routes:
+            for route, handler in routes:
+                self.add(route, handler)
+
+    def add(self, route, handler):
+        """Adds a route to this router.
+
+        :param route:
+            A :class:`Route` instance, or a string used to instantiate
+            :attr:`route_class`.
+        :param handler:
+            A :class:`RequestHandler` class or dotted name for a class to be
+            lazily imported, e.g., ``my.module.MyHandler``.
+        """
+        if isinstance(route, basestring):
+            # Simple route, compatible with webapp.
+            route = self.route_class(route)
+
+        if isinstance(handler, basestring):
+            # Auto import the handler when needed.
+            handler = LazyObject(handler)
+
+        self.routes.append((route, handler))
+        if route.name:
+            self.route_map[route.name] = route
+
+    def match(self, request):
+        """Matches all routes against the current request. The first one that
+        matches is returned.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :returns:
+            A tuple ``(route, args, kwargs)``.
+        """
+        for route, handler in self.routes:
+            match = route.match(request)
+            if match:
+                return (handler,) + match
+
+        return None
+
+    def dispatch(self, app, request, response):
+        """Dispatches a request. This matches the current request against
+        registered routes and calls the matched :class:`RequestHandler`.
+
+        :param app:
+            A :class:`WSGIApplication` instance.
+        :param request:
+            A ``webapp.Request`` instance.
+        :param response:
+            A :class:`Response` instance.
+        """
+        request.router_match = match = self.match(request)
+
+        if match:
+            handler_class, route, args, kwargs = match
+            handler = handler_class(app, request, response)
+            try:
+                handler(request.method.lower(), *args, **kwargs)
+            except Exception, e:
+                # If the handler implements exception handling,
+                # let it handle it.
+                handler.handle_exception(e, app.debug)
+        else:
+            # 404 Not Found.
+            raise webob.exc.HTTPNotFound()
+
+    def build(self, _name, _full=False, _secure=False, _anchor=None,
+        _request=None, **kwargs):
+        """Builds and returns a URL for a named :class:`Route`.
+
+        For example, if you have these routes registered in the application::
+
+            app = WSGIApplication([
+                (Route(r'/', 'home/main'), 'handlers.HomeHandler'),
+                (Route(r'/wiki', 'wiki/start'), WikiHandler),
+                (Route(r'/wiki/<page>', 'wiki/page'), WikiHandler),
+            ])
+
+        Here are some examples of how to generate URLs for them:
+
+        >>> url = app.router.build('home/main')
+        /
+        >>> url = app.router.build('home/main', _full=True, _request=Request.blank('/'))
+        http://localhost:8080/
+        >>> url = app.router.build('wiki/start')
+        /wiki
+        >>> url = app.router.build('wiki/start', _full=True, _request=Request.blank('/'))
+        http://localhost:8080/wiki
+        >>> url = app.router.build('wiki/start', _full=True, _anchor='my-heading', _request=Request.blank('/'))
+        http://localhost:8080/wiki#my-heading
+        >>> url = app.router.build('wiki/page', page='my-first-page')
+        /wiki/my-first-page
+
+        :param _name:
+            The route name.
+        :param _full:
+            If True, returns an absolute URL. Otherwise returns a relative one.
+        :param _secure:
+            If True, returns an absolute URL using `https` scheme.
+        :param _anchor:
+            An anchor to append to the end of the URL.
+        :param _request:
+            The current ``Request`` object.
+        :param kwargs:
+            Keyword arguments to build the URL. All route variables that are
+            not set as defaults must be passed, and they must conform to the
+            format set in the route. Extra keywords are appended as URL
+            arguments.
+        :returns:
+            An absolute or relative URL.
+        """
+        route = self.route_map.get(_name, None)
+        if not route:
+            raise KeyError('Route "%s" is not defined.' % _name)
+
+        url = route.build(**kwargs)
+
+        if _full or _secure:
+            if _request is None:
+                raise ValueError('A Request object must be passed to build '
+                    'absolute URLs.')
+
+            scheme = 'http'
+            if _secure:
+                scheme += 's'
+
+            url = '%s://%s%s' % (scheme, _request.host, url)
+
+        if _anchor:
+            url += '#%s' % url_escape(_anchor)
 
         return url
 
@@ -812,7 +842,7 @@ class Config(dict):
 class WSGIApplication(object):
     """Wraps a set of webapp RequestHandlers in a WSGI-compatible application.
 
-    To use this class, pass a list of ``(route path, RequestHandler)``
+    To use this class, pass a list of tuples ``(route, RequestHandler class)``
     to the constructor, and pass the class instance to a WSGI handler.
     Example::
 
@@ -823,7 +853,7 @@ class WSGIApplication(object):
                 self.response.out.write('Hello, World!')
 
         app = WSGIApplication([
-            Route(r'/', HelloWorldHandler),
+            (r'/', HelloWorldHandler),
         ])
 
         def main():
@@ -832,17 +862,17 @@ class WSGIApplication(object):
         if __name__ == '__main__':
             main()
 
-    The URL mapping is first-match based on the list ordering. URL definitions
-    can have an optional name passed as third argument, which is used to
-    build it, and an optional dictionary of default values passed as fourth
-    argument. Example::
+    The URL mapping is first-match based on the list ordering. The route
+    definition can be an object that implements the method ``match(request)``.
+    The provided class :class:`Route` is a route implementation that allows
+    fully reversible URLs. Example::
 
         app = WSGIApplication([
-            Route(r'/articles', ArticlesHandler, 'articles'),
-            Route(r'/articles/<article_id:[\d]+>', ArticleHandler, 'article', {'id': '1'}),
+            (Route(r'/articles', 'articles'), ArticlesHandler),
+            (Route(r'/articles/<article_id:[\d]+>', 'article', {'id': '1'}), ArticleHandler),
         ])
 
-    See :class:`Route` for a complete explanation of the route syntax.
+    .. seealso:: :class:`Route`.
     """
     #: Default class used for the request object.
     request_class = Request
@@ -897,28 +927,15 @@ class WSGIApplication(object):
             A callable accepting a status code, a list of headers and an
             optional exception context to start the response.
         """
-        request = self.request_class(environ)
-        response = self.response_class()
-        method = environ['REQUEST_METHOD'].lower()
-
         try:
-            if method not in _ALLOWED_METHODS:
+            self.request = request = self.request_class(environ)
+            response = self.response_class()
+
+            if request.method not in _ALLOWED_METHODS:
                 # 501 Not Implemented.
                 raise webob.exc.HTTPNotImplemented()
 
-            route, args, kwargs = request.url_route = self.router.match(request)
-
-            if route:
-                handler = route.handler(self, request, response)
-                try:
-                    handler(method, *args, **kwargs)
-                except Exception, e:
-                    # If the handler implements exception handling,
-                    # let it handle it.
-                    handler.handle_exception(e, self.debug)
-            else:
-                # 404 Not Found.
-                raise webob.exc.HTTPNotFound()
+            self.router.dispatch(self, request, response)
         except Exception, e:
             try:
                 self.handle_exception(request, response, e)
@@ -932,6 +949,8 @@ class WSGIApplication(object):
 
                 # 500 Internal Server Error: nothing else to do.
                 response = webob.exc.HTTPInternalServerError()
+        finally:
+            self.request = None
 
         return response(environ, start_response)
 
@@ -965,6 +984,22 @@ class WSGIApplication(object):
             # No exception handler. Catch it in the WSGI app.
             raise
 
+    def url_for(self, _name, _full=False, _secure=False, _anchor=None,
+        **kwargs):
+        """Builds and returns a URL for a named :class:`Route`.
+
+        .. seealso:: :meth:`Router.build`.
+        """
+        return self.router.build(_name, _full=_full, _secure=_secure,
+            _anchor=_anchor, _request=self.request, **kwargs)
+
+    def get_config(self, module, key=None, default=REQUIRED_VALUE):
+        """Returns a configuration value for a module.
+
+        .. seealso:: :meth:`Config.load_and_get`.
+        """
+        return self.config.load_and_get(module, key=key, default=default)
+
     def run(self, bare=False):
         """Runs the app using ``google.appengine.ext.webapp.util.run_wsgi_app``.
         This is generally called inside a ``main()`` function of the file
@@ -973,7 +1008,7 @@ class WSGIApplication(object):
             # ...
 
             app = WSGIApplication([
-                Route(r'/', HelloWorldHandler),
+                (Route(r'/'), HelloWorldHandler),
             ])
 
             def main():
@@ -990,6 +1025,31 @@ class WSGIApplication(object):
             run_bare_wsgi_app(self)
         else:
             run_wsgi_app(self)
+
+
+class LazyObject(object):
+    """An object that is only imported when called.
+
+    Example::
+
+        handler_class = LazyObject('my.module.MyHandler')
+        handler = handler_class(app, request, response)
+    """
+    def __init__(self, import_name):
+        """Initializes a lazy object.
+
+        :param import_name:
+            The dotted name for the object to import, e.g.,
+            ``my.module.MyClass``.
+        """
+        self.import_name = import_name
+        self.obj = None
+
+    def __call__(self, *args, **kwargs):
+        if self.obj is None:
+            self.obj = import_string(self.import_name)
+
+        return self.obj(*args, **kwargs)
 
 
 def abort(code, *args, **kwargs):
@@ -1016,7 +1076,7 @@ def get_valid_methods(handler):
     :returns:
         A list of HTTP methods supported by the handler.
     """
-    return [m.upper() for m in _ALLOWED_METHODS if getattr(handler, m, None)]
+    return [m for m in _ALLOWED_METHODS if getattr(handler, m.lower(), None)]
 
 
 def import_string(import_name, silent=False):

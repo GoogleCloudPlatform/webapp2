@@ -4,26 +4,24 @@ Tests for webapp2 webapp router
 """
 import unittest
 
-from webapp2 import Request, Router, WebappRoute
+from webapp2 import Request, Router, SimpleRoute
 
 
-class TestWebappRoute(unittest.TestCase):
+class TestSimpleRoute(unittest.TestCase):
     def test_no_variable(self):
         router = Router([(r'/', 'my_handler')])
 
-        matched_route, args, kwargs = router.match(Request.blank('/'))
+        handler, matched_route, args, kwargs = router.match(Request.blank('/'))
         self.assertEqual(args, ())
         self.assertEqual(kwargs, {})
-        self.assertRaises(ImportError, getattr, matched_route, 'handler')
 
     def test_simple_variables(self):
         router = Router([(r'/(\d{4})/(\d{2})', 'my_handler')])
 
-        matched_route, args, kwargs = router.match(Request.blank('/2007/10'))
+        handler, matched_route, args, kwargs = router.match(Request.blank('/2007/10'))
         self.assertEqual(args, ('2007', '10'))
         self.assertEqual(kwargs, {})
-        self.assertRaises(ImportError, getattr, matched_route, 'handler')
 
     def test_build(self):
-        route = WebappRoute('/', None)
+        route = SimpleRoute('/')
         self.assertRaises(NotImplementedError, route.build)

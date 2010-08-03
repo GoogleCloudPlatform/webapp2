@@ -72,6 +72,41 @@ class UrlForHandler(RequestHandler):
         self.response.out.write('OK')
 
 
+class AppUrlForHandler(RequestHandler):
+    def get(self, **kwargs):
+        assert self.app.url_for('home') == '/'
+        assert self.app.url_for('home', foo='bar') == '/?foo=bar'
+        assert self.app.url_for('home', _anchor='my-anchor', foo='bar') == '/?foo=bar#my-anchor'
+        assert self.app.url_for('home', _anchor='my-anchor') == '/#my-anchor'
+        assert self.app.url_for('home', _full=True) == 'http://localhost:80/'
+        assert self.app.url_for('home', _full=True, _anchor='my-anchor') == 'http://localhost:80/#my-anchor'
+        assert self.app.url_for('home', _secure=True) == 'https://localhost:80/'
+        assert self.app.url_for('home', _secure=True, _full=False) == 'https://localhost:80/'
+        assert self.app.url_for('home', _secure=True, _anchor='my-anchor') == 'https://localhost:80/#my-anchor'
+
+        assert self.app.url_for('methods') == '/methods'
+        assert self.app.url_for('methods', foo='bar') == '/methods?foo=bar'
+        assert self.app.url_for('methods', _anchor='my-anchor', foo='bar') == '/methods?foo=bar#my-anchor'
+        assert self.app.url_for('methods', _anchor='my-anchor') == '/methods#my-anchor'
+        assert self.app.url_for('methods', _full=True) == 'http://localhost:80/methods'
+        assert self.app.url_for('methods', _full=True, _anchor='my-anchor') == 'http://localhost:80/methods#my-anchor'
+        assert self.app.url_for('methods', _secure=True) == 'https://localhost:80/methods'
+        assert self.app.url_for('methods', _secure=True, _full=False) == 'https://localhost:80/methods'
+        assert self.app.url_for('methods', _secure=True, _anchor='my-anchor') == 'https://localhost:80/methods#my-anchor'
+
+        assert self.app.url_for('route-test', year='2010', month='07', name='test') == '/2010/07/test'
+        assert self.app.url_for('route-test', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar'
+        assert self.app.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar#my-anchor'
+        assert self.app.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test') == '/2010/07/test#my-anchor'
+        assert self.app.url_for('route-test', _full=True, year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test'
+        assert self.app.url_for('route-test', _full=True, _anchor='my-anchor', year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test#my-anchor'
+        assert self.app.url_for('route-test', _secure=True, year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
+        assert self.app.url_for('route-test', _secure=True, _full=False, year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
+        assert self.app.url_for('route-test', _secure=True, _anchor='my-anchor', year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test#my-anchor'
+
+        self.response.out.write('OK')
+
+
 class RedirectToHandler(RequestHandler):
     def get(self, **kwargs):
         self.redirect_to('route-test', _anchor='my-anchor', year='2010',
@@ -125,20 +160,21 @@ def get_redirect_url(handler, **kwargs):
 
 
 app = WSGIApplication([
-    Route('/', HomeHandler, name='home'),
-    Route('/methods', MethodsHandler, name='methods'),
-    Route('/broken', BrokenHandler),
-    Route('/broken-but-fixed', BrokenButFixedHandler),
-    Route('/url-for', UrlForHandler),
-    Route('/<year:\d{4}>/<month:\d\d>/<name>', None, name='route-test'),
-    Route('/<:\d\d>/<:\d{2}>/<slug>', PositionalHandler, name='positional'),
-    Route('/redirect-me', RedirectHandler, defaults={'url': '/broken'}),
-    Route('/redirect-me2', RedirectHandler, defaults={'url': get_redirect_url}),
-    Route('/redirect-me3', RedirectHandler, defaults={'url': '/broken', 'permanent': False}),
-    Route('/redirect-me4', RedirectHandler, defaults={'url': get_redirect_url, 'permanent': False}),
-    Route('/redirect-me5', RedirectToHandler),
-    Route('/lazy', 'resources.handlers.LazyHandler'),
-    Route('/error', HandlerWithError),
+    (Route('/', name='home'), HomeHandler),
+    (Route('/methods', name='methods'), MethodsHandler),
+    (Route('/broken'), BrokenHandler),
+    (Route('/broken-but-fixed'), BrokenButFixedHandler),
+    (Route('/url-for'), UrlForHandler),
+    (Route('/app-url-for'), AppUrlForHandler),
+    (Route('/<year:\d{4}>/<month:\d\d>/<name>', name='route-test'), None),
+    (Route('/<:\d\d>/<:\d{2}>/<slug>', name='positional'), PositionalHandler),
+    (Route('/redirect-me', defaults={'url': '/broken'}), RedirectHandler),
+    (Route('/redirect-me2', defaults={'url': get_redirect_url}), RedirectHandler),
+    (Route('/redirect-me3', defaults={'url': '/broken', 'permanent': False}), RedirectHandler),
+    (Route('/redirect-me4', defaults={'url': get_redirect_url, 'permanent': False}), RedirectHandler),
+    (Route('/redirect-me5'), RedirectToHandler),
+    (Route('/lazy'), 'resources.handlers.LazyHandler'),
+    (Route('/error'), HandlerWithError),
 ], debug=False)
 
 test_app = TestApp(app)
@@ -169,7 +205,7 @@ class TestHandler(unittest.TestCase):
 
     def test_debug_mode(self):
         app = WSGIApplication([
-            Route('/broken', BrokenHandler),
+            (Route('/broken'), BrokenHandler),
         ], debug=True)
 
         test_app = TestApp(app)
@@ -262,6 +298,11 @@ class TestHandler(unittest.TestCase):
 
     def test_url_for(self):
         res = test_app.get('/url-for')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'OK')
+
+    def test_app_url_for(self):
+        res = test_app.get('/app-url-for')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'OK')
 

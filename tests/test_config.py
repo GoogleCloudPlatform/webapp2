@@ -245,6 +245,17 @@ class TestGetConfig(unittest.TestCase):
         config = Config()
         assert config.load_and_get('webapp2', 'foo') == 'baz'
 
+    def test_app_get_config(self):
+        app = WSGIApplication()
+
+        assert app.get_config('resources.i18n', 'locale') == 'en_US'
+        assert app.get_config('resources.i18n', 'locale', 'foo') == 'en_US'
+        assert app.get_config('resources.i18n') == {
+            'locale': 'en_US',
+            'timezone': 'America/Chicago',
+            'required': REQUIRED_VALUE,
+        }
+
     def test_request_handler_get_config(self):
         app = WSGIApplication()
 

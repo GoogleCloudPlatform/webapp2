@@ -1,3 +1,5 @@
+.. _contents:
+
 API Reference
 =============
 .. module:: webapp2
@@ -12,7 +14,7 @@ WSGI App
 .. autoclass:: WSGIApplication
    :members: request_class, response_class, router_class, config_class,
              error_handlers, __init__, __call__, wsgi_app, handle_exception,
-             run
+             url_for, get_config, run
 
 
 Request Handlers
@@ -29,11 +31,15 @@ Request Handlers
 URL Routing
 -----------
 .. autoclass:: Router
-   :members: add, match, build
+   :members: route_class, __init__, add, match, build, dispatch
 
 
 .. autoclass:: Route
    :members: __init__, match, build
+
+
+.. autoclass:: SimpleRoute
+   :members: __init__, match
 
 
 Configuration
@@ -43,11 +49,13 @@ Configuration
              load_and_get
 
 
-Helper Functions
-----------------
-These are some functions used internally that are also available for
+Utilities
+---------
+These are some other utilities used internally that are also available for
 general use.
 
+.. autoclass:: LazyObject
+   :members: __init__
 .. autofunction:: abort
 .. autofunction:: get_valid_methods
 .. autofunction:: import_string
