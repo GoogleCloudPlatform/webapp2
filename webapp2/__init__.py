@@ -970,7 +970,7 @@ class WSGIApplication(object):
         else:
             code = 500
 
-        handler = self.error_handlers.get(code, self.error_handlers.get(500))
+        handler = self.error_handlers.get(code) or self.error_handlers.get(500)
         if handler:
             # Handle the exception using a custom handler.
             handler(self, request, response)('get', exception=e)
