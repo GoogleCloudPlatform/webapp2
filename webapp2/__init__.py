@@ -350,10 +350,8 @@ class Route(object):
 
     def _parse_template(self):
         self._variables = {}
-        last = 0
-        count = 0
-        regex = ''
-        template = ''
+        last = count = 0
+        regex = template = ''
         for match in _ROUTE_REGEX.finditer(self.template):
             part = self.template[last:match.start()]
             name = match.group(1)

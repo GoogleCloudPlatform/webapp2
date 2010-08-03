@@ -31,7 +31,7 @@ app = WSGIApplication([
     (Route('/lazy', name='lazy'), 'handlers.LazyHandler'),
     # Redirects to a given path.
     (Route('/redirect-me', defaults={'url': '/lazy'}), RedirectHandler),
-    # redirects to a URL using a callable to get the destination URL.
+    # Redirects to a URL using a callable to get the destination URL.
     (Route('/redirect-me2', defaults={'url': get_redirect_url}), RedirectHandler),
     # No exception should pass. If exceptions are not handled, a 500 page is displayed.
     (Route('/exception'), HandlerWithError),
