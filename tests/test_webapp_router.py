@@ -25,3 +25,7 @@ class TestSimpleRoute(unittest.TestCase):
     def test_build(self):
         route = SimpleRoute('/')
         self.assertRaises(NotImplementedError, route.build)
+
+    def test_route_repr(self):
+        self.assertEqual(SimpleRoute(r'/<foo>').__repr__(), "SimpleRoute('/<foo>')")
+        self.assertEqual(str(SimpleRoute(r'/<foo>')), "SimpleRoute('/<foo>')")

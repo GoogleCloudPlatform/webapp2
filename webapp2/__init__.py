@@ -300,6 +300,11 @@ class SimpleRoute(object):
     def build(self, *args, **kwargs):
         raise NotImplementedError()
 
+    def __repr__(self):
+        return 'SimpleRoute(%r)' % self.template
+
+    __str__ = __repr__
+
 
 class Route(object):
     """A URL route definition. A route template contains regular expressions
@@ -489,6 +494,12 @@ class Route(object):
 
         return url
 
+    def __repr__(self):
+        return 'Route(%r, name=%r, defaults=%s, build_only=%s)' % \
+            (self.template, self.name, self.defaults, self.build_only)
+
+    __str__ = __repr__
+
 
 class Router(object):
     """A simple URL router used to match the current URL, dispatch the handler
@@ -529,6 +540,9 @@ class Router(object):
 
         if not route.build_only:
             self.routes.append((route, handler))
+        elif not route.name:
+            raise ValueError("Route %s is build_only but doesn't have name." %
+                route.__repr__())
 
         if route.name:
             self.route_map[route.name] = route
@@ -641,6 +655,14 @@ class Router(object):
             url += '#%s' % url_escape(_anchor)
 
         return url
+
+    def __repr__(self):
+        routes = list(self.routes) + [v for k, v in \
+            self.route_map.iteritems() if v not in self.routes]
+
+        return 'Router(%r)' % routes
+
+    __str__ = __repr__
 
 
 class Config(dict):

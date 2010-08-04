@@ -178,3 +178,25 @@ class TestRoute(unittest.TestCase):
         url = '/' + '/'.join(args)
         self.assertEqual(route.match(Request.blank(url)), (route, args, {}))
         self.assertEqual(route.build(*args), url)
+
+    def test_build_only_without_name(self):
+        router = Router()
+        self.assertRaises(ValueError, router.add, Route(r'/<foo>', build_only=True), None)
+
+    def test_route_repr(self):
+        self.assertEqual(Route(r'/<foo>').__repr__(),
+            "Route('/<foo>', name=None, defaults={}, build_only=False)")
+        self.assertEqual(Route(r'/<foo>', name='bar', defaults={'baz': 'ding'}, build_only=True).__repr__(),
+            "Route('/<foo>', name='bar', defaults={'baz': 'ding'}, build_only=True)")
+
+        self.assertEqual(str(Route(r'/<foo>')),
+            "Route('/<foo>', name=None, defaults={}, build_only=False)")
+        self.assertEqual(str(Route(r'/<foo>', name='bar', defaults={'baz': 'ding'}, build_only=True)),
+            "Route('/<foo>', name='bar', defaults={'baz': 'ding'}, build_only=True)")
+
+    def test_router_repr(self):
+        router = Router()
+        router.add(Route(r'/hello', name='hello', build_only=True), None)
+        router.add(Route(r'/world'), None)
+
+        self.assertEqual(router.__repr__(), "Router([(Route('/world', name=None, defaults={}, build_only=False), None), Route('/hello', name='hello', defaults={}, build_only=True)])")
