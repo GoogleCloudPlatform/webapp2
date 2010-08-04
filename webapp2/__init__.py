@@ -223,8 +223,8 @@ class RequestHandler(object):
 
 class RedirectHandler(RequestHandler):
     """Redirects to the given URL for all GET requests. This is meant to be
-    used when defining URL routes. You must provide the keyword argument
-    *url* in the route. Example::
+    used when defining URL routes. You must provide at least the keyword
+    argument *url* in the route default values. Example::
 
         def get_redirect_url(handler, *args, **kwargs):
             return handler.url_for('new-route-name')
@@ -304,7 +304,7 @@ class Route(object):
     enclosed by ``<>`` and is used to match requested URLs. Here are some
     examples::
 
-        route = Route(r'/article/<article_id:[\d]+>')
+        route = Route(r'/article/<id:[\d]+>')
         route = Route(r'/wiki/<page_name:\w+>')
         route = Route(r'/blog/<year:\d{4}>/<month:\d{2}>/<day:\d{2}>/<slug:\w+>')
 
@@ -331,14 +331,14 @@ class Route(object):
             is passed as keyword argument to the :class:`RequestHandler`.
             Otherwise it is passed as positional argument.
 
-            The same template can mix parts with only name, only regular
-            expression or both.
+            The same template can mix parts with name, regular expression or
+            both.
         :param name:
             The name of this route, used to build URLs based on it.
         :param defaults:
-            Default or extra keywords to be returned by this route. Default
-            values present in the route variables are used to build the URL
-            if the value is not passed.
+            Default or extra keywords to be returned by this route. Values
+            also present in the route variables are used to build the URL
+            when they are missing.
         """
         self.template = template
         self.name = name
@@ -369,6 +369,7 @@ class Route(object):
         regex = '^%s%s$' % (regex, re.escape(self.template[last:]))
         self._regex = re.compile(regex)
         self._reverse_template = template + self.template[last:]
+        self.has_positional_variables = count > 0
 
     @property
     def regex(self):
@@ -403,12 +404,14 @@ class Route(object):
         if match:
             kwargs = self.defaults.copy()
             kwargs.update(match.groupdict())
-            args = []
-            for key in kwargs.keys():
-                if key.startswith('__'):
-                    args.insert(int(key[2:-2]), kwargs.pop(key))
+            if self.has_positional_variables:
+                args = tuple(value[1] for value in sorted((int(key[2:-2]), \
+                    kwargs.pop(key)) for key in \
+                    kwargs.keys() if key.startswith('__')))
+            else:
+                args = ()
 
-            return self, tuple(args), kwargs
+            return self, args, kwargs
 
     def build(self, *args, **kwargs):
         """Builds a URL for this route. Examples:
@@ -430,20 +433,21 @@ class Route(object):
 
         :param args:
             Positional arguments to build the URL. All positional variables
-            defined in the route must be passed.
+            defined in the route must be passed and must conform to the
+            format set in the route. Extra arguments are ignored.
         :param kwargs:
-            Keyword arguments to build the URL. All route variables that are
-            not set as defaults must be passed, and they must conform to the
-            format set in the route. Extra keywords are appended as URL
-            arguments.
+            Keyword arguments to build the URL. All variables not set in the
+            route default values must be passed and must conform to the format
+            set in the route. Extra keywords are appended as URL arguments.
         :returns:
             A formatted URL.
         """
         variables = self.variables
-        for index, value in enumerate(args):
-            key = '__%d__' % index
-            if key in variables:
-                kwargs[key] = value
+        if self.has_positional_variables:
+            for index, value in enumerate(args):
+                key = '__%d__' % index
+                if key in variables:
+                    kwargs[key] = value
 
         values = {}
         for name, regex in variables.iteritems():
@@ -529,7 +533,7 @@ class Router(object):
         :param request:
             A ``webapp.Request`` instance.
         :returns:
-            A tuple ``(route, args, kwargs)``.
+            A tuple ``(handler, route, args, kwargs)``.
         """
         for route, handler in self.routes:
             match = route.match(request)
@@ -840,7 +844,7 @@ class WSGIApplication(object):
     to the constructor, and pass the class instance to a WSGI handler.
     Example::
 
-        from webapp2 import RequestHandler, Route, WSGIApplication
+        from webapp2 import RequestHandler, WSGIApplication
 
         class HelloWorldHandler(RequestHandler):
             def get(self):
@@ -859,11 +863,11 @@ class WSGIApplication(object):
     The URL mapping is first-match based on the list ordering. The route
     definition can be an object that implements the method ``match(request)``.
     The provided class :class:`Route` is a route implementation that allows
-    fully reversible URLs. Example::
+    reversible URLs and keyword arguments passed to the handler. Example::
 
         app = WSGIApplication([
             (Route(r'/articles', 'articles'), ArticlesHandler),
-            (Route(r'/articles/<article_id:[\d]+>', 'article', {'id': '1'}), ArticleHandler),
+            (Route(r'/articles/<id:[\d]+>', 'article', {'id': '1'}), ArticleHandler),
         ])
 
     .. seealso:: :class:`Route`.
@@ -885,7 +889,7 @@ class WSGIApplication(object):
         """Initializes the WSGI application.
 
         :param routes:
-            A list of URL route definitions.
+            List of URL definitions as tuples ``(route, RequestHandler class)``.
         :param debug:
             True if this is debug mode, False otherwise.
         :param config:
@@ -950,9 +954,9 @@ class WSGIApplication(object):
 
     def handle_exception(self, request, response, e):
         """Handles an exception. Searches :attr:`error_handlers` for a handler
-        with the eerror code, if it is a :class:`HTTPException`, or the 500
-        status code as fall back. Dispatches the handler if found, otherwise
-        simply sets the error code in the response.
+        with the error code, if it is a :class:`HTTPException`, or the 500
+        status code as fall back. Dispatches the handler if found, or re-raises
+        the exception to be caught by :class:`WSGIApplication`.
 
         :param request:
             A ``webapp.Request`` instance.
@@ -1075,7 +1079,7 @@ def get_valid_methods(handler):
 
 def import_string(import_name, silent=False):
     """Imports an object based on a string. If `silent` is True the return
-    value will be `None` if the import fails.
+    value will be None if the import fails.
 
     Simplified version of the function with same name from
     `Werkzeug <http://werkzeug.pocoo.org/>`_.

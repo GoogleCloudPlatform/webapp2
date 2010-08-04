@@ -161,3 +161,8 @@ class TestRoute(unittest.TestCase):
         router.add(Route(r'/hello', name='hello'), 'my_handler')
         self.assertRaises(ValueError, router.build, 'hello', _full=True)
         self.assertRaises(ValueError, router.build, 'hello', _secure=True)
+
+    def test_positions(self):
+        route = Route('/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>')
+        self.assertEqual(route.build('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'), '/0/1/2/3/4/5/6/7/8/9')
+        self.assertEqual(route.match(Request.blank('/0/1/2/3/4/5/6/7/8/9')), (route, ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'), {}))
