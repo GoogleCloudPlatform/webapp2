@@ -1,3 +1,11 @@
+Version 0.2 - August 04, 2010
+=============================
+- Fixed a bug in Route.match() that would make it return positional arguments
+  with wrong order. Dictionary is correctly sorted now.
+- Added build_only option for rules: rules that are only used for url_for() and
+  never match.
+
+
 Version 0.1 - August 03, 2010
 =============================
 - Initial release.
