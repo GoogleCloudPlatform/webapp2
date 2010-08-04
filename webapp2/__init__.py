@@ -111,6 +111,7 @@ class RequestHandler(object):
 
         .. warning::
            This is deprecated. It is here for compatibility with webapp only.
+           Don't use it!
 
         :param request:
             A ``webapp.Request`` instance.
@@ -119,7 +120,7 @@ class RequestHandler(object):
         """
         import warnings
         warnings.warn('RequestHandler.initialize() is deprecated. Use '
-            '__init__() instead', DeprecationWarning)
+            '__init__() instead.', DeprecationWarning)
 
         self.app = WSGIApplication.active_instance
         self.request = request
@@ -605,6 +606,7 @@ class Router(object):
                 # Support webapp's initialize().
                 handler = handler_class()
                 handler.initialize(request, response)
+
             try:
                 handler(request.method.lower(), *args, **kwargs)
             except Exception, e:
