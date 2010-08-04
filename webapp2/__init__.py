@@ -657,8 +657,8 @@ class Router(object):
         return url
 
     def __repr__(self):
-        routes = list(self.routes) + [v for k, v in \
-            self.route_map.iteritems() if v not in self.routes]
+        routes = self.routes + [v for k, v in self.route_map.iteritems() if \
+            v not in self.routes]
 
         return 'Router(%r)' % routes
 
