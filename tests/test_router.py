@@ -2,6 +2,7 @@
 """
 Tests for webapp2 router
 """
+import random
 import unittest
 
 from webapp2 import Request, Route, Router
@@ -163,6 +164,17 @@ class TestRoute(unittest.TestCase):
         self.assertRaises(ValueError, router.build, 'hello', _secure=True)
 
     def test_positions(self):
-        route = Route('/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>/<:\d>')
-        self.assertEqual(route.build('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'), '/0/1/2/3/4/5/6/7/8/9')
-        self.assertEqual(route.match(Request.blank('/0/1/2/3/4/5/6/7/8/9')), (route, ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'), {}))
+        template = '/<:\d+>' * 98
+        args = tuple(str(i) for i in range(98))
+        url = '/' + '/'.join(args)
+
+        route = Route(template)
+        self.assertEqual(route.match(Request.blank(url)), (route, args, {}))
+        self.assertEqual(route.build(*args), url)
+
+        args = [str(i) for i in range(1000)]
+        random.shuffle(args)
+        args = tuple(args[:98])
+        url = '/' + '/'.join(args)
+        self.assertEqual(route.match(Request.blank(url)), (route, args, {}))
+        self.assertEqual(route.build(*args), url)
