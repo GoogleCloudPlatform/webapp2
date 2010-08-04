@@ -260,6 +260,8 @@ class SimpleRoute(object):
     """
     #: Route name, used to build URLs. Always None for this route class.
     name = None
+    #: This route can't be built, so it is always used for matching.
+    build_only = False
 
     def __init__(self, template):
         """Initializes a URL route.
@@ -311,7 +313,7 @@ class Route(object):
     Based on `Another Do-It-Yourself Framework`_, by Ian Bicking. We added
     URL building, non-keyword variables and other improvements.
     """
-    def __init__(self, template, name=None, defaults=None):
+    def __init__(self, template, name=None, defaults=None, build_only=False):
         """Initializes a URL route.
 
         :param template:
@@ -339,10 +341,13 @@ class Route(object):
             Default or extra keywords to be returned by this route. Values
             also present in the route variables are used to build the URL
             when they are missing.
+        :param build_only:
+            If True, this route never matches and is used only to build URLs.
         """
         self.template = template
         self.name = name
         self.defaults = defaults or {}
+        self.build_only = build_only
         # Lazy properties.
         self._regex = None
         self._variables = None
@@ -522,7 +527,9 @@ class Router(object):
             # Auto import the handler when needed.
             handler = LazyObject(handler)
 
-        self.routes.append((route, handler))
+        if not route.build_only:
+            self.routes.append((route, handler))
+
         if route.name:
             self.route_map[route.name] = route
 
