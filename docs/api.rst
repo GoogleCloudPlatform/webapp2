@@ -20,8 +20,8 @@ WSGI App
 Request Handlers
 ----------------
 .. autoclass:: RequestHandler
-   :members: __init__, __call__, abort, error, redirect, redirect_to, url_for,
-             get_config, handle_exception
+   :members: __init__, initialize, __call__, abort, error, redirect,
+             redirect_to, url_for, get_config, handle_exception
 
 
 .. autoclass:: RedirectHandler

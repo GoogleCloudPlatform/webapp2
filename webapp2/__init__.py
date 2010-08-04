@@ -91,7 +91,8 @@ class RequestHandler(object):
     Implements most of ``webapp.RequestHandler`` interface.
     """
     def __init__(self, app, request, response):
-        """Initializes the handler.
+        """Initializes this request handler with the given WSGI application,
+        Request and Response.
 
         :param app:
             A :class:`WSGIApplication` instance.
@@ -101,6 +102,26 @@ class RequestHandler(object):
             A :class:`Response` instance.
         """
         self.app = app
+        self.request = request
+        self.response = response
+
+    def initialize(self, request, response):
+        """Initializes this request handler with the given Request and
+        Response.
+
+        .. warning::
+           This is deprecated. It is here for compatibility with webapp only.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :param response:
+            A :class:`Response` instance.
+        """
+        import warnings
+        warnings.warn('RequestHandler.initialize() is deprecated. Use '
+            '__init__() instead', DeprecationWarning)
+
+        self.app = WSGIApplication.active_instance
         self.request = request
         self.response = response
 
@@ -578,7 +599,12 @@ class Router(object):
 
         if match:
             handler_class, route, args, kwargs = match
-            handler = handler_class(app, request, response)
+            try:
+                handler = handler_class(app, request, response)
+            except TypeError, e:
+                # Support webapp's initialize().
+                handler = handler_class()
+                handler.initialize(request, response)
             try:
                 handler(request.method.lower(), *args, **kwargs)
             except Exception, e:
@@ -927,6 +953,8 @@ class WSGIApplication(object):
         self.debug = debug
         self.router = self.router_class(routes)
         self.config = self.config_class(config)
+        # For compatibility with webapp only. Don't use it!
+        WSGIApplication.active_instance = self
 
     def __call__(self, environ, start_response):
         """Called by WSGI when a request comes in. Calls :meth:`wsgi_app`."""
@@ -955,6 +983,9 @@ class WSGIApplication(object):
             optional exception context to start the response.
         """
         try:
+            # For compatibility with webapp only. Don't use it!
+            WSGIApplication.active_instance = self
+
             self.request = request = self.request_class(environ)
             response = self.response_class()
 
