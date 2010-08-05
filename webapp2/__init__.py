@@ -186,6 +186,8 @@ class RequestHandler(object):
             If True, uses a 301 redirect instead of a 302 redirect.
         :param abort:
             If True, raises an exception to perform the redirect.
+
+        .. seealso:: :meth:`redirect_to`.
         """
         absolute_url = str(urlparse.urljoin(self.request.uri, uri))
         if permanent:
@@ -219,6 +221,8 @@ class RequestHandler(object):
             Positional arguments to build the URL.
         :param kwargs:
             Keyword arguments to build the URL.
+
+        .. seealso:: :meth:`redirect` and :meth:`url_for`.
         """
         url = self.url_for(_name, _scheme=_scheme, _anchor=_anchor, *args,
             **kwargs)
@@ -226,6 +230,57 @@ class RequestHandler(object):
 
     def url_for(self, _name, *args, **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
+
+        For example, if you have these routes defined for the application::
+
+            app = WSGIApplication([
+                Route(r'/', 'handlers.HomeHandler', 'home'),
+                Route(r'/wiki', WikiHandler, 'wiki'),
+                Route(r'/wiki/<page>', WikiHandler, 'wiki-page'),
+            ])
+
+        Here are some examples of how to generate URLs inside a handler::
+
+            # /
+            url = self.url_for('home')
+
+            # http://localhost:8080/
+            url = self.url_for('home', _full=True)
+
+            # /wiki
+            url = self.url_for('wiki')
+
+            # http://localhost:8080/wiki
+            url = self.url_for('wiki', _full=True)
+
+            # http://localhost:8080/wiki#my-heading
+            url = self.url_for('wiki', _full=True, _anchor='my-heading')
+
+            # /wiki/my-first-page
+            url = self.url_for('wiki-page', page='my-first-page')
+
+            # /wiki/my-first-page?format=atom
+            url = self.url_for('wiki-page', page='my-first-page', format='atom')
+
+        :param _name:
+            The route name.
+        :param args:
+            Positional arguments to build the URL. All positional variables
+            defined in the route must be passed and must conform to the
+            format set in the route. Extra arguments are ignored.
+        :param kwargs:
+            Keyword arguments to build the URL. All variables not set in the
+            route default values must be passed and must conform to the format
+            set in the route. Extra keywords are appended as URL arguments.
+
+            A few keywords have special meaning:
+
+            - **_full**: If True, builds an absolute URL.
+            - **_scheme**: URL scheme, e.g., `http` or `https`. If defined,
+              an absolute URL is always returned.
+            - **_anchor**: If set, appends an anchor to generated URL.
+        :returns:
+            An absolute or relative URL.
 
         .. seealso:: :meth:`Router.build`.
         """
@@ -271,10 +326,10 @@ class RedirectHandler(RequestHandler):
         """Performs the redirect. Two keyword arguments can be passed through
         the URL route:
 
-        - *url*: A URL string or a callable that returns a URL. The callable
+        - **url**: A URL string or a callable that returns a URL. The callable
           is called passing ``(handler, *args, **kwargs)`` as arguments.
-        - *permanent*: If False, uses a 301 redirect instead of a 302 redirect
-          Default is True.
+        - **permanent**: If False, uses a 301 redirect instead of a 302
+          redirect Default is True.
         """
         url = kwargs.get('url', '/')
 
@@ -664,7 +719,7 @@ class Route(SimpleRoute):
     def build(self, request, args, kwargs):
         """Builds a URL for this route.
 
-        .. seealso:: :meth:`Router.build`.
+        .. seealso:: :meth:`Router.build` and :meth:`RequestHandler.url_for`.
         """
         full = kwargs.pop('_full', False)
         scheme = kwargs.pop('_scheme', None)
@@ -812,29 +867,6 @@ class Router(object):
     def build(self, name, request, args, kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
-        For example, if you have these routes registered in the application::
-
-            app = WSGIApplication([
-                Route(r'/', 'handlers.HomeHandler', 'home/main'),
-                Route(r'/wiki', WikiHandler, 'wiki/start'),
-                Route(r'/wiki/<page>', WikiHandler, 'wiki/page'),
-            ])
-
-        Here are some examples of how to generate URLs for them:
-
-        >>> url = app.router.build('home/main')
-        /
-        >>> url = app.router.build('home/main', _full=True, _request=Request.blank('/'))
-        http://localhost:8080/
-        >>> url = app.router.build('wiki/start')
-        /wiki
-        >>> url = app.router.build('wiki/start', _full=True, _request=Request.blank('/'))
-        http://localhost:8080/wiki
-        >>> url = app.router.build('wiki/start', _full=True, _anchor='my-heading', _request=Request.blank('/'))
-        http://localhost:8080/wiki#my-heading
-        >>> url = app.router.build('wiki/page', page='my-first-page')
-        /wiki/my-first-page
-
         :param name:
             The route name.
         :param request:
@@ -856,6 +888,8 @@ class Router(object):
             - **_anchor**: If set, appends an anchor to generated URL.
         :returns:
             An absolute or relative URL.
+
+        .. seealso:: :meth:`RequestHandler.url_for`.
         """
         route = self.route_map.get(name, None)
         if not route:
@@ -1032,7 +1066,7 @@ class WSGIApplication(object):
     def url_for(self, _name, *args, **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
-        .. seealso:: :meth:`Router.build`.
+        .. seealso:: :meth:`RequestHandler.url_for` and :meth:`Router.build`.
         """
         return self.router.build(_name, self.request, args, kwargs)
 

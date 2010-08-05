@@ -66,8 +66,10 @@ class TestRoute(unittest.TestCase):
 
     def test_build_missing_argument(self):
         route = Route(r'/<:\d{4}>', None)
-        self.assertRaises(TypeError, route.build)
-        self.assertRaises(TypeError, route.build, Request.blank('/'), (2010,))
+        self.assertRaises(KeyError, route.build, Request.blank('/'), (), {})
+
+        route = Route(r'/<:\d{4}>/<:\d{2}>', None)
+        self.assertRaises(KeyError, route.build, Request.blank('/'), (2010,), {})
 
     def test_build_invalid_argument(self):
         route = Route(r'/<:\d{4}>', None)
