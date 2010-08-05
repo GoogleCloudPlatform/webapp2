@@ -111,7 +111,7 @@ class RequestHandler(object):
 
         .. warning::
            This is deprecated. It is here for compatibility with webapp only.
-           Don't use it!
+           Use __init__() instead.
 
         :param request:
             A ``webapp.Request`` instance.
