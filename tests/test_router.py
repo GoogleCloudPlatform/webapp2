@@ -195,18 +195,18 @@ class TestRoute(unittest.TestCase):
 
     def test_route_repr(self):
         self.assertEqual(Route(r'/<foo>', None).__repr__(),
-            "Route('/<foo>', None, name=None, defaults={}, build_only=False)")
+            "<Route('/<foo>', None, name=None, defaults={}, build_only=False)>")
         self.assertEqual(Route(r'/<foo>', None, name='bar', defaults={'baz': 'ding'}, build_only=True).__repr__(),
-            "Route('/<foo>', None, name='bar', defaults={'baz': 'ding'}, build_only=True)")
+            "<Route('/<foo>', None, name='bar', defaults={'baz': 'ding'}, build_only=True)>")
 
         self.assertEqual(str(Route(r'/<foo>', None)),
-            "Route('/<foo>', None, name=None, defaults={}, build_only=False)")
+            "<Route('/<foo>', None, name=None, defaults={}, build_only=False)>")
         self.assertEqual(str(Route(r'/<foo>', None, name='bar', defaults={'baz': 'ding'}, build_only=True)),
-            "Route('/<foo>', None, name='bar', defaults={'baz': 'ding'}, build_only=True)")
+            "<Route('/<foo>', None, name='bar', defaults={'baz': 'ding'}, build_only=True)>")
 
     def test_router_repr(self):
         router = Router()
         router.add(Route(r'/hello', None, name='hello', build_only=True))
         router.add(Route(r'/world', None))
 
-        self.assertEqual(router.__repr__(), "Router([Route('/world', None, name=None, defaults={}, build_only=False), Route('/hello', None, name='hello', defaults={}, build_only=True)])")
+        self.assertEqual(router.__repr__(), "<Router([<Route('/world', None, name=None, defaults={}, build_only=False)>, <Route('/hello', None, name='hello', defaults={}, build_only=True)>])>")

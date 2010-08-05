@@ -495,8 +495,8 @@ class SimpleRoute(object):
             lazily imported, e.g., ``my.module.MyHandler``.
         """
         self.template = template
-        # Lazy properties.
         self.handler = handler
+        # Lazy property.
         self._regex = None
 
     @property
@@ -528,7 +528,7 @@ class SimpleRoute(object):
         raise NotImplementedError()
 
     def __repr__(self):
-        return 'SimpleRoute(%r, %r)' % (self.template, self.handler)
+        return '<SimpleRoute(%r, %r)>' % (self.template, self.handler)
 
     __str__ = __repr__
 
@@ -657,7 +657,7 @@ class Route(SimpleRoute):
         .. seealso:: :meth:`Router.build`.
         """
         full = kwargs.pop('_full', False)
-        scheme = kwargs.pop('_scheme', False)
+        scheme = kwargs.pop('_scheme', None)
         anchor = kwargs.pop('_anchor', None)
 
         if full or scheme:
@@ -705,7 +705,7 @@ class Route(SimpleRoute):
         return (self.reverse_template % values, kwargs)
 
     def __repr__(self):
-        return 'Route(%r, %r, name=%r, defaults=%s, build_only=%s)' % \
+        return '<Route(%r, %r, name=%r, defaults=%r, build_only=%r)>' % \
             (self.template, self.handler, self.name, self.defaults,
             self.build_only)
 
@@ -857,7 +857,7 @@ class Router(object):
         routes = self.routes + [v for k, v in self.route_map.iteritems() if \
             v not in self.routes]
 
-        return 'Router(%r)' % routes
+        return '<Router(%r)>' % routes
 
     __str__ = __repr__
 
@@ -1210,7 +1210,7 @@ def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):
             for value in values:
                 query_args.append((to_utf8(key), to_utf8(value)))
 
-        # Sorting should be optional? Sorted args is commonly needed to build
+        # Sorting should be optional? Sorted args are commonly needed to build
         # URL signatures for services.
         query_args.sort()
         query = urllib.urlencode(query_args)
