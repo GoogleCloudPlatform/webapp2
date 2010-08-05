@@ -736,7 +736,12 @@ class Route(SimpleRoute):
         return urlunsplit(scheme, netloc, path, query, anchor)
 
     def _build(self, args, kwargs):
-        """Builds the path for this route."""
+        """Builds the path for this route.
+
+        :returns:
+            A tuple ``(path, kwargs)`` with the built URL path and extra
+            keywords to be used as URL query arguments.
+        """
         variables = self.variables
         if self.has_positional_variables:
             for index, value in enumerate(args):
@@ -748,22 +753,15 @@ class Route(SimpleRoute):
         for name, regex in variables.iteritems():
             value = kwargs.pop(name, self.defaults.get(name))
             if not value:
-                if name.startswith('__'):
-                    name = name[2:-2]
-
-                raise KeyError('Missing argument "%s" to build URL.' % name)
+                raise KeyError('Missing argument "%s" to build URL.' % \
+                    name.strip('_'))
 
             if not isinstance(value, basestring):
                 value = str(value)
 
-            value = url_escape(value)
-
             if not regex.match(value):
-                if name.startswith('__'):
-                    name = name[2:-2]
-
                 raise ValueError('URL buiding error: Value "%s" is not '
-                    'supported for argument "%s".' % (value, name))
+                    'supported for argument "%s".' % (value, name.strip('_')))
 
             values[name] = value
 
@@ -797,7 +795,7 @@ class Router(object):
             for route in routes:
                 if isinstance(route, tuple):
                     # Simple route, compatible with webapp.
-                    route = self.route_class(route[0], route[1])
+                    route = self.route_class(*route)
 
                 self.add(route)
 
