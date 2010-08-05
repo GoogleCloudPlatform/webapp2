@@ -61,6 +61,7 @@ general use.
 .. autofunction:: url_unescape
 .. autofunction:: to_utf8
 .. autofunction:: to_unicode
+.. autofunction:: urlunsplit
 
 
 .. _Tornado: http://www.tornadoweb.org/

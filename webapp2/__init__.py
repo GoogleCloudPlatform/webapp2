@@ -518,7 +518,7 @@ class SimpleRoute(object):
         :param request:
             A ``webapp.Request`` instance.
         :returns:
-            A tuple ``(route, args, kwargs)`` if the route matches, or None.
+            A tuple ``(handler, args, kwargs)`` if the route matches, or None.
         """
         match = self.regex.match(request.path)
         if match:
@@ -636,7 +636,7 @@ class Route(SimpleRoute):
         :param request:
             A ``webapp.Request`` instance.
         :returns:
-            A tuple ``(route, args, kwargs)`` if the route matches, or None.
+            A tuple ``(handler, args, kwargs)`` if the route matches, or None.
         """
         match = self.regex.match(request.path)
         if match:
@@ -652,6 +652,10 @@ class Route(SimpleRoute):
             return self.handler, args, kwargs
 
     def build(self, request, args, kwargs):
+        """Builds a URL for this route.
+
+        .. seealso:: :meth:`Router.build`.
+        """
         full = kwargs.pop('_full', False)
         scheme = kwargs.pop('_scheme', False)
         anchor = kwargs.pop('_anchor', None)
@@ -667,34 +671,7 @@ class Route(SimpleRoute):
         return urlunsplit(scheme, netloc, path, query, anchor)
 
     def _build(self, args, kwargs):
-        """Builds a URL for this route. Examples:
-
-        >>> route = Route(r'/blog', BlogHandler)
-        >>> route.build()
-        /blog
-        >>> route.build(page='2', format='atom')
-        /blog?page=2&format=atom
-        >>> route = Route(r'/blog/archive/<year:\d{4}>', BlogArchiveHandler)
-        >>> route.build(year=2010)
-        /blog/2010
-        >>> route = Route(r'/blog/archive/<year:\d{4}>/<month:\d{2}>/<slug:\w+>', BlogItemHandler)
-        >>> route.build(year='2010', month='07', slug='my_blog_post')
-        /blog/2010/07/my_blog_post
-        >>> route = Route(r'/blog/archive/<:\d{4}>/<:\d{2}>/<slug:\w+>', BlogArchiveHandler)
-        >>> route.build('2010', '07', slug='my_blog_post')
-        /blog/2010/07/my_blog_post
-
-        :param args:
-            Positional arguments to build the URL. All positional variables
-            defined in the route must be passed and must conform to the
-            format set in the route. Extra arguments are ignored.
-        :param kwargs:
-            Keyword arguments to build the URL. All variables not set in the
-            route default values must be passed and must conform to the format
-            set in the route. Extra keywords are appended as URL arguments.
-        :returns:
-            A formatted URL.
-        """
+        """Builds the path for this route."""
         variables = self.variables
         if self.has_positional_variables:
             for index, value in enumerate(args):
@@ -800,7 +777,8 @@ class Router(object):
         :param response:
             A :class:`Response` instance.
         :param match:
-            A tuple ``(route, args, kwargs)``, resulted from the matched route.
+            A tuple ``(handler, args, kwargs)``, resulted from the matched
+            route.
         """
         handler_class, args, kwargs = match
 
@@ -851,20 +829,21 @@ class Router(object):
             The route name.
         :param request:
             The current ``Request`` object.
-        :param full:
-            If True, returns an absolute URL. Otherwise returns a relative one.
-        :param scheme:
-            URL scheme, e.g., `http` or `https`. If not set, uses `http`. If
-            set, an absolute URL will be returned.
-        :param anchor:
-            An anchor to append to the end of the URL.
         :param args:
-            Positional arguments to build the URL.
+            Positional arguments to build the URL. All positional variables
+            defined in the route must be passed and must conform to the
+            format set in the route. Extra arguments are ignored.
         :param kwargs:
-            Keyword arguments to build the URL. All route variables that are
-            not set as defaults must be passed, and they must conform to the
-            format set in the route. Extra keywords are appended as URL
-            arguments.
+            Keyword arguments to build the URL. All variables not set in the
+            route default values must be passed and must conform to the format
+            set in the route. Extra keywords are appended as URL arguments.
+
+            A few keywords have special meaning:
+
+            - **_full**: If True, builds an absolute URL.
+            - **_scheme**: URL scheme, e.g., `http` or `https`. If defined,
+              always returns an absolute URL.
+            - **_anchor**: If set, appends an anchor to generated URL.
         :returns:
             An absolute or relative URL.
         """
@@ -886,9 +865,9 @@ class Router(object):
 class WSGIApplication(object):
     """Wraps a set of webapp RequestHandlers in a WSGI-compatible application.
 
-    To use this class, pass a list of tuples ``(route, RequestHandler class)``
-    to the constructor, and pass the class instance to a WSGI handler.
-    Example::
+    To use this class, pass a list of tuples ``(regex, RequestHandler class)``
+    or :class:`Route` instances to the constructor, and pass the class instance
+    to a WSGI handler. Example::
 
         from webapp2 import RequestHandler, WSGIApplication
 
@@ -906,8 +885,8 @@ class WSGIApplication(object):
         if __name__ == '__main__':
             main()
 
-    The URL mapping is first-match based on the list ordering. The route
-    definition can be an object that implements the method ``match(request)``.
+    The URL mapping is first-match based on the list ordering. Items in the
+    list can also be an object that implements the method ``match(request)``.
     The provided class :class:`Route` is a route implementation that allows
     reversible URLs and keyword arguments passed to the handler. Example::
 
@@ -1206,10 +1185,10 @@ def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):
         Network location, e.g., `localhost:8080` or `www.google.com`.
     :param path:
         URL path.
-    :query:
+    :param query:
         URL query as an escaped string, or a dictionary or list of key-values
         tuples to build a query.
-    :fragment:
+    :param fragment:
         Fragment identifier, also known as "anchor".
     """
     if not scheme or not netloc:
