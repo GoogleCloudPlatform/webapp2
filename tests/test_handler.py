@@ -117,6 +117,11 @@ class RedirectToHandler(RequestHandler):
             month='07', name='test', foo='bar')
 
 
+class RedirectAbortHandler(RequestHandler):
+    def get(self, **kwargs):
+        self.redirect('/somewhere', abort=True)
+
+
 class BrokenHandler(RequestHandler):
     def get(self, **kwargs):
         raise ValueError('booo!')
@@ -185,6 +190,7 @@ app = WSGIApplication([
     Route('/redirect-me3', RedirectHandler, defaults={'url': '/broken', 'permanent': False}),
     Route('/redirect-me4', RedirectHandler, defaults={'url': get_redirect_url, 'permanent': False}),
     Route('/redirect-me5', RedirectToHandler),
+    Route('/redirect-me6', RedirectAbortHandler),
     Route('/lazy', 'resources.handlers.LazyHandler'),
     Route('/error', HandlerWithError),
     Route('/initialize', InitializeHandler),
@@ -357,6 +363,14 @@ class TestHandler(unittest.TestCase):
         self.assertEqual(res.status, '302 Found')
         self.assertEqual(res.body, '')
         self.assertEqual(res.headers['Location'], 'http://localhost/2010/07/test?foo=bar#my-anchor')
+
+    def test_redirect_abort(self):
+        res = test_app.get('/redirect-me6')
+        self.assertEqual(res.status, '302 Found')
+        self.assertEqual(res.body, """302 Found
+
+The resource was found at http://localhost/somewhere; you should be redirected automatically.  """)
+        self.assertEqual(res.headers['Location'], 'http://localhost/somewhere')
 
     def test_run(self):
         os.environ['REQUEST_METHOD'] = 'GET'

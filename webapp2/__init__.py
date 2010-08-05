@@ -177,25 +177,31 @@ class RequestHandler(object):
         """
         abort(code, *args, **kwargs)
 
-    def redirect(self, uri, permanent=False):
+    def redirect(self, uri, permanent=False, abort=False):
         """Issues an HTTP redirect to the given relative URL.
 
         :param uri:
             A relative or absolute URI (e.g., '../flowers.html').
         :param permanent:
             If True, uses a 301 redirect instead of a 302 redirect.
+        :param abort:
+            If True, raises an exception to perform the redirect.
         """
+        absolute_url = str(urlparse.urljoin(self.request.uri, uri))
         if permanent:
-            self.response.set_status(301)
+            code = 301
         else:
-            self.response.set_status(302)
+            code = 302
 
-        absolute_url = urlparse.urljoin(self.request.uri, uri)
-        self.response.headers['Location'] = str(absolute_url)
+        if abort:
+            self.abort(code, headers=[('Location', absolute_url)])
+
+        self.response.headers['Location'] = absolute_url
+        self.response.set_status(code)
         self.response.clear()
 
     def redirect_to(self, _name, _scheme=None, _anchor=None, _permanent=False,
-        *args, **kwargs):
+        _abort=False, *args, **kwargs):
         """Convenience method mixing :meth:`redirect` and :meth:`url_for`:
         Issues an HTTP redirect to a named URL built using :meth:`url_for`.
 
@@ -207,12 +213,16 @@ class RequestHandler(object):
             An anchor to append to the end of the redirected URL.
         :param _permanent:
             If True, uses a 301 redirect instead of a 302 redirect.
+        :param _abort:
+            If True, raises an exception to perform the redirect.
+        :param args:
+            Positional arguments to build the URL.
         :param kwargs:
             Keyword arguments to build the URL.
         """
         url = self.url_for(_name, _scheme=_scheme, _anchor=_anchor, *args,
             **kwargs)
-        self.redirect(url, permanent=_permanent)
+        self.redirect(url, permanent=_permanent, abort=_abort)
 
     def url_for(self, _name, *args, **kwargs):
         """Builds and returns a URL for a named :class:`Route`.

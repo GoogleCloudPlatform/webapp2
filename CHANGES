@@ -1,3 +1,9 @@
+Development version
+===================
+- redirect() and redirect_to() now accept a keyword argument 'abort' to raise
+  an exception to do the redirect.
+
+
 Version 0.3 - August 05, 2010
 =============================
 - Routes store the handler, as we had in 0.1. This allows custom routes to
