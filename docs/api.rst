@@ -54,8 +54,6 @@ Utilities
 These are some other utilities used internally that are also available for
 general use.
 
-.. autoclass:: LazyObject
-   :members: __init__
 .. autofunction:: abort
 .. autofunction:: get_valid_methods
 .. autofunction:: import_string
@@ -66,4 +64,5 @@ general use.
 
 
 .. _Tornado: http://www.tornadoweb.org/
+.. _Werkzeug: http://werkzeug.pocoo.org/
 .. _Another Do-It-Yourself Framework: http://pythonpaste.org/webob/do-it-yourself.html

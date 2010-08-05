@@ -47,7 +47,7 @@ class Response(webob.Response):
     def __init__(self, *args, **kwargs):
         super(Response, self).__init__(*args, **kwargs)
 
-        # webapp uses self.response.out.write(...)
+        # webapp uses self.response.out.write()
         self.out = self.body_file
 
     def set_status(self, code, message=None):
@@ -118,9 +118,9 @@ class RequestHandler(object):
         :param response:
             A :class:`Response` instance.
         """
-        import warnings
-        warnings.warn('RequestHandler.initialize() is deprecated. Use '
-            '__init__() instead.', DeprecationWarning)
+        from warnings import warn
+        warn(DeprecationWarning('RequestHandler.initialize() is deprecated. '
+            'Use __init__() instead.'))
 
         self.app = WSGIApplication.active_instance
         self.request = request
@@ -194,15 +194,15 @@ class RequestHandler(object):
         self.response.headers['Location'] = str(absolute_url)
         self.response.clear()
 
-    def redirect_to(self, _name, _secure=False, _anchor=None, _permanent=False,
-        **kwargs):
+    def redirect_to(self, _name, _scheme=None, _anchor=None, _permanent=False,
+        *args, **kwargs):
         """Convenience method mixing :meth:`redirect` and :meth:`url_for`:
         Issues an HTTP redirect to a named URL built using :meth:`url_for`.
 
         :param _name:
             The route name to redirect to.
-        :param _secure:
-            If True, redirects to a URL using `https` scheme.
+        :param _scheme:
+            URL scheme, e.g., `http` or `https`.
         :param _anchor:
             An anchor to append to the end of the redirected URL.
         :param _permanent:
@@ -210,17 +210,16 @@ class RequestHandler(object):
         :param kwargs:
             Keyword arguments to build the URL.
         """
-        uri = self.url_for(_name, _secure=_secure, _anchor=_anchor, **kwargs)
-        self.redirect(uri, permanent=_permanent)
+        url = self.url_for(_name, _scheme=_scheme, _anchor=_anchor, *args,
+            **kwargs)
+        self.redirect(url, permanent=_permanent)
 
-    def url_for(self, _name, _full=False, _secure=False, _anchor=None,
-        **kwargs):
+    def url_for(self, _name, *args, **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
         .. seealso:: :meth:`Router.build`.
         """
-        return self.app.router.build(_name, _full=_full, _secure=_secure,
-            _anchor=_anchor, _request=self.request, **kwargs)
+        return self.app.router.build(_name, self.request, args, kwargs)
 
     def get_config(self, module, key=None, default=REQUIRED_VALUE):
         """Returns a configuration value for a module.
@@ -252,8 +251,8 @@ class RedirectHandler(RequestHandler):
             return handler.url_for('new-route-name')
 
         app = WSGIApplication([
-            (Route(r'/old-url', defaults={'url': '/new-url'}), RedirectHandler),
-            (Route(r'/other-old-url', defaults={'url': get_redirect_url}), RedirectHandler),
+            Route(r'/old-url', RedirectHandler, defaults={'url': '/new-url'}),
+            Route(r'/other-old-url', RedirectHandler, defaults={'url': get_redirect_url}),
         ])
 
     Based on idea from `Tornado`_.
@@ -273,424 +272,6 @@ class RedirectHandler(RequestHandler):
             url = url(self, *args, **kwargs)
 
         self.redirect(url, permanent=kwargs.get('permanent', True))
-
-
-class SimpleRoute(object):
-    """A route that is compatible with webapp's routing. URL building is not
-    implemented as webapp has rudimentar support for it, and this is the most
-    unknown webapp feature anyway.
-    """
-    #: Route name, used to build URLs. Always None for this route class.
-    name = None
-    #: This route can't be built, so it is always used for matching.
-    build_only = False
-
-    def __init__(self, template):
-        """Initializes a URL route.
-
-        :param template:
-            A route regex to be matched.
-        """
-        self.template = template
-        self._regex = None
-
-    @property
-    def regex(self):
-        if self._regex is None:
-            if not self.template.startswith('^'):
-                self.template = '^' + self.template
-
-            if not self.template.endswith('$'):
-                self.template += '$'
-
-            self._regex = re.compile(self.template)
-
-        return self._regex
-
-    def match(self, request):
-        """Matches this route against the current request.
-
-        :param request:
-            A ``webapp.Request`` instance.
-        :returns:
-            A tuple ``(route, args, kwargs)`` if the route matches, or None.
-        """
-        match = self.regex.match(request.path)
-        if match:
-            return self, match.groups(), {}
-
-    def build(self, *args, **kwargs):
-        raise NotImplementedError()
-
-    def __repr__(self):
-        return 'SimpleRoute(%r)' % self.template
-
-    __str__ = __repr__
-
-
-class Route(object):
-    """A URL route definition. A route template contains regular expressions
-    enclosed by ``<>`` and is used to match requested URLs. Here are some
-    examples::
-
-        route = Route(r'/article/<id:[\d]+>')
-        route = Route(r'/wiki/<page_name:\w+>')
-        route = Route(r'/blog/<year:\d{4}>/<month:\d{2}>/<day:\d{2}>/<slug:\w+>')
-
-    Based on `Another Do-It-Yourself Framework`_, by Ian Bicking. We added
-    URL building, non-keyword variables and other improvements.
-    """
-    def __init__(self, template, name=None, defaults=None, build_only=False):
-        """Initializes a URL route.
-
-        :param template:
-            A route template to be matched. A route template contains parts
-            enclosed by ``<>`` that can have only a name, only a regular
-            expression or both:
-
-              =============================  ==================================
-              Format                         Example
-              =============================  ==================================
-              ``<name>``                     ``r'/<year>/<month>'``
-              ``<:regular expression>``      ``r'/<:\d{4}>/<:\d{2}>'``
-              ``<name:regular expression>``  ``r'/<year:\d{4}>/<month:\d{2}>'``
-              =============================  ==================================
-
-            If the name is set, the value of the matched regular expression
-            is passed as keyword argument to the :class:`RequestHandler`.
-            Otherwise it is passed as positional argument.
-
-            The same template can mix parts with name, regular expression or
-            both.
-        :param name:
-            The name of this route, used to build URLs based on it.
-        :param defaults:
-            Default or extra keywords to be returned by this route. Values
-            also present in the route variables are used to build the URL
-            when they are missing.
-        :param build_only:
-            If True, this route never matches and is used only to build URLs.
-        """
-        self.template = template
-        self.name = name
-        self.defaults = defaults or {}
-        self.build_only = build_only
-        # Lazy properties.
-        self._regex = None
-        self._variables = None
-        self._reverse_template = None
-
-    def _parse_template(self):
-        self._variables = {}
-        last = count = 0
-        regex = template = ''
-        for match in _ROUTE_REGEX.finditer(self.template):
-            part = self.template[last:match.start()]
-            name = match.group(1)
-            expr = match.group(2) or '[^/]+'
-            last = match.end()
-
-            if not name:
-                name = '__%d__' % count
-                count += 1
-
-            template += '%s%%(%s)s' % (part, name)
-            regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
-            self._variables[name] = re.compile('^%s$' % expr)
-
-        regex = '^%s%s$' % (regex, re.escape(self.template[last:]))
-        self._regex = re.compile(regex)
-        self._reverse_template = template + self.template[last:]
-        self.has_positional_variables = count > 0
-
-    @property
-    def regex(self):
-        if self._regex is None:
-            self._parse_template()
-
-        return self._regex
-
-    @property
-    def variables(self):
-        if self._variables is None:
-            self._parse_template()
-
-        return self._variables
-
-    @property
-    def reverse_template(self):
-        if self._reverse_template is None:
-            self._parse_template()
-
-        return self._reverse_template
-
-    def match(self, request):
-        """Matches this route against the current request.
-
-        :param request:
-            A ``webapp.Request`` instance.
-        :returns:
-            A tuple ``(route, args, kwargs)`` if the route matches, or None.
-        """
-        match = self.regex.match(request.path)
-        if match:
-            kwargs = self.defaults.copy()
-            kwargs.update(match.groupdict())
-            if self.has_positional_variables:
-                args = tuple(value[1] for value in sorted((int(key[2:-2]), \
-                    kwargs.pop(key)) for key in \
-                    kwargs.keys() if key.startswith('__')))
-            else:
-                args = ()
-
-            return self, args, kwargs
-
-    def build(self, *args, **kwargs):
-        """Builds a URL for this route. Examples:
-
-        >>> route = Route(r'/blog')
-        >>> route.build()
-        /blog
-        >>> route.build(page='2', format='atom')
-        /blog?page=2&format=atom
-        >>> route = Route(r'/blog/archive/<year:\d{4}>')
-        >>> route.build(year=2010)
-        /blog/2010
-        >>> route = Route(r'/blog/archive/<year:\d{4}>/<month:\d{2}>/<slug:\w+>')
-        >>> route.build(year='2010', month='07', slug='my_blog_post')
-        /blog/2010/07/my_blog_post
-        >>> route = Route(r'/blog/archive/<:\d{4}>/<:\d{2}>/<slug:\w+>')
-        >>> route.build('2010', '07', slug='my_blog_post')
-        /blog/2010/07/my_blog_post
-
-        :param args:
-            Positional arguments to build the URL. All positional variables
-            defined in the route must be passed and must conform to the
-            format set in the route. Extra arguments are ignored.
-        :param kwargs:
-            Keyword arguments to build the URL. All variables not set in the
-            route default values must be passed and must conform to the format
-            set in the route. Extra keywords are appended as URL arguments.
-        :returns:
-            A formatted URL.
-        """
-        variables = self.variables
-        if self.has_positional_variables:
-            for index, value in enumerate(args):
-                key = '__%d__' % index
-                if key in variables:
-                    kwargs[key] = value
-
-        values = {}
-        for name, regex in variables.iteritems():
-            value = kwargs.pop(name, self.defaults.get(name))
-            if not value:
-                if name.startswith('__'):
-                    name = name[2:-2]
-
-                raise KeyError('Missing argument "%s" to build URL.' % name)
-
-            if not isinstance(value, basestring):
-                value = str(value)
-
-            value = url_escape(value)
-
-            if not regex.match(value):
-                if name.startswith('__'):
-                    name = name[2:-2]
-
-                raise ValueError('URL buiding error: Value "%s" is not '
-                    'supported for argument "%s".' % (value, name))
-
-            values[name] = value
-
-        url = self.reverse_template % values
-
-        # Cleanup and encode extra kwargs.
-        kwargs = [(to_utf8(k), to_utf8(v)) for k, v in kwargs.iteritems() \
-            if isinstance(v, basestring)]
-
-        if kwargs:
-            # Append extra keywords as URL arguments.
-            url += '?%s' % urllib.urlencode(kwargs)
-
-        return url
-
-    def __repr__(self):
-        return 'Route(%r, name=%r, defaults=%s, build_only=%s)' % \
-            (self.template, self.name, self.defaults, self.build_only)
-
-    __str__ = __repr__
-
-
-class Router(object):
-    """A simple URL router used to match the current URL, dispatch the handler
-    and build URLs for other resources.
-    """
-    #: Default class used when the route is a string, compatible with webapp.
-    route_class = SimpleRoute
-
-    def __init__(self, routes=None):
-        """Initializes the router.
-
-        :param routes:
-            A list of tuples ``(route, handler)`` to initialize the router.
-        """
-        self.routes = []
-        self.route_map = {}
-        if routes:
-            for route, handler in routes:
-                self.add(route, handler)
-
-    def add(self, route, handler):
-        """Adds a route to this router.
-
-        :param route:
-            A :class:`Route` instance, or a string used to instantiate
-            :attr:`route_class`.
-        :param handler:
-            A :class:`RequestHandler` class or dotted name for a class to be
-            lazily imported, e.g., ``my.module.MyHandler``.
-        """
-        if isinstance(route, basestring):
-            # Simple route, compatible with webapp.
-            route = self.route_class(route)
-
-        if isinstance(handler, basestring):
-            # Auto import the handler when needed.
-            handler = LazyObject(handler)
-
-        if not route.build_only:
-            self.routes.append((route, handler))
-        elif not route.name:
-            raise ValueError("Route %s is build_only but doesn't have name." %
-                route.__repr__())
-
-        if route.name:
-            self.route_map[route.name] = route
-
-    def match(self, request):
-        """Matches all routes against the current request. The first one that
-        matches is returned.
-
-        :param request:
-            A ``webapp.Request`` instance.
-        :returns:
-            A tuple ``(handler, route, args, kwargs)``.
-        """
-        for route, handler in self.routes:
-            match = route.match(request)
-            if match:
-                return (handler,) + match
-
-        return None
-
-    def dispatch(self, app, request, response):
-        """Dispatches a request. This matches the current request against
-        registered routes and calls the matched :class:`RequestHandler`.
-
-        :param app:
-            A :class:`WSGIApplication` instance.
-        :param request:
-            A ``webapp.Request`` instance.
-        :param response:
-            A :class:`Response` instance.
-        """
-        request.router_match = match = self.match(request)
-
-        if match:
-            handler_class, route, args, kwargs = match
-            try:
-                handler = handler_class(app, request, response)
-            except TypeError, e:
-                # Support webapp's initialize().
-                handler = handler_class()
-                handler.initialize(request, response)
-
-            try:
-                handler(request.method.lower(), *args, **kwargs)
-            except Exception, e:
-                # If the handler implements exception handling,
-                # let it handle it.
-                handler.handle_exception(e, app.debug)
-        else:
-            # 404 Not Found.
-            raise webob.exc.HTTPNotFound()
-
-    def build(self, _name, _full=False, _secure=False, _anchor=None,
-        _request=None, **kwargs):
-        """Builds and returns a URL for a named :class:`Route`.
-
-        For example, if you have these routes registered in the application::
-
-            app = WSGIApplication([
-                (Route(r'/', 'home/main'), 'handlers.HomeHandler'),
-                (Route(r'/wiki', 'wiki/start'), WikiHandler),
-                (Route(r'/wiki/<page>', 'wiki/page'), WikiHandler),
-            ])
-
-        Here are some examples of how to generate URLs for them:
-
-        >>> url = app.router.build('home/main')
-        /
-        >>> url = app.router.build('home/main', _full=True, _request=Request.blank('/'))
-        http://localhost:8080/
-        >>> url = app.router.build('wiki/start')
-        /wiki
-        >>> url = app.router.build('wiki/start', _full=True, _request=Request.blank('/'))
-        http://localhost:8080/wiki
-        >>> url = app.router.build('wiki/start', _full=True, _anchor='my-heading', _request=Request.blank('/'))
-        http://localhost:8080/wiki#my-heading
-        >>> url = app.router.build('wiki/page', page='my-first-page')
-        /wiki/my-first-page
-
-        :param _name:
-            The route name.
-        :param _full:
-            If True, returns an absolute URL. Otherwise returns a relative one.
-        :param _secure:
-            If True, returns an absolute URL using `https` scheme.
-        :param _anchor:
-            An anchor to append to the end of the URL.
-        :param _request:
-            The current ``Request`` object.
-        :param kwargs:
-            Keyword arguments to build the URL. All route variables that are
-            not set as defaults must be passed, and they must conform to the
-            format set in the route. Extra keywords are appended as URL
-            arguments.
-        :returns:
-            An absolute or relative URL.
-        """
-        route = self.route_map.get(_name, None)
-        if not route:
-            raise KeyError('Route "%s" is not defined.' % _name)
-
-        url = route.build(**kwargs)
-
-        if _full or _secure:
-            if _request is None:
-                raise ValueError('A Request object must be passed to build '
-                    'absolute URLs.')
-
-            scheme = 'http'
-            if _secure:
-                scheme += 's'
-
-            url = '%s://%s%s' % (scheme, _request.host, url)
-
-        if _anchor:
-            url += '#%s' % url_escape(_anchor)
-
-        return url
-
-    def __repr__(self):
-        routes = self.routes + [v for k, v in self.route_map.iteritems() if \
-            v not in self.routes]
-
-        return 'Router(%r)' % routes
-
-    __str__ = __repr__
 
 
 class Config(dict):
@@ -894,6 +475,414 @@ class Config(dict):
                 'set.' % (module, key))
 
 
+class SimpleRoute(object):
+    """A route that is compatible with webapp's routing. URL building is not
+    implemented as webapp has rudimentar support for it, and this is the most
+    unknown webapp feature anyway.
+    """
+    #: Route name, used to build URLs. Always None for this route class.
+    name = None
+    #: This route can't be built, so it is always used for matching.
+    build_only = False
+
+    def __init__(self, template, handler):
+        """Initializes a URL route.
+
+        :param template:
+            A regex to be matched.
+        :param handler:
+            A :class:`RequestHandler` class or dotted name for a class to be
+            lazily imported, e.g., ``my.module.MyHandler``.
+        """
+        self.template = template
+        # Lazy properties.
+        self.handler = handler
+        self._regex = None
+
+    @property
+    def regex(self):
+        if self._regex is None:
+            if not self.template.startswith('^'):
+                self.template = '^' + self.template
+
+            if not self.template.endswith('$'):
+                self.template += '$'
+
+            self._regex = re.compile(self.template)
+
+        return self._regex
+
+    def match(self, request):
+        """Matches this route against the current request.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :returns:
+            A tuple ``(route, args, kwargs)`` if the route matches, or None.
+        """
+        match = self.regex.match(request.path)
+        if match:
+            return self.handler, match.groups(), {}
+
+    def build(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def __repr__(self):
+        return 'SimpleRoute(%r, %r)' % (self.template, self.handler)
+
+    __str__ = __repr__
+
+
+class Route(SimpleRoute):
+    """A URL route definition. A route template contains parts enclosed by
+    ``<>`` and is used to match requested URLs. Here are some examples::
+
+        route = Route(r'/article/<id:[\d]+>', ArticleHandler)
+        route = Route(r'/wiki/<page_name:\w+>', WikiPageHandler)
+        route = Route(r'/blog/<year:\d{4}>/<month:\d{2}>/<day:\d{2}>/<slug:\w+>', BlogItemHandler)
+
+    Based on `Another Do-It-Yourself Framework`_, by Ian Bicking. We added
+    URL building, non-keyword variables and other improvements.
+    """
+    def __init__(self, template, handler, name=None, defaults=None,
+        build_only=False):
+        """Initializes a URL route.
+
+        :param template:
+            A route template to be matched, containing parts enclosed by ``<>``
+            that can have only a name, only a regular expression or both:
+
+              =============================  ==================================
+              Format                         Example
+              =============================  ==================================
+              ``<name>``                     ``r'/<year>/<month>'``
+              ``<:regular expression>``      ``r'/<:\d{4}>/<:\d{2}>'``
+              ``<name:regular expression>``  ``r'/<year:\d{4}>/<month:\d{2}>'``
+              =============================  ==================================
+
+            If the name is set, the value of the matched regular expression
+            is passed as keyword argument to the :class:`RequestHandler`.
+            Otherwise it is passed as positional argument.
+
+            The same template can mix parts with name, regular expression or
+            both.
+        :param handler:
+            A :class:`RequestHandler` class or dotted name for a class to be
+            lazily imported, e.g., ``my.module.MyHandler``.
+        :param name:
+            The name of this route, used to build URLs based on it.
+        :param defaults:
+            Default or extra keywords to be returned by this route. Values
+            also present in the route variables are used to build the URL
+            when they are missing.
+        :param build_only:
+            If True, this route never matches and is used only to build URLs.
+        """
+        super(Route, self).__init__(template, handler)
+        self.name = name
+        self.defaults = defaults or {}
+        self.build_only = build_only
+        # Lazy properties.
+        self._variables = None
+        self._reverse_template = None
+
+    def _parse_template(self):
+        self._variables = {}
+        last = count = 0
+        regex = template = ''
+        for match in _ROUTE_REGEX.finditer(self.template):
+            part = self.template[last:match.start()]
+            name = match.group(1)
+            expr = match.group(2) or '[^/]+'
+            last = match.end()
+
+            if not name:
+                name = '__%d__' % count
+                count += 1
+
+            template += '%s%%(%s)s' % (part, name)
+            regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
+            self._variables[name] = re.compile('^%s$' % expr)
+
+        regex = '^%s%s$' % (regex, re.escape(self.template[last:]))
+        self._regex = re.compile(regex)
+        self._reverse_template = template + self.template[last:]
+        self.has_positional_variables = count > 0
+
+    @property
+    def regex(self):
+        if self._regex is None:
+            self._parse_template()
+
+        return self._regex
+
+    @property
+    def variables(self):
+        if self._variables is None:
+            self._parse_template()
+
+        return self._variables
+
+    @property
+    def reverse_template(self):
+        if self._reverse_template is None:
+            self._parse_template()
+
+        return self._reverse_template
+
+    def match(self, request):
+        """Matches this route against the current request.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :returns:
+            A tuple ``(route, args, kwargs)`` if the route matches, or None.
+        """
+        match = self.regex.match(request.path)
+        if match:
+            kwargs = self.defaults.copy()
+            kwargs.update(match.groupdict())
+            if self.has_positional_variables:
+                args = tuple(value[1] for value in sorted((int(key[2:-2]), \
+                    kwargs.pop(key)) for key in \
+                    kwargs.keys() if key.startswith('__')))
+            else:
+                args = ()
+
+            return self.handler, args, kwargs
+
+    def build(self, request, args, kwargs):
+        full = kwargs.pop('_full', False)
+        scheme = kwargs.pop('_scheme', False)
+        anchor = kwargs.pop('_anchor', None)
+
+        if full or scheme:
+            netloc = request.host
+            if not scheme:
+                scheme = 'http'
+        else:
+            netloc = None
+
+        path, query = self._build(args, kwargs)
+        return urlunsplit(scheme, netloc, path, query, anchor)
+
+    def _build(self, args, kwargs):
+        """Builds a URL for this route. Examples:
+
+        >>> route = Route(r'/blog', BlogHandler)
+        >>> route.build()
+        /blog
+        >>> route.build(page='2', format='atom')
+        /blog?page=2&format=atom
+        >>> route = Route(r'/blog/archive/<year:\d{4}>', BlogArchiveHandler)
+        >>> route.build(year=2010)
+        /blog/2010
+        >>> route = Route(r'/blog/archive/<year:\d{4}>/<month:\d{2}>/<slug:\w+>', BlogItemHandler)
+        >>> route.build(year='2010', month='07', slug='my_blog_post')
+        /blog/2010/07/my_blog_post
+        >>> route = Route(r'/blog/archive/<:\d{4}>/<:\d{2}>/<slug:\w+>', BlogArchiveHandler)
+        >>> route.build('2010', '07', slug='my_blog_post')
+        /blog/2010/07/my_blog_post
+
+        :param args:
+            Positional arguments to build the URL. All positional variables
+            defined in the route must be passed and must conform to the
+            format set in the route. Extra arguments are ignored.
+        :param kwargs:
+            Keyword arguments to build the URL. All variables not set in the
+            route default values must be passed and must conform to the format
+            set in the route. Extra keywords are appended as URL arguments.
+        :returns:
+            A formatted URL.
+        """
+        variables = self.variables
+        if self.has_positional_variables:
+            for index, value in enumerate(args):
+                key = '__%d__' % index
+                if key in variables:
+                    kwargs[key] = value
+
+        values = {}
+        for name, regex in variables.iteritems():
+            value = kwargs.pop(name, self.defaults.get(name))
+            if not value:
+                if name.startswith('__'):
+                    name = name[2:-2]
+
+                raise KeyError('Missing argument "%s" to build URL.' % name)
+
+            if not isinstance(value, basestring):
+                value = str(value)
+
+            value = url_escape(value)
+
+            if not regex.match(value):
+                if name.startswith('__'):
+                    name = name[2:-2]
+
+                raise ValueError('URL buiding error: Value "%s" is not '
+                    'supported for argument "%s".' % (value, name))
+
+            values[name] = value
+
+        return (self.reverse_template % values, kwargs)
+
+    def __repr__(self):
+        return 'Route(%r, %r, name=%r, defaults=%s, build_only=%s)' % \
+            (self.template, self.handler, self.name, self.defaults,
+            self.build_only)
+
+    __str__ = __repr__
+
+
+class Router(object):
+    """A simple URL router used to match the current URL, dispatch the handler
+    and build URLs for other resources.
+    """
+    #: Default class used when the route is a tuple, compatible with webapp.
+    route_class = SimpleRoute
+
+    def __init__(self, routes=None):
+        """Initializes the router.
+
+        :param routes:
+            A list of tuples ``(route, handler)`` or route instances to
+            initialize the router.
+        """
+        self.routes = []
+        self.route_map = {}
+        if routes:
+            for route in routes:
+                if isinstance(route, tuple):
+                    # Simple route, compatible with webapp.
+                    route = self.route_class(route[0], route[1])
+
+                self.add(route)
+
+    def add(self, route):
+        """Adds a route to this router.
+
+        :param route:
+            A :class:`Route` instance, or a string used to instantiate
+            :attr:`route_class`.
+        """
+        if not route.build_only:
+            self.routes.append(route)
+        elif not route.name:
+            raise ValueError("Route %s is build_only but doesn't have a "
+                "name." % route.__repr__())
+
+        if route.name:
+            self.route_map[route.name] = route
+
+    def match(self, request):
+        """Matches all routes against the current request. The first one that
+        matches is returned.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :returns:
+            A tuple ``(route, args, kwargs)`` if a route matched, or None.
+        """
+        for route in self.routes:
+            match = route.match(request)
+            if match:
+                return match
+
+    def dispatch(self, app, request, response, match):
+        """Dispatches a request. This calls the :class:`RequestHandler` from
+        the matched :class:`Route`.
+
+        :param app:
+            A :class:`WSGIApplication` instance.
+        :param request:
+            A ``webapp.Request`` instance.
+        :param response:
+            A :class:`Response` instance.
+        :param match:
+            A tuple ``(route, args, kwargs)``, resulted from the matched route.
+        """
+        handler_class, args, kwargs = match
+
+        if isinstance(handler_class, basestring):
+            handler_class = import_string(handler_class)
+
+        try:
+            handler = handler_class(app, request, response)
+        except TypeError, e:
+            # Support webapp's initialize().
+            handler = handler_class()
+            handler.initialize(request, response)
+
+        try:
+            handler(request.method.lower(), *args, **kwargs)
+        except Exception, e:
+            # If the handler implements exception handling,
+            # let it handle it.
+            handler.handle_exception(e, app.debug)
+
+    def build(self, name, request, args, kwargs):
+        """Builds and returns a URL for a named :class:`Route`.
+
+        For example, if you have these routes registered in the application::
+
+            app = WSGIApplication([
+                Route(r'/', 'handlers.HomeHandler', 'home/main'),
+                Route(r'/wiki', WikiHandler, 'wiki/start'),
+                Route(r'/wiki/<page>', WikiHandler, 'wiki/page'),
+            ])
+
+        Here are some examples of how to generate URLs for them:
+
+        >>> url = app.router.build('home/main')
+        /
+        >>> url = app.router.build('home/main', _full=True, _request=Request.blank('/'))
+        http://localhost:8080/
+        >>> url = app.router.build('wiki/start')
+        /wiki
+        >>> url = app.router.build('wiki/start', _full=True, _request=Request.blank('/'))
+        http://localhost:8080/wiki
+        >>> url = app.router.build('wiki/start', _full=True, _anchor='my-heading', _request=Request.blank('/'))
+        http://localhost:8080/wiki#my-heading
+        >>> url = app.router.build('wiki/page', page='my-first-page')
+        /wiki/my-first-page
+
+        :param name:
+            The route name.
+        :param request:
+            The current ``Request`` object.
+        :param full:
+            If True, returns an absolute URL. Otherwise returns a relative one.
+        :param scheme:
+            URL scheme, e.g., `http` or `https`. If not set, uses `http`. If
+            set, an absolute URL will be returned.
+        :param anchor:
+            An anchor to append to the end of the URL.
+        :param args:
+            Positional arguments to build the URL.
+        :param kwargs:
+            Keyword arguments to build the URL. All route variables that are
+            not set as defaults must be passed, and they must conform to the
+            format set in the route. Extra keywords are appended as URL
+            arguments.
+        :returns:
+            An absolute or relative URL.
+        """
+        route = self.route_map.get(name, None)
+        if not route:
+            raise KeyError('Route "%s" is not defined.' % name)
+
+        return route.build(request, args, kwargs)
+
+    def __repr__(self):
+        routes = self.routes + [v for k, v in self.route_map.iteritems() if \
+            v not in self.routes]
+
+        return 'Router(%r)' % routes
+
+    __str__ = __repr__
+
+
 class WSGIApplication(object):
     """Wraps a set of webapp RequestHandlers in a WSGI-compatible application.
 
@@ -923,8 +912,8 @@ class WSGIApplication(object):
     reversible URLs and keyword arguments passed to the handler. Example::
 
         app = WSGIApplication([
-            (Route(r'/articles', 'articles'), ArticlesHandler),
-            (Route(r'/articles/<id:[\d]+>', 'article', {'id': '1'}), ArticleHandler),
+            Route(r'/articles', ArticlesHandler, 'articles'),
+            Route(r'/articles/<id:[\d]+>', ArticleHandler, 'article', {'id': '1'}),
         ])
 
     .. seealso:: :class:`Route`.
@@ -995,7 +984,14 @@ class WSGIApplication(object):
                 # 501 Not Implemented.
                 raise webob.exc.HTTPNotImplemented()
 
-            self.router.dispatch(self, request, response)
+            # match is (route, args, kwargs)
+            match = self.router.match(request)
+
+            if match:
+                self.router.dispatch(self, request, response, match)
+            else:
+                # 404 Not Found.
+                raise webob.exc.HTTPNotFound()
         except Exception, e:
             try:
                 self.handle_exception(request, response, e)
@@ -1044,14 +1040,12 @@ class WSGIApplication(object):
             # No exception handler. Catch it in the WSGI app.
             raise
 
-    def url_for(self, _name, _full=False, _secure=False, _anchor=None,
-        **kwargs):
+    def url_for(self, _name, *args, **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
         .. seealso:: :meth:`Router.build`.
         """
-        return self.router.build(_name, _full=_full, _secure=_secure,
-            _anchor=_anchor, _request=self.request, **kwargs)
+        return self.router.build(_name, self.request, args, kwargs)
 
     def get_config(self, module, key=None, default=REQUIRED_VALUE):
         """Returns a configuration value for a module.
@@ -1068,7 +1062,7 @@ class WSGIApplication(object):
             # ...
 
             app = WSGIApplication([
-                (Route(r'/'), HelloWorldHandler),
+                Route(r'/', HelloWorldHandler),
             ])
 
             def main():
@@ -1087,31 +1081,6 @@ class WSGIApplication(object):
             run_wsgi_app(self)
 
 
-class LazyObject(object):
-    """An object that is only imported when called.
-
-    Example::
-
-        handler_class = LazyObject('my.module.MyHandler')
-        handler = handler_class(app, request, response)
-    """
-    def __init__(self, import_name):
-        """Initializes a lazy object.
-
-        :param import_name:
-            The dotted name for the object to import, e.g.,
-            ``my.module.MyClass``.
-        """
-        self.import_name = import_name
-        self.obj = None
-
-    def __call__(self, *args, **kwargs):
-        if self.obj is None:
-            self.obj = import_string(self.import_name)
-
-        return self.obj(*args, **kwargs)
-
-
 def abort(code, *args, **kwargs):
     """Raises an ``HTTPException``. The exception is instantiated passing
     *args* and *kwargs*.
@@ -1124,7 +1093,10 @@ def abort(code, *args, **kwargs):
     :param kwargs:
         Keyword arguments to be used to instantiate the exception.
     """
-    cls = webob.exc.status_map.get(code) or webob.exc.status_map.get(500)
+    cls = webob.exc.status_map.get(code)
+    if not cls:
+        raise KeyError('No exception is defined for code %r.' % code)
+
     raise cls(*args, **kwargs)
 
 
@@ -1140,11 +1112,10 @@ def get_valid_methods(handler):
 
 
 def import_string(import_name, silent=False):
-    """Imports an object based on a string. If `silent` is True the return
+    """Imports an object based on a string. If *silent* is True the return
     value will be None if the import fails.
 
-    Simplified version of the function with same name from
-    `Werkzeug <http://werkzeug.pocoo.org/>`_.
+    Simplified version of the function with same name from `Werkzeug`_.
 
     :param import_name:
         The dotted name for the object to import.
@@ -1157,10 +1128,9 @@ def import_string(import_name, silent=False):
     try:
         if '.' in import_name:
             module, obj = import_name.rsplit('.', 1)
+            return getattr(__import__(module, None, None, [obj]), obj)
         else:
             return __import__(import_name)
-
-        return getattr(__import__(module, None, None, [obj]), obj)
     except (ImportError, AttributeError):
         if not silent:
             raise
@@ -1224,3 +1194,49 @@ def to_unicode(value):
 
     assert isinstance(value, unicode)
     return value
+
+
+def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):
+    """Similar to ``urlparse.urlunsplit``, but will escape values and
+    urlencode and sort query arguments.
+
+    :param scheme:
+        URL scheme, e.g., `http` or `https`.
+    :param netloc:
+        Network location, e.g., `localhost:8080` or `www.google.com`.
+    :param path:
+        URL path.
+    :query:
+        URL query as an escaped string, or a dictionary or list of key-values
+        tuples to build a query.
+    :fragment:
+        Fragment identifier, also known as "anchor".
+    """
+    if not scheme or not netloc:
+        scheme = None
+        netloc = None
+
+    if path:
+        path = urllib.quote_plus(to_utf8(path), '/')
+
+    if query and not isinstance(query, basestring):
+        if isinstance(query, dict):
+            query = query.items()
+
+        query_args = []
+        for key, values in query:
+            if isinstance(values, basestring):
+                values = (values,)
+
+            for value in values:
+                query_args.append((to_utf8(key), to_utf8(value)))
+
+        # Sorting should be optional? Sorted args is commonly needed to build
+        # URL signatures for services.
+        query_args.sort()
+        query = urllib.urlencode(query_args)
+
+    if fragment:
+        fragment = url_escape(fragment)
+
+    return urlparse.urlunsplit((scheme, netloc, path, query, fragment))

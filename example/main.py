@@ -24,17 +24,17 @@ def get_redirect_url(handler, **kwargs):
 
 app = WSGIApplication([
     # Home sweet home.
-    (Route('/', name='home'), HomeHandler),
+    Route('/', HomeHandler, name='home'),
     # A route with a named variable.
-    (Route('/view/<item>', name='view'), ViewHandler),
+    Route('/view/<item>', ViewHandler, name='view'),
     # Loads a handler lazily.
-    (Route('/lazy', name='lazy'), 'handlers.LazyHandler'),
+    Route('/lazy', 'handlers.LazyHandler', name='lazy'),
     # Redirects to a given path.
-    (Route('/redirect-me', defaults={'url': '/lazy'}), RedirectHandler),
+    Route('/redirect-me', RedirectHandler, defaults={'url': '/lazy'}),
     # Redirects to a URL using a callable to get the destination URL.
-    (Route('/redirect-me2', defaults={'url': get_redirect_url}), RedirectHandler),
+    Route('/redirect-me2', RedirectHandler, defaults={'url': get_redirect_url}),
     # No exception should pass. If exceptions are not handled, a 500 page is displayed.
-    (Route('/exception'), HandlerWithError),
+    Route('/exception', HandlerWithError),
 ])
 
 

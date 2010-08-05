@@ -56,9 +56,9 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertRaises(webob.exc.HTTPVersionNotSupported, abort, 505)
 
         # Invalid use 500 as default.
-        self.assertRaises(webob.exc.HTTPInternalServerError, abort, 0)
-        self.assertRaises(webob.exc.HTTPInternalServerError, abort, 999999)
-        self.assertRaises(webob.exc.HTTPInternalServerError, abort, 'foo')
+        self.assertRaises(KeyError, abort, 0)
+        self.assertRaises(KeyError, abort, 999999)
+        self.assertRaises(KeyError, abort, 'foo')
 
     def test_import_string(self):
         self.assertEqual(import_string('webob.exc'), webob.exc)
