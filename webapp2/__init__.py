@@ -202,17 +202,13 @@ class RequestHandler(object):
         self.response.set_status(code)
         self.response.clear()
 
-    def redirect_to(self, _name, _scheme=None, _anchor=None, _permanent=False,
-        _abort=False, *args, **kwargs):
+    def redirect_to(self, _name, _permanent=False, _abort=False, *args,
+        **kwargs):
         """Convenience method mixing :meth:`redirect` and :meth:`url_for`:
         Issues an HTTP redirect to a named URL built using :meth:`url_for`.
 
         :param _name:
             The route name to redirect to.
-        :param _scheme:
-            URL scheme, e.g., `http` or `https`.
-        :param _anchor:
-            An anchor to append to the end of the redirected URL.
         :param _permanent:
             If True, uses a 301 redirect instead of a 302 redirect.
         :param _abort:
@@ -243,22 +239,16 @@ class RequestHandler(object):
 
             # /
             url = self.url_for('home')
-
             # http://localhost:8080/
             url = self.url_for('home', _full=True)
-
             # /wiki
             url = self.url_for('wiki')
-
             # http://localhost:8080/wiki
             url = self.url_for('wiki', _full=True)
-
             # http://localhost:8080/wiki#my-heading
             url = self.url_for('wiki', _full=True, _anchor='my-heading')
-
             # /wiki/my-first-page
             url = self.url_for('wiki-page', page='my-first-page')
-
             # /wiki/my-first-page?format=atom
             url = self.url_for('wiki-page', page='my-first-page', format='atom')
 
@@ -707,7 +697,7 @@ class Route(SimpleRoute):
         if match:
             kwargs = self.defaults.copy()
             kwargs.update(match.groupdict())
-            if self.has_positional_variables:
+            if kwargs and self.has_positional_variables:
                 args = tuple(value[1] for value in sorted((int(key[2:-2]), \
                     kwargs.pop(key)) for key in \
                     kwargs.keys() if key.startswith('__')))
@@ -1232,6 +1222,8 @@ def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):
         tuples to build a query.
     :param fragment:
         Fragment identifier, also known as "anchor".
+    :returns:
+        An assembled absolute or relative URL.
     """
     if not scheme or not netloc:
         scheme = None
