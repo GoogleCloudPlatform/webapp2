@@ -220,8 +220,7 @@ class RequestHandler(object):
 
         .. seealso:: :meth:`redirect` and :meth:`url_for`.
         """
-        url = self.url_for(_name, _scheme=_scheme, _anchor=_anchor, *args,
-            **kwargs)
+        url = self.url_for(_name, *args, **kwargs)
         self.redirect(url, permanent=_permanent, abort=_abort)
 
     def url_for(self, _name, *args, **kwargs):
