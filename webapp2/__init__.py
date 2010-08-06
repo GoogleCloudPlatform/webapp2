@@ -923,7 +923,7 @@ class WSGIApplication(object):
 
         app = WSGIApplication([
             Route(r'/articles', ArticlesHandler, 'articles'),
-            Route(r'/articles/<id:[\d]+>', ArticleHandler, 'article', {'id': '1'}),
+            Route(r'/articles/<id:[\d]+>', ArticleHandler, 'article'),
         ])
 
     .. seealso:: :class:`Route`.
