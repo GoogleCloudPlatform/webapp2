@@ -34,12 +34,16 @@ URL Routing
    :members: route_class, __init__, add, match, build, dispatch
 
 
-.. autoclass:: Route
-   :members: __init__, match, build
+.. autoclass:: BaseRoute
+   :members: name, build_only, match, build, get_routes
 
 
 .. autoclass:: SimpleRoute
    :members: __init__, match
+
+
+.. autoclass:: Route
+   :members: __init__, match, build
 
 
 Configuration

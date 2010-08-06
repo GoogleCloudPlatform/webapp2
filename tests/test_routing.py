@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Tests for webapp2 router
+Tests for webapp2's Router, Route and BaseRoute.
 """
 import random
 import unittest
 
-from webapp2 import Request, Route, Router
+from webapp2 import BaseRoute, Request, Route, Router
 
 
 class TestRoute(unittest.TestCase):
@@ -212,3 +212,8 @@ class TestRoute(unittest.TestCase):
         router.add(Route(r'/world', None))
 
         self.assertEqual(router.__repr__(), "<Router([<Route('/world', None, name=None, defaults={}, build_only=False)>, <Route('/hello', None, name='hello', defaults={}, build_only=True)>])>")
+
+    def test_base_route(self):
+        route = BaseRoute()
+        self.assertRaises(NotImplementedError, route.match, None)
+        self.assertRaises(NotImplementedError, route.copy)

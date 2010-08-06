@@ -2,6 +2,14 @@ Development version
 ===================
 - redirect() and redirect_to() now accept a keyword argument 'abort' to raise
   an exception to do the redirect.
+- Added BaseRoute, a interface for custom routes.
+- Nested routes are now possible. Routes have now the methiod ``get_routes``,
+  a generator that yields the route itself or all nested routes it may contain.
+  As an example, `extras/routes.py` has a ``PrefixRoute`` class that prefixes
+  all nested routes with a given path. This is based on an idea from
+  `werkzeug.routing`.
+- Added ``copy()`` method to routes, to return a new instance of a route with
+  the same attributes as the original. This is useful to assemble nested routes.
 
 
 Version 0.3 - August 05, 2010
@@ -16,8 +24,8 @@ Version 0.2 - August 04, 2010
 =============================
 - Fixed a bug in Route.match() that would make it return positional arguments
   with wrong order. Dictionary is correctly sorted now.
-- Added build_only option for rules: rules that are only used for url_for() and
-  never match.
+- Added build_only option for routes: routes that are only used for url_for()
+  and never match.
 
 
 Version 0.1 - August 03, 2010

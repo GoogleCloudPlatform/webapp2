@@ -118,9 +118,8 @@ class RequestHandler(object):
         :param response:
             A :class:`Response` instance.
         """
-        from warnings import warn
-        warn(DeprecationWarning('RequestHandler.initialize() is deprecated. '
-            'Use __init__() instead.'))
+        logging.warning('RequestHandler.initialize() is deprecated. '
+            'Use __init__() instead.')
 
         self.app = WSGIApplication.active_instance
         self.request = request
@@ -342,22 +341,15 @@ class Config(dict):
 
         config['my.module'] = {
             'foo': 'bar',
-            'baz': 'ding',
         }
 
-        config['my.other.module'] = {
-            'secret_key': 'try to guess me!',
-        }
-
-        app = WSGIApplication(config=config)
+        app = WSGIApplication([('/', MyHandler)], config=config)
 
     Then to read configuration values, use :meth:`RequestHandler.get_config`::
 
         class MyHandler(RequestHandler):
             def get(self):
                 foo = self.get_config('my.module', 'foo')
-
-                secret_key = self.get_config('my.other.module', 'secret_key')
 
                 # ...
     """
@@ -529,16 +521,61 @@ class Config(dict):
                 'set.' % (module, key))
 
 
-class SimpleRoute(object):
+class BaseRoute(object):
+    """Interface for URL routes. Custom routes must implement some or all
+    methods and attributes from this class.
+    """
+    #: Route name, used to build URLs.
+    name = None
+    #: True if this route is only used for URL generation and never matches.
+    build_only = False
+
+    def match(self, request):
+        """Matches this route against the current request.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :returns:
+            A tuple ``(handler, args, kwargs)`` if the route matches, or None.
+        """
+        raise NotImplementedError()
+
+    def build(self, request, args, kwargs):
+        """Builds and returns a URL for this route.
+
+        :param request:
+            The current ``Request`` object.
+        :param args:
+            Tuple of positional arguments to build the URL.
+        :param kwargs:
+            Dictionary of keyword arguments to build the URL.
+        :returns:
+            An absolute or relative URL.
+        """
+        raise NotImplementedError()
+
+    def get_routes(self):
+        """Generator to get all routes from a route.
+
+        :yields:
+            This route or all nested routes that it contains.
+        """
+        yield self
+
+    def copy(self):
+        """Returns a copy of this route.
+
+        :returns:
+            A new route instance.
+        """
+        raise NotImplementedError()
+
+
+class SimpleRoute(BaseRoute):
     """A route that is compatible with webapp's routing. URL building is not
     implemented as webapp has rudimentar support for it, and this is the most
     unknown webapp feature anyway.
     """
-    #: Route name, used to build URLs. Always None for this route class.
-    name = None
-    #: This route can't be built, so it is always used for matching.
-    build_only = False
-
     def __init__(self, template, handler):
         """Initializes a URL route.
 
@@ -569,17 +606,11 @@ class SimpleRoute(object):
     def match(self, request):
         """Matches this route against the current request.
 
-        :param request:
-            A ``webapp.Request`` instance.
-        :returns:
-            A tuple ``(handler, args, kwargs)`` if the route matches, or None.
+        .. seealso:: :meth:`BaseRoute.match`.
         """
         match = self.regex.match(request.path)
         if match:
             return self.handler, match.groups(), {}
-
-    def build(self, *args, **kwargs):
-        raise NotImplementedError()
 
     def __repr__(self):
         return '<SimpleRoute(%r, %r)>' % (self.template, self.handler)
@@ -687,10 +718,7 @@ class Route(SimpleRoute):
     def match(self, request):
         """Matches this route against the current request.
 
-        :param request:
-            A ``webapp.Request`` instance.
-        :returns:
-            A tuple ``(handler, args, kwargs)`` if the route matches, or None.
+        .. seealso:: :meth:`BaseRoute.match`.
         """
         match = self.regex.match(request.path)
         if match:
@@ -708,7 +736,7 @@ class Route(SimpleRoute):
     def build(self, request, args, kwargs):
         """Builds a URL for this route.
 
-        .. seealso:: :meth:`Router.build` and :meth:`RequestHandler.url_for`.
+        .. seealso:: :meth:`Router.build`.
         """
         full = kwargs.pop('_full', False)
         scheme = kwargs.pop('_scheme', None)
@@ -756,6 +784,15 @@ class Route(SimpleRoute):
 
         return (self.reverse_template % values, kwargs)
 
+    def copy(self):
+        """Returns a copy of this route.
+
+        :returns:
+            A new route instance.
+        """
+        return Route(self.template, self.handler, name=self.name,
+            defaults=self.defaults, build_only=self.build_only)
+
     def __repr__(self):
         return '<Route(%r, %r, name=%r, defaults=%r, build_only=%r)>' % \
             (self.template, self.handler, self.name, self.defaults,
@@ -768,41 +805,42 @@ class Router(object):
     """A simple URL router used to match the current URL, dispatch the handler
     and build URLs for other resources.
     """
-    #: Default class used when the route is a tuple, compatible with webapp.
+    #: Class used when the route is a tuple. Default is compatible with webapp.
     route_class = SimpleRoute
 
     def __init__(self, routes=None):
         """Initializes the router.
 
         :param routes:
-            A list of tuples ``(route, handler)`` or route instances to
-            initialize the router.
+            A list of :class:`Route` instances to initialize the router.
         """
+        # Handler classes imported lazily.
+        self._handlers = {}
         self.routes = []
         self.route_map = {}
         if routes:
             for route in routes:
-                if isinstance(route, tuple):
-                    # Simple route, compatible with webapp.
-                    route = self.route_class(*route)
-
                 self.add(route)
 
     def add(self, route):
         """Adds a route to this router.
 
         :param route:
-            A :class:`Route` instance, or a string used to instantiate
-            :attr:`route_class`.
+            A :class:`Route` instance.
         """
-        if not route.build_only:
-            self.routes.append(route)
-        elif not route.name:
-            raise ValueError("Route %s is build_only but doesn't have a "
-                "name." % route.__repr__())
+        if isinstance(route, tuple):
+            # Simple route, compatible with webapp.
+            route = self.route_class(*route)
 
-        if route.name:
-            self.route_map[route.name] = route
+        for r in route.get_routes():
+            if not r.build_only:
+                self.routes.append(r)
+            elif not r.name:
+                raise ValueError("Route %r is build_only but doesn't have a "
+                    "name." % r)
+
+            if r.name:
+                self.route_map[r.name] = route
 
     def match(self, request):
         """Matches all routes against the current request. The first one that
@@ -835,7 +873,10 @@ class Router(object):
         handler_class, args, kwargs = match
 
         if isinstance(handler_class, basestring):
-            handler_class = import_string(handler_class)
+            if handler_class not in self._handlers:
+                self._handlers[handler_class] = import_string(handler_class)
+
+            handler_class = self._handlers[handler_class]
 
         try:
             handler = handler_class(app, request, response)
@@ -859,13 +900,14 @@ class Router(object):
         :param request:
             The current ``Request`` object.
         :param args:
-            Positional arguments to build the URL. All positional variables
-            defined in the route must be passed and must conform to the
-            format set in the route. Extra arguments are ignored.
+            Tuple of positional arguments to build the URL. All positional
+            variables defined in the route must be passed and must conform to
+            the format set in the route. Extra arguments are ignored.
         :param kwargs:
-            Keyword arguments to build the URL. All variables not set in the
-            route default values must be passed and must conform to the format
-            set in the route. Extra keywords are appended as URL arguments.
+            Dictionary of keyword arguments to build the URL. All variables
+            not set in the route default values must be passed and must conform
+            to the format set in the route. Extra keywords are appended as URL
+            arguments.
 
             A few keywords have special meaning:
 

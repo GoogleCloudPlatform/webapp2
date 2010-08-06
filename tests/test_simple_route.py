@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tests for webapp2 webapp router
+Tests for webapp2's SimpleRoute
 """
 import unittest
 
@@ -24,7 +24,7 @@ class TestSimpleRoute(unittest.TestCase):
 
     def test_build(self):
         route = SimpleRoute('/', None)
-        self.assertRaises(NotImplementedError, route.build)
+        self.assertRaises(NotImplementedError, route.build, None, None, None)
 
     def test_route_repr(self):
         self.assertEqual(SimpleRoute(r'/<foo>', None).__repr__(), "<SimpleRoute('/<foo>', None)>")
