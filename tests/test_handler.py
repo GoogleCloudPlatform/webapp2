@@ -196,6 +196,8 @@ app = WSGIApplication([
     Route('/initialize', InitializeHandler),
     Route('/redirect-me-easily', redirect_to='/i-was-redirected-easily'),
     Route('/redirect-me-easily2', redirect_to='/i-was-redirected-easily', defaults={'permanent': False}),
+    Route('/strict-foo', HomeHandler, 'foo-strict', strict_slash=True),
+    Route('/strict-bar/', HomeHandler, 'bar-strict', strict_slash=True),
 ], debug=False)
 
 test_app = TestApp(app)
@@ -376,6 +378,27 @@ class TestHandler(unittest.TestCase):
         self.assertEqual(res.status, '302 Found')
         self.assertEqual(res.body, '')
         self.assertEqual(res.headers['Location'], 'http://localhost/i-was-redirected-easily')
+
+    def test_strict_slash(self):
+        res = test_app.get('/strict-foo')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'home sweet home')
+
+        res = test_app.get('/strict-bar/')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'home sweet home')
+
+        # Now the non-strict...
+
+        res = test_app.get('/strict-foo/')
+        self.assertEqual(res.status, '301 Moved Permanently')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/strict-foo')
+
+        res = test_app.get('/strict-bar')
+        self.assertEqual(res.status, '301 Moved Permanently')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/strict-bar/')
 
     def test_redirect_abort(self):
         res = test_app.get('/redirect-me6')

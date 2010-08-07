@@ -2,19 +2,38 @@ Development version
 ===================
 - redirect() and redirect_to() now accept a keyword argument 'abort' to raise
   an exception to do the redirect.
+
 - Added BaseRoute, a interface for custom routes.
+
 - Nested routes are now possible. Routes have now the methiod ``get_routes``,
   a generator that yields the route itself or all nested routes it may contain.
   As an example, `extras/routes.py` has a ``PrefixRoute`` class that prefixes
   all nested routes with a given path. This is based on an idea from
   `werkzeug.routing`.
+
 - Added ``copy()`` method to routes, to return a new instance of a route with
   the same attributes as the original. This is useful to assemble nested routes.
-- Added argument `redirect_to` to Route: routes can now redirect automatically
-  using RedirectHandler. These two are equivalent::
 
-      route = Route('/foo', RedirectHandler, {'url': '/bar'})
-      route = Route('/foo', redirect_to='/bar')
+- Added argument `redirect_to` to Route: if set, the route is used to redirect
+  to a URL. The value can be a URL string or a callable that returns a URL.
+  These two are equivalent::
+
+    route = Route('/foo', RedirectHandler, defaults={'url': '/bar'})
+    route = Route('/foo', redirect_to='/bar')
+
+- Added argument `strict_slash` to Route: if True, redirects access to the same
+  URL with different trailing slash to the strict path defined in the rule.
+  For example, take these rules::
+
+      route = Route('/foo', FooHandler, strict_slash=True)
+      route = Route('/bar/', BarHandler, strict_slash=True)
+
+  Because **strict_slash** is True, this is what will happen:
+
+  - Access to ``/foo`` will execute ``FooHandler`` normally.
+  - Access to ``/bar/`` will execute ``BarHandler`` normally.
+  - Access to ``/foo/`` will redirect to ``/foo``.
+  - Access to ``/bar`` will redirect to ``/bar/``.
 
 
 Version 0.3 - August 05, 2010
