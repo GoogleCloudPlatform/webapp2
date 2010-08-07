@@ -899,7 +899,7 @@ class Router(object):
         # All routes that can be matched.
         self.match_routes = []
         # All routes that can be built.
-        self.named_routes = {}
+        self.build_routes = {}
         if routes:
             for route in routes:
                 self.add(route)
@@ -918,7 +918,7 @@ class Router(object):
             self.match_routes.append(r)
 
         for r in route.get_build_routes(self):
-            self.named_routes[r.name] = r
+            self.build_routes[r.name] = r
 
     def match(self, request):
         """Matches all routes against the current request. The first one that
@@ -986,15 +986,15 @@ class Router(object):
 
         .. seealso:: :meth:`RequestHandler.url_for`.
         """
-        route = self.named_routes.get(name)
+        route = self.build_routes.get(name)
         if not route:
             raise KeyError('Route "%s" is not defined.' % name)
 
         return route.build(request, args, kwargs)
 
     def __repr__(self):
-        routes = self.match_routes + [v for k, v in self.named_routes.iteritems() if \
-            v not in self.match_routes]
+        routes = self.match_routes + [v for k, v in \
+            self.build_routes.iteritems() if v not in self.match_routes]
 
         return '<Router(%r)>' % routes
 
