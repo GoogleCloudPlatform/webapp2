@@ -692,7 +692,12 @@ class Route(BaseRoute):
         :param redirect_to:
             If set, this route is used to redirect to a URL. The value can be
             a URL string or a callable that returns a URL. The callable is
-            called passing ``(handler, *args, **kwargs)`` as arguments.
+            called passing ``(handler, *args, **kwargs)`` as arguments. This is
+            a convenience to use :class:`RedirectHandler`. These two are
+            equivalent::
+
+                route = Route('/foo', RedirectHandler, {'url': '/bar'})
+                route = Route('/foo', redirect_to='/bar')
         """
         if handler is None and build_only is None and redirect_to is None:
             raise ValueError('Handler must be defined.')
