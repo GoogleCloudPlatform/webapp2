@@ -68,6 +68,7 @@ general use.
 .. autofunction:: urlunsplit
 
 
+.. _Another Do-It-Yourself Framework: http://pythonpaste.org/webob/do-it-yourself.html
+.. _Flask: http://flask.pocoo.org/
 .. _Tornado: http://www.tornadoweb.org/
 .. _Werkzeug: http://werkzeug.pocoo.org/
-.. _Another Do-It-Yourself Framework: http://pythonpaste.org/webob/do-it-yourself.html

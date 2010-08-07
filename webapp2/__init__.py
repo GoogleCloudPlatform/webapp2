@@ -75,7 +75,7 @@ class Response(webob.Response):
         :param code:
             The HTTP code for which we want a message.
         """
-        message = webob.statusreasons.status_reasons.get(code, None)
+        message = webob.statusreasons.status_reasons.get(code)
         if not message:
             raise KeyError('Invalid HTTP status code: %d' % code)
 
@@ -177,7 +177,11 @@ class RequestHandler(object):
         abort(code, *args, **kwargs)
 
     def redirect(self, uri, permanent=False, abort=False):
-        """Issues an HTTP redirect to the given relative URL.
+        """Issues an HTTP redirect to the given relative URL. This won't stop
+        code execution unless **abort** is True. A common practice is to
+        return when calling the function::
+
+            return self.redirect('/some-path')
 
         :param uri:
             A relative or absolute URI (e.g., '../flowers.html').
@@ -266,6 +270,8 @@ class RequestHandler(object):
             - **_full**: If True, builds an absolute URL.
             - **_scheme**: URL scheme, e.g., `http` or `https`. If defined,
               an absolute URL is always returned.
+            - **_netloc**: Network location, e.g., `www.google.com`. If
+              defined, an absolute URL is always returned.
             - **_anchor**: If set, appends an anchor to generated URL.
         :returns:
             An absolute or relative URL.
@@ -740,14 +746,15 @@ class Route(SimpleRoute):
         """
         full = kwargs.pop('_full', False)
         scheme = kwargs.pop('_scheme', None)
+        netloc = kwargs.pop('_netloc', None)
         anchor = kwargs.pop('_anchor', None)
 
-        if full or scheme:
-            netloc = request.host
+        if full or scheme or netloc:
+            if not netloc:
+                netloc = request.host
+
             if not scheme:
                 scheme = 'http'
-        else:
-            netloc = None
 
         path, query = self._build(args, kwargs)
         return urlunsplit(scheme, netloc, path, query, anchor)
@@ -840,7 +847,7 @@ class Router(object):
                     "name." % r)
 
             if r.name:
-                self.route_map[r.name] = route
+                self.route_map[r.name] = r
 
     def match(self, request):
         """Matches all routes against the current request. The first one that
@@ -900,27 +907,15 @@ class Router(object):
         :param request:
             The current ``Request`` object.
         :param args:
-            Tuple of positional arguments to build the URL. All positional
-            variables defined in the route must be passed and must conform to
-            the format set in the route. Extra arguments are ignored.
+            Tuple of positional arguments to build the URL.
         :param kwargs:
-            Dictionary of keyword arguments to build the URL. All variables
-            not set in the route default values must be passed and must conform
-            to the format set in the route. Extra keywords are appended as URL
-            arguments.
-
-            A few keywords have special meaning:
-
-            - **_full**: If True, builds an absolute URL.
-            - **_scheme**: URL scheme, e.g., `http` or `https`. If defined,
-              always returns an absolute URL.
-            - **_anchor**: If set, appends an anchor to generated URL.
+            Dictionary of keyword arguments to build the URL.
         :returns:
             An absolute or relative URL.
 
         .. seealso:: :meth:`RequestHandler.url_for`.
         """
-        route = self.route_map.get(name, None)
+        route = self.route_map.get(name)
         if not route:
             raise KeyError('Route "%s" is not defined.' % name)
 
@@ -1017,7 +1012,7 @@ class WSGIApplication(object):
         Then you still have the original application object around and
         can continue to call methods on it.
 
-        This idea comes from `Flask <http://flask.pocoo.org/>`_.
+        This idea comes from `Flask`_.
 
         :param environ:
             A WSGI environment.

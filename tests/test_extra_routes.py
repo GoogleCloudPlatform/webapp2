@@ -7,56 +7,79 @@ import unittest
 
 from webapp2 import Request, Route, Router
 
-from extras.routes import PrefixRoute
+from extras.routes import PrefixRoute, NamePrefixRoute, HandlerPrefixRoute
 
 
 class TestPrefixRoute(unittest.TestCase):
     def test_simple(self):
         router = Router([
             PrefixRoute('/a', [
-                Route('/', 'a'),
-                Route('/b', 'a/b'),
-                Route('/c', 'a/c'),
+                Route('/', 'a', 'name-a'),
+                Route('/b', 'a/b', 'name-a/b'),
+                Route('/c', 'a/c', 'name-a/c'),
                 PrefixRoute('/d', [
-                    Route('/', 'a/d'),
-                    Route('/b', 'a/d/b'),
-                    Route('/c', 'a/d/c'),
+                    Route('/', 'a/d', 'name-a/d'),
+                    Route('/b', 'a/d/b', 'name-a/d/b'),
+                    Route('/c', 'a/d/c', 'name-a/d/c'),
                 ]),
             ])
         ])
 
-        match = router.match(Request.blank('/a/'))
-        self.assertEqual(match, ('a', (), {}))
+        path = '/a/'
+        match = ('a', (), {})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        self.assertEqual(router.build('name-' + match[0], Request.blank('/'), match[1], match[2]), path)
 
-        match = router.match(Request.blank('/a/b'))
-        self.assertEqual(match, ('a/b', (), {}))
+        path = '/a/b'
+        match = ('a/b', (), {})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        self.assertEqual(router.build('name-' + match[0], Request.blank('/'), match[1], match[2]), path)
 
-        match = router.match(Request.blank('/a/c'))
-        self.assertEqual(match, ('a/c', (), {}))
+        path = '/a/c'
+        match = ('a/c', (), {})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        self.assertEqual(router.build('name-' + match[0], Request.blank('/'), match[1], match[2]), path)
 
-        match = router.match(Request.blank('/a/d/'))
-        self.assertEqual(match, ('a/d', (), {}))
+        path = '/a/d/'
+        match = ('a/d', (), {})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        self.assertEqual(router.build('name-' + match[0], Request.blank('/'), match[1], match[2]), path)
 
-        match = router.match(Request.blank('/a/d/b'))
-        self.assertEqual(match, ('a/d/b', (), {}))
+        path = '/a/d/b'
+        match = ('a/d/b', (), {})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        self.assertEqual(router.build('name-' + match[0], Request.blank('/'), match[1], match[2]), path)
 
-        match = router.match(Request.blank('/a/d/c'))
-        self.assertEqual(match, ('a/d/c', (), {}))
+        path = '/a/d/c'
+        match = ('a/d/c', (), {})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        self.assertEqual(router.build('name-' + match[0], Request.blank('/'), match[1], match[2]), path)
 
-    def test_with_variables(self):
+    def test_with_variables_name_and_handler(self):
         router = Router([
-            PrefixRoute('/user/<username:\w+>', [
-                Route('/', 'user-overview'),
-                Route('/profile', 'user-profile'),
-                Route('/projects', 'user-projects'),
+                PrefixRoute('/user/<username:\w+>', [
+                    HandlerPrefixRoute('apps.users.', [
+                        NamePrefixRoute('user-', [
+                            Route('/', 'UserOverviewHandler', 'overview'),
+                            Route('/profile', 'UserProfileHandler', 'profile'),
+                            Route('/projects', 'UserProjectsHandler', 'projects'),
+                        ]),
+                    ]),
             ])
         ])
 
-        match = router.match(Request.blank('/user/calvin/'))
-        self.assertEqual(match, ('user-overview', (), {'username': 'calvin'}))
+        path = '/user/calvin/'
+        match = ('apps.users.UserOverviewHandler', (), {'username': 'calvin'})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        self.assertEqual(router.build('user-overview', Request.blank('/'), match[1], match[2]), path)
 
-        match = router.match(Request.blank('/user/calvin/profile'))
-        self.assertEqual(match, ('user-profile', (), {'username': 'calvin'}))
+        path = '/user/calvin/profile'
+        match = ('apps.users.UserProfileHandler', (), {'username': 'calvin'})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        self.assertEqual(router.build('user-profile', Request.blank('/'), match[1], match[2]), path)
 
-        match = router.match(Request.blank('/user/calvin/projects'))
-        self.assertEqual(match, ('user-projects', (), {'username': 'calvin'}))
+        path = '/user/calvin/projects'
+        match = ('apps.users.UserProjectsHandler', (), {'username': 'calvin'})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        self.assertEqual(router.build('user-projects', Request.blank('/'), match[1], match[2]), path)
+
