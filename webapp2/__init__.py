@@ -694,32 +694,24 @@ class Route(BaseRoute):
             a URL string or a callable that returns a URL. The callable is
             called passing ``(handler, *args, **kwargs)`` as arguments.
         """
+        if handler is None and build_only is None and redirect_to is None:
+            raise ValueError('Handler must be defined.')
+
         self.template = template
-        self.handler = handler
         self.name = name
         self.defaults = defaults or {}
         self.build_only = build_only
-        self.redirect_to = redirect_to
+
+        if redirect_to is not None:
+            self.handler = RedirectHandler
+            self.defaults['url'] = redirect_to
+        else:
+            self.handler = handler
+
         # Lazy properties.
         self._regex = None
         self._variables = None
         self._reverse_template = None
-
-    def get_match_routes(self, router):
-        """Generator to get all routes that can be matched from a route.
-
-        :yields:
-            This route or all nested routes that can be matched.
-        """
-        if not self.build_only:
-            if self.redirect_to is not None:
-                self.handler = RedirectHandler
-                self.defaults['url'] = self.redirect_to
-
-            yield self
-        elif not self.name:
-            raise ValueError("Route %r is build_only but doesn't have a "
-                "name" % self)
 
     def _parse_template(self):
         self._variables = {}
