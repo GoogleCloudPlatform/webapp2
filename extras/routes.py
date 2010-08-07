@@ -22,6 +22,7 @@ class Route(webapp2.Route):
 
                 route = Route('/foo', RedirectHandler, defaults={'url': '/bar'})
                 route = Route('/foo', redirect_to='/bar')
+
         :param strict_slash:
             If True, redirects access to the same URL with different trailing
             slash to the strict path defined in the rule. For example, take
@@ -120,7 +121,7 @@ class MultiRoute(object):
 class PathPrefixRoute(MultiRoute):
     """The idea of this route is to set a base path for other routes::
 
-        route = PrefixRoute('/users/<user:\w+>', [
+        route = PathPrefixRoute('/users/<user:\w+>', [
             Route('/', UserOverviewHandler, 'user-overview'),
             Route('/profile', UserProfileHandler, 'user-profile'),
             Route('/projects', UserProjectsHandler, 'user-projects'),
@@ -150,12 +151,12 @@ class PathPrefixRoute(MultiRoute):
 
 
 class NamePrefixRoute(PathPrefixRoute):
-    """Same as :class:`PrefixRoute`, but prefixes the names of routes."""
+    """Same as :class:`PathPrefixRoute`, but prefixes the names of routes."""
     prefix_attr = 'name'
 
 
 class HandlerPrefixRoute(PathPrefixRoute):
-    """Same as :class:`PrefixRoute`, but prefixes the handlers of routes."""
+    """Same as :class:`PathPrefixRoute`, but prefixes the handlers of routes."""
     prefix_attr = 'handler'
 
 

@@ -1,34 +1,74 @@
-Development version
-===================
+Version 0.4 - August 07, 2010
+=============================
 - redirect() and redirect_to() now accept a keyword argument 'abort' to raise
   an exception to do the redirect.
 
-- Added BaseRoute, an interface for custom routes.
+- '_netloc' can be passed to url_for() build URLs for a given domain or
+  subdomain.
 
-- Nested routes are now possible. As an example, `extras/routes.py` has some
-  classes that prefix all nested routes with a given path, name or handler.
-  This is based on an idea from `werkzeug.routing`.
+- Added BaseRoute, an interface for custom routes. Several improvements make
+  the routing system more extensible, while the default Route class sticks to
+  the basics.
 
-- Added argument `redirect_to` to Route: if set, the route is used to redirect
-  to a URL. The value can be a URL string or a callable that returns a URL.
-  These two are equivalent::
+- Nested routes are now possible. As an example, `extras/routes.py` has several
+  classes that accept nested routes or extend routing in other ways:
 
-    route = Route('/foo', RedirectHandler, defaults={'url': '/bar'})
-    route = Route('/foo', redirect_to='/bar')
+  - PathPrefixRoute: the idea of this route is to set a base path for other
+    routes::
 
-- Added argument `strict_slash` to Route: if True, redirects access to the same
-  URL with different trailing slash to the strict path defined in the rule.
-  For example, take these rules::
+        route = PrefixRoute('/users/<user:\w+>', [
+            Route('/', UserOverviewHandler, 'user-overview'),
+            Route('/profile', UserProfileHandler, 'user-profile'),
+            Route('/projects', UserProjectsHandler, 'user-projects'),
+        ])
 
-      route = Route('/foo', FooHandler, strict_slash=True)
-      route = Route('/bar/', BarHandler, strict_slash=True)
+    The example above is the same as setting the following routes, just more
+    convenient as you can reuse the path prefix::
 
-  Because **strict_slash** is True, this is what will happen:
+        Route('/users/<user:\w+>/', UserOverviewHandler, 'user-overview')
+        Route('/users/<user:\w+>/profile', UserProfileHandler, 'user-profile')
+        Route('/users/<user:\w+>/projects', UserProjectsHandler, 'user-projects')
 
-  - Access to ``/foo`` will execute ``FooHandler`` normally.
-  - Access to ``/bar/`` will execute ``BarHandler`` normally.
-  - Access to ``/foo/`` will redirect to ``/foo``.
-  - Access to ``/bar`` will redirect to ``/bar/``.
+  - NamePrefixRoute: Same as PathPrefixRoute, but prefixes the names of routes.
+
+  - HandlerPrefixRoute: Same as PathPrefixRoute, but prefixes the handlers of
+    routes.
+
+  - DomainRoute: a route used to restrict route matches to a given domain or
+    subdomain.
+
+    For example, to restrict routes to a subdomain of the appspot domain::
+
+        SUBDOMAIN_RE = '^([^.]+)\.app-id\.appspot\.com$'
+
+        router = Router([
+            DomainRoute(SUBDOMAIN_RE, [
+                Route('/foo', 'FooHandler', 'subdomain-thingie'),
+            ])
+        ])
+
+  - Improved Route: a route with redirect_to and strict_slash.
+
+    - `redirect_to`: if set, the route is used to redirect to a URL. The value
+       can be a URL string or a callable that returns a URL. These two are
+       equivalent::
+
+          route = Route('/foo', RedirectHandler, defaults={'url': '/bar'})
+          route = Route('/foo', redirect_to='/bar')
+
+    - `strict_slash`: if True, redirects access to the same URL with different
+      trailing slash to the strict path defined in the rule. For example, take
+      these rules::
+
+          route = Route('/foo', FooHandler, strict_slash=True)
+          route = Route('/bar/', BarHandler, strict_slash=True)
+
+      Because **strict_slash** is True, this is what will happen:
+
+      - Access to ``/foo`` will execute ``FooHandler`` normally.
+      - Access to ``/bar/`` will execute ``BarHandler`` normally.
+      - Access to ``/foo/`` will redirect to ``/foo``.
+      - Access to ``/bar`` will redirect to ``/bar/``.
 
 
 Version 0.3 - August 05, 2010

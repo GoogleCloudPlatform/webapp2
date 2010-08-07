@@ -23,7 +23,7 @@ import webob.exc
 HTTPException = webob.exc.HTTPException
 
 #: Allowed request methods.
-_ALLOWED_METHODS = frozenset(['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT',
+ALLOWED_METHODS = frozenset(['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT',
     'DELETE', 'TRACE'])
 
 #: Regex for URL definitions.
@@ -564,6 +564,8 @@ class BaseRoute(object):
     def get_routes(self, router):
         """Generator to get all routes from a route.
 
+        :param router:
+            A :class:`Router` instance.
         :yields:
             This route or all nested routes that it contains.
         """
@@ -572,6 +574,8 @@ class BaseRoute(object):
     def get_match_routes(self, router):
         """Generator to get all routes that can be matched from a route.
 
+        :param router:
+            A :class:`Router` instance.
         :yields:
             This route or all nested routes that can be matched.
         """
@@ -584,6 +588,8 @@ class BaseRoute(object):
     def get_build_routes(self, router):
         """Generator to get all routes that can be built from a route.
 
+        :param router:
+            A :class:`Router` instance.
         :yields:
             This route or all nested routes that can be built.
         """
@@ -1032,7 +1038,7 @@ class WSGIApplication(object):
             self.request = request = self.request_class(environ)
             response = self.response_class()
 
-            if request.method not in _ALLOWED_METHODS:
+            if request.method not in ALLOWED_METHODS:
                 # 501 Not Implemented.
                 raise webob.exc.HTTPNotImplemented()
 
@@ -1160,7 +1166,7 @@ def get_valid_methods(handler):
     :returns:
         A list of HTTP methods supported by the handler.
     """
-    return [m for m in _ALLOWED_METHODS if getattr(handler, m.lower(), None)]
+    return [m for m in ALLOWED_METHODS if getattr(handler, m.lower(), None)]
 
 
 def import_string(import_name, silent=False):

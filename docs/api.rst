@@ -31,11 +31,12 @@ Request Handlers
 URL Routing
 -----------
 .. autoclass:: Router
-   :members: route_class, __init__, add, match, build, dispatch
+   :members: route_class, __init__, add, build, match, dispatch
 
 
 .. autoclass:: BaseRoute
-   :members: name, build_only, match, build, get_routes
+   :members: name, build_only, match, build, get_routes, get_match_routes,
+             get_build_routes
 
 
 .. autoclass:: SimpleRoute
