@@ -1,6 +1,9 @@
 """
 Extra route classes. Proof of concepts for webapp2's routing system.
 """
+import re
+
+
 class MultiRoute(object):
     """Base class for routes with nested routes."""
     def __init__(self, routes):
@@ -77,3 +80,41 @@ class NamePrefixRoute(PathPrefixRoute):
 class HandlerPrefixRoute(PathPrefixRoute):
     """Same as :class:`PrefixRoute`, but prefixes the handlers of routes."""
     prefix_attr = 'handler'
+
+
+class DomainRoute(MultiRoute):
+    """A route used to restrict route matches to a given domain or subdomain.
+
+    For example, to restrict routes to a subdomain of the appspot domain::
+
+        SUBDOMAIN_RE = '^([^.]+)\.app-id\.appspot\.com$'
+
+        router = Router([
+            DomainRoute(SUBDOMAIN_RE, [
+                Route('/foo', 'FooHandler', 'subdomain-thingie'),
+            ])
+        ])
+
+    """
+    def __init__(self, regex, routes):
+        super(DomainRoute, self).__init__(routes)
+        self.regex = re.compile(regex)
+
+    def get_match_routes(self, router):
+        if self.routes is None:
+            self._prepare_routes(router)
+            self.routes = [r for r in self.routes if not r.build_only]
+
+        yield self
+
+    def match(self, request):
+        # Using SERVER_NAME to ignore port number that comes with request.host
+        host_match = self.regex.match(request.environ['SERVER_NAME'])
+        if host_match:
+            for route in self.routes:
+                match = route.match(request)
+                if match:
+                    handler, args, kwargs = match
+                    kwargs['_host_match'] = host_match.groups()
+
+                    return handler, args, kwargs

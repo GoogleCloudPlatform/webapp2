@@ -7,10 +7,11 @@ import unittest
 
 from webapp2 import Request, Route, Router
 
-from extras.routes import PathPrefixRoute, NamePrefixRoute, HandlerPrefixRoute
+from extras.routes import (DomainRoute, HandlerPrefixRoute, NamePrefixRoute,
+    PathPrefixRoute)
 
 
-class TestPathPrefixRoute(unittest.TestCase):
+class TestPrefixRoutes(unittest.TestCase):
     def test_simple(self):
         router = Router([
             PathPrefixRoute('/a', [
@@ -57,14 +58,14 @@ class TestPathPrefixRoute(unittest.TestCase):
 
     def test_with_variables_name_and_handler(self):
         router = Router([
-                PathPrefixRoute('/user/<username:\w+>', [
-                    HandlerPrefixRoute('apps.users.', [
-                        NamePrefixRoute('user-', [
-                            Route('/', 'UserOverviewHandler', 'overview'),
-                            Route('/profile', 'UserProfileHandler', 'profile'),
-                            Route('/projects', 'UserProjectsHandler', 'projects'),
-                        ]),
+            PathPrefixRoute('/user/<username:\w+>', [
+                HandlerPrefixRoute('apps.users.', [
+                    NamePrefixRoute('user-', [
+                        Route('/', 'UserOverviewHandler', 'overview'),
+                        Route('/profile', 'UserProfileHandler', 'profile'),
+                        Route('/projects', 'UserProjectsHandler', 'projects'),
                     ]),
+                ]),
             ])
         ])
 
@@ -83,3 +84,63 @@ class TestPathPrefixRoute(unittest.TestCase):
         self.assertEqual(router.match(Request.blank(path)), match)
         self.assertEqual(router.build('user-projects', Request.blank('/'), match[1], match[2]), path)
 
+
+class TestDomainRoute(unittest.TestCase):
+    def test_simple(self):
+        SUBDOMAIN_RE = '^([^.]+)\.app-id\.appspot\.com$'
+
+        router = Router([
+            DomainRoute(SUBDOMAIN_RE, [
+                Route('/foo', 'FooHandler', 'subdomain-thingie'),
+            ])
+        ])
+
+        match = router.match(Request.blank('/foo'))
+        self.assertEqual(match, None)
+
+        match = router.match(Request.blank('http://my-subdomain.app-id.appspot.com/foo'))
+        self.assertEqual(match, ('FooHandler', (), {'_host_match': ('my-subdomain',)}))
+
+        match = router.match(Request.blank('http://another-subdomain.app-id.appspot.com/foo'))
+        self.assertEqual(match, ('FooHandler', (), {'_host_match': ('another-subdomain',)}))
+
+        url = router.build('subdomain-thingie', None, (), {'_netloc': 'another-subdomain.app-id.appspot.com'})
+        self.assertEqual(url, 'http://another-subdomain.app-id.appspot.com/foo')
+
+    def test_with_variables_name_and_handler(self):
+        SUBDOMAIN_RE = '^([^.]+)\.app-id\.appspot\.com$'
+
+        router = Router([
+            DomainRoute(SUBDOMAIN_RE, [
+                PathPrefixRoute('/user/<username:\w+>', [
+                    HandlerPrefixRoute('apps.users.', [
+                        NamePrefixRoute('user-', [
+                            Route('/', 'UserOverviewHandler', 'overview'),
+                            Route('/profile', 'UserProfileHandler', 'profile'),
+                            Route('/projects', 'UserProjectsHandler', 'projects'),
+                        ]),
+                    ]),
+                ])
+            ]),
+        ])
+
+        path = 'http://my-subdomain.app-id.appspot.com/user/calvin/'
+        match = ('apps.users.UserOverviewHandler', (), {'username': 'calvin', '_host_match': ('my-subdomain',)})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        match[2].pop('_host_match')
+        match[2]['_netloc'] = 'my-subdomain.app-id.appspot.com'
+        self.assertEqual(router.build('user-overview', Request.blank('/'), match[1], match[2]), path)
+
+        path = 'http://my-subdomain.app-id.appspot.com/user/calvin/profile'
+        match = ('apps.users.UserProfileHandler', (), {'username': 'calvin', '_host_match': ('my-subdomain',)})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        match[2].pop('_host_match')
+        match[2]['_netloc'] = 'my-subdomain.app-id.appspot.com'
+        self.assertEqual(router.build('user-profile', Request.blank('/'), match[1], match[2]), path)
+
+        path = 'http://my-subdomain.app-id.appspot.com/user/calvin/projects'
+        match = ('apps.users.UserProjectsHandler', (), {'username': 'calvin', '_host_match': ('my-subdomain',)})
+        self.assertEqual(router.match(Request.blank(path)), match)
+        match[2].pop('_host_match')
+        match[2]['_netloc'] = 'my-subdomain.app-id.appspot.com'
+        self.assertEqual(router.build('user-projects', Request.blank('/'), match[1], match[2]), path)

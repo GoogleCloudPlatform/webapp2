@@ -3,7 +3,7 @@ Development version
 - redirect() and redirect_to() now accept a keyword argument 'abort' to raise
   an exception to do the redirect.
 
-- Added BaseRoute, a interface for custom routes.
+- Added BaseRoute, an interface for custom routes.
 
 - Nested routes are now possible. As an example, `extras/routes.py` has some
   classes that prefix all nested routes with a given path, name or handler.
