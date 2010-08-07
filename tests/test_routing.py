@@ -191,13 +191,6 @@ class TestRoute(unittest.TestCase):
         url = route.build(Request.blank('/'), args, {})
         self.assertEqual(url_res, url)
 
-    def test_redirect_to(self):
-        router = Router([Route('/foo', redirect_to='/bar')])
-        handler, args, kwargs = router.match(Request.blank('/foo'))
-        self.assertEqual(handler, RedirectHandler)
-        self.assertEqual(args, ())
-        self.assertEqual(kwargs, {'url': '/bar'})
-
     def test_build_only_without_name(self):
         router = Router()
         self.assertRaises(ValueError, router.add, Route(r'/<foo>', None, build_only=True))

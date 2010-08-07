@@ -3,6 +3,83 @@ Extra route classes. Proof of concepts for webapp2's routing system.
 """
 import re
 
+import webapp2
+
+
+class Route(webapp2.Route):
+    """An improved route class that adds redirect_to and strict_slash options.
+    """
+    def __init__(self, template, handler=None, name=None, defaults=None,
+        build_only=False, redirect_to=None, strict_slash=False):
+        """Initializes a URL route. Extra arguments:
+
+        :param redirect_to:
+            If set, this route is used to redirect to a URL. The value can be
+            a URL string or a callable that returns a URL. The callable is
+            called passing ``(handler, *args, **kwargs)`` as arguments. This is
+            a convenience to use :class:`RedirectHandler`. These two are
+            equivalent::
+
+                route = Route('/foo', RedirectHandler, defaults={'url': '/bar'})
+                route = Route('/foo', redirect_to='/bar')
+        :param strict_slash:
+            If True, redirects access to the same URL with different trailing
+            slash to the strict path defined in the rule. For example, take
+            these rules::
+
+                route = Route('/foo', FooHandler, strict_slash=True)
+                route = Route('/bar/', BarHandler, strict_slash=True)
+
+            Because **strict_slash** is True, this is what will happen:
+
+            - Access to ``/foo`` will execute ``FooHandler`` normally.
+            - Access to ``/bar/`` will execute ``BarHandler`` normally.
+            - Access to ``/foo/`` will redirect to ``/foo``.
+            - Access to ``/bar`` will redirect to ``/bar/``.
+        """
+        super(Route, self).__init__(template, handler, name, defaults,
+            build_only)
+
+        if strict_slash and not name:
+            raise ValueError('Routes with strict_slash must have a name.')
+
+        self.strict_slash = strict_slash
+
+        if redirect_to is not None:
+            self.handler = webapp2.RedirectHandler
+            self.defaults['url'] = redirect_to
+
+    def get_match_routes(self, router):
+        """Generator to get all routes that can be matched from a route.
+
+        :yields:
+            This route or all nested routes that can be matched.
+        """
+        if not self.build_only:
+            if self.strict_slash is True:
+                if self.template.endswith('/'):
+                    template = self.template[:-1]
+                else:
+                    template = self.template + '/'
+
+                defaults = self.defaults.copy()
+                defaults.update({
+                    'url': self._redirect_to_strict,
+                    'route_name': self.name
+                })
+                new_route = Route(template, webapp2.RedirectHandler,
+                    defaults=defaults)
+                for route in [self, new_route]:
+                    yield route
+            else:
+                yield self
+        elif not self.name:
+            raise ValueError("Route %r is build_only but doesn't have a "
+                "name" % self)
+
+    def _redirect_to_strict(self, handler, *args, **kwargs):
+        return handler.url_for(kwargs.pop('route_name'), *args, **kwargs)
+
 
 class MultiRoute(object):
     """Base class for routes with nested routes."""

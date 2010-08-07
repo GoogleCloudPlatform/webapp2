@@ -5,10 +5,69 @@ Tests for extra routes not included in webapp2 (see extras/routes.py)
 import random
 import unittest
 
-from webapp2 import Request, Route, Router
+from webapp2 import (RedirectHandler, Request, RequestHandler, Route, Router,
+    WSGIApplication)
+
+from webtest import TestApp
 
 from extras.routes import (DomainRoute, HandlerPrefixRoute, NamePrefixRoute,
-    PathPrefixRoute)
+    PathPrefixRoute, Route as ImprovedRoute)
+
+
+class HomeHandler(RequestHandler):
+    def get(self, **kwargs):
+        self.response.out.write('home sweet home')
+
+
+app = WSGIApplication([
+    ImprovedRoute('/redirect-me-easily', redirect_to='/i-was-redirected-easily'),
+    ImprovedRoute('/redirect-me-easily2', redirect_to='/i-was-redirected-easily', defaults={'permanent': False}),
+    ImprovedRoute('/strict-foo', HomeHandler, 'foo-strict', strict_slash=True),
+    ImprovedRoute('/strict-bar/', HomeHandler, 'bar-strict', strict_slash=True),
+], debug=False)
+
+test_app = TestApp(app)
+
+
+class TestImprovedRoute(unittest.TestCase):
+    def test_route_redirect_to(self):
+        router = Router([ImprovedRoute('/foo', redirect_to='/bar')])
+        handler, args, kwargs = router.match(Request.blank('/foo'))
+        self.assertEqual(handler, RedirectHandler)
+        self.assertEqual(args, ())
+        self.assertEqual(kwargs, {'url': '/bar'})
+
+    def test_easy_redirect_to(self):
+        res = test_app.get('/redirect-me-easily')
+        self.assertEqual(res.status, '301 Moved Permanently')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/i-was-redirected-easily')
+
+        res = test_app.get('/redirect-me-easily2')
+        self.assertEqual(res.status, '302 Found')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/i-was-redirected-easily')
+
+    def test_strict_slash(self):
+        res = test_app.get('/strict-foo')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'home sweet home')
+
+        res = test_app.get('/strict-bar/')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'home sweet home')
+
+        # Now the non-strict...
+
+        res = test_app.get('/strict-foo/')
+        self.assertEqual(res.status, '301 Moved Permanently')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/strict-foo')
+
+        res = test_app.get('/strict-bar')
+        self.assertEqual(res.status, '301 Moved Permanently')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/strict-bar/')
 
 
 class TestPrefixRoutes(unittest.TestCase):

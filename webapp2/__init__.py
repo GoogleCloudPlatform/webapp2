@@ -650,7 +650,7 @@ class Route(BaseRoute):
     URL building, non-keyword variables and other improvements.
     """
     def __init__(self, template, handler=None, name=None, defaults=None,
-        build_only=False, redirect_to=None, strict_slash=False):
+        build_only=False):
         """Initializes a URL route.
 
         :param template:
@@ -682,82 +682,16 @@ class Route(BaseRoute):
             when they are missing.
         :param build_only:
             If True, this route never matches and is used only to build URLs.
-        :param redirect_to:
-            If set, this route is used to redirect to a URL. The value can be
-            a URL string or a callable that returns a URL. The callable is
-            called passing ``(handler, *args, **kwargs)`` as arguments. This is
-            a convenience to use :class:`RedirectHandler`. These two are
-            equivalent::
-
-                route = Route('/foo', RedirectHandler, defaults={'url': '/bar'})
-                route = Route('/foo', redirect_to='/bar')
-        :param strict_slash:
-            If True, redirects access to the same URL with different trailing
-            slash to the strict path defined in the rule. For example, take
-            these rules::
-
-                route = Route('/foo', FooHandler, strict_slash=True)
-                route = Route('/bar/', BarHandler, strict_slash=True)
-
-            Because **strict_slash** is True, this is what will happen:
-
-            - Access to ``/foo`` will execute ``FooHandler`` normally.
-            - Access to ``/bar/`` will execute ``BarHandler`` normally.
-            - Access to ``/foo/`` will redirect to ``/foo``.
-            - Access to ``/bar`` will redirect to ``/bar/``.
         """
-        if handler is None and build_only is None and redirect_to is None:
-            raise ValueError('Handler must be defined.')
-
-        if strict_slash and not name:
-            raise ValueError('Routes with strict_slash must have a name.')
-
         self.template = template
+        self.handler = handler
         self.name = name
         self.defaults = defaults or {}
         self.build_only = build_only
-        self.strict_slash = strict_slash
-
-        if redirect_to is not None:
-            self.handler = RedirectHandler
-            self.defaults['url'] = redirect_to
-        else:
-            self.handler = handler
-
         # Lazy properties.
         self._regex = None
         self._variables = None
         self._reverse_template = None
-
-    def get_match_routes(self, router):
-        """Generator to get all routes that can be matched from a route.
-
-        :yields:
-            This route or all nested routes that can be matched.
-        """
-        if not self.build_only:
-            if self.strict_slash is True:
-                if self.template.endswith('/'):
-                    template = self.template[:-1]
-                else:
-                    template = self.template + '/'
-
-                defaults = self.defaults.copy()
-                defaults.update({
-                    'url': self._redirect_to_strict,
-                    'route_name': self.name
-                })
-                new_route = Route(template, RedirectHandler, defaults=defaults)
-                for route in [self, new_route]:
-                    yield route
-            else:
-                yield self
-        elif not self.name:
-            raise ValueError("Route %r is build_only but doesn't have a "
-                "name" % self)
-
-    def _redirect_to_strict(self, handler, *args, **kwargs):
-        return handler.url_for(kwargs.pop('route_name'), *args, **kwargs)
 
     def _parse_template(self):
         self._variables = {}
