@@ -5,14 +5,9 @@ Development version
 
 - Added BaseRoute, a interface for custom routes.
 
-- Nested routes are now possible. Routes have now the methiod ``get_routes``,
-  a generator that yields the route itself or all nested routes it may contain.
-  As an example, `extras/routes.py` has a ``PrefixRoute`` class that prefixes
-  all nested routes with a given path. This is based on an idea from
-  `werkzeug.routing`.
-
-- Added ``copy()`` method to routes, to return a new instance of a route with
-  the same attributes as the original. This is useful to assemble nested routes.
+- Nested routes are now possible. As an example, `extras/routes.py` has some
+  classes that prefix all nested routes with a given path, name or handler.
+  This is based on an idea from `werkzeug.routing`.
 
 - Added argument `redirect_to` to Route: if set, the route is used to redirect
   to a URL. The value can be a URL string or a callable that returns a URL.

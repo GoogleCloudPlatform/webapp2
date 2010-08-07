@@ -326,11 +326,12 @@ class RedirectHandler(RequestHandler):
           redirect Default is True.
         """
         url = kwargs.pop('url', '/')
+        permanent = kwargs.pop('permanent', True)
 
         if callable(url):
             url = url(self, *args, **kwargs)
 
-        self.redirect(url, permanent=kwargs.get('permanent', True))
+        self.redirect(url, permanent=permanent)
 
 
 class Config(dict):
@@ -557,14 +558,6 @@ class BaseRoute(object):
             Dictionary of keyword arguments to build the URL.
         :returns:
             An absolute or relative URL.
-        """
-        raise NotImplementedError()
-
-    def copy(self):
-        """Returns a copy of this route.
-
-        :returns:
-            A new route instance.
         """
         raise NotImplementedError()
 
@@ -879,15 +872,6 @@ class Route(BaseRoute):
             values[name] = value
 
         return (self.reverse_template % values, kwargs)
-
-    def copy(self):
-        """Returns a copy of this route.
-
-        :returns:
-            A new route instance.
-        """
-        return Route(self.template, self.handler, name=self.name,
-            defaults=self.defaults, build_only=self.build_only)
 
     def __repr__(self):
         return '<Route(%r, %r, name=%r, defaults=%r, build_only=%r)>' % \

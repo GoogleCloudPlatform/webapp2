@@ -223,4 +223,3 @@ class TestRoute(unittest.TestCase):
     def test_base_route(self):
         route = BaseRoute()
         self.assertRaises(NotImplementedError, route.match, None)
-        self.assertRaises(NotImplementedError, route.copy)
