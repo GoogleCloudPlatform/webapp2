@@ -7,17 +7,17 @@ import unittest
 
 from webapp2 import Request, Route, Router
 
-from extras.routes import PrefixRoute, NamePrefixRoute, HandlerPrefixRoute
+from extras.routes import PathPrefixRoute, NamePrefixRoute, HandlerPrefixRoute
 
 
-class TestPrefixRoute(unittest.TestCase):
+class TestPathPrefixRoute(unittest.TestCase):
     def test_simple(self):
         router = Router([
-            PrefixRoute('/a', [
+            PathPrefixRoute('/a', [
                 Route('/', 'a', 'name-a'),
                 Route('/b', 'a/b', 'name-a/b'),
                 Route('/c', 'a/c', 'name-a/c'),
-                PrefixRoute('/d', [
+                PathPrefixRoute('/d', [
                     Route('/', 'a/d', 'name-a/d'),
                     Route('/b', 'a/d/b', 'name-a/d/b'),
                     Route('/c', 'a/d/c', 'name-a/d/c'),
@@ -57,7 +57,7 @@ class TestPrefixRoute(unittest.TestCase):
 
     def test_with_variables_name_and_handler(self):
         router = Router([
-                PrefixRoute('/user/<username:\w+>', [
+                PathPrefixRoute('/user/<username:\w+>', [
                     HandlerPrefixRoute('apps.users.', [
                         NamePrefixRoute('user-', [
                             Route('/', 'UserOverviewHandler', 'overview'),

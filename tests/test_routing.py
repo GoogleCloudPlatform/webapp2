@@ -5,7 +5,7 @@ Tests for webapp2's Router, Route and BaseRoute.
 import random
 import unittest
 
-from webapp2 import BaseRoute, Request, Route, Router
+from webapp2 import BaseRoute, RedirectHandler, Request, Route, Router
 
 
 class TestRoute(unittest.TestCase):
@@ -190,6 +190,13 @@ class TestRoute(unittest.TestCase):
         self.assertEqual(route.match(Request.blank(url_res)), (None, args, {}))
         url = route.build(Request.blank('/'), args, {})
         self.assertEqual(url_res, url)
+
+    def test_redirect_to(self):
+        router = Router([Route('/foo', redirect_to='/bar')])
+        handler, args, kwargs = router.match(Request.blank('/foo'))
+        self.assertEqual(handler, RedirectHandler)
+        self.assertEqual(args, ())
+        self.assertEqual(kwargs, {'url': '/bar'})
 
     def test_build_only_without_name(self):
         router = Router()

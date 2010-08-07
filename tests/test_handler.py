@@ -194,6 +194,8 @@ app = WSGIApplication([
     Route('/lazy', 'resources.handlers.LazyHandler'),
     Route('/error', HandlerWithError),
     Route('/initialize', InitializeHandler),
+    Route('/redirect-me-easily', redirect_to='/i-was-redirected-easily'),
+    Route('/redirect-me-easily2', redirect_to='/i-was-redirected-easily', defaults={'permanent': False}),
 ], debug=False)
 
 test_app = TestApp(app)
@@ -363,6 +365,17 @@ class TestHandler(unittest.TestCase):
         self.assertEqual(res.status, '302 Found')
         self.assertEqual(res.body, '')
         self.assertEqual(res.headers['Location'], 'http://localhost/2010/07/test?foo=bar#my-anchor')
+
+    def test_easy_redirect_to(self):
+        res = test_app.get('/redirect-me-easily')
+        self.assertEqual(res.status, '301 Moved Permanently')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/i-was-redirected-easily')
+
+        res = test_app.get('/redirect-me-easily2')
+        self.assertEqual(res.status, '302 Found')
+        self.assertEqual(res.body, '')
+        self.assertEqual(res.headers['Location'], 'http://localhost/i-was-redirected-easily')
 
     def test_redirect_abort(self):
         res = test_app.get('/redirect-me6')

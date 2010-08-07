@@ -10,6 +10,11 @@ Development version
   `werkzeug.routing`.
 - Added ``copy()`` method to routes, to return a new instance of a route with
   the same attributes as the original. This is useful to assemble nested routes.
+- Added argument `redirect_to` to Route: routes can now redirect automatically
+  using RedirectHandler. These two are equivalent::
+
+      route = Route('/foo', RedirectHandler, {'url': '/bar'})
+      route = Route('/foo', redirect_to='/bar')
 
 
 Version 0.3 - August 05, 2010

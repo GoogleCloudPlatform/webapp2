@@ -1,11 +1,44 @@
 """
 Extra route classes. Proof of concepts for webapp2's routing system.
 """
-from webapp2 import Route
+class MultiRoute(object):
+    """Base class for routes with nested routes."""
+    def __init__(self, routes):
+        self._routes = routes
+        self.routes = None
+
+    def get_routes(self, router):
+        if self.routes is None:
+            self._prepare_routes(router)
+
+        for route in self.routes:
+            yield route
+
+    def get_match_routes(self, router):
+        if self.routes is None:
+            self._prepare_routes(router)
+
+        for route in self.routes:
+            if not route.build_only:
+                yield route
+
+    def get_build_routes(self, router):
+        if self.routes is None:
+            self._prepare_routes(router)
+
+        for route in self.routes:
+            if route.name is not None:
+                yield route
+
+    def _prepare_routes(self, router):
+        self.routes = []
+        for routes in self._routes:
+            for route in routes.get_routes(router):
+                self.routes.append(route)
 
 
-class PrefixRoute(object):
-    """The idea of this route is to set a base path and name for other routes::
+class PathPrefixRoute(MultiRoute):
+    """The idea of this route is to set a base path for other routes::
 
         route = PrefixRoute('/users/<user:\w+>', [
             Route('/', UserOverviewHandler, 'user-overview'),
@@ -14,7 +47,7 @@ class PrefixRoute(object):
         ])
 
     The example above is the same as setting the following routes, just more
-    convenient as you can reuse the path and name prefixes::
+    convenient as you can reuse the path prefix::
 
         Route('/users/<user:\w+>/', UserOverviewHandler, 'user-overview')
         Route('/users/<user:\w+>/profile', UserProfileHandler, 'user-profile')
@@ -23,24 +56,24 @@ class PrefixRoute(object):
     prefix_attr = 'template'
 
     def __init__(self, prefix, routes):
+        super(PathPrefixRoute, self).__init__(routes)
         self.prefix = prefix
-        self.routes = routes
 
-    def get_routes(self):
-        for routes in self.routes:
-            for route in routes.get_routes():
-                route = route.copy()
+    def _prepare_routes(self, router):
+        self.routes = []
+        for routes in self._routes:
+            for route in routes.get_routes(router):
                 setattr(route, self.prefix_attr, self.prefix + getattr(route,
                     self.prefix_attr))
 
-                yield route
+                self.routes.append(route)
 
 
-class NamePrefixRoute(PrefixRoute):
+class NamePrefixRoute(PathPrefixRoute):
     """Same as :class:`PrefixRoute`, but prefixes the names of routes."""
     prefix_attr = 'name'
 
 
-class HandlerPrefixRoute(PrefixRoute):
+class HandlerPrefixRoute(PathPrefixRoute):
     """Same as :class:`PrefixRoute`, but prefixes the handlers of routes."""
     prefix_attr = 'handler'

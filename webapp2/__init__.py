@@ -560,14 +560,6 @@ class BaseRoute(object):
         """
         raise NotImplementedError()
 
-    def get_routes(self):
-        """Generator to get all routes from a route.
-
-        :yields:
-            This route or all nested routes that it contains.
-        """
-        yield self
-
     def copy(self):
         """Returns a copy of this route.
 
@@ -575,6 +567,35 @@ class BaseRoute(object):
             A new route instance.
         """
         raise NotImplementedError()
+
+    def get_routes(self, router):
+        """Generator to get all routes from a route.
+
+        :yields:
+            This route or all nested routes that it contains.
+        """
+        yield self
+
+    def get_match_routes(self, router):
+        """Generator to get all routes that can be matched from a route.
+
+        :yields:
+            This route or all nested routes that can be matched.
+        """
+        if not self.build_only:
+            yield self
+        elif not self.name:
+            raise ValueError("Route %r is build_only but doesn't have a "
+                "name" % self)
+
+    def get_build_routes(self, router):
+        """Generator to get all routes that can be built from a route.
+
+        :yields:
+            This route or all nested routes that can be built.
+        """
+        if self.name is not None:
+            yield self
 
 
 class SimpleRoute(BaseRoute):
@@ -624,7 +645,7 @@ class SimpleRoute(BaseRoute):
     __str__ = __repr__
 
 
-class Route(SimpleRoute):
+class Route(BaseRoute):
     """A URL route definition. A route template contains parts enclosed by
     ``<>`` and is used to match requested URLs. Here are some examples::
 
@@ -635,8 +656,8 @@ class Route(SimpleRoute):
     Based on `Another Do-It-Yourself Framework`_, by Ian Bicking. We added
     URL building, non-keyword variables and other improvements.
     """
-    def __init__(self, template, handler, name=None, defaults=None,
-        build_only=False):
+    def __init__(self, template, handler=None, name=None, defaults=None,
+        build_only=False, redirect_to=None):
         """Initializes a URL route.
 
         :param template:
@@ -668,14 +689,37 @@ class Route(SimpleRoute):
             when they are missing.
         :param build_only:
             If True, this route never matches and is used only to build URLs.
+        :param redirect_to:
+            If set, this route is used to redirect to a URL. The value can be
+            a URL string or a callable that returns a URL. The callable is
+            called passing ``(handler, *args, **kwargs)`` as arguments.
         """
-        super(Route, self).__init__(template, handler)
+        self.template = template
+        self.handler = handler
         self.name = name
         self.defaults = defaults or {}
         self.build_only = build_only
+        self.redirect_to = redirect_to
         # Lazy properties.
+        self._regex = None
         self._variables = None
         self._reverse_template = None
+
+    def get_match_routes(self, router):
+        """Generator to get all routes that can be matched from a route.
+
+        :yields:
+            This route or all nested routes that can be matched.
+        """
+        if not self.build_only:
+            if self.redirect_to is not None:
+                self.handler = RedirectHandler
+                self.defaults['url'] = self.redirect_to
+
+            yield self
+        elif not self.name:
+            raise ValueError("Route %r is build_only but doesn't have a "
+                "name" % self)
 
     def _parse_template(self):
         self._variables = {}
@@ -823,8 +867,10 @@ class Router(object):
         """
         # Handler classes imported lazily.
         self._handlers = {}
-        self.routes = []
-        self.route_map = {}
+        # All routes that can be matched.
+        self.match_routes = []
+        # All routes that can be built.
+        self.named_routes = {}
         if routes:
             for route in routes:
                 self.add(route)
@@ -839,15 +885,11 @@ class Router(object):
             # Simple route, compatible with webapp.
             route = self.route_class(*route)
 
-        for r in route.get_routes():
-            if not r.build_only:
-                self.routes.append(r)
-            elif not r.name:
-                raise ValueError("Route %r is build_only but doesn't have a "
-                    "name." % r)
+        for r in route.get_match_routes(self):
+            self.match_routes.append(r)
 
-            if r.name:
-                self.route_map[r.name] = r
+        for r in route.get_build_routes(self):
+            self.named_routes[r.name] = r
 
     def match(self, request):
         """Matches all routes against the current request. The first one that
@@ -858,7 +900,7 @@ class Router(object):
         :returns:
             A tuple ``(route, args, kwargs)`` if a route matched, or None.
         """
-        for route in self.routes:
+        for route in self.match_routes:
             match = route.match(request)
             if match:
                 return match
@@ -915,15 +957,15 @@ class Router(object):
 
         .. seealso:: :meth:`RequestHandler.url_for`.
         """
-        route = self.route_map.get(name)
+        route = self.named_routes.get(name)
         if not route:
             raise KeyError('Route "%s" is not defined.' % name)
 
         return route.build(request, args, kwargs)
 
     def __repr__(self):
-        routes = self.routes + [v for k, v in self.route_map.iteritems() if \
-            v not in self.routes]
+        routes = self.match_routes + [v for k, v in self.named_routes.iteritems() if \
+            v not in self.match_routes]
 
         return '<Router(%r)>' % routes
 
