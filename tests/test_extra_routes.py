@@ -10,8 +10,8 @@ from webapp2 import (RedirectHandler, Request, RequestHandler, Route, Router,
 
 from webtest import TestApp
 
-from extras.routes import (DomainRoute, HandlerPrefixRoute, NamePrefixRoute,
-    PathPrefixRoute, Route as ImprovedRoute)
+from extras.routes import (DomainRoute, HandlerPrefixRoute, ImprovedRoute,
+    NamePrefixRoute, PathPrefixRoute)
 
 
 class HomeHandler(RequestHandler):

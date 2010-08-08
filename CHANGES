@@ -1,3 +1,9 @@
+Version 0.4.1 - August 08, 2010
+===============================
+- Removed router parameter from get_routes(), get_match_routes(),
+  get_build_routes(). This simplifies multi-routes quite a bit.
+
+
 Version 0.4 - August 07, 2010
 =============================
 - redirect() and redirect_to() now accept a keyword argument 'abort' to raise
@@ -16,18 +22,22 @@ Version 0.4 - August 07, 2010
   - PathPrefixRoute: the idea of this route is to set a base path for other
     routes::
 
-        route = PrefixRoute('/users/<user:\w+>', [
-            Route('/', UserOverviewHandler, 'user-overview'),
-            Route('/profile', UserProfileHandler, 'user-profile'),
-            Route('/projects', UserProjectsHandler, 'user-projects'),
+        app = WSGIApplication([
+            PathPrefixRoute('/users/<user:\w+>', [
+                Route('/', UserOverviewHandler, 'user-overview'),
+                Route('/profile', UserProfileHandler, 'user-profile'),
+                Route('/projects', UserProjectsHandler, 'user-projects'),
+            ]),
         ])
 
     The example above is the same as setting the following routes, just more
     convenient as you can reuse the path prefix::
 
-        Route('/users/<user:\w+>/', UserOverviewHandler, 'user-overview')
-        Route('/users/<user:\w+>/profile', UserProfileHandler, 'user-profile')
-        Route('/users/<user:\w+>/projects', UserProjectsHandler, 'user-projects')
+        app = WSGIApplication([
+            Route('/users/<user:\w+>/', UserOverviewHandler, 'user-overview'),
+            Route('/users/<user:\w+>/profile', UserProfileHandler, 'user-profile'),
+            Route('/users/<user:\w+>/projects', UserProjectsHandler, 'user-projects'),
+        ])
 
   - NamePrefixRoute: Same as PathPrefixRoute, but prefixes the names of routes.
 
@@ -41,13 +51,14 @@ Version 0.4 - August 07, 2010
 
         SUBDOMAIN_RE = '^([^.]+)\.app-id\.appspot\.com$'
 
-        router = Router([
+        app = WSGIApplication([
             DomainRoute(SUBDOMAIN_RE, [
-                Route('/foo', 'FooHandler', 'subdomain-thingie'),
-            ])
+                Route('/foo', 'FooHandler', 'subdomain-thing'),
+            ]),
+            Route('/bar', 'BarHandler', 'normal-thing'),
         ])
 
-  - Improved Route: a route with redirect_to and strict_slash.
+  - ImprovedRoute: a route with redirect_to and strict_slash.
 
     - `redirect_to`: if set, the route is used to redirect to a URL. The value
        can be a URL string or a callable that returns a URL. These two are

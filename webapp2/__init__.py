@@ -26,6 +26,9 @@ HTTPException = webob.exc.HTTPException
 ALLOWED_METHODS = frozenset(['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT',
     'DELETE', 'TRACE'])
 
+#: Value used for required arguments.
+REQUIRED_VALUE = object()
+
 #: Regex for URL definitions.
 _ROUTE_REGEX = re.compile(r'''
     \<            # The exact character "<"
@@ -33,9 +36,6 @@ _ROUTE_REGEX = re.compile(r'''
     (?::([^>]*))? # The optional :regex part
     \>            # The exact character ">"
     ''', re.VERBOSE)
-
-#: Value used for required arguments.
-REQUIRED_VALUE = object()
 
 
 class Response(webob.Response):
@@ -561,21 +561,17 @@ class BaseRoute(object):
         """
         raise NotImplementedError()
 
-    def get_routes(self, router):
+    def get_routes(self):
         """Generator to get all routes from a route.
 
-        :param router:
-            A :class:`Router` instance.
         :yields:
             This route or all nested routes that it contains.
         """
         yield self
 
-    def get_match_routes(self, router):
+    def get_match_routes(self):
         """Generator to get all routes that can be matched from a route.
 
-        :param router:
-            A :class:`Router` instance.
         :yields:
             This route or all nested routes that can be matched.
         """
@@ -585,11 +581,9 @@ class BaseRoute(object):
             raise ValueError("Route %r is build_only but doesn't have a "
                 "name" % self)
 
-    def get_build_routes(self, router):
+    def get_build_routes(self):
         """Generator to get all routes that can be built from a route.
 
-        :param router:
-            A :class:`Router` instance.
         :yields:
             This route or all nested routes that can be built.
         """
@@ -854,10 +848,10 @@ class Router(object):
             # Simple route, compatible with webapp.
             route = self.route_class(*route)
 
-        for r in route.get_match_routes(self):
+        for r in route.get_match_routes():
             self.match_routes.append(r)
 
-        for r in route.get_build_routes(self):
+        for r in route.get_build_routes():
             self.build_routes[r.name] = r
 
     def match(self, request):
