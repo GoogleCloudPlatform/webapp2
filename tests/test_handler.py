@@ -43,72 +43,47 @@ class MethodsHandler(HomeHandler):
 
 class UrlForHandler(RequestHandler):
     def get(self, **kwargs):
-        assert self.url_for('home') == '/'
-        assert self.url_for('home', foo='bar') == '/?foo=bar'
-        assert self.url_for('home', _anchor='my-anchor', foo='bar') == '/?foo=bar#my-anchor'
-        assert self.url_for('home', _anchor='my-anchor') == '/#my-anchor'
-        assert self.url_for('home', _full=True) == 'http://localhost:80/'
-        assert self.url_for('home', _full=True, _anchor='my-anchor') == 'http://localhost:80/#my-anchor'
-        assert self.url_for('home', _scheme='https') == 'https://localhost:80/'
-        assert self.url_for('home', _scheme='https', _full=False) == 'https://localhost:80/'
-        assert self.url_for('home', _scheme='https', _anchor='my-anchor') == 'https://localhost:80/#my-anchor'
+        method = self.get_url_for_method()
 
-        assert self.url_for('methods') == '/methods'
-        assert self.url_for('methods', foo='bar') == '/methods?foo=bar'
-        assert self.url_for('methods', _anchor='my-anchor', foo='bar') == '/methods?foo=bar#my-anchor'
-        assert self.url_for('methods', _anchor='my-anchor') == '/methods#my-anchor'
-        assert self.url_for('methods', _full=True) == 'http://localhost:80/methods'
-        assert self.url_for('methods', _full=True, _anchor='my-anchor') == 'http://localhost:80/methods#my-anchor'
-        assert self.url_for('methods', _scheme='https') == 'https://localhost:80/methods'
-        assert self.url_for('methods', _scheme='https', _full=False) == 'https://localhost:80/methods'
-        assert self.url_for('methods', _scheme='https', _anchor='my-anchor') == 'https://localhost:80/methods#my-anchor'
+        assert method('home') == '/'
+        assert method('home', foo='bar') == '/?foo=bar'
+        assert method('home', _anchor='my-anchor', foo='bar') == '/?foo=bar#my-anchor'
+        assert method('home', _anchor='my-anchor') == '/#my-anchor'
+        assert method('home', _full=True) == 'http://localhost:80/'
+        assert method('home', _full=True, _anchor='my-anchor') == 'http://localhost:80/#my-anchor'
+        assert method('home', _scheme='https') == 'https://localhost:80/'
+        assert method('home', _scheme='https', _full=False) == 'https://localhost:80/'
+        assert method('home', _scheme='https', _anchor='my-anchor') == 'https://localhost:80/#my-anchor'
 
-        assert self.url_for('route-test', year='2010', month='07', name='test') == '/2010/07/test'
-        assert self.url_for('route-test', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar'
-        assert self.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar#my-anchor'
-        assert self.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test') == '/2010/07/test#my-anchor'
-        assert self.url_for('route-test', _full=True, year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test'
-        assert self.url_for('route-test', _full=True, _anchor='my-anchor', year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test#my-anchor'
-        assert self.url_for('route-test', _scheme='https', year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
-        assert self.url_for('route-test', _scheme='https', _full=False, year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
-        assert self.url_for('route-test', _scheme='https', _anchor='my-anchor', year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test#my-anchor'
+        assert method('methods') == '/methods'
+        assert method('methods', foo='bar') == '/methods?foo=bar'
+        assert method('methods', _anchor='my-anchor', foo='bar') == '/methods?foo=bar#my-anchor'
+        assert method('methods', _anchor='my-anchor') == '/methods#my-anchor'
+        assert method('methods', _full=True) == 'http://localhost:80/methods'
+        assert method('methods', _full=True, _anchor='my-anchor') == 'http://localhost:80/methods#my-anchor'
+        assert method('methods', _scheme='https') == 'https://localhost:80/methods'
+        assert method('methods', _scheme='https', _full=False) == 'https://localhost:80/methods'
+        assert method('methods', _scheme='https', _anchor='my-anchor') == 'https://localhost:80/methods#my-anchor'
 
-        self.response.out.write('OK')
-
-
-class AppUrlForHandler(RequestHandler):
-    def get(self, **kwargs):
-        assert self.app.url_for('home') == '/'
-        assert self.app.url_for('home', foo='bar') == '/?foo=bar'
-        assert self.app.url_for('home', _anchor='my-anchor', foo='bar') == '/?foo=bar#my-anchor'
-        assert self.app.url_for('home', _anchor='my-anchor') == '/#my-anchor'
-        assert self.app.url_for('home', _full=True) == 'http://localhost:80/'
-        assert self.app.url_for('home', _full=True, _anchor='my-anchor') == 'http://localhost:80/#my-anchor'
-        assert self.app.url_for('home', _scheme='https') == 'https://localhost:80/'
-        assert self.app.url_for('home', _scheme='https', _full=False) == 'https://localhost:80/'
-        assert self.app.url_for('home', _scheme='https', _anchor='my-anchor') == 'https://localhost:80/#my-anchor'
-
-        assert self.app.url_for('methods') == '/methods'
-        assert self.app.url_for('methods', foo='bar') == '/methods?foo=bar'
-        assert self.app.url_for('methods', _anchor='my-anchor', foo='bar') == '/methods?foo=bar#my-anchor'
-        assert self.app.url_for('methods', _anchor='my-anchor') == '/methods#my-anchor'
-        assert self.app.url_for('methods', _full=True) == 'http://localhost:80/methods'
-        assert self.app.url_for('methods', _full=True, _anchor='my-anchor') == 'http://localhost:80/methods#my-anchor'
-        assert self.app.url_for('methods', _scheme='https') == 'https://localhost:80/methods'
-        assert self.app.url_for('methods', _scheme='https', _full=False) == 'https://localhost:80/methods'
-        assert self.app.url_for('methods', _scheme='https', _anchor='my-anchor') == 'https://localhost:80/methods#my-anchor'
-
-        assert self.app.url_for('route-test', year='2010', month='07', name='test') == '/2010/07/test'
-        assert self.app.url_for('route-test', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar'
-        assert self.app.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar#my-anchor'
-        assert self.app.url_for('route-test', _anchor='my-anchor', year='2010', month='07', name='test') == '/2010/07/test#my-anchor'
-        assert self.app.url_for('route-test', _full=True, year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test'
-        assert self.app.url_for('route-test', _full=True, _anchor='my-anchor', year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test#my-anchor'
-        assert self.app.url_for('route-test', _scheme='https', year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
-        assert self.app.url_for('route-test', _scheme='https', _full=False, year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
-        assert self.app.url_for('route-test', _scheme='https', _anchor='my-anchor', year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test#my-anchor'
+        assert method('route-test', year='2010', month='07', name='test') == '/2010/07/test'
+        assert method('route-test', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar'
+        assert method('route-test', _anchor='my-anchor', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar#my-anchor'
+        assert method('route-test', _anchor='my-anchor', year='2010', month='07', name='test') == '/2010/07/test#my-anchor'
+        assert method('route-test', _full=True, year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test'
+        assert method('route-test', _full=True, _anchor='my-anchor', year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test#my-anchor'
+        assert method('route-test', _scheme='https', year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
+        assert method('route-test', _scheme='https', _full=False, year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
+        assert method('route-test', _scheme='https', _anchor='my-anchor', year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test#my-anchor'
 
         self.response.out.write('OK')
+
+    def get_url_for_method(self):
+        return self.url_for
+
+
+class AppUrlForHandler(UrlForHandler):
+    def get_url_for_method(self):
+        return self.app.url_for
 
 
 class RedirectToHandler(RequestHandler):
