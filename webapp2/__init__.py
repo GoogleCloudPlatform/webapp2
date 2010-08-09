@@ -46,9 +46,9 @@ class Response(webob.Response):
     """
     def __init__(self, *args, **kwargs):
         super(Response, self).__init__(*args, **kwargs)
-
-        # webapp uses self.response.out.write()
-        self.out = self.body_file
+        # webapp uses response.out.write(), so we point `.out` to `self`
+        # and it will use `Response.write()`.
+        self.out = self
 
     def set_status(self, code, message=None):
         """Sets the HTTP status code of this response.
@@ -66,7 +66,7 @@ class Response(webob.Response):
 
     def clear(self):
         """Clears all data written to the output stream so that it is empty."""
-        self.app_iter = []
+        self.body = ''
 
     @staticmethod
     def http_status_message(code):

@@ -1,3 +1,13 @@
+Development version
+===================
+- Little review of Response based on observations from
+  http://pythonpaste.org/webob/differences.html#webapp-response:
+
+  - Response.out is now a reference to self, to use webob.Response's neat
+    .write() method which can handle both string and unicode.
+  - Response.clear() now sets .body = '' instead of .app_iter = [].
+
+
 Version 0.4.1 - August 08, 2010
 ===============================
 - Removed router parameter from get_routes(), get_match_routes(),
