@@ -131,7 +131,7 @@ class SecureCookie(object):
             return None
 
         try:
-            return self.decode(parts[0])
+            return self._decode(parts[0])
         except:
             return None
 
@@ -146,15 +146,15 @@ class SecureCookie(object):
         """
         assert isinstance(value, dict), 'SecureCookie values must be a dict.'
         timestamp = str(int(time.time()))
-        value = self.encode(value)
+        value = self._encode(value)
         signature = self._get_signature(name, value, timestamp)
         value = '|'.join([value, timestamp, signature])
         response.set_cookie(name, value, **kwargs)
 
-    def encode(self, value):
-        return base64.b64encode(simplejson.dumps(value))
+    def _encode(self, value):
+        return base64.b64encode(simplejson.dumps(value, separators=(',',':')))
 
-    def decode(self, value):
+    def _decode(self, value):
         return simplejson.loads(base64.b64decode(value))
 
     def _get_signature(self, *parts):
@@ -228,6 +228,9 @@ class SessionStore(object):
             max_age=max_age)
 
     def set_secure_cookie(self, name, value, **kwargs):
+        if not kwargs:
+            kwargs = self.config['cookie_args'].copy()
+
         self.secure_cookie_factory.set_cookie(self.response, name, value,
             **kwargs)
 
