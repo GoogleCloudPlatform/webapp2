@@ -1,5 +1,8 @@
 TODO
 ----
+- Use router.dispatch() on WSGIApplication.handle_exception(), so that exception
+  handlers can also be lazily loaded.
+
 - Docs:
   - WSGIApplication
   - URL routing

@@ -10,6 +10,8 @@ Development version
 - Removed RequestHandler.initialize(). It doesn't assure backwards
   compatibility anyway and is not a deal breaker for porting webapp apps.
 
+- Removed url_escape() and url_unescape(). Unused or almost unused.
+
 
 Version 0.4.1 - August 08, 2010
 ===============================

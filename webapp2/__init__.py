@@ -1158,32 +1158,6 @@ def import_string(import_name, silent=False):
             raise
 
 
-def url_escape(value):
-    """Returns a valid URL-encoded version of the given value.
-
-    This function comes from `Tornado`_.
-
-    :param value:
-        A URL to be encoded.
-    :returns:
-        The encoded URL.
-    """
-    return urllib.quote_plus(to_utf8(value))
-
-
-def url_unescape(value):
-    """Decodes the given value from a URL.
-
-    This function comes from `Tornado`_.
-
-    :param value:
-        A URL to be decoded.
-    :returns:
-        The decoded URL.
-    """
-    return to_unicode(urllib.unquote_plus(value))
-
-
 def to_utf8(value):
     """Returns a string encoded using UTF-8.
 
@@ -1261,6 +1235,6 @@ def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):
         query = urllib.urlencode(query_args)
 
     if fragment:
-        fragment = url_escape(fragment)
+        fragment = urllib.quote_plus(to_utf8(fragment))
 
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))

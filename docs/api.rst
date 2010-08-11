@@ -62,8 +62,6 @@ general use.
 .. autofunction:: abort
 .. autofunction:: get_valid_methods
 .. autofunction:: import_string
-.. autofunction:: url_escape
-.. autofunction:: url_unescape
 .. autofunction:: to_utf8
 .. autofunction:: to_unicode
 .. autofunction:: urlunsplit
