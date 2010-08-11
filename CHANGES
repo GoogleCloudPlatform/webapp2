@@ -7,6 +7,9 @@ Development version
     .write() method which can handle both string and unicode.
   - Response.clear() now sets .body = '' instead of .app_iter = [].
 
+- Removed RequestHandler.initialize(). It doesn't assure backwards
+  compatibility anyway and is not a deal breaker for porting webapp apps.
+
 
 Version 0.4.1 - August 08, 2010
 ===============================
