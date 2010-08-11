@@ -263,9 +263,9 @@ class RequestHandler(object):
     def get_config(self, module, key=None, default=REQUIRED_VALUE):
         """Returns a configuration value for a module.
 
-        .. seealso:: :meth:`Config.load_and_get`.
+        .. seealso:: :meth:`Config.get_or_load`.
         """
-        return self.app.config.load_and_get(module, key=key, default=default)
+        return self.app.config.get_or_load(module, key=key, default=default)
 
     def handle_exception(self, exception, debug_mode):
         """Called if this handler throws an exception during execution.
@@ -466,7 +466,7 @@ class Config(dict):
 
         return self[module][key]
 
-    def load_and_get(self, module, key=None, default=REQUIRED_VALUE):
+    def get_or_load(self, module, key=None, default=REQUIRED_VALUE):
         """Returns a configuration value for a module. If it is not already
         set, loads a ``default_config`` variable from the given module,
         updates the app configuration with those default values and returns
@@ -1072,9 +1072,9 @@ class WSGIApplication(object):
     def get_config(self, module, key=None, default=REQUIRED_VALUE):
         """Returns a configuration value for a module.
 
-        .. seealso:: :meth:`Config.load_and_get`.
+        .. seealso:: :meth:`Config.get_or_load`.
         """
-        return self.config.load_and_get(module, key=key, default=default)
+        return self.config.get_or_load(module, key=key, default=default)
 
     def run(self, bare=False):
         """Runs the app using ``google.appengine.ext.webapp.util.run_wsgi_app``.

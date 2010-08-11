@@ -156,9 +156,9 @@ class TestGetConfig(unittest.TestCase):
         from resources.template import default_config as template_config
         from resources.i18n import default_config as i18n_config
 
-        assert config.load_and_get('resources.template', 'templates_dir') == template_config['templates_dir']
-        assert config.load_and_get('resources.i18n', 'locale') == i18n_config['locale']
-        assert config.load_and_get('resources.i18n', 'timezone') == i18n_config['timezone']
+        assert config.get_or_load('resources.template', 'templates_dir') == template_config['templates_dir']
+        assert config.get_or_load('resources.i18n', 'locale') == i18n_config['locale']
+        assert config.get_or_load('resources.i18n', 'timezone') == i18n_config['timezone']
 
     def test_default_config_with_non_existing_key(self):
         config = Config()
@@ -166,10 +166,10 @@ class TestGetConfig(unittest.TestCase):
         from resources.i18n import default_config as i18n_config
 
         # In the first time the module config will be loaded normally.
-        assert config.load_and_get('resources.i18n', 'locale') == i18n_config['locale']
+        assert config.get_or_load('resources.i18n', 'locale') == i18n_config['locale']
 
         # In the second time it won't be loaded, but won't find the value and then use the default.
-        assert config.load_and_get('resources.i18n', 'i_dont_exist', 'foo') == 'foo'
+        assert config.get_or_load('resources.i18n', 'i_dont_exist', 'foo') == 'foo'
 
     def test_override_config(self):
         config = Config({
@@ -182,9 +182,9 @@ class TestGetConfig(unittest.TestCase):
             },
         })
 
-        assert config.load_and_get('resources.template', 'templates_dir') == 'apps/templates'
-        assert config.load_and_get('resources.i18n', 'locale') == 'pt_BR'
-        assert config.load_and_get('resources.i18n', 'timezone') == 'America/Sao_Paulo'
+        assert config.get_or_load('resources.template', 'templates_dir') == 'apps/templates'
+        assert config.get_or_load('resources.i18n', 'locale') == 'pt_BR'
+        assert config.get_or_load('resources.i18n', 'timezone') == 'America/Sao_Paulo'
 
     def test_override_config2(self):
         config = Config({
@@ -193,57 +193,57 @@ class TestGetConfig(unittest.TestCase):
             },
         })
 
-        assert config.load_and_get('resources.i18n', 'locale') == 'en_US'
-        assert config.load_and_get('resources.i18n', 'timezone') == 'America/Sao_Paulo'
+        assert config.get_or_load('resources.i18n', 'locale') == 'en_US'
+        assert config.get_or_load('resources.i18n', 'timezone') == 'America/Sao_Paulo'
 
     def test_get(self):
         config = Config({'foo': {
             'bar': 'baz',
         }})
 
-        assert config.load_and_get('foo', 'bar') == 'baz'
+        assert config.get_or_load('foo', 'bar') == 'baz'
 
     def test_get_with_default(self):
         config = Config()
 
-        assert config.load_and_get('resources.i18n', 'bar', 'baz') == 'baz'
+        assert config.get_or_load('resources.i18n', 'bar', 'baz') == 'baz'
 
     def test_get_with_default_and_none(self):
         config = Config({'foo': {
             'bar': None,
         }})
 
-        assert config.load_and_get('foo', 'bar', 'ooops') is None
+        assert config.get_or_load('foo', 'bar', 'ooops') is None
 
     def test_get_with_default_and_module_load(self):
         config = Config()
-        assert config.load_and_get('resources.i18n', 'locale') == 'en_US'
-        assert config.load_and_get('resources.i18n', 'locale', 'foo') == 'en_US'
+        assert config.get_or_load('resources.i18n', 'locale') == 'en_US'
+        assert config.get_or_load('resources.i18n', 'locale', 'foo') == 'en_US'
 
     @raises(KeyError)
     def test_required_config(self):
         config = Config()
-        config.load_and_get('resources.i18n', 'required')
+        config.get_or_load('resources.i18n', 'required')
 
     @raises(KeyError)
     def test_missing_module(self):
         config = Config()
-        assert config.load_and_get('i_dont_exist', 'i_dont_exist') == 'baz'
+        assert config.get_or_load('i_dont_exist', 'i_dont_exist') == 'baz'
 
     @raises(KeyError)
     def test_missing_module2(self):
         config = Config()
-        assert config.load_and_get('i_dont_exist') == 'baz'
+        assert config.get_or_load('i_dont_exist') == 'baz'
 
     @raises(KeyError)
     def test_missing_key(self):
         config = Config()
-        config.load_and_get('resources.i18n', 'i_dont_exist')
+        config.get_or_load('resources.i18n', 'i_dont_exist')
 
     @raises(KeyError)
     def test_missing_default_config(self):
         config = Config()
-        assert config.load_and_get('webapp2', 'foo') == 'baz'
+        assert config.get_or_load('webapp2', 'foo') == 'baz'
 
     def test_app_get_config(self):
         app = WSGIApplication()
