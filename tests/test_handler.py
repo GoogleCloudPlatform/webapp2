@@ -366,9 +366,3 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             ['GET', 'POST'].sort())
         self.assertEqual(get_valid_methods(MethodsHandler).sort(),
             ['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'TRACE'].sort())
-
-    def test_initialize(self):
-        # Trigger a warning.
-        res = test_app.get('/initialize')
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.body, 'Request method: GET')

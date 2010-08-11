@@ -10,8 +10,7 @@ import webob
 import webob.exc
 
 from webapp2 import (RedirectHandler, RequestHandler, Response,
-    WSGIApplication, abort, import_string, url_escape, url_unescape,
-    to_unicode, to_utf8)
+    WSGIApplication, abort, import_string, to_unicode, to_utf8)
 
 
 class TestMiscellaneous(unittest.TestCase):
@@ -69,14 +68,6 @@ class TestMiscellaneous(unittest.TestCase):
 
         self.assertRaises(ImportError, import_string, 'dfasfasdfdsfsd')
         self.assertRaises(AttributeError, import_string, 'webob.dfasfasdfdsfsd')
-
-    def test_url_escape(self):
-        self.assertEqual(url_escape('url with spaces!'), 'url+with+spaces%21')
-        self.assertEqual(url_escape('%now, this is weird'), '%25now%2C+this+is+weird')
-
-    def test_url_unescape(self):
-        self.assertEqual(url_unescape('url+with+spaces%21'), 'url with spaces!')
-        self.assertEqual(url_unescape('%25now%2C+this+is+weird'), '%now, this is weird')
 
     def to_utf8(self):
         res = to_utf8(unicode('éééé'))
