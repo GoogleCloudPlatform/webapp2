@@ -69,12 +69,12 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertRaises(ImportError, import_string, 'dfasfasdfdsfsd')
         self.assertRaises(AttributeError, import_string, 'webob.dfasfasdfdsfsd')
 
-    def to_utf8(self):
-        res = to_utf8(unicode('éééé'))
-        self.assertEqual(isinstance(res, string), True)
+    def test_to_utf8(self):
+        res = to_utf8('ábcdéf'.decode('utf-8'))
+        self.assertEqual(isinstance(res, str), True)
 
         res = to_utf8('abcdef')
-        self.assertEqual(isinstance(res, string), True)
+        self.assertEqual(isinstance(res, str), True)
 
     def test_to_unicode(self):
         res = to_unicode(unicode('foo'))
@@ -87,4 +87,3 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(Response.http_status_message(404), 'Not Found')
         self.assertEqual(Response.http_status_message(500), 'Internal Server Error')
         self.assertRaises(KeyError, Response.http_status_message, 9999)
-
