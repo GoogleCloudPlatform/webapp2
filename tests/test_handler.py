@@ -359,6 +359,32 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
         self.assertEqual(sys.stdout.getvalue(), DEFAULT_RESPONSE)
 
+    def test_run_debug(self):
+        debug = app.debug
+        app.debug = True
+        os.environ['REQUEST_METHOD'] = 'GET'
+
+        app.run(bare=True)
+        self.assertEqual(sys.stdout.getvalue(), DEFAULT_RESPONSE)
+
+        app.debug = debug
+
+    def test_run_debug2(self):
+        import sys
+        import webapp2
+
+        path = webapp2._ULTIMATE_SYS_PATH
+        webapp2._ULTIMATE_SYS_PATH = []
+        debug = app.debug
+        app.debug = True
+        os.environ['REQUEST_METHOD'] = 'GET'
+
+        app.run(bare=True)
+        self.assertEqual(sys.stdout.getvalue(), DEFAULT_RESPONSE)
+
+        app.debug = debug
+        webapp2._ULTIMATE_SYS_PATH = sys.path = path
+
     def test_get_valid_methods(self):
         self.assertEqual(get_valid_methods(BrokenHandler).sort(),
             ['GET'].sort())
