@@ -41,51 +41,6 @@ class MethodsHandler(HomeHandler):
         self.response.out.write('home sweet home - OPTIONS')
 
 
-class UrlForHandler(RequestHandler):
-    def get(self, **kwargs):
-        method = self.get_url_for_method()
-
-        assert method('home') == '/'
-        assert method('home', foo='bar') == '/?foo=bar'
-        assert method('home', _anchor='my-anchor', foo='bar') == '/?foo=bar#my-anchor'
-        assert method('home', _anchor='my-anchor') == '/#my-anchor'
-        assert method('home', _full=True) == 'http://localhost:80/'
-        assert method('home', _full=True, _anchor='my-anchor') == 'http://localhost:80/#my-anchor'
-        assert method('home', _scheme='https') == 'https://localhost:80/'
-        assert method('home', _scheme='https', _full=False) == 'https://localhost:80/'
-        assert method('home', _scheme='https', _anchor='my-anchor') == 'https://localhost:80/#my-anchor'
-
-        assert method('methods') == '/methods'
-        assert method('methods', foo='bar') == '/methods?foo=bar'
-        assert method('methods', _anchor='my-anchor', foo='bar') == '/methods?foo=bar#my-anchor'
-        assert method('methods', _anchor='my-anchor') == '/methods#my-anchor'
-        assert method('methods', _full=True) == 'http://localhost:80/methods'
-        assert method('methods', _full=True, _anchor='my-anchor') == 'http://localhost:80/methods#my-anchor'
-        assert method('methods', _scheme='https') == 'https://localhost:80/methods'
-        assert method('methods', _scheme='https', _full=False) == 'https://localhost:80/methods'
-        assert method('methods', _scheme='https', _anchor='my-anchor') == 'https://localhost:80/methods#my-anchor'
-
-        assert method('route-test', year='2010', month='07', name='test') == '/2010/07/test'
-        assert method('route-test', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar'
-        assert method('route-test', _anchor='my-anchor', year='2010', month='07', name='test', foo='bar') == '/2010/07/test?foo=bar#my-anchor'
-        assert method('route-test', _anchor='my-anchor', year='2010', month='07', name='test') == '/2010/07/test#my-anchor'
-        assert method('route-test', _full=True, year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test'
-        assert method('route-test', _full=True, _anchor='my-anchor', year='2010', month='07', name='test') == 'http://localhost:80/2010/07/test#my-anchor'
-        assert method('route-test', _scheme='https', year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
-        assert method('route-test', _scheme='https', _full=False, year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test'
-        assert method('route-test', _scheme='https', _anchor='my-anchor', year='2010', month='07', name='test') == 'https://localhost:80/2010/07/test#my-anchor'
-
-        self.response.out.write('OK')
-
-    def get_url_for_method(self):
-        return self.url_for
-
-
-class AppUrlForHandler(UrlForHandler):
-    def get_url_for_method(self):
-        return self.app.url_for
-
-
 class RedirectToHandler(RequestHandler):
     def get(self, **kwargs):
         self.redirect_to('route-test', _anchor='my-anchor', year='2010',
@@ -156,8 +111,6 @@ app = WSGIApplication([
     Route('/methods', MethodsHandler, name='methods'),
     Route('/broken', BrokenHandler),
     Route('/broken-but-fixed', BrokenButFixedHandler),
-    Route('/url-for', UrlForHandler),
-    Route('/app-url-for', AppUrlForHandler),
     Route('/<year:\d{4}>/<month:\d\d>/<name>', None, name='route-test'),
     Route('/<:\d\d>/<:\d{2}>/<slug>', PositionalHandler, name='positional'),
     Route('/redirect-me', RedirectHandler, defaults={'url': '/broken'}),
@@ -290,16 +243,6 @@ class TestHandler(unittest.TestCase):
         res = req.get_response(app)
         self.assertEqual(res.status, '501 Not Implemented')
 
-    def test_url_for(self):
-        res = test_app.get('/url-for')
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.body, 'OK')
-
-    def test_app_url_for(self):
-        res = test_app.get('/app-url-for')
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.body, 'OK')
-
     def test_positional(self):
         res = test_app.get('/07/31/test')
         self.assertEqual(res.status, '200 OK')
@@ -392,3 +335,41 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             ['GET', 'POST'].sort())
         self.assertEqual(get_valid_methods(MethodsHandler).sort(),
             ['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'TRACE'].sort())
+
+    def test_url_for(self):
+        request = Request.blank('http://localhost:80/')
+        app.request = request
+        handler = RequestHandler(app, request, None)
+
+        for func in (app.url_for, handler.url_for):
+            self.assertEqual(func('home'), '/')
+            self.assertEqual(func('home', foo='bar'), '/?foo=bar')
+            self.assertEqual(func('home', _anchor='my-anchor', foo='bar'), '/?foo=bar#my-anchor')
+            self.assertEqual(func('home', _anchor='my-anchor'), '/#my-anchor')
+            self.assertEqual(func('home', _full=True), 'http://localhost:80/')
+            self.assertEqual(func('home', _full=True, _anchor='my-anchor'), 'http://localhost:80/#my-anchor')
+            self.assertEqual(func('home', _scheme='https'), 'https://localhost:80/')
+            self.assertEqual(func('home', _scheme='https', _full=False), 'https://localhost:80/')
+            self.assertEqual(func('home', _scheme='https', _anchor='my-anchor'), 'https://localhost:80/#my-anchor')
+
+            self.assertEqual(func('methods'), '/methods')
+            self.assertEqual(func('methods', foo='bar'), '/methods?foo=bar')
+            self.assertEqual(func('methods', _anchor='my-anchor', foo='bar'), '/methods?foo=bar#my-anchor')
+            self.assertEqual(func('methods', _anchor='my-anchor'), '/methods#my-anchor')
+            self.assertEqual(func('methods', _full=True), 'http://localhost:80/methods')
+            self.assertEqual(func('methods', _full=True, _anchor='my-anchor'), 'http://localhost:80/methods#my-anchor')
+            self.assertEqual(func('methods', _scheme='https'), 'https://localhost:80/methods')
+            self.assertEqual(func('methods', _scheme='https', _full=False), 'https://localhost:80/methods')
+            self.assertEqual(func('methods', _scheme='https', _anchor='my-anchor'), 'https://localhost:80/methods#my-anchor')
+
+            self.assertEqual(func('route-test', year='2010', month='07', name='test'), '/2010/07/test')
+            self.assertEqual(func('route-test', year='2010', month='07', name='test', foo='bar'), '/2010/07/test?foo=bar')
+            self.assertEqual(func('route-test', _anchor='my-anchor', year='2010', month='07', name='test', foo='bar'), '/2010/07/test?foo=bar#my-anchor')
+            self.assertEqual(func('route-test', _anchor='my-anchor', year='2010', month='07', name='test'), '/2010/07/test#my-anchor')
+            self.assertEqual(func('route-test', _full=True, year='2010', month='07', name='test'), 'http://localhost:80/2010/07/test')
+            self.assertEqual(func('route-test', _full=True, _anchor='my-anchor', year='2010', month='07', name='test'), 'http://localhost:80/2010/07/test#my-anchor')
+            self.assertEqual(func('route-test', _scheme='https', year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test')
+            self.assertEqual(func('route-test', _scheme='https', _full=False, year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test')
+            self.assertEqual(func('route-test', _scheme='https', _anchor='my-anchor', year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test#my-anchor')
+
+        app.request = None

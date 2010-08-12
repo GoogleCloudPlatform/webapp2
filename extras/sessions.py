@@ -107,6 +107,11 @@ class SecureCookie(object):
     Extracted from `Tornado`_ and modified.
     """
     def __init__(self, secret_key):
+        """
+        :param secret_key:
+            A long, random sequence of bytes to be used as the HMAC secret
+            for the cookie signature.
+        """
         self.secret_key = secret_key
 
     def get_cookie(self, request, name, max_age=None):
@@ -138,11 +143,7 @@ class SecureCookie(object):
     def set_cookie(self, response, name, value, **kwargs):
         """Signs and timestamps a cookie so it cannot be forged.
 
-        You must specify the 'cookie_secret' setting in your Application
-        to use this method. It should be a long, random sequence of bytes
-        to be used as the HMAC secret for the signature.
-
-        To read a cookie set with this method, use get_secure_cookie().
+        To read a cookie set with this method, use get_cookie().
         """
         assert isinstance(value, dict), 'SecureCookie values must be a dict.'
         timestamp = str(int(time.time()))
