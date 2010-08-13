@@ -1,19 +1,31 @@
-Development version
-===================
-- Little review of Response based on observations from
+Version 0.5 - August 13, 2010
+=============================
+- Better compatibility with webapp:
+  - webapp2.WSGIapplication can be used with webapp.RequestHandler.
+  - webapp.WSGIapplication can be used with webapp2.RequestHandler.
+
+  Although the functionality becomes limited in both cases, this should help
+  migration.
+
+- Review of Response based on observations from
   http://pythonpaste.org/webob/differences.html#webapp-response:
 
   - Response.out is now a reference to self, to use webob.Response's neat
     .write() method which can handle both string and unicode.
   - Response.clear() now sets .body = '' instead of .app_iter = [].
 
-- Removed RequestHandler.initialize(). It doesn't assure backwards
-  compatibility anyway and is not a deal breaker for porting webapp apps.
+- Added Response.write(), for compatibility with StringIO behavior in webapp
+  when calling write() passing non-basestring values (issue 2).
 
 - Removed url_escape() and url_unescape(). Unused or almost unused.
 
-- Added Response.write(), for compatibility with StringIO behavior in webapp
-  when calling write() passing non-basestring values (issue 2).
+- ErrorHandlers can now be defined as strings to be lazily loaded, as they
+  now use the same dispatch mechanism of other handlers.
+
+Backwards compatibility warning
+-------------------------------
+- The method handle_exception() is called from app-wide error handlers.
+  Previously, get() was called.
 
 
 Version 0.4.1 - August 08, 2010

@@ -65,20 +65,20 @@ class BrokenButFixedHandler(BrokenHandler):
 
 
 class Handle404(RequestHandler):
-    def get(self, **kwargs):
+    def handle_exception(self, exception, debug_mode):
         self.response.out.write('404 custom handler')
         self.response.set_status(404)
 
 
 class Handle405(RequestHandler):
-    def get(self, **kwargs):
+    def handle_exception(self, exception, debug_mode):
         self.response.out.write('405 custom handler')
         self.response.set_status(405, 'Custom Error Message')
         self.response.headers['Allow'] = 'GET'
 
 
 class Handle500(RequestHandler):
-    def get(self, **kwargs):
+    def handle_exception(self, exception, debug_mode):
         self.response.out.write('500 custom handler')
         self.response.set_status(500)
 

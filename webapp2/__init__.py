@@ -99,9 +99,13 @@ class RequestHandler(object):
 
     Implements most of ``webapp.RequestHandler`` interface.
     """
-    def __init__(self, app, request, response):
+    def __init__(self, app=None, request=None, response=None):
         """Initializes this request handler with the given WSGI application,
         Request and Response.
+
+        .. note::
+           Parameters are optional only to support webapp's constructor which
+           doesn't take any arguments. Consider them as required.
 
         :param app:
             A :class:`WSGIApplication` instance.
@@ -111,6 +115,26 @@ class RequestHandler(object):
             A :class:`Response` instance.
         """
         self.app = app
+        self.request = request
+        self.response = response
+
+    def initialize(self, request, response):
+        """Initializes this request handler with the given WSGI application,
+        Request and Response.
+
+        .. warning::
+           This is deprecated. It is here for compatibility with webapp only.
+           Use __init__() instead.
+
+        :param request:
+            A ``webapp.Request`` instance.
+        :param response:
+            A :class:`Response` instance.
+        """
+        logging.warning('RequestHandler.initialize() is deprecated. '
+            'Use __init__() instead.')
+
+        self.app = WSGIApplication.active_instance
         self.request = request
         self.response = response
 
@@ -279,7 +303,7 @@ class RequestHandler(object):
     def handle_exception(self, exception, debug_mode):
         """Called if this handler throws an exception during execution.
 
-        The default behavior is to raise the exception to be handled by
+        The default behavior is to re-raise the exception to be handled by
         :meth:`WSGIApplication.handle_exception`.
 
         :param exception:
@@ -857,7 +881,7 @@ class Router(object):
             if match:
                 return match
 
-    def dispatch(self, app, request, response, match):
+    def dispatch(self, app, request, response, match, method=None):
         """Dispatches a request. This calls the :class:`RequestHandler` from
         the matched :class:`Route`.
 
@@ -870,8 +894,12 @@ class Router(object):
         :param match:
             A tuple ``(handler, args, kwargs)``, resulted from the matched
             route.
+        :param method:
+            Handler method to be called. In cases like exception handling, a
+            method can be forced instead of using the request method.
         """
         handler_class, args, kwargs = match
+        method = method or request.method.lower()
 
         if isinstance(handler_class, basestring):
             if handler_class not in self._handlers:
@@ -879,10 +907,21 @@ class Router(object):
 
             handler_class = self._handlers[handler_class]
 
-        handler = handler_class(app, request, response)
+        new_style_handler = True
+        try:
+            handler = handler_class(app, request, response)
+        except TypeError, e:
+            # Support webapp's initialize().
+            new_style_handler = False
+            handler = handler_class()
+            handler.initialize(request, response)
 
         try:
-            handler(request.method.lower(), *args, **kwargs)
+            if new_style_handler:
+                handler(method, *args, **kwargs)
+            else:
+                # Support webapp's handlers which don't implement __call__().
+                getattr(handler, method)(*args)
         except Exception, e:
             # If the handler implements exception handling,
             # let it handle it.
@@ -962,10 +1001,6 @@ class WSGIApplication(object):
     router_class = Router
     #: Default class used for the config object.
     config_class = Config
-    #: A dictionary mapping HTTP error codes to :class:`RequestHandler`
-    #: classes used to handle them. The handler set for status 500 is used
-    #: as default if others are not set.
-    error_handlers = {}
 
     def __init__(self, routes=None, debug=False, config=None):
         """Initializes the WSGI application.
@@ -980,6 +1015,12 @@ class WSGIApplication(object):
         self.debug = debug
         self.router = self.router_class(routes)
         self.config = self.config_class(config)
+        # A dictionary mapping HTTP error codes to :class:`RequestHandler`
+        # classes used to handle them. The handler set for status 500 is used
+        # as default if others are not set.
+        self.error_handlers = {}
+        # For compatibility with webapp only. Don't use it!
+        WSGIApplication.active_instance = self
 
     def __call__(self, environ, start_response):
         """Called by WSGI when a request comes in. Calls :meth:`wsgi_app`."""
@@ -1008,6 +1049,9 @@ class WSGIApplication(object):
             optional exception context to start the response.
         """
         try:
+            # For compatibility with webapp only. Don't use it!
+            WSGIApplication.active_instance = self
+
             self.request = request = self.request_class(environ)
             response = self.response_class()
 
@@ -1042,10 +1086,34 @@ class WSGIApplication(object):
         return response(environ, start_response)
 
     def handle_exception(self, request, response, e):
-        """Handles an exception. Searches :attr:`error_handlers` for a handler
-        with the error code, if it is a :class:`HTTPException`, or the 500
-        status code as fall back. Dispatches the handler if found, or re-raises
-        the exception to be caught by :class:`WSGIApplication`.
+        """Handles an exception. To set app-wide error handlers, define them
+        using the corresponent HTTP status code in the ``error_handlers``
+        dictionary of :class:`WSGIApplication`. For example, to set a custom
+        `Not Found` page::
+
+            class Handle404(RequestHandler):
+                def handle_exception(self, exception, debug_mode):
+                    self.response.out.write('Oops! I could swear this page was here!')
+                    self.response.set_status(404)
+
+            app = WSGIApplication([
+                (r'/', MyHandler),
+            ])
+            app.error_handlers[404] = Handle404
+
+        When an ``HTTPException`` is raised using :func:`abort` or because the
+        app could not fulfill the request, the error handler registered for
+        the current HTTP status code will be called. If it is not set, the
+        handler defined for status code 500 is used as a fallback, or the
+        exception is re-raised if no handler is set.
+
+        .. note::
+           Although being a :class:`RequestHandler`, the error handler will
+           execute the ``handle_exception`` method after instantiation, instead
+           of the method corresponding to the current request.
+
+           Also, the error handler is responsible for setting the response
+           status code, as shown in the example above.
 
         :param request:
             A ``webapp.Request`` instance.
@@ -1066,7 +1134,9 @@ class WSGIApplication(object):
         handler = self.error_handlers.get(code) or self.error_handlers.get(500)
         if handler:
             # Handle the exception using a custom handler.
-            handler(self, request, response)('get', exception=e)
+            match = (handler, (e, self.debug), {})
+            self.router.dispatch(self, request, response, match,
+                method='handle_exception')
         else:
             # No exception handler. Catch it in the WSGI app.
             raise
