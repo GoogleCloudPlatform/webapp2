@@ -12,6 +12,9 @@ Development version
 
 - Removed url_escape() and url_unescape(). Unused or almost unused.
 
+- Added Response.write(), for compatibility with StringIO behavior in webapp
+  when calling write() passing non-basestring values (issue 2).
+
 
 Version 0.4.1 - August 08, 2010
 ===============================

@@ -50,6 +50,15 @@ class Response(webob.Response):
         # and it will use `Response.write()`.
         self.out = self
 
+    def write(self, text):
+        """Appends a text to the response body."""
+        # webapp uses StringIO as Response.out, so we need to convert anything
+        # that is not str or unicode to string to keep same behavior.
+        if not isinstance(text, basestring):
+            text = unicode(text)
+
+        super(Response, self).write(text)
+
     def set_status(self, code, message=None):
         """Sets the HTTP status code of this response.
 
