@@ -484,17 +484,21 @@ class Config(dict):
         :param key:
             The key from the module configuration.
         :param default:
-            A default value to return in case the configuration for
-            the module/key is not set.
+            A default value to return when the configuration for the given
+            key is not set. It is only returned if **key** is defined.
         :returns:
             The configuration value.
         """
         if module not in self:
+            if key is None:
+                return None
+
             return default
 
         if key is None:
             return self[module]
-        elif key not in self[module]:
+
+        if key not in self[module]:
             return default
 
         return self[module][key]
@@ -531,13 +535,14 @@ class Config(dict):
             self.loaded.append(module)
 
         value = self.get(module, key, default)
-        if value is not REQUIRED_VALUE:
+
+        if value is not REQUIRED_VALUE and not (key is None and value is None):
             return value
 
-        if key is None:
+        if key is None and value is None:
             raise KeyError('Module %s is not configured.' % module)
-        else:
-            raise KeyError('Module %s requires the config key "%s" to be '
+
+        raise KeyError('Module %s requires the config key "%s" to be '
                 'set.' % (module, key))
 
 
