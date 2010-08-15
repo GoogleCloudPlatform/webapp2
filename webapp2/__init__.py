@@ -626,27 +626,25 @@ class SimpleRoute(BaseRoute):
         self.template = template
         self.handler = handler
         # Lazy property.
-        self._regex = None
+        self.regex = None
 
-    @property
-    def regex(self):
-        if self._regex is None:
-            if not self.template.startswith('^'):
-                self.template = '^' + self.template
+    def _regex(self):
+        if not self.template.startswith('^'):
+            self.template = '^' + self.template
 
-            if not self.template.endswith('$'):
-                self.template += '$'
+        if not self.template.endswith('$'):
+            self.template += '$'
 
-            self._regex = re.compile(self.template)
-
-        return self._regex
+        self.regex = re.compile(self.template)
+        return self.regex
 
     def match(self, request):
         """Matches this route against the current request.
 
         .. seealso:: :meth:`BaseRoute.match`.
         """
-        match = self.regex.match(request.path)
+        regex = self.regex or self._regex()
+        match = regex.match(request.path)
         if match:
             return self.handler, match.groups(), {}
 
@@ -707,14 +705,14 @@ class Route(BaseRoute):
         self.defaults = defaults or {}
         self.build_only = build_only
         # Lazy properties.
-        self._regex = None
-        self._variables = None
-        self._reverse_template = None
+        self.regex = None
+        self.variables = None
+        self.reverse_template = None
 
     def _parse_template(self):
-        self._variables = {}
+        self.variables = {}
         last = count = 0
-        regex = template = ''
+        regex = reverse_template = ''
         for match in _ROUTE_REGEX.finditer(self.template):
             part = self.template[last:match.start()]
             name = match.group(1)
@@ -725,42 +723,34 @@ class Route(BaseRoute):
                 name = '__%d__' % count
                 count += 1
 
-            template += '%s%%(%s)s' % (part, name)
+            reverse_template += '%s%%(%s)s' % (part, name)
             regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
-            self._variables[name] = re.compile('^%s$' % expr)
+            self.variables[name] = re.compile('^%s$' % expr)
 
         regex = '^%s%s$' % (regex, re.escape(self.template[last:]))
-        self._regex = re.compile(regex)
-        self._reverse_template = template + self.template[last:]
+        self.regex = re.compile(regex)
+        self.reverse_template = reverse_template + self.template[last:]
         self.has_positional_variables = count > 0
 
-    @property
-    def regex(self):
-        if self._regex is None:
-            self._parse_template()
+    def _regex(self):
+        self._parse_template()
+        return self.regex
 
-        return self._regex
+    def _variables(self):
+        self._parse_template()
+        return self.variables
 
-    @property
-    def variables(self):
-        if self._variables is None:
-            self._parse_template()
-
-        return self._variables
-
-    @property
-    def reverse_template(self):
-        if self._reverse_template is None:
-            self._parse_template()
-
-        return self._reverse_template
+    def _reverse_template(self):
+        self._parse_template()
+        return self.reverse_template
 
     def match(self, request):
         """Matches this route against the current request.
 
         .. seealso:: :meth:`BaseRoute.match`.
         """
-        match = self.regex.match(request.path)
+        regex = self.regex or self._regex()
+        match = regex.match(request.path)
         if match:
             kwargs = self.defaults.copy()
             kwargs.update(match.groupdict())
@@ -800,7 +790,7 @@ class Route(BaseRoute):
             A tuple ``(path, kwargs)`` with the built URL path and extra
             keywords to be used as URL query arguments.
         """
-        variables = self.variables
+        variables = self.variables or self._variables()
         if self.has_positional_variables:
             for index, value in enumerate(args):
                 key = '__%d__' % index
