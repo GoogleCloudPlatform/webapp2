@@ -13,7 +13,7 @@ import re
 import urllib
 import urlparse
 
-from google.appengine.ext.webapp import Request
+from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_bare_wsgi_app, run_wsgi_app
 
 import webob
@@ -36,6 +36,15 @@ _ROUTE_REGEX = re.compile(r'''
     (?::([^>]*))? # The optional :regex part
     \>            # The exact character ">"
     ''', re.VERBOSE)
+
+
+class Request(webapp.Request):
+    def __init__(self, *args, **kwargs):
+        super(Request, self).__init__(*args, **kwargs)
+        # A registry for objects used during the request lifetime.
+        self.registry = {}
+        # A dictionary for variables used in rendering.
+        self.context = {}
 
 
 class Response(webob.Response):
@@ -1016,6 +1025,8 @@ class WSGIApplication(object):
         # classes used to handle them. The handler set for status 500 is used
         # as default if others are not set.
         self.error_handlers = {}
+        # A registry for objects used during the app lifetime.
+        self.registry = {}
         # For compatibility with webapp only. Don't use it!
         WSGIApplication.active_instance = self
 
