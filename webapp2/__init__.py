@@ -1118,8 +1118,6 @@ class WSGIApplication(object):
             The raised exception.
         """
         logging.exception(e)
-        if self.debug:
-            raise
 
         if isinstance(e, HTTPException):
             code = e.code
