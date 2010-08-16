@@ -905,7 +905,7 @@ class Router(object):
             method can be forced instead of using the request method.
         """
         handler_class, args, kwargs = match
-        method = method or request.method.lower()
+        method = method or request.method.lower().replace('-', '_')
 
         if isinstance(handler_class, basestring):
             if handler_class not in self._handlers:
@@ -1219,7 +1219,8 @@ def get_valid_methods(handler):
     :returns:
         A list of HTTP methods supported by the handler.
     """
-    return [m for m in ALLOWED_METHODS if getattr(handler, m.lower(), None)]
+    return [method for method in ALLOWED_METHODS if getattr(handler,
+        method.lower().replace('-', '_'), None)]
 
 
 def import_string(import_name, silent=False):

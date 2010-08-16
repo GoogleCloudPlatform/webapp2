@@ -9,6 +9,13 @@ Development version
   when in debug mode: it is up to the error handler to raise it if in dev; it
   will be raised if no error handler is defined to handle it anyway.
 
+- Added attributes, WSGIApplication.registry, Request.registry and
+  Request.context, dictionaries for objects in use during the app or request
+  lifetimes.
+
+- Before passing the request method to the RequestHandler, '-' is replaced
+  by '_', so that a method like WebDav's 'VERSION-CONTROL' can be supported.
+
 
 Version 0.5 - August 13, 2010
 =============================
