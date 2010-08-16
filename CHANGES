@@ -1,3 +1,15 @@
+Development version
+===================
+- When a URL matches, some attributes are set in the request object:
+  - request.route: the matched route
+  - request.route_args: the matched positional arguments, a tuple
+  - request.route_kwargs: the matched keyword arguments, a dict
+
+- WSGIApplication.handle_exception() doesn't automatically raises the exception
+  when in debug mode: it is up to the error handler to raise it if in dev; it
+  will be raised if no error handler is defined to handle it anyway.
+
+
 Version 0.5 - August 13, 2010
 =============================
 - Better compatibility with webapp:

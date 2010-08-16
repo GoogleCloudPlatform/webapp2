@@ -874,6 +874,8 @@ class Router(object):
         for route in self.match_routes:
             match = route.match(request)
             if match:
+                request.route = route
+                request.route_args, request.route_kwargs = match[1], match[2]
                 return match
 
     def dispatch(self, app, request, response, match, method=None):
