@@ -385,47 +385,27 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
     def test_extra_request_methods(self):
         allowed_methods_backup = webapp2.ALLOWED_METHODS
+        webdav_methods = ('VERSION-CONTROL', 'UNLOCK', 'PROPFIND')
 
-        # It is still not possible to use WebDav methods...
-        req = webapp2.Request.blank('/webdav')
-        req.method = 'VERSION-CONTROL'
-        res = req.get_response(app)
-        self.assertEqual(res.status, '501 Not Implemented')
-
-        req = webapp2.Request.blank('/webdav')
-        req.method = 'UNLOCK'
-        res = req.get_response(app)
-        self.assertEqual(res.status, '501 Not Implemented')
-
-        req = webapp2.Request.blank('/webdav')
-        req.method = 'PROPFIND'
-        res = req.get_response(app)
-        self.assertEqual(res.status, '501 Not Implemented')
+        for method in webdav_methods:
+            # It is still not possible to use WebDav methods...
+            req = webapp2.Request.blank('/webdav')
+            req.method = method
+            res = req.get_response(app)
+            self.assertEqual(res.status, '501 Not Implemented')
 
         # Let's extend ALLOWED_METHODS with some WebDav methods.
-        webdav_methods = ('VERSION-CONTROL', 'UNLOCK', 'PROPFIND')
         webapp2.ALLOWED_METHODS = tuple(webapp2.ALLOWED_METHODS) + webdav_methods
 
         self.assertEqual(sorted(webapp2.get_valid_methods(WebDavHandler)), sorted(list(webdav_methods)))
 
         # Now we can use WebDav methods...
-        req = webapp2.Request.blank('/webdav')
-        req.method = 'VERSION-CONTROL'
-        res = req.get_response(app)
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.body, 'Method: VERSION-CONTROL')
-
-        req = webapp2.Request.blank('/webdav')
-        req.method = 'UNLOCK'
-        res = req.get_response(app)
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.body, 'Method: UNLOCK')
-
-        req = webapp2.Request.blank('/webdav')
-        req.method = 'PROPFIND'
-        res = req.get_response(app)
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.body, 'Method: PROPFIND')
+        for method in webdav_methods:
+            req = webapp2.Request.blank('/webdav')
+            req.method = method
+            res = req.get_response(app)
+            self.assertEqual(res.status, '200 OK')
+            self.assertEqual(res.body, 'Method: %s' % method)
 
         # Restore initial values.
         webapp2.ALLOWED_METHODS = allowed_methods_backup
