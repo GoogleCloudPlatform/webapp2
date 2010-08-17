@@ -31,7 +31,7 @@ test_app = TestApp(app)
 
 class TestImprovedRoute(unittest.TestCase):
     def test_route_redirect_to(self):
-        router = Router([ImprovedRoute('/foo', redirect_to='/bar')])
+        router = Router(None, [ImprovedRoute('/foo', redirect_to='/bar')])
         handler, args, kwargs = router.match(Request.blank('/foo'))
         self.assertEqual(handler, RedirectHandler)
         self.assertEqual(args, ())
@@ -72,7 +72,7 @@ class TestImprovedRoute(unittest.TestCase):
 
 class TestPrefixRoutes(unittest.TestCase):
     def test_simple(self):
-        router = Router([
+        router = Router(None, [
             PathPrefixRoute('/a', [
                 Route('/', 'a', 'name-a'),
                 Route('/b', 'a/b', 'name-a/b'),
@@ -116,7 +116,7 @@ class TestPrefixRoutes(unittest.TestCase):
         self.assertEqual(router.build('name-' + match[0], Request.blank('/'), match[1], match[2]), path)
 
     def test_with_variables_name_and_handler(self):
-        router = Router([
+        router = Router(None, [
             PathPrefixRoute('/user/<username:\w+>', [
                 HandlerPrefixRoute('apps.users.', [
                     NamePrefixRoute('user-', [
@@ -148,7 +148,7 @@ class TestDomainRoute(unittest.TestCase):
     def test_simple(self):
         SUBDOMAIN_RE = '^([^.]+)\.app-id\.appspot\.com$'
 
-        router = Router([
+        router = Router(None, [
             DomainRoute(SUBDOMAIN_RE, [
                 Route('/foo', 'FooHandler', 'subdomain-thingie'),
             ])
@@ -169,7 +169,7 @@ class TestDomainRoute(unittest.TestCase):
     def test_with_variables_name_and_handler(self):
         SUBDOMAIN_RE = '^([^.]+)\.app-id\.appspot\.com$'
 
-        router = Router([
+        router = Router(None, [
             DomainRoute(SUBDOMAIN_RE, [
                 PathPrefixRoute('/user/<username:\w+>', [
                     HandlerPrefixRoute('apps.users.', [

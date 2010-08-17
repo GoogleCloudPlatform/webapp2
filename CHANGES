@@ -26,6 +26,9 @@ Development version
       # If config['foo'] is not set, return None. Default is ignored here.
       config.get('foo', default='baz')
 
+- Router initialization now receives the app as parameter, so that extended
+  routes can access app's config.
+
 
 Version 0.5 - August 13, 2010
 =============================

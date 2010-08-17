@@ -143,7 +143,7 @@ class TestRoute(unittest.TestCase):
         self.assertEqual(url, '/2010')
 
     def test_router_build_error(self):
-        router = Router()
+        router = Router(None)
         router.add(Route('/<year:\d{4}>', None, name='year-page'))
 
         url = router.build('year-page', Request.blank('/'), (), dict(year='2010'))
@@ -172,7 +172,7 @@ class TestRoute(unittest.TestCase):
         self.assertEqual(template, '/<foo/<:bar')
 
     def test_build_full_without_request(self):
-        router = Router()
+        router = Router(None)
         router.add(Route(r'/hello', None, name='hello'))
         self.assertRaises(AttributeError, router.build, 'hello', None, (), dict(_full=True))
         self.assertRaises(AttributeError, router.build, 'hello', None, (), dict(_scheme='https'))
@@ -196,7 +196,7 @@ class TestRoute(unittest.TestCase):
         self.assertEqual(url_res, url)
 
     def test_build_only_without_name(self):
-        router = Router()
+        router = Router(None)
         self.assertRaises(ValueError, router.add, Route(r'/<foo>', None, build_only=True))
 
     def test_route_repr(self):
@@ -211,7 +211,7 @@ class TestRoute(unittest.TestCase):
             "<Route('/<foo>', None, name='bar', defaults={'baz': 'ding'}, build_only=True)>")
 
     def test_router_repr(self):
-        router = Router()
+        router = Router(None)
         router.add(Route(r'/hello', None, name='hello', build_only=True))
         router.add(Route(r'/world', None))
 

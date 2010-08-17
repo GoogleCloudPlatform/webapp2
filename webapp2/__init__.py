@@ -847,12 +847,15 @@ class Router(object):
     #: Class used when the route is a tuple. Default is compatible with webapp.
     route_class = SimpleRoute
 
-    def __init__(self, routes=None):
+    def __init__(self, app, routes=None):
         """Initializes the router.
 
+        :param app:
+            The :class:`WSGIApplication` instance.
         :param routes:
             A list of :class:`Route` instances to initialize the router.
         """
+        self.app = app
         # Handler classes imported lazily.
         self._handlers = {}
         # All routes that can be matched.
@@ -1027,8 +1030,8 @@ class WSGIApplication(object):
             A configuration dictionary for the application.
         """
         self.debug = debug
-        self.router = self.router_class(routes)
         self.config = self.config_class(config)
+        self.router = self.router_class(self, routes)
         # A dictionary mapping HTTP error codes to :class:`RequestHandler`
         # classes used to handle them. The handler set for status 500 is used
         # as default if others are not set.
