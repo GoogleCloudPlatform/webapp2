@@ -109,6 +109,10 @@ class WebDavHandler(webapp2.RequestHandler):
         self.response.out.write('Method: PROPFIND')
 
 
+class AuthorizationHandler(webapp2.RequestHandler):
+    def get(self):
+        self.response.out.write('nothing here')
+
 def get_redirect_url(handler, **kwargs):
     return handler.url_for('methods')
 
@@ -130,6 +134,7 @@ app = webapp2.WSGIApplication([
     webapp2.Route('/error', HandlerWithError),
     webapp2.Route('/initialize', InitializeHandler),
     webapp2.Route('/webdav', WebDavHandler),
+    webapp2.Route('/authorization', AuthorizationHandler),
 ], debug=False)
 
 test_app = TestApp(app)
@@ -410,3 +415,10 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         # Restore initial values.
         webapp2.ALLOWED_METHODS = allowed_methods_backup
         self.assertEqual(len(webapp2.ALLOWED_METHODS), 7)
+
+    """
+    def test_authorization(self):
+        response = test_app.get('http://username:password@localhost:8001/authorization')
+
+        self.assertEqual(response.headers, ...)
+    """
