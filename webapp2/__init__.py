@@ -298,6 +298,14 @@ class RequestHandler(object):
         :returns:
             An absolute or relative URL.
 
+        .. note::
+           This method, like :meth:`WSGIApplication.url_for`, needs the request
+           attribute to be set to build absolute URLs. This is because some
+           routes may need to retrieve information from the request to set the
+           URL host. We pass the request object explicitly instead of relying
+           on ``os.environ`` mainly for better testability, but it also helps
+           middleware.
+
         .. seealso:: :meth:`Router.build`.
         """
         return self.app.router.build(_name, self.request, args, kwargs)
