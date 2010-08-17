@@ -1,5 +1,5 @@
-Development version
-===================
+Version 0.5.1 - August 17, 2010
+===============================
 - When a URL matches, some attributes are set in the request object:
   - request.route: the matched route
   - request.route_args: the matched positional arguments, a tuple
