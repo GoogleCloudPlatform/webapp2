@@ -1,22 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Tests for webapp2 RequestHandler
+Tests for webapp2 webapp2.RequestHandler
 """
 import os
 import StringIO
 import sys
 import unittest
-import warnings
 
 from webtest import TestApp
 
-from webapp2 import (RedirectHandler, Request, RequestHandler, Route,
-    WSGIApplication, get_valid_methods)
-
-warnings.simplefilter('ignore')
+import webapp2
 
 
-class HomeHandler(RequestHandler):
+class HomeHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
         self.response.out.write('home sweet home')
 
@@ -41,18 +37,18 @@ class MethodsHandler(HomeHandler):
         self.response.out.write('home sweet home - OPTIONS')
 
 
-class RedirectToHandler(RequestHandler):
+class RedirectToHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
         self.redirect_to('route-test', _anchor='my-anchor', year='2010',
             month='07', name='test', foo='bar')
 
 
-class RedirectAbortHandler(RequestHandler):
+class RedirectAbortHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
         self.redirect('/somewhere', abort=True)
 
 
-class BrokenHandler(RequestHandler):
+class BrokenHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
         raise ValueError('booo!')
 
@@ -64,37 +60,37 @@ class BrokenButFixedHandler(BrokenHandler):
         self.response.out.write('that was close!')
 
 
-class Handle404(RequestHandler):
+class Handle404(webapp2.RequestHandler):
     def handle_exception(self, exception, debug_mode):
         self.response.out.write('404 custom handler')
         self.response.set_status(404)
 
 
-class Handle405(RequestHandler):
+class Handle405(webapp2.RequestHandler):
     def handle_exception(self, exception, debug_mode):
         self.response.out.write('405 custom handler')
         self.response.set_status(405, 'Custom Error Message')
         self.response.headers['Allow'] = 'GET'
 
 
-class Handle500(RequestHandler):
+class Handle500(webapp2.RequestHandler):
     def handle_exception(self, exception, debug_mode):
         self.response.out.write('500 custom handler')
         self.response.set_status(500)
 
 
-class PositionalHandler(RequestHandler):
+class PositionalHandler(webapp2.RequestHandler):
     def get(self, month, day, slug=None):
         self.response.out.write('%s:%s:%s' % (month, day, slug))
 
 
-class HandlerWithError(RequestHandler):
+class HandlerWithError(webapp2.RequestHandler):
     def get(self, **kwargs):
         self.response.out.write('bla bla bla bla bla bla')
         self.error(403)
 
 
-class InitializeHandler(RequestHandler):
+class InitializeHandler(webapp2.RequestHandler):
     def __init__(self):
         pass
 
@@ -102,26 +98,38 @@ class InitializeHandler(RequestHandler):
         self.response.out.write('Request method: %s' % self.request.method)
 
 
+class WebDavHandler(webapp2.RequestHandler):
+    def version_control(self):
+        self.response.out.write('Method: VERSION-CONTROL')
+
+    def unlock(self):
+        self.response.out.write('Method: UNLOCK')
+
+    def propfind(self):
+        self.response.out.write('Method: PROPFIND')
+
+
 def get_redirect_url(handler, **kwargs):
     return handler.url_for('methods')
 
 
-app = WSGIApplication([
-    Route('/', HomeHandler, name='home'),
-    Route('/methods', MethodsHandler, name='methods'),
-    Route('/broken', BrokenHandler),
-    Route('/broken-but-fixed', BrokenButFixedHandler),
-    Route('/<year:\d{4}>/<month:\d\d>/<name>', None, name='route-test'),
-    Route('/<:\d\d>/<:\d{2}>/<slug>', PositionalHandler, name='positional'),
-    Route('/redirect-me', RedirectHandler, defaults={'url': '/broken'}),
-    Route('/redirect-me2', RedirectHandler, defaults={'url': get_redirect_url}),
-    Route('/redirect-me3', RedirectHandler, defaults={'url': '/broken', 'permanent': False}),
-    Route('/redirect-me4', RedirectHandler, defaults={'url': get_redirect_url, 'permanent': False}),
-    Route('/redirect-me5', RedirectToHandler),
-    Route('/redirect-me6', RedirectAbortHandler),
-    Route('/lazy', 'resources.handlers.LazyHandler'),
-    Route('/error', HandlerWithError),
-    Route('/initialize', InitializeHandler),
+app = webapp2.WSGIApplication([
+    webapp2.Route('/', HomeHandler, name='home'),
+    webapp2.Route('/methods', MethodsHandler, name='methods'),
+    webapp2.Route('/broken', BrokenHandler),
+    webapp2.Route('/broken-but-fixed', BrokenButFixedHandler),
+    webapp2.Route('/<year:\d{4}>/<month:\d\d>/<name>', None, name='route-test'),
+    webapp2.Route('/<:\d\d>/<:\d{2}>/<slug>', PositionalHandler, name='positional'),
+    webapp2.Route('/redirect-me', webapp2.RedirectHandler, defaults={'url': '/broken'}),
+    webapp2.Route('/redirect-me2', webapp2.RedirectHandler, defaults={'url': get_redirect_url}),
+    webapp2.Route('/redirect-me3', webapp2.RedirectHandler, defaults={'url': '/broken', 'permanent': False}),
+    webapp2.Route('/redirect-me4', webapp2.RedirectHandler, defaults={'url': get_redirect_url, 'permanent': False}),
+    webapp2.Route('/redirect-me5', RedirectToHandler),
+    webapp2.Route('/redirect-me6', RedirectAbortHandler),
+    webapp2.Route('/lazy', 'resources.handlers.LazyHandler'),
+    webapp2.Route('/error', HandlerWithError),
+    webapp2.Route('/initialize', InitializeHandler),
+    webapp2.Route('/webdav', WebDavHandler),
 ], debug=False)
 
 test_app = TestApp(app)
@@ -139,24 +147,6 @@ The resource could not be found.
 class TestHandler(unittest.TestCase):
     def tearDown(self):
         app.error_handlers = {}
-
-    def test_lazy_handler(self):
-        res = test_app.get('/lazy')
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.body, 'I am a laaazy view.')
-
-    def test_handler_with_error(self):
-        res = test_app.get('/error', status=403)
-        self.assertEqual(res.status, '403 Forbidden')
-        self.assertEqual(res.body, '')
-
-    def test_debug_mode(self):
-        app = WSGIApplication([
-            Route('/broken', BrokenHandler),
-        ], debug=True)
-
-        test_app = TestApp(app)
-        self.assertRaises(ValueError, test_app.get, '/broken')
 
     def test_200(self):
         res = test_app.get('/')
@@ -180,6 +170,31 @@ class TestHandler(unittest.TestCase):
         res = test_app.get('/broken-but-fixed')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'that was close!')
+
+    def test_501(self):
+        # 501 Not Implemented
+        req = webapp2.Request.blank('/methods')
+        req.method = 'FOOBAR'
+        res = req.get_response(app)
+        self.assertEqual(res.status, '501 Not Implemented')
+
+    def test_lazy_handler(self):
+        res = test_app.get('/lazy')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'I am a laaazy view.')
+
+    def test_handler_with_error(self):
+        res = test_app.get('/error', status=403)
+        self.assertEqual(res.status, '403 Forbidden')
+        self.assertEqual(res.body, '')
+
+    def test_debug_mode(self):
+        app = webapp2.WSGIApplication([
+            webapp2.Route('/broken', BrokenHandler),
+        ], debug=True)
+
+        test_app = TestApp(app)
+        self.assertRaises(ValueError, test_app.get, '/broken')
 
     def test_custom_error_handlers(self):
         app.error_handlers = {
@@ -219,29 +234,23 @@ class TestHandler(unittest.TestCase):
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'home sweet home - DELETE')
 
-        req = Request.blank('/methods')
+        req = webapp2.Request.blank('/methods')
         req.method = 'HEAD'
         res = req.get_response(app)
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, '')
 
-        req = Request.blank('/methods')
+        req = webapp2.Request.blank('/methods')
         req.method = 'OPTIONS'
         res = req.get_response(app)
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'home sweet home - OPTIONS')
 
-        req = Request.blank('/methods')
+        req = webapp2.Request.blank('/methods')
         req.method = 'TRACE'
         res = req.get_response(app)
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'home sweet home - TRACE')
-
-        # 501 Not Implemented
-        req = Request.blank('/methods')
-        req.method = 'FOOBAR'
-        res = req.get_response(app)
-        self.assertEqual(res.status, '501 Not Implemented')
 
     def test_positional(self):
         res = test_app.get('/07/31/test')
@@ -329,17 +338,17 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         webapp2._ULTIMATE_SYS_PATH = sys.path = path
 
     def test_get_valid_methods(self):
-        self.assertEqual(get_valid_methods(BrokenHandler).sort(),
+        self.assertEqual(webapp2.get_valid_methods(BrokenHandler).sort(),
             ['GET'].sort())
-        self.assertEqual(get_valid_methods(HomeHandler).sort(),
+        self.assertEqual(webapp2.get_valid_methods(HomeHandler).sort(),
             ['GET', 'POST'].sort())
-        self.assertEqual(get_valid_methods(MethodsHandler).sort(),
+        self.assertEqual(webapp2.get_valid_methods(MethodsHandler).sort(),
             ['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'TRACE'].sort())
 
     def test_url_for(self):
-        request = Request.blank('http://localhost:80/')
+        request = webapp2.Request.blank('http://localhost:80/')
         app.request = request
-        handler = RequestHandler(app, request, None)
+        handler = webapp2.RequestHandler(app, request, None)
 
         for func in (app.url_for, handler.url_for):
             self.assertEqual(func('home'), '/')
@@ -373,3 +382,51 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             self.assertEqual(func('route-test', _scheme='https', _anchor='my-anchor', year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test#my-anchor')
 
         app.request = None
+
+    def test_extra_request_methods(self):
+        allowed_methods_backup = webapp2.ALLOWED_METHODS
+
+        # It is still not possible to use WebDav methods...
+        req = webapp2.Request.blank('/webdav')
+        req.method = 'VERSION-CONTROL'
+        res = req.get_response(app)
+        self.assertEqual(res.status, '501 Not Implemented')
+
+        req = webapp2.Request.blank('/webdav')
+        req.method = 'UNLOCK'
+        res = req.get_response(app)
+        self.assertEqual(res.status, '501 Not Implemented')
+
+        req = webapp2.Request.blank('/webdav')
+        req.method = 'PROPFIND'
+        res = req.get_response(app)
+        self.assertEqual(res.status, '501 Not Implemented')
+
+        # Let's extend ALLOWED_METHODS with some WebDav methods.
+        webdav_methods = ('VERSION-CONTROL', 'UNLOCK', 'PROPFIND')
+        webapp2.ALLOWED_METHODS = tuple(webapp2.ALLOWED_METHODS) + webdav_methods
+
+        self.assertEqual(sorted(webapp2.get_valid_methods(WebDavHandler)), sorted(list(webdav_methods)))
+
+        # Now we can use WebDav methods...
+        req = webapp2.Request.blank('/webdav')
+        req.method = 'VERSION-CONTROL'
+        res = req.get_response(app)
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'Method: VERSION-CONTROL')
+
+        req = webapp2.Request.blank('/webdav')
+        req.method = 'UNLOCK'
+        res = req.get_response(app)
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'Method: UNLOCK')
+
+        req = webapp2.Request.blank('/webdav')
+        req.method = 'PROPFIND'
+        res = req.get_response(app)
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'Method: PROPFIND')
+
+        # Restore initial values.
+        webapp2.ALLOWED_METHODS = allowed_methods_backup
+        self.assertEqual(len(webapp2.ALLOWED_METHODS), 7)

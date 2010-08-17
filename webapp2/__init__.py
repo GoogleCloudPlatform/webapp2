@@ -926,7 +926,7 @@ class Router(object):
             if new_style_handler:
                 handler(method, *args, **kwargs)
             else:
-                # Support webapp's handlers which don't implement __call__().
+                # Support webapp handlers which don't implement __call__().
                 getattr(handler, method)(*args)
         except Exception, e:
             # If the handler implements exception handling,
@@ -1029,6 +1029,8 @@ class WSGIApplication(object):
         self.registry = {}
         # For compatibility with webapp only. Don't use it!
         WSGIApplication.active_instance = self
+        # Current request did not start yet, so we set a fallback.
+        self.request = None
 
     def __call__(self, environ, start_response):
         """Called by WSGI when a request comes in. Calls :meth:`wsgi_app`."""
@@ -1067,7 +1069,7 @@ class WSGIApplication(object):
                 # 501 Not Implemented.
                 raise webob.exc.HTTPNotImplemented()
 
-            # match is (route, args, kwargs)
+            # Matched values are (handler, args, kwargs).
             match = self.router.match(request)
 
             if match:
@@ -1082,11 +1084,11 @@ class WSGIApplication(object):
                 # Use the exception as response.
                 response = e
             except Exception, e:
-                # Our last chance to handle the error.
+                # Error wasn't handled so we have nothing else to do.
                 if self.debug:
                     raise
 
-                # 500 Internal Server Error: nothing else to do.
+                # 500 Internal Server Error.
                 response = webob.exc.HTTPInternalServerError()
         finally:
             self.request = None
