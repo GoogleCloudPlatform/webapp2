@@ -16,6 +16,16 @@ Development version
 - Before passing the request method to the RequestHandler, '-' is replaced
   by '_', so that a method like WebDav's 'VERSION-CONTROL' can be supported.
 
+- Config.get() now only returns the passed default value when key is defined.
+  This is the intended, more predictable behavior: default is a default for
+  the key, not the module. For example::
+
+      # If config['foo']['bar'] is not set, return 'baz'.
+      config.get('foo', 'bar', default='baz')
+
+      # If config['foo'] is not set, return None. Default is ignored here.
+      config.get('foo', default='baz')
+
 
 Version 0.5 - August 13, 2010
 =============================
