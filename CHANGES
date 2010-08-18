@@ -1,3 +1,9 @@
+Development version
+===================
+- Fix: Anchors in generated URLs are quoted using urlib.quote, instead of
+  urlib.quote_plus.
+
+
 Version 0.5.1 - August 17, 2010
 ===============================
 - When a URL matches, some attributes are set in the request object:

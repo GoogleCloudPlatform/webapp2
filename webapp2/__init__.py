@@ -1338,7 +1338,7 @@ def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):
         query = urllib.urlencode(query_args)
 
     if fragment:
-        fragment = urllib.quote_plus(to_utf8(fragment))
+        fragment = urllib.quote(to_utf8(fragment))
 
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
 
