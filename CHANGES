@@ -3,6 +3,9 @@ Development version
 - Fix: Anchors in generated URLs are quoted using urlib.quote, instead of
   urlib.quote_plus.
 
+- In Router.dispatch(), if an exception occurs while handling an exception,
+  raise it instead of trying to handle it again.
+
 
 Version 0.5.1 - August 17, 2010
 ===============================

@@ -940,8 +940,11 @@ class Router(object):
                 # Support webapp handlers which don't implement __call__().
                 getattr(handler, method)(*args)
         except Exception, e:
-            # If the handler implements exception handling,
-            # let it handle it.
+            if method == 'handle_exception':
+                # We are already handling an exception.
+                raise
+
+            # If the handler implements exception handling, let it handle it.
             handler.handle_exception(e, app.debug)
 
     def build(self, name, request, args, kwargs):
