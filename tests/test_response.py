@@ -62,3 +62,12 @@ class TestResponse(unittest.TestCase):
         res.write(var_2)
         res.write(var_1)
         self.assertEqual(res.body, 'barfoo%r' % var_1)
+
+    def test_write2(self):
+        res = Response()
+        res.charset = None
+        res.write(u'foo')
+
+        self.assertEqual(res.body, u'foo')
+        self.assertEqual(res.charset, 'utf8')
+

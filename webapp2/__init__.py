@@ -65,6 +65,7 @@ class Response(webob.Response):
         # that is not str or unicode to string to keep same behavior.
         if not isinstance(text, basestring):
             text = unicode(text)
+
         if isinstance(text, unicode) and not self.charset:
             self.charset = self.default_charset
 
@@ -1038,8 +1039,7 @@ class WSGIApplication(object):
         self.config = self.config_class(config)
         self.router = self.router_class(self, routes)
         # A dictionary mapping HTTP error codes to :class:`RequestHandler`
-        # classes used to handle them. The handler set for status 500 is used
-        # as default if others are not set.
+        # classes used to handle them.
         self.error_handlers = {}
         # A registry for objects used during the app lifetime.
         self.registry = {}
@@ -1128,10 +1128,9 @@ class WSGIApplication(object):
             app.error_handlers[404] = Handle404
 
         When an ``HTTPException`` is raised using :func:`abort` or because the
-        app could not fulfill the request, the error handler registered for
-        the current HTTP status code will be called. If it is not set, the
-        handler defined for status code 500 is used as a fallback, or the
-        exception is re-raised if no handler is set.
+        app could not fulfill the request, the error handler defined for the
+        current HTTP status code will be called. If it is not set, the
+        exception is re-raised.
 
         .. note::
            Although being a :class:`RequestHandler`, the error handler will
@@ -1155,7 +1154,7 @@ class WSGIApplication(object):
         else:
             code = 500
 
-        handler = self.error_handlers.get(code) or self.error_handlers.get(500)
+        handler = self.error_handlers.get(code)
         if handler:
             # Handle the exception using a custom handler.
             match = (handler, (e, self.debug), {})

@@ -422,3 +422,36 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
         self.assertEqual(response.headers, ...)
     """
+
+    def test_handle_exception_with_error(self):
+        class HomeHandler(webapp2.RequestHandler):
+            def get(self, **kwargs):
+                raise TypeError()
+
+            def handle_exception(self, exception, debug_mode):
+                raise ValueError()
+
+        app = webapp2.WSGIApplication([
+            webapp2.Route('/', HomeHandler, name='home'),
+        ], debug=False)
+        app.error_handlers[500] = HomeHandler
+
+        test_app = TestApp(app)
+        res = test_app.get('/', status=500)
+        self.assertEqual(res.status, '500 Internal Server Error')
+
+    def test_handle_exception_with_error_debug(self):
+        class HomeHandler(webapp2.RequestHandler):
+            def get(self, **kwargs):
+                raise TypeError()
+
+            def handle_exception(self, exception, debug_mode):
+                raise ValueError()
+
+        app = webapp2.WSGIApplication([
+            webapp2.Route('/', HomeHandler, name='home'),
+        ], debug=True)
+        app.error_handlers[500] = HomeHandler
+
+        test_app = TestApp(app)
+        self.assertRaises(ValueError, test_app.get, '/', status=500)
