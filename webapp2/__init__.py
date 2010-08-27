@@ -65,6 +65,8 @@ class Response(webob.Response):
         # that is not str or unicode to string to keep same behavior.
         if not isinstance(text, basestring):
             text = unicode(text)
+        if isinstance(text, unicode) and not self.charset:
+            self.charset = self.default_charset
 
         super(Response, self).write(text)
 
