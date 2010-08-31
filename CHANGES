@@ -1,5 +1,5 @@
-Development version
-===================
+Version 0.6 - August 31, 2010
+=============================
 - Fix: Anchors in generated URLs are quoted using urlib.quote, instead of
   urlib.quote_plus.
 
@@ -7,9 +7,13 @@ Development version
   raise it instead of trying to handle it again.
 
 - Fixed bug when writing a unicode string to Response and charset is not set.
+  Thanks to martinc for the patch.
 
 - Changed: the app won't fallback anymore to the exception handler set for
   status 500 if handlers for other status are not set.
+
+- Changed: exceptions are only logged when unhandled. It is up to exception
+  handlers to log them when appropriate.
 
 
 Version 0.5.1 - August 17, 2010

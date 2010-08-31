@@ -1101,6 +1101,7 @@ class WSGIApplication(object):
                 response = e
             except Exception, e:
                 # Error wasn't handled so we have nothing else to do.
+                logging.exception(e)
                 if self.debug:
                     raise
 
@@ -1147,8 +1148,6 @@ class WSGIApplication(object):
         :param e:
             The raised exception.
         """
-        logging.exception(e)
-
         if isinstance(e, HTTPException):
             code = e.code
         else:
