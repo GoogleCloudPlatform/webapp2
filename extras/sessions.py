@@ -145,12 +145,14 @@ class SecureCookie(object):
 
         To read a cookie set with this method, use get_cookie().
         """
-        assert isinstance(value, dict), 'SecureCookie values must be a dict.'
+        value = self.get_signed_value(name, value)
+        response.set_cookie(name, value, **kwargs)
+
+    def get_signed_value(self, name, value):
         timestamp = str(int(time.time()))
         value = self._encode(value)
         signature = self._get_signature(name, value, timestamp)
-        value = '|'.join([value, timestamp, signature])
-        response.set_cookie(name, value, **kwargs)
+        return '|'.join([value, timestamp, signature])
 
     def _encode(self, value):
         return base64.b64encode(simplejson.dumps(value, separators=(',',':')))
@@ -160,10 +162,7 @@ class SecureCookie(object):
 
     def _get_signature(self, *parts):
         hash = hmac.new(self.secret_key, digestmod=hashlib.sha1)
-
-        for part in parts:
-            hash.update(part)
-
+        hash.update('|'.join(parts))
         return hash.hexdigest()
 
     def _check_signature(self, a, b):
