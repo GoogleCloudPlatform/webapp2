@@ -6,6 +6,7 @@ import os
 import StringIO
 import sys
 import unittest
+import urllib
 
 from webtest import TestApp
 
@@ -113,6 +114,10 @@ class AuthorizationHandler(webapp2.RequestHandler):
     def get(self):
         self.response.out.write('nothing here')
 
+class HandlerWithEscapedArg(webapp2.RequestHandler):
+    def get(self, name):
+        self.response.out.write(urllib.unquote_plus(name))
+
 def get_redirect_url(handler, **kwargs):
     return handler.url_for('methods')
 
@@ -135,6 +140,7 @@ app = webapp2.WSGIApplication([
     webapp2.Route('/initialize', InitializeHandler),
     webapp2.Route('/webdav', WebDavHandler),
     webapp2.Route('/authorization', AuthorizationHandler),
+    webapp2.Route('/escape/<name>', HandlerWithEscapedArg, 'escape'),
 ], debug=False)
 
 test_app = TestApp(app)
@@ -422,6 +428,20 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
         self.assertEqual(response.headers, ...)
     """
+
+    def test_escaping(self):
+        request = webapp2.Request.blank('http://localhost:80/')
+        app.request = request
+        handler = webapp2.RequestHandler(app, request, None)
+
+        for func in (app.url_for, handler.url_for):
+            res = test_app.get(func('escape', name='with space'))
+            self.assertEqual(res.status, '200 OK')
+            self.assertEqual(res.body, 'with space')
+
+            res = test_app.get(func('escape', name='with+plus'))
+            self.assertEqual(res.status, '200 OK')
+            self.assertEqual(res.body, 'with+plus')
 
     def test_handle_exception_with_error(self):
         class HomeHandler(webapp2.RequestHandler):

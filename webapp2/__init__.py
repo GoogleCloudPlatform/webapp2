@@ -1321,7 +1321,7 @@ def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):
         netloc = None
 
     if path:
-        path = urllib.quote_plus(to_utf8(path), '/')
+        path = urllib.quote(to_utf8(path))
 
     if query and not isinstance(query, basestring):
         if isinstance(query, dict):
