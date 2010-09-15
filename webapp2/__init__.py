@@ -146,7 +146,7 @@ class RequestHandler(object):
         logging.warning('RequestHandler.initialize() is deprecated. '
             'Use __init__() instead.')
 
-        self.app = WSGIApplication.active_instance
+        self.app = WSGIApplication.app
         self.request = request
         self.response = response
 
@@ -1024,6 +1024,8 @@ class WSGIApplication(object):
     router_class = Router
     #: Default class used for the config object.
     config_class = Config
+    #: Per request variables.
+    active_instance = app = request = None
 
     def __init__(self, routes=None, debug=False, config=None):
         """Initializes the WSGI application.
@@ -1043,8 +1045,8 @@ class WSGIApplication(object):
         self.error_handlers = {}
         # A registry for objects used during the app lifetime.
         self.registry = {}
-        # For compatibility with webapp only. Don't use it!
-        WSGIApplication.active_instance = self
+        # The active app.
+        WSGIApplication.active_instance = WSGIApplication.app = self
         # Current request did not start yet, so we set a fallback.
         self.request = None
 
@@ -1075,10 +1077,10 @@ class WSGIApplication(object):
             optional exception context to start the response.
         """
         try:
-            # For compatibility with webapp only. Don't use it!
-            WSGIApplication.active_instance = self
-
-            self.request = request = self.request_class(environ)
+            # The active app.
+            WSGIApplication.active_instance = WSGIApplication.app = self
+            # The active request.
+            WSGIApplication.request = request = self.request_class(environ)
             response = self.response_class()
 
             if request.method not in ALLOWED_METHODS:
@@ -1108,7 +1110,8 @@ class WSGIApplication(object):
                 # 500 Internal Server Error.
                 response = webob.exc.HTTPInternalServerError()
         finally:
-            self.request = None
+            WSGIApplication.active_instance = WSGIApplication.app = \
+                WSGIApplication.request = None
 
         return response(environ, start_response)
 

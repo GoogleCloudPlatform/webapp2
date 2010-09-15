@@ -1,3 +1,12 @@
+Development version
+===================
+- Added WSGIApplication.app and WSGIApplication.request, class attributes set
+  on each request to reference currently active app and request.
+  WSGIApplication.app is an alias to WSGIApplication.active_instance.
+
+- Fixed double escaping of + in urlunsplit(). Thanks, alkis.
+
+
 Version 0.6 - August 31, 2010
 =============================
 - Fix: Anchors in generated URLs are quoted using urlib.quote, instead of
