@@ -140,7 +140,7 @@ app = webapp2.WSGIApplication([
     webapp2.Route('/initialize', InitializeHandler),
     webapp2.Route('/webdav', WebDavHandler),
     webapp2.Route('/authorization', AuthorizationHandler),
-    webapp2.Route('/escape/<name>', HandlerWithEscapedArg, 'escape'),
+    webapp2.Route('/escape/<name:.*>', HandlerWithEscapedArg, 'escape'),
 ], debug=False)
 
 test_app = TestApp(app)
@@ -442,6 +442,10 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             res = test_app.get(func('escape', name='with+plus'))
             self.assertEqual(res.status, '200 OK')
             self.assertEqual(res.body, 'with+plus')
+
+            res = test_app.get(func('escape', name='with/slash'))
+            self.assertEqual(res.status, '200 OK')
+            self.assertEqual(res.body, 'with/slash')
 
     def test_handle_exception_with_error(self):
         class HomeHandler(webapp2.RequestHandler):
