@@ -51,7 +51,7 @@ Configuration
 -------------
 .. autoclass:: Config
    :members: loaded, __init__, __setitem__, update, setdefault, get,
-             get_or_load
+             get_config
 
 
 Utilities
