@@ -1,23 +1,37 @@
 # -*- coding: utf-8 -*-
 """
-Tests for webapp2 config
+Tests for webapp2.Config
 """
 import unittest
-
-from nose.tools import assert_raises, raises
 
 from webapp2 import Config, WSGIApplication, RequestHandler, REQUIRED_VALUE
 
 
 class TestConfig(unittest.TestCase):
+    def tearDown(self):
+        pass
+
+    def test_get(self):
+        config = Config({'foo': {
+            'bar': 'baz',
+            'doo': 'ding',
+        }})
+
+        self.assertEqual(config.get('foo'), {
+            'bar': 'baz',
+            'doo': 'ding',
+        })
+
+        self.assertEqual(config.get('bar'), {})
+
     def test_get_existing_keys(self):
         config = Config({'foo': {
             'bar': 'baz',
             'doo': 'ding',
         }})
 
-        assert config.get('foo', 'bar') == 'baz'
-        assert config.get('foo', 'doo') == 'ding'
+        self.assertEqual(config.get_config('foo', 'bar'), 'baz')
+        self.assertEqual(config.get_config('foo', 'doo'), 'ding')
 
     def test_get_existing_keys_from_default(self):
         config = Config({}, {'foo': {
@@ -25,13 +39,13 @@ class TestConfig(unittest.TestCase):
             'doo': 'ding',
         }})
 
-        assert config.get('foo', 'bar') == 'baz'
-        assert config.get('foo', 'doo') == 'ding'
+        self.assertEqual(config.get_config('foo', 'bar'), 'baz')
+        self.assertEqual(config.get_config('foo', 'doo'), 'ding')
 
     def test_get_non_existing_keys(self):
         config = Config()
 
-        assert config.get('foo', 'bar') is None
+        self.assertRaises(KeyError, config.get_config, 'foo', 'bar')
 
     def test_get_dict_existing_keys(self):
         config = Config({'foo': {
@@ -39,28 +53,28 @@ class TestConfig(unittest.TestCase):
             'doo': 'ding',
         }})
 
-        assert config.get('foo') == {
+        self.assertEqual(config.get_config('foo'), {
             'bar': 'baz',
             'doo': 'ding',
-        }
+        })
 
     def test_get_dict_non_existing_keys(self):
         config = Config()
 
-        assert config.get('bar') is None
+        self.assertRaises(KeyError, config.get_config, 'bar')
 
     def test_get_with_default(self):
         config = Config()
 
-        assert config.get('foo', 'bar', 'ooops') == 'ooops'
-        assert config.get('foo', 'doo', 'wooo') == 'wooo'
+        self.assertRaises(KeyError, config.get_config, 'foo', 'bar', 'ooops')
+        self.assertRaises(KeyError, config.get_config, 'foo', 'doo', 'wooo')
 
     def test_get_with_default_and_none(self):
         config = Config({'foo': {
             'bar': None,
         }})
 
-        assert config.get('foo', 'bar', 'ooops') is None
+        self.assertEqual(config.get_config('foo', 'bar', 'ooops'), None)
 
     def test_update(self):
         config = Config({'foo': {
@@ -68,75 +82,73 @@ class TestConfig(unittest.TestCase):
             'doo': 'ding',
         }})
 
-        assert config.get('foo', 'bar') == 'baz'
-        assert config.get('foo', 'doo') == 'ding'
+        self.assertEqual(config.get_config('foo', 'bar'), 'baz')
+        self.assertEqual(config.get_config('foo', 'doo'), 'ding')
 
         config.update('foo', {'bar': 'other'})
 
-        assert config.get('foo', 'bar') == 'other'
-        assert config.get('foo', 'doo') == 'ding'
+        self.assertEqual(config.get_config('foo', 'bar'), 'other')
+        self.assertEqual(config.get_config('foo', 'doo'), 'ding')
 
     def test_setdefault(self):
         config = Config()
 
-        assert config.get('foo') is None
+        self.assertRaises(KeyError, config.get_config, 'foo')
 
         config.setdefault('foo', {
             'bar': 'baz',
             'doo': 'ding',
         })
 
-        assert config.get('foo', 'bar') == 'baz'
-        assert config.get('foo', 'doo') == 'ding'
+        self.assertEqual(config.get_config('foo', 'bar'), 'baz')
+        self.assertEqual(config.get_config('foo', 'doo'), 'ding')
 
     def test_setdefault2(self):
         config = Config({'foo': {
             'bar': 'baz',
         }})
 
-        assert config.get('foo') == {
+        self.assertEqual(config.get_config('foo'), {
             'bar': 'baz',
-        }
+        })
 
         config.setdefault('foo', {
             'bar': 'wooo',
             'doo': 'ding',
         })
 
-        assert config.get('foo', 'bar') == 'baz'
-        assert config.get('foo', 'doo') == 'ding'
+        self.assertEqual(config.get_config('foo', 'bar'), 'baz')
+        self.assertEqual(config.get_config('foo', 'doo'), 'ding')
 
     def test_setitem(self):
         config = Config()
+        config['foo'] = {'bar': 'baz'}
 
-        def setitem(key, value):
-            config[key] = value
-            return config
-
-        assert setitem('foo', {'bar': 'baz'}) == {'foo': {'bar': 'baz'}}
+        self.assertEqual(config, {'foo': {'bar': 'baz'}})
+        self.assertEqual(config['foo'], {'bar': 'baz'})
 
     def test_init_no_dict_values(self):
-        assert_raises(AssertionError, Config, {'foo': 'bar'})
-        assert_raises(AssertionError, Config, {'foo': None})
-        assert_raises(AssertionError, Config, 'foo')
+        self.assertRaises(AssertionError, Config, {'foo': 'bar'})
+        self.assertRaises(AssertionError, Config, {'foo': None})
+        self.assertRaises(AssertionError, Config, 'foo')
 
     def test_init_no_dict_default(self):
-        assert_raises(AssertionError, Config, {}, {'foo': 'bar'})
-        assert_raises(AssertionError, Config, {}, {'foo': None})
-        assert_raises(AssertionError, Config, {}, 'foo')
+        self.assertRaises(AssertionError, Config, {}, {'foo': 'bar'})
+        self.assertRaises(AssertionError, Config, {}, {'foo': None})
+        self.assertRaises(AssertionError, Config, {}, 'foo')
 
     def test_update_no_dict_values(self):
         config = Config()
 
-        assert_raises(AssertionError, config.update, {'foo': 'bar'}, 'baz')
-        assert_raises(AssertionError, config.update, {'foo': None}, 'baz')
-        assert_raises(AssertionError, config.update, 'foo', 'bar')
+        self.assertRaises(AssertionError, config.update, {'foo': 'bar'}, 'baz')
+        self.assertRaises(AssertionError, config.update, {'foo': None}, 'baz')
+        self.assertRaises(AssertionError, config.update, 'foo', 'bar')
 
     def test_setdefault_no_dict_values(self):
         config = Config()
 
-        assert_raises(AssertionError, config.setdefault, 'foo', 'bar')
-        assert_raises(AssertionError, config.setdefault, 'foo', None)
+        self.assertRaises(AssertionError, config.setdefault, 'foo', 'bar')
+        self.assertRaises(AssertionError, config.setdefault, 'foo', None)
 
     def test_setitem_no_dict_values(self):
         config = Config()
@@ -145,20 +157,23 @@ class TestConfig(unittest.TestCase):
             config[key] = value
             return config
 
-        assert_raises(AssertionError, setitem, 'foo', 'bar')
-        assert_raises(AssertionError, setitem, 'foo', None)
+        self.assertRaises(AssertionError, setitem, 'foo', 'bar')
+        self.assertRaises(AssertionError, setitem, 'foo', None)
 
 
-class TestGetConfig(unittest.TestCase):
+class TestLoadConfig(unittest.TestCase):
+    def tearDown(self):
+        pass
+
     def test_default_config(self):
         config = Config()
 
         from resources.template import default_config as template_config
         from resources.i18n import default_config as i18n_config
 
-        assert config.get_or_load('resources.template', 'templates_dir') == template_config['templates_dir']
-        assert config.get_or_load('resources.i18n', 'locale') == i18n_config['locale']
-        assert config.get_or_load('resources.i18n', 'timezone') == i18n_config['timezone']
+        self.assertEqual(config.get_config('resources.template', 'templates_dir'), template_config['templates_dir'])
+        self.assertEqual(config.get_config('resources.i18n', 'locale'), i18n_config['locale'])
+        self.assertEqual(config.get_config('resources.i18n', 'timezone'), i18n_config['timezone'])
 
     def test_default_config_with_non_existing_key(self):
         config = Config()
@@ -166,10 +181,10 @@ class TestGetConfig(unittest.TestCase):
         from resources.i18n import default_config as i18n_config
 
         # In the first time the module config will be loaded normally.
-        assert config.get_or_load('resources.i18n', 'locale') == i18n_config['locale']
+        self.assertEqual(config.get_config('resources.i18n', 'locale'), i18n_config['locale'])
 
         # In the second time it won't be loaded, but won't find the value and then use the default.
-        assert config.get_or_load('resources.i18n', 'i_dont_exist', 'foo') == 'foo'
+        self.assertEqual(config.get_config('resources.i18n', 'i_dont_exist', 'foo'), 'foo')
 
     def test_override_config(self):
         config = Config({
@@ -182,9 +197,9 @@ class TestGetConfig(unittest.TestCase):
             },
         })
 
-        assert config.get_or_load('resources.template', 'templates_dir') == 'apps/templates'
-        assert config.get_or_load('resources.i18n', 'locale') == 'pt_BR'
-        assert config.get_or_load('resources.i18n', 'timezone') == 'America/Sao_Paulo'
+        self.assertEqual(config.get_config('resources.template', 'templates_dir'), 'apps/templates')
+        self.assertEqual(config.get_config('resources.i18n', 'locale'), 'pt_BR')
+        self.assertEqual(config.get_config('resources.i18n', 'timezone'), 'America/Sao_Paulo')
 
     def test_override_config2(self):
         config = Config({
@@ -193,78 +208,161 @@ class TestGetConfig(unittest.TestCase):
             },
         })
 
-        assert config.get_or_load('resources.i18n', 'locale') == 'en_US'
-        assert config.get_or_load('resources.i18n', 'timezone') == 'America/Sao_Paulo'
+        self.assertEqual(config.get_config('resources.i18n', 'locale'), 'en_US')
+        self.assertEqual(config.get_config('resources.i18n', 'timezone'), 'America/Sao_Paulo')
 
     def test_get(self):
         config = Config({'foo': {
             'bar': 'baz',
         }})
 
-        assert config.get_or_load('foo', 'bar') == 'baz'
+        self.assertEqual(config.get_config('foo', 'bar'), 'baz')
 
     def test_get_with_default(self):
         config = Config()
 
-        assert config.get_or_load('resources.i18n', 'bar', 'baz') == 'baz'
+        self.assertEqual(config.get_config('resources.i18n', 'bar', 'baz'), 'baz')
 
     def test_get_with_default_and_none(self):
         config = Config({'foo': {
             'bar': None,
         }})
 
-        assert config.get_or_load('foo', 'bar', 'ooops') is None
+        self.assertEqual(config.get_config('foo', 'bar', 'ooops'), None)
 
     def test_get_with_default_and_module_load(self):
         config = Config()
-        assert config.get_or_load('resources.i18n', 'locale') == 'en_US'
-        assert config.get_or_load('resources.i18n', 'locale', 'foo') == 'en_US'
+        self.assertEqual(config.get_config('resources.i18n', 'locale'), 'en_US')
+        self.assertEqual(config.get_config('resources.i18n', 'locale', 'foo'), 'en_US')
 
-    @raises(KeyError)
     def test_required_config(self):
         config = Config()
-        config.get_or_load('resources.i18n', 'required')
+        self.assertRaises(KeyError, config.get_config, 'resources.i18n', 'foo')
 
-    @raises(KeyError)
     def test_missing_module(self):
         config = Config()
-        assert config.get_or_load('i_dont_exist', 'i_dont_exist') == 'baz'
+        self.assertRaises(KeyError, config.get_config, 'i_dont_exist', 'i_dont_exist')
 
-    @raises(KeyError)
     def test_missing_module2(self):
         config = Config()
-        assert config.get_or_load('i_dont_exist') == 'baz'
+        self.assertRaises(KeyError, config.get_config, 'i_dont_exist')
 
-    @raises(KeyError)
     def test_missing_key(self):
         config = Config()
-        config.get_or_load('resources.i18n', 'i_dont_exist')
+        self.assertRaises(KeyError, config.get_config, 'resources.i18n', 'i_dont_exist')
 
-    @raises(KeyError)
     def test_missing_default_config(self):
         config = Config()
-        assert config.get_or_load('webapp2', 'foo') == 'baz'
+        self.assertRaises(KeyError, config.get_config, 'tipfy', 'foo')
 
     def test_app_get_config(self):
         app = WSGIApplication()
 
-        assert app.get_config('resources.i18n', 'locale') == 'en_US'
-        assert app.get_config('resources.i18n', 'locale', 'foo') == 'en_US'
-        assert app.get_config('resources.i18n') == {
+        self.assertEqual(app.get_config('resources.i18n', 'locale'), 'en_US')
+        self.assertEqual(app.get_config('resources.i18n', 'locale', 'foo'), 'en_US')
+        self.assertEqual(app.get_config('resources.i18n'), {
             'locale': 'en_US',
             'timezone': 'America/Chicago',
             'required': REQUIRED_VALUE,
-        }
+        })
 
     def test_request_handler_get_config(self):
         app = WSGIApplication()
 
-        handler = RequestHandler(app, None, None)
+        handler = RequestHandler(app, None)
 
-        assert handler.get_config('resources.i18n', 'locale') == 'en_US'
-        assert handler.get_config('resources.i18n', 'locale', 'foo') == 'en_US'
-        assert handler.get_config('resources.i18n') == {
+        self.assertEqual(handler.get_config('resources.i18n', 'locale'), 'en_US')
+        self.assertEqual(handler.get_config('resources.i18n', 'locale', 'foo'), 'en_US')
+        self.assertEqual(handler.get_config('resources.i18n'), {
             'locale': 'en_US',
             'timezone': 'America/Chicago',
             'required': REQUIRED_VALUE,
-        }
+        })
+
+
+class TestLoadConfigGetItem(unittest.TestCase):
+    def tearDown(self):
+        pass
+
+    def test_default_config(self):
+        config = Config()
+
+        from resources.template import default_config as template_config
+        from resources.i18n import default_config as i18n_config
+
+        self.assertEqual(config['resources.template']['templates_dir'], template_config['templates_dir'])
+        self.assertEqual(config['resources.i18n']['locale'], i18n_config['locale'])
+        self.assertEqual(config['resources.i18n']['timezone'], i18n_config['timezone'])
+
+    def test_default_config_with_non_existing_key(self):
+        config = Config()
+
+        from resources.i18n import default_config as i18n_config
+
+        # In the first time the module config will be loaded normally.
+        self.assertEqual(config['resources.i18n']['locale'], i18n_config['locale'])
+
+        # In the second time it won't be loaded, but won't find the value and then use the default.
+        self.assertEqual(config['resources.i18n'].get('i_dont_exist', 'foo'), 'foo')
+
+    def test_override_config(self):
+        config = Config({
+            'resources.template': {
+                'templates_dir': 'apps/templates'
+            },
+            'resources.i18n': {
+                'locale': 'pt_BR',
+                'timezone': 'America/Sao_Paulo',
+            },
+        })
+
+        self.assertEqual(config['resources.template']['templates_dir'], 'apps/templates')
+        self.assertEqual(config['resources.i18n']['locale'], 'pt_BR')
+        self.assertEqual(config['resources.i18n']['timezone'], 'America/Sao_Paulo')
+
+    def test_override_config2(self):
+        config = Config({
+            'resources.i18n': {
+                'timezone': 'America/Sao_Paulo',
+            },
+        })
+
+        self.assertEqual(config['resources.i18n']['locale'], 'en_US')
+        self.assertEqual(config['resources.i18n']['timezone'], 'America/Sao_Paulo')
+
+    def test_get(self):
+        config = Config({'foo': {
+            'bar': 'baz',
+        }})
+
+        self.assertEqual(config['foo']['bar'], 'baz')
+
+    def test_get_with_default(self):
+        config = Config()
+
+        self.assertEqual(config['resources.i18n'].get('bar', 'baz'), 'baz')
+
+    def test_get_with_default_and_none(self):
+        config = Config({'foo': {
+            'bar': None,
+        }})
+
+        self.assertEqual(config['foo'].get('bar', 'ooops'), None)
+
+    def test_get_with_default_and_module_load(self):
+        config = Config()
+        self.assertEqual(config['resources.i18n']['locale'], 'en_US')
+        self.assertEqual(config['resources.i18n'].get('locale', 'foo'), 'en_US')
+
+    def test_required_config(self):
+        config = Config()
+        self.assertRaises(KeyError, config['resources.i18n'].__getitem__, 'foo')
+        self.assertRaises(KeyError, config['resources.i18n'].__getitem__, 'required')
+
+    def test_missing_module(self):
+        config = Config()
+        self.assertRaises(KeyError, config.__getitem__, 'i_dont_exist')
+
+    def test_missing_key(self):
+        config = Config()
+        self.assertRaises(KeyError, config['resources.i18n'].__getitem__, 'i_dont_exist')

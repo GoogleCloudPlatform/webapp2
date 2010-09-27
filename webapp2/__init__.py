@@ -26,7 +26,10 @@ HTTPException = webob.exc.HTTPException
 ALLOWED_METHODS = frozenset(['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT',
     'DELETE', 'TRACE'])
 
-#: Value used for required arguments.
+# Value used for missing default values.
+DEFAULT_VALUE = object()
+
+# Value used for required values.
 REQUIRED_VALUE = object()
 
 #: Regex for URL definitions.
@@ -316,9 +319,9 @@ class RequestHandler(object):
     def get_config(self, module, key=None, default=REQUIRED_VALUE):
         """Returns a configuration value for a module.
 
-        .. seealso:: :meth:`Config.get_or_load`.
+        .. seealso:: :meth:`Config.get_config`.
         """
-        return self.app.config.get_or_load(module, key=key, default=default)
+        return self.app.config.get_config(module, key=key, default=default)
 
     def handle_exception(self, exception, debug_mode):
         """Called if this handler throws an exception during execution.
@@ -373,9 +376,9 @@ class Config(dict):
     and applies updates and default values to the inner dictionaries instead
     of the first level one.
 
-    The configuration object is available as a ``config`` attribute of the
-    :class:`WSGIApplication`. If is instantiated and populated when the app is
-    built::
+    The configuration object is available as a ``config`` attribute of
+    :class:`WSGIApplication`. If is instantiated and populated when the app
+    is built::
 
         config = {}
 
@@ -383,7 +386,7 @@ class Config(dict):
             'foo': 'bar',
         }
 
-        app = WSGIApplication([('/', MyHandler)], config=config)
+        app = WSGIApplication(rules=[Rule('/', name='home', handler=MyHandler)], config=config)
 
     Then to read configuration values, use :meth:`RequestHandler.get_config`::
 
@@ -396,140 +399,31 @@ class Config(dict):
     #: Loaded module configurations.
     loaded = None
 
-    def __init__(self, value=None, default=None, loaded=None):
+    def __init__(self, values=None, defaults=None):
         """Initializes the configuration object.
 
-        :param value:
+        :param values:
             A dictionary of configuration dictionaries for modules.
-        :param default:
-            A dictionary of configuration dictionaries for default values.
-        :param loaded:
-            A list of modules to be marked as loaded.
+        :param defaults:
+            A dictionary of configuration dictionaries for initial default
+            values. These modules are marked as loaded.
         """
-        self.loaded = loaded or []
-        if value is not None:
-            assert isinstance(value, dict)
-            for module in value.keys():
-                self.update(module, value[module])
+        self.loaded = []
+        if values is not None:
+            assert isinstance(values, dict)
+            for module, config in values.iteritems():
+                self.update(module, config)
 
-        if default is not None:
-            assert isinstance(default, dict)
-            for module in default.keys():
-                self.setdefault(module, default[module])
+        if defaults is not None:
+            assert isinstance(defaults, dict)
+            for module, config in defaults.iteritems():
+                self.setdefault(module, config)
+                self.loaded.append(module)
 
-    def __setitem__(self, module, value):
-        """Sets a configuration for a module, requiring it to be a dictionary.
-
-        :param module:
-            A module name for the configuration, e.g.: 'webapp2.plugins.i18n'.
-        :param value:
-            A dictionary of configurations for the module.
-        """
-        assert isinstance(value, dict)
-        super(Config, self).__setitem__(module, value)
-
-    def update(self, module, value):
-        """Updates the configuration dictionary for a module.
-
-        >>> cfg = Config({'webapp2.plugins.i18n': {'locale': 'pt_BR'})
-        >>> cfg.get('webapp2.plugins.i18n', 'locale')
-        pt_BR
-        >>> cfg.get('webapp2.plugins.i18n', 'foo')
-        None
-        >>> cfg.update('webapp2.plugins.i18n', {'locale': 'en_US', 'foo': 'bar'})
-        >>> cfg.get('webapp2.plugins.i18n', 'locale')
-        en_US
-        >>> cfg.get('webapp2.plugins.i18n', 'foo')
-        bar
-
-        :param module:
-            The module to update the configuration, e.g.:
-            'webapp2.plugins.i18n'.
-        :param value:
-            A dictionary of configurations for the module.
-        :returns:
-            None.
-        """
-        assert isinstance(value, dict)
-        if module not in self:
-            self[module] = {}
-
-        self[module].update(value)
-
-    def setdefault(self, module, value):
-        """Sets a default configuration dictionary for a module.
-
-        >>> cfg = Config({'webapp2.plugins.i18n': {'locale': 'pt_BR'})
-        >>> cfg.get('webapp2.plugins.i18n', 'locale')
-        pt_BR
-        >>> cfg.get('webapp2.plugins.i18n', 'foo')
-        None
-        >>> cfg.setdefault('webapp2.plugins.i18n', {'locale': 'en_US', 'foo': 'bar'})
-        >>> cfg.get('webapp2.plugins.i18n', 'locale')
-        pt_BR
-        >>> cfg.get('webapp2.plugins.i18n', 'foo')
-        bar
-
-        :param module:
-            The module to set default configuration, e.g.:
-            'webapp2.plugins.i18n'.
-        :param value:
-            A dictionary of configurations for the module.
-        :returns:
-            None.
-        """
-        assert isinstance(value, dict)
-        if module not in self:
-            self[module] = {}
-
-        for key in value.keys():
-            self[module].setdefault(key, value[key])
-
-    def get(self, module, key=None, default=None):
-        """Returns a configuration value for given key in a given module.
-
-        >>> cfg = Config({'webapp2.plugins.i18n': {'locale': 'pt_BR'})
-        >>> cfg.get('webapp2.plugins.i18n')
-        {'locale': 'pt_BR'}
-        >>> cfg.get('webapp2.plugins.i18n', 'locale')
-        pt_BR
-        >>> cfg.get('webapp2.plugins.i18n', 'invalid-key')
-        None
-        >>> cfg.get('webapp2.plugins.i18n', 'invalid-key', 'default-value')
-        default-value
-
-        :param module:
-            The module to get a configuration from, e.g.:
-            'webapp2.plugins.i18n'.
-        :param key:
-            The key from the module configuration.
-        :param default:
-            A default value to return when the configuration for the given
-            key is not set. It is only returned if **key** is defined.
-        :returns:
-            The configuration value.
-        """
-        if module not in self:
-            if key is None:
-                return None
-
-            return default
-
-        if key is None:
-            return self[module]
-
-        if key not in self[module]:
-            return default
-
-        return self[module][key]
-
-    def get_or_load(self, module, key=None, default=REQUIRED_VALUE):
-        """Returns a configuration value for a module. If it is not already
-        set, loads a ``default_config`` variable from the given module,
-        updates the app configuration with those default values and returns
-        the value for the given key. If the key is still not available,
-        returns the provided default value or raises an exception if no
-        default was provided.
+    def __getitem__(self, module):
+        """Returns the configuration for a module. If it is not already
+        set, loads a ``default_config`` variable from the given module and
+        updates the configuration with those default values
 
         Every module that allows some kind of configuration sets a
         ``default_config`` global variable that is loaded by this function,
@@ -537,12 +431,7 @@ class Config(dict):
         by the user.
 
         :param module:
-            The configured module.
-        :param key:
-            The config key.
-        :param default:
-            A default value to return in case the configuration for
-            the module/key is not set.
+            The module name.
         :returns:
             A configuration value.
         """
@@ -554,16 +443,125 @@ class Config(dict):
 
             self.loaded.append(module)
 
-        value = self.get(module, key, default)
+        try:
+            return dict.__getitem__(self, module)
+        except KeyError:
+            raise KeyError('Module %r is not configured.' % module)
 
-        if value is not REQUIRED_VALUE and not (key is None and value is None):
-            return value
+    def __setitem__(self, module, values):
+        """Sets a configuration for a module, requiring it to be a dictionary.
 
-        if key is None and value is None:
-            raise KeyError('Module %s is not configured.' % module)
+        :param module:
+            A module name for the configuration, e.g.: `webapp2.ext.i18n`.
+        :param values:
+            A dictionary of configurations for the module.
+        """
+        assert isinstance(values, dict), 'Module configuration must be a dict.'
+        dict.__setitem__(self, module, SubConfig(module, values))
 
-        raise KeyError('Module %s requires the config key "%s" to be '
-                'set.' % (module, key))
+    def get(self, module, default=DEFAULT_VALUE):
+        """Returns a configuration for a module. If default is not provided,
+        returns an empty dict if the module is not configured.
+
+        :param module:
+            The module name.
+        :params default:
+            Default value to return if the module is not configured. If not
+            set, returns an empty dict.
+        :returns:
+            A module configuration.
+        """
+        if default is DEFAULT_VALUE:
+            default = {}
+
+        return dict.get(self, module, default)
+
+    def setdefault(self, module, values):
+        """Sets a default configuration dictionary for a module.
+
+        :param module:
+            The module to set default configuration, e.g.: `webapp2.ext.i18n`.
+        :param values:
+            A dictionary of configurations for the module.
+        :returns:
+            The module configuration dictionary.
+        """
+        assert isinstance(values, dict), 'Module configuration must be a dict.'
+        if module not in self:
+            dict.__setitem__(self, module, SubConfig(module))
+
+        module_dict = dict.__getitem__(self, module)
+
+        for key, value in values.iteritems():
+            module_dict.setdefault(key, value)
+
+        return module_dict
+
+    def update(self, module, values):
+        """Updates the configuration dictionary for a module.
+
+        :param module:
+            The module to update the configuration, e.g.: `webapp2.ext.i18n`.
+        :param values:
+            A dictionary of configurations for the module.
+        """
+        assert isinstance(values, dict), 'Module configuration must be a dict.'
+        if module not in self:
+            dict.__setitem__(self, module, SubConfig(module))
+
+        dict.__getitem__(self, module).update(values)
+
+    def get_config(self, module, key=None, default=REQUIRED_VALUE):
+        """Returns a configuration value for a module and optionally a key.
+        Will raise a KeyError if they the module is not configured or the key
+        doesn't exist and a default is not provided.
+
+        :param module:
+            The module name.
+        :params key:
+            The configuration key.
+        :param default:
+            Default value to return if the key doesn't exist.
+        :returns:
+            A module configuration.
+        """
+        module_dict = self.__getitem__(module)
+
+        if key is None:
+            return module_dict
+
+        return module_dict.get(key, default)
+
+
+class SubConfig(dict):
+    def __init__(self, module, values=None):
+        dict.__init__(self, values or ())
+        self.module = module
+
+    def __getitem__(self, key):
+        try:
+            value = dict.__getitem__(self, key)
+        except KeyError:
+            raise KeyError('Module %r does not have the config key %r' %
+                (self.module, key))
+
+        if value is REQUIRED_VALUE:
+            raise KeyError('Module %r requires the config key %r to be '
+                'set.' % (self.module, key))
+
+        return value
+
+    def get(self, key, default=None):
+        if key not in self:
+            value = default
+        else:
+            value = dict.__getitem__(self, key)
+
+        if value is REQUIRED_VALUE:
+            raise KeyError('Module %r requires the config key %r to be '
+                'set.' % (self.module, key))
+
+        return value
 
 
 class BaseRoute(object):
@@ -1024,7 +1022,7 @@ class WSGIApplication(object):
     router_class = Router
     #: Default class used for the config object.
     config_class = Config
-    #: Per request variables.
+    #: Request variables.
     active_instance = app = request = None
 
     def __init__(self, routes=None, debug=False, config=None):
@@ -1176,9 +1174,9 @@ class WSGIApplication(object):
     def get_config(self, module, key=None, default=REQUIRED_VALUE):
         """Returns a configuration value for a module.
 
-        .. seealso:: :meth:`Config.get_or_load`.
+        .. seealso:: :meth:`Config.get_config`.
         """
-        return self.config.get_or_load(module, key=key, default=default)
+        return self.config.get_config(module, key=key, default=default)
 
     def run(self, bare=False):
         """Runs the app using ``google.appengine.ext.webapp.util.run_wsgi_app``.

@@ -1,10 +1,26 @@
-Development version
-===================
+Version 0.7 - September 26, 2010
+================================
 - Added WSGIApplication.app and WSGIApplication.request, class attributes set
   on each request to reference currently active app and request.
   WSGIApplication.app is an alias to WSGIApplication.active_instance.
 
 - Fixed double escaping of + in urlunsplit(). Thanks, alkis.
+
+- IMPROVED: configuration now behaves exactly like a dictionary, still
+  auto-loading configuration values when needed and honoring required configs.
+  For example, we always used this::
+
+      bar = self.app.get_config('foo', 'bar')
+
+  Now it is also possible to use direct access and dict methods::
+
+      bar = self.app.config['foo']['bar']
+      # or...
+      bar = self.app.config['foo'].get('bar')
+      # or...
+      bar = self.app.config.get('foo').get('bar')
+
+  The previous get_config() method works as always.
 
 
 Version 0.6 - August 31, 2010
