@@ -481,6 +481,49 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         test_app = TestApp(app)
         self.assertRaises(ValueError, test_app.get, '/', status=500)
 
+    def test_function_handler(self):
+        def my_view(request, response):
+            response.out.write('Hello, function world!')
+
+        def other_view(request, response):
+            response.out.write('Hello again, function world!')
+
+        app = webapp2.WSGIApplication([
+            webapp2.Route('/', my_view),
+            webapp2.Route('/other', other_view),
+        ], debug=True)
+
+        test_app = TestApp(app)
+        res = test_app.get('/')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'Hello, function world!')
+
+        res = test_app.get('/other')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'Hello again, function world!')
+
+    def test_custom_handler_method(self):
+        class MyHandler(webapp2.RequestHandler):
+            def my_method(self):
+                self.response.out.write('Hello, custom method world!')
+
+            def my_other_method(self):
+                self.response.out.write('Hello again, custom method world!')
+
+        app = webapp2.WSGIApplication([
+            webapp2.Route('/', MyHandler, handler_method='my_method'),
+            webapp2.Route('/other', MyHandler, handler_method='my_other_method'),
+        ], debug=True)
+
+        test_app = TestApp(app)
+        res = test_app.get('/')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'Hello, custom method world!')
+
+        res = test_app.get('/other')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.body, 'Hello again, custom method world!')
+
 
 if __name__ == '__main__':
     test_base.main()

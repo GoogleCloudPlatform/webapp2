@@ -13,7 +13,7 @@ from setuptools import setup
 
 setup(
     name = 'webapp2',
-    version = '0.7',
+    version = '1.0',
     license = 'Apache Software License',
     url = 'http://www.tipfy.org/',
     description = "Taking Google App Engine's webapp to the next level!",
@@ -26,7 +26,7 @@ setup(
         'webapp2',
     ],
     classifiers = [
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',

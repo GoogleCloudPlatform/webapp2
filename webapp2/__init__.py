@@ -951,7 +951,8 @@ class Router(object):
 
             request.route.handler = handler_spec = self._handlers[handler_spec]
 
-        if issubclass(handler_spec, webapp.RequestHandler):
+        if isinstance(handler_spec, type) and \
+            issubclass(handler_spec, webapp.RequestHandler):
             # Support webapp: use initialize() and call the request method
             # directly. No duck-typing here.
             handler = handler_spec()
@@ -960,6 +961,7 @@ class Router(object):
             method = getattr(handler, method_name)
             method(*args, **kwargs)
         else:
+            # A function or webapp2.RequestHandler.
             handler = handler_spec(request, response)
             if hasattr(handler, '__call__'):
                 # If handler_spec was a function, we're done. But if it was

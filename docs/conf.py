@@ -16,8 +16,17 @@ import sys, os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+gae_path = '/usr/local/google_appengine'
+
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, path)
+
+sys.path[0:0] = [
+    gae_path,
+    os.path.join(gae_path, 'lib', 'django_0_96'),
+    os.path.join(gae_path, 'lib', 'webob'),
+    os.path.join(gae_path, 'lib', 'yaml', 'lib'),
+    path,
+]
 
 # -- General configuration -----------------------------------------------------
 

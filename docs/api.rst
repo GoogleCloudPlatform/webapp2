@@ -13,7 +13,7 @@ WSGI App
 --------
 .. autoclass:: WSGIApplication
    :members: request_class, response_class, router_class, config_class,
-             __init__, __call__, wsgi_app, handle_exception, url_for,
+             __init__, __call__, dispatch, handle_exception, url_for,
              get_config, run
 
 
@@ -21,7 +21,7 @@ Request Handlers
 ----------------
 .. autoclass:: RequestHandler
    :members: __init__, __call__, abort, error, redirect, redirect_to, url_for,
-             get_config, handle_exception
+             get_config, handle_exception, get_valid_methods
 
 
 .. autoclass:: RedirectHandler
@@ -60,7 +60,6 @@ These are some other utilities used internally that are also available for
 general use.
 
 .. autofunction:: abort
-.. autofunction:: get_valid_methods
 .. autofunction:: import_string
 .. autofunction:: to_utf8
 .. autofunction:: to_unicode
