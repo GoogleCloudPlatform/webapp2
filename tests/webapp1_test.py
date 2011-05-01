@@ -10,6 +10,8 @@ import webapp2
 
 from webtest import TestApp
 
+import test_base
+
 
 # Old WSGIApplication, new RequestHandler.
 class NewStyleHandler(webapp2.RequestHandler):
@@ -35,7 +37,7 @@ app2 = webapp2.WSGIApplication([
 test_app2 = TestApp(app2)
 
 
-class TestWSGIApplication(unittest.TestCase):
+class TestWSGIApplication(test_base.BaseTestCase):
     def test_old_app_new_handler(self):
         res = test_app.get('/test/foo')
         self.assertEqual(res.status, '200 OK')
@@ -46,7 +48,7 @@ class TestWSGIApplication(unittest.TestCase):
         self.assertEqual(res.body, 'bar')
 
 
-class TestRequestHandler(unittest.TestCase):
+class TestRequestHandler(test_base.BaseTestCase):
     def test_new_app_old_handler(self):
         res = test_app2.get('/test/foo')
         self.assertEqual(res.status, '200 OK')
@@ -55,3 +57,7 @@ class TestRequestHandler(unittest.TestCase):
         res = test_app2.get('/test/bar')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.body, 'bar')
+
+
+if __name__ == '__main__':
+    test_base.main()

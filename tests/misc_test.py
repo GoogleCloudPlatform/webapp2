@@ -12,8 +12,10 @@ import webob.exc
 from webapp2 import (RedirectHandler, RequestHandler, Response,
     WSGIApplication, abort, import_string, to_unicode, to_utf8)
 
+import test_base
 
-class TestMiscellaneous(unittest.TestCase):
+
+class TestMiscellaneous(test_base.BaseTestCase):
     def test_abort(self):
         self.assertRaises(webob.exc.HTTPOk, abort, 200)
         self.assertRaises(webob.exc.HTTPCreated, abort, 201)
@@ -87,3 +89,7 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(Response.http_status_message(404), 'Not Found')
         self.assertEqual(Response.http_status_message(500), 'Internal Server Error')
         self.assertRaises(KeyError, Response.http_status_message, 9999)
+
+
+if __name__ == '__main__':
+    test_base.main()

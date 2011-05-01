@@ -13,6 +13,8 @@ from webtest import TestApp
 from extras.routes import (DomainRoute, HandlerPrefixRoute, ImprovedRoute,
     NamePrefixRoute, PathPrefixRoute)
 
+import test_base
+
 
 class HomeHandler(RequestHandler):
     def get(self, **kwargs):
@@ -29,7 +31,7 @@ app = WSGIApplication([
 test_app = TestApp(app)
 
 
-class TestImprovedRoute(unittest.TestCase):
+class TestImprovedRoute(test_base.BaseTestCase):
     def test_route_redirect_to(self):
         router = Router(None, [ImprovedRoute('/foo', redirect_to='/bar')])
         handler, args, kwargs = router.match(Request.blank('/foo'))
@@ -70,7 +72,7 @@ class TestImprovedRoute(unittest.TestCase):
         self.assertEqual(res.headers['Location'], 'http://localhost/strict-bar/')
 
 
-class TestPrefixRoutes(unittest.TestCase):
+class TestPrefixRoutes(test_base.BaseTestCase):
     def test_simple(self):
         router = Router(None, [
             PathPrefixRoute('/a', [
@@ -144,7 +146,7 @@ class TestPrefixRoutes(unittest.TestCase):
         self.assertEqual(router.build('user-projects', Request.blank('/'), match[1], match[2]), path)
 
 
-class TestDomainRoute(unittest.TestCase):
+class TestDomainRoute(test_base.BaseTestCase):
     def test_simple(self):
         SUBDOMAIN_RE = '^([^.]+)\.app-id\.appspot\.com$'
 
@@ -203,3 +205,7 @@ class TestDomainRoute(unittest.TestCase):
         match[2].pop('_host_match')
         match[2]['_netloc'] = 'my-subdomain.app-id.appspot.com'
         self.assertEqual(router.build('user-projects', Request.blank('/'), match[1], match[2]), path)
+
+
+if __name__ == '__main__':
+    test_base.main()

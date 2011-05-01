@@ -7,8 +7,10 @@ import unittest
 
 from webapp2 import BaseRoute, RedirectHandler, Request, Route, Router
 
+import test_base
 
-class TestRoute(unittest.TestCase):
+
+class TestRoute(test_base.BaseTestCase):
     def test_no_variable(self):
         route = Route(r'/hello', None)
         handler, args, kwargs = route.match(Request.blank('/hello'))
@@ -220,3 +222,7 @@ class TestRoute(unittest.TestCase):
     def test_base_route(self):
         route = BaseRoute()
         self.assertRaises(NotImplementedError, route.match, None)
+
+
+if __name__ == '__main__':
+    test_base.main()

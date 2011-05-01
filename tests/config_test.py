@@ -6,8 +6,10 @@ import unittest
 
 from webapp2 import Config, WSGIApplication, RequestHandler, REQUIRED_VALUE
 
+import test_base
 
-class TestConfig(unittest.TestCase):
+
+class TestConfig(test_base.BaseTestCase):
     def tearDown(self):
         pass
 
@@ -161,7 +163,7 @@ class TestConfig(unittest.TestCase):
         self.assertRaises(AssertionError, setitem, 'foo', None)
 
 
-class TestLoadConfig(unittest.TestCase):
+class TestLoadConfig(test_base.BaseTestCase):
     def tearDown(self):
         pass
 
@@ -280,7 +282,7 @@ class TestLoadConfig(unittest.TestCase):
         })
 
 
-class TestLoadConfigGetItem(unittest.TestCase):
+class TestLoadConfigGetItem(test_base.BaseTestCase):
     def tearDown(self):
         pass
 
@@ -366,3 +368,7 @@ class TestLoadConfigGetItem(unittest.TestCase):
     def test_missing_key(self):
         config = Config()
         self.assertRaises(KeyError, config['resources.i18n'].__getitem__, 'i_dont_exist')
+
+
+if __name__ == '__main__':
+    test_base.main()

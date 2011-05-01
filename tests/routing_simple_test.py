@@ -6,8 +6,10 @@ import unittest
 
 from webapp2 import Request, Router, SimpleRoute
 
+import test_base
 
-class TestSimpleRoute(unittest.TestCase):
+
+class TestSimpleRoute(test_base.BaseTestCase):
     def test_no_variable(self):
         router = Router(None, [(r'/', 'my_handler')])
 
@@ -29,3 +31,7 @@ class TestSimpleRoute(unittest.TestCase):
     def test_route_repr(self):
         self.assertEqual(SimpleRoute(r'/<foo>', None).__repr__(), "<SimpleRoute('/<foo>', None)>")
         self.assertEqual(str(SimpleRoute(r'/<foo>', None)), "<SimpleRoute('/<foo>', None)>")
+
+
+if __name__ == '__main__':
+    test_base.main()

@@ -1,3 +1,23 @@
+Version 1.0 - TO be released
+============================
+This is a major refactoring with some incompatible changes, mostly internal
+stuff that won't be noticed in common usage.
+
+- Changed signature of RequestHandler's constructor: it now receives only
+  (request, response) instead of (app, request, response).
+- Added RequestContext class, which should help testing.
+- Added .app attribute to Request, a reference to the active app.
+- Refactored routing scheme:
+  - Now also supports function views besides classes.
+  - Now also supports normal functions as exception handlers, and exception
+    handlers don't need to be a subclass RequestHandler (but still can).
+  - Now also supports custom handler methods besides using the request method.
+- Removed Request.context: was redundant with Request.registry.
+- Renamed WSGIApplication.wsgi_app to WSGIApplication.dispatch.
+- Moved ALLOWED_METHODS to WSGIApplication.allowed_methods.
+- Moved get_valid_methods() to RequestHandler.get_valid_methods().
+
+
 Version 0.7 - September 26, 2010
 ================================
 - Added WSGIApplication.app and WSGIApplication.request, class attributes set

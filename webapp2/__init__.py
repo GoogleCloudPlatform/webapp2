@@ -8,6 +8,8 @@
     :copyright: 2010 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
+from __future__ import with_statement
+
 import logging
 import re
 import urllib
@@ -21,10 +23,6 @@ import webob.exc
 
 #: Base HTTP exception, set here as public interface.
 HTTPException = webob.exc.HTTPException
-
-#: Allowed request methods.
-ALLOWED_METHODS = frozenset(['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT',
-    'DELETE', 'TRACE'])
 
 # Value used for missing default values.
 DEFAULT_VALUE = object()
@@ -42,12 +40,19 @@ _ROUTE_REGEX = re.compile(r'''
 
 
 class Request(webapp.Request):
+    #: A reference to the WSGIApplication instance.
+    app = None
+    #: The matched route.
+    route = None
+    #: The matched route positional arguments.
+    route_args = None
+    #: The matched route keyword arguments.
+    route_kwargs = None
+
     def __init__(self, *args, **kwargs):
         super(Request, self).__init__(*args, **kwargs)
         # A registry for objects used during the request lifetime.
         self.registry = {}
-        # A dictionary for variables used in rendering.
-        self.context = {}
 
 
 class Response(webob.Response):
@@ -114,7 +119,7 @@ class RequestHandler(object):
 
     Implements most of ``webapp.RequestHandler`` interface.
     """
-    def __init__(self, app=None, request=None, response=None):
+    def __init__(self, request=None, response=None):
         """Initializes this request handler with the given WSGI application,
         Request and Response.
 
@@ -122,16 +127,15 @@ class RequestHandler(object):
            Parameters are optional only to support webapp's constructor which
            doesn't take any arguments. Consider them as required.
 
-        :param app:
-            A :class:`WSGIApplication` instance.
         :param request:
             A ``webapp.Request`` instance.
         :param response:
             A :class:`Response` instance.
         """
-        self.app = app
         self.request = request
         self.response = response
+        if request:
+            self.app = request.app
 
     def initialize(self, request, response):
         """Initializes this request handler with the given WSGI application,
@@ -146,39 +150,49 @@ class RequestHandler(object):
         :param response:
             A :class:`Response` instance.
         """
-        logging.warning('RequestHandler.initialize() is deprecated. '
-            'Use __init__() instead.')
-
-        self.app = WSGIApplication.app
+        from warnings import warn
+        warn(DeprecationWarning('RequestHandler.initialize() is deprecated. '
+            'Use __init__() instead.'))
         self.request = request
         self.response = response
+        self.app = WSGIApplication.app
 
-    def __call__(self, _method, *args, **kwargs):
-        """Dispatches the requested method.
+    def __call__(self):
+        """Dispatches the requested method."""
+        self.dispatch()
 
-        :param _method:
-            The method to be dispatched: the request method in lower case
-            (e.g., 'get', 'post', 'head', 'put' etc).
-        :param args:
-            Positional arguments to be passed to the method, coming from the
-            matched :class:`Route`.
-        :param kwargs:
-            Keyword arguments to be passed to the method, coming from the
-            matched :class:`Route`.
-        :returns:
-            None.
-        """
-        method = getattr(self, _method, None)
+    def dispatch(self):
+        method_name = self.request.route.handler_method
+        if not method_name:
+            method_name = self.request.method.lower().replace('-', '_')
+
+        method = getattr(self, method_name, None)
         if method is None:
             # 405 Method Not Allowed.
             # The response MUST include an Allow header containing a
             # list of valid methods for the requested resource.
             # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6
-            valid = ', '.join(get_valid_methods(self))
+            valid = ', '.join(self.get_valid_methods())
             self.abort(405, headers=[('Allow', valid)])
 
         # Execute the method.
-        method(*args, **kwargs)
+        try:
+            method(*self.request.route_args, **self.request.route_kwargs)
+        except Exception, e:
+            self.handle_exception(e, self.app.debug)
+
+    def get_valid_methods(self):
+        """Returns a list of request methods supported by this handler.
+
+        :returns:
+            A list of HTTP methods supported by this handler.
+        """
+        methods = []
+        for method in self.app.allowed_methods:
+            if getattr(self, method.lower().replace('-', '_'), None):
+                methods.append(method)
+
+        return methods
 
     def error(self, code):
         """Clears the response output stream and sets the given HTTP error
@@ -386,7 +400,7 @@ class Config(dict):
             'foo': 'bar',
         }
 
-        app = WSGIApplication(rules=[Rule('/', name='home', handler=MyHandler)], config=config)
+        app = WSGIApplication(routes=[Rule('/', name='home', handler=MyHandler)], config=config)
 
     Then to read configuration values, use :meth:`RequestHandler.get_config`::
 
@@ -572,6 +586,10 @@ class BaseRoute(object):
     name = None
     #: True if this route is only used for URL generation and never matches.
     build_only = False
+    #: The handler callable or callable in dotted notation.
+    handler = None
+    #: The custom handler method.
+    handler_method = None
 
     def match(self, request):
         """Matches this route against the current request.
@@ -684,7 +702,7 @@ class Route(BaseRoute):
     URL building, non-keyword variables and other improvements.
     """
     def __init__(self, template, handler=None, name=None, defaults=None,
-        build_only=False):
+        build_only=False, handler_method=None):
         """Initializes a URL route.
 
         :param template:
@@ -708,6 +726,8 @@ class Route(BaseRoute):
         :param handler:
             A :class:`RequestHandler` class or dotted name for a class to be
             lazily imported, e.g., ``my.module.MyHandler``.
+        :param handler_method:
+            A custom handler method to be used.
         :param name:
             The name of this route, used to build URLs based on it.
         :param defaults:
@@ -726,6 +746,19 @@ class Route(BaseRoute):
         self.regex = None
         self.variables = None
         self.reverse_template = None
+        # If a handler string has a colon, we take it as the method from a
+        # handler class, e.g., 'my_module.MyClass:my_method', and store it
+        # in the route as 'handler_method'. Not every route mapping to a class
+        # must define a method (the request method is used by default), and for
+        # functions 'handler_method' is of course always None.
+        self.handler_method = handler_method
+        if isinstance(handler, basestring) and handler.rfind(':') != -1:
+            if handler_method:
+                raise BadArgumentError(
+                    "If handler_method is defined in a Route, handler "
+                    "can't have a colon (got %r)." % handler)
+            else:
+                self.handler, self.handler_method = handler.rsplit(':', 1)
 
     def _parse_template(self):
         self.variables = {}
@@ -786,17 +819,14 @@ class Route(BaseRoute):
 
         .. seealso:: :meth:`Router.build`.
         """
-        full = kwargs.pop('_full', False)
         scheme = kwargs.pop('_scheme', None)
         netloc = kwargs.pop('_netloc', None)
         anchor = kwargs.pop('_anchor', None)
+        full = kwargs.pop('_full', False) and not scheme and not netloc
 
         if full or scheme or netloc:
-            if not netloc:
-                netloc = request.host
-
-            if not scheme:
-                scheme = 'http'
+            netloc = netloc or request.host
+            scheme = scheme or 'http'
 
         path, query = self._build(args, kwargs)
         return urlunsplit(scheme, netloc, path, query, anchor)
@@ -891,6 +921,8 @@ class Router(object):
             A ``webapp.Request`` instance.
         :returns:
             A tuple ``(route, args, kwargs)`` if a route matched, or None.
+        :raises:
+            ``webob.exc.HTTPNotFound`` if no route matched.
         """
         for route in self.match_routes:
             match = route.match(request)
@@ -899,54 +931,40 @@ class Router(object):
                 request.route_args, request.route_kwargs = match[1], match[2]
                 return match
 
-    def dispatch(self, app, request, response, match, method=None):
+    def dispatch(self, request, response):
         """Dispatches a request. This calls the :class:`RequestHandler` from
         the matched :class:`Route`.
 
-        :param app:
-            A :class:`WSGIApplication` instance.
         :param request:
             A ``webapp.Request`` instance.
         :param response:
             A :class:`Response` instance.
-        :param match:
-            A tuple ``(handler, args, kwargs)``, resulted from the matched
-            route.
-        :param method:
-            Handler method to be called. In cases like exception handling, a
-            method can be forced instead of using the request method.
         """
-        handler_class, args, kwargs = match
-        method = method or request.method.lower().replace('-', '_')
+        match = self.match(request)
+        if not match:
+            raise webob.exc.HTTPNotFound()
 
-        if isinstance(handler_class, basestring):
-            if handler_class not in self._handlers:
-                self._handlers[handler_class] = import_string(handler_class)
+        handler_spec, args, kwargs = match
+        if isinstance(handler_spec, basestring):
+            if handler_spec not in self._handlers:
+                self._handlers[handler_spec] = import_string(handler_spec)
 
-            handler_class = self._handlers[handler_class]
+            request.route.handler = handler_spec = self._handlers[handler_spec]
 
-        new_style_handler = True
-        try:
-            handler = handler_class(app, request, response)
-        except TypeError, e:
-            # Support webapp's initialize().
-            new_style_handler = False
-            handler = handler_class()
+        if issubclass(handler_spec, webapp.RequestHandler):
+            # Support webapp: use initialize() and call the request method
+            # directly. No duck-typing here.
+            handler = handler_spec()
             handler.initialize(request, response)
-
-        try:
-            if new_style_handler:
-                handler(method, *args, **kwargs)
-            else:
-                # Support webapp handlers which don't implement __call__().
-                getattr(handler, method)(*args)
-        except Exception, e:
-            if method == 'handle_exception':
-                # We are already handling an exception.
-                raise
-
-            # If the handler implements exception handling, let it handle it.
-            handler.handle_exception(e, app.debug)
+            method_name = request.method.lower().replace('-', '_')
+            method = getattr(handler, method_name)
+            method(*args, **kwargs)
+        else:
+            handler = handler_spec(request, response)
+            if hasattr(handler, '__call__'):
+                # If handler_spec was a function, we're done. But if it was
+                # a class with __call__, we call it again.
+                handler()
 
     def build(self, name, request, args, kwargs):
         """Builds and returns a URL for a named :class:`Route`.
@@ -977,6 +995,44 @@ class Router(object):
         return '<Router(%r)>' % routes
 
     __str__ = __repr__
+
+
+class RequestContext(object):
+    """Sets and releases the request context during a request."""
+
+    def __init__(self, app, environ):
+        """Initializes the request context.
+
+        :param app:
+            An :class:`App` instance.
+        :param environ:
+            A WSGI environment.
+        """
+        self.app = app
+        self.environ = environ
+
+    def __enter__(self):
+        """Enters the request context.
+
+        :returns:
+            A :class:`Request` instance.
+        """
+        # The active app.
+        WSGIApplication.app = WSGIApplication.active_instance = self.app
+        # The active request.
+        WSGIApplication.request = request = self.app.request_class(self.environ)
+        request.app = self.app
+        return request
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Exits the request context.
+
+        This will release the context locals except if an exception is caught
+        in debug mode. In this case the locals are kept to be inspected.
+        """
+        if exc_type is None or not self.app.debug:
+            WSGIApplication.app = WSGIApplication.active_instance = \
+                WSGIApplication.request = None
 
 
 class WSGIApplication(object):
@@ -1014,6 +1070,9 @@ class WSGIApplication(object):
 
     .. seealso:: :class:`Route`.
     """
+    #: Allowed request methods.
+    allowed_methods = ('GET', 'POST', 'HEAD', 'OPTIONS', 'PUT',
+        'DELETE', 'TRACE')
     #: Default class used for the request object.
     request_class = Request
     #: Default class used for the response object.
@@ -1022,8 +1081,12 @@ class WSGIApplication(object):
     router_class = Router
     #: Default class used for the config object.
     config_class = Config
+    #: Context class used when a request comes in.
+    request_context_class = RequestContext
     #: Request variables.
-    active_instance = app = request = None
+    active_instance = None
+    app = None
+    request = None
 
     def __init__(self, routes=None, debug=False, config=None):
         """Initializes the WSGI application.
@@ -1049,10 +1112,10 @@ class WSGIApplication(object):
         self.request = None
 
     def __call__(self, environ, start_response):
-        """Called by WSGI when a request comes in. Calls :meth:`wsgi_app`."""
-        return self.wsgi_app(environ, start_response)
+        """Called by WSGI when a request comes in. Calls :meth:`dispatch`."""
+        return self.dispatch(environ, start_response)
 
-    def wsgi_app(self, environ, start_response):
+    def dispatch(self, environ, start_response):
         """This is the actual WSGI application.  This is not implemented in
         :meth:`__call__` so that middlewares can be applied without losing a
         reference to the class. So instead of doing this::
@@ -1061,7 +1124,7 @@ class WSGIApplication(object):
 
         It's a better idea to do this instead::
 
-            app.wsgi_app = MyMiddleware(app.wsgi_app)
+            app.dispatch = MyMiddleware(app.dispatch)
 
         Then you still have the original application object around and
         can continue to call methods on it.
@@ -1074,42 +1137,28 @@ class WSGIApplication(object):
             A callable accepting a status code, a list of headers and an
             optional exception context to start the response.
         """
-        try:
-            # The active app.
-            WSGIApplication.active_instance = WSGIApplication.app = self
-            # The active request.
-            WSGIApplication.request = request = self.request_class(environ)
-            response = self.response_class()
-
-            if request.method not in ALLOWED_METHODS:
-                # 501 Not Implemented.
-                raise webob.exc.HTTPNotImplemented()
-
-            # Matched values are (handler, args, kwargs).
-            match = self.router.match(request)
-
-            if match:
-                self.router.dispatch(self, request, response, match)
-            else:
-                # 404 Not Found.
-                raise webob.exc.HTTPNotFound()
-        except Exception, e:
+        response = self.response_class()
+        with self.request_context_class(self, environ) as request:
             try:
-                self.handle_exception(request, response, e)
-            except webob.exc.WSGIHTTPException, e:
-                # Use the exception as response.
-                response = e
-            except Exception, e:
-                # Error wasn't handled so we have nothing else to do.
-                logging.exception(e)
-                if self.debug:
-                    raise
+                if request.method not in self.allowed_methods:
+                    # 501 Not Implemented.
+                    raise webob.exc.HTTPNotImplemented()
 
-                # 500 Internal Server Error.
-                response = webob.exc.HTTPInternalServerError()
-        finally:
-            WSGIApplication.active_instance = WSGIApplication.app = \
-                WSGIApplication.request = None
+                self.router.dispatch(request, response)
+            except Exception, e:
+                try:
+                    self.handle_exception(request, response, e)
+                except webob.exc.WSGIHTTPException, e:
+                    # Use the exception as response.
+                    response = e
+                except Exception, e:
+                    # Error wasn't handled so we have nothing else to do.
+                    logging.exception(e)
+                    if self.debug:
+                        raise
+
+                    # 500 Internal Server Error.
+                    response = webob.exc.HTTPInternalServerError()
 
         return response(environ, start_response)
 
@@ -1154,12 +1203,14 @@ class WSGIApplication(object):
         else:
             code = 500
 
-        handler = self.error_handlers.get(code)
-        if handler:
+        handler_spec = self.error_handlers.get(code)
+        if handler_spec:
             # Handle the exception using a custom handler.
-            match = (handler, (e, self.debug), {})
-            self.router.dispatch(self, request, response, match,
-                method='handle_exception')
+            handler = handler_spec(request, response)
+            if hasattr(handler, 'handle_exception'):
+                # If the exception handler was a function or doesn't have a
+                # 'handle_exception' method, we're done. Otherwise call it.
+                handler.handle_exception(e, self.debug)
         else:
             # No exception handler. Catch it in the WSGI app.
             raise
@@ -1222,18 +1273,6 @@ def abort(code, *args, **kwargs):
         raise KeyError('No exception is defined for code %r.' % code)
 
     raise cls(*args, **kwargs)
-
-
-def get_valid_methods(handler):
-    """Returns a list of HTTP methods supported by a handler.
-
-    :param handler:
-        A :class:`RequestHandler` instance.
-    :returns:
-        A list of HTTP methods supported by the handler.
-    """
-    return [method for method in ALLOWED_METHODS if getattr(handler,
-        method.lower().replace('-', '_'), None)]
 
 
 def import_string(import_name, silent=False):

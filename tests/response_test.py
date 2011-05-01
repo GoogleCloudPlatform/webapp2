@@ -6,6 +6,8 @@ import unittest
 
 from webapp2 import Response
 
+import test_base
+
 
 class NoStringOrUnicodeConversion(object):
     pass
@@ -21,7 +23,7 @@ class UnicodeConversion(object):
         return 'bar'.decode('utf-8')
 
 
-class TestResponse(unittest.TestCase):
+class TestResponse(test_base.BaseTestCase):
     def test_write(self):
         var_1 = NoStringOrUnicodeConversion()
         var_2 = StringConversion()
@@ -71,3 +73,6 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(res.body, u'foo')
         self.assertEqual(res.charset, 'utf8')
 
+
+if __name__ == '__main__':
+    test_base.main()
