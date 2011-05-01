@@ -966,7 +966,7 @@ class Router(object):
             # A function or webapp2.RequestHandler.
             handler = handler_spec(request, response)
             if hasattr(handler, '__call__'):
-                # If handler_spec was a function, we're done. But if it was
+                # If handler_spec is a function, we're done. But if it is
                 # a class with __call__, we call it again.
                 handler()
 
@@ -1008,7 +1008,7 @@ class RequestContext(object):
         """Initializes the request context.
 
         :param app:
-            An :class:`App` instance.
+            An :class:`WSGIApplication` instance.
         :param environ:
             A WSGI environment.
         """
@@ -1112,8 +1112,6 @@ class WSGIApplication(object):
         self.registry = {}
         # The active app.
         WSGIApplication.active_instance = WSGIApplication.app = self
-        # Current request did not start yet, so we set a fallback.
-        self.request = None
 
     def __call__(self, environ, start_response):
         """Called by WSGI when a request comes in. Calls :meth:`dispatch`."""
@@ -1214,7 +1212,7 @@ class WSGIApplication(object):
             # Handle the exception using a custom handler.
             handler = handler_spec(request, response)
             if hasattr(handler, 'handle_exception'):
-                # If the exception handler was a function or doesn't have a
+                # If handler_spec is a function or doesn't have a
                 # 'handle_exception' method, we're done. Otherwise call it.
                 handler.handle_exception(e, self.debug)
         else:
