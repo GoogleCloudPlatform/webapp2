@@ -48,6 +48,8 @@ class Request(webapp.Request):
     route_args = None
     #: The matched route keyword arguments.
     route_kwargs = None
+    #: Store exceptions so exception handler functions can access it.
+    exception = None
 
     def __init__(self, *args, **kwargs):
         super(Request, self).__init__(*args, **kwargs)
@@ -1207,6 +1209,8 @@ class WSGIApplication(object):
 
         handler_spec = self.error_handlers.get(code)
         if handler_spec:
+            # Store the exception so it is available for functions.
+            request.exception = e
             # Handle the exception using a custom handler.
             handler = handler_spec(request, response)
             if hasattr(handler, 'handle_exception'):
