@@ -1029,7 +1029,7 @@ class RequestContext(object):
         # The active response.
         response = self.app.response_class()
         # Register global variables.
-        WSGIApplication.set_globals(app=self.app, request=request)
+        self.app.set_globals(app=self.app, request=request)
         return request, response
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -1039,7 +1039,7 @@ class RequestContext(object):
         in debug mode. In this case the locals are kept to be inspected.
         """
         if exc_type is None or not self.app.debug:
-            WSGIApplication.set_globals(app=None, request=None)
+            self.app.set_globals()
 
 
 class WSGIApplication(object):
@@ -1115,10 +1115,9 @@ class WSGIApplication(object):
         # A registry for objects used during the app lifetime.
         self.registry = {}
         # Register global variables.
-        WSGIApplication.set_globals(app=self)
+        self.set_globals(app=self)
 
-    @classmethod
-    def set_globals(cls, app=None, request=None):
+    def set_globals(self, app=None, request=None):
         """Registers the global variables for app and request.
 
         App Engine doesn't have threading, so we just assign them directly.
@@ -1126,6 +1125,7 @@ class WSGIApplication(object):
         assigning to a proxy object that returns app and request using
         thread locals.
         """
+        cls = WSGIApplication
         cls.app = cls.active_instance = app
         cls.request = request
 
