@@ -1022,22 +1022,24 @@ class RequestContext(object):
         :returns:
             A :class:`Request` instance.
         """
-        # The active app.
-        WSGIApplication.app = WSGIApplication.active_instance = self.app
         # The active request.
-        WSGIApplication.request = request = self.app.request_class(self.environ)
+        request = self.app.request_class(self.environ)
+        # Make the app available thorugh the request object.
         request.app = self.app
-        return request
+        # The active response.
+        response = self.app.response_class()
+        # Register global variables.
+        WSGIApplication.set_globals(app=self.app, request=request)
+        return request, response
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Exits the request context.
 
-        This will release the context locals except if an exception is caught
+        This release the context locals except if an exception is caught
         in debug mode. In this case the locals are kept to be inspected.
         """
         if exc_type is None or not self.app.debug:
-            WSGIApplication.app = WSGIApplication.active_instance = \
-                WSGIApplication.request = None
+            WSGIApplication.set_globals(app=None, request=None)
 
 
 class WSGIApplication(object):
@@ -1088,10 +1090,11 @@ class WSGIApplication(object):
     config_class = Config
     #: Context class used when a request comes in.
     request_context_class = RequestContext
-    #: Request variables.
-    active_instance = None
+    #: Global variables.
     app = None
     request = None
+    #: Same as app, for compatibility with webapp.
+    active_instance = None
 
     def __init__(self, routes=None, debug=False, config=None):
         """Initializes the WSGI application.
@@ -1111,8 +1114,20 @@ class WSGIApplication(object):
         self.error_handlers = {}
         # A registry for objects used during the app lifetime.
         self.registry = {}
-        # The active app.
-        WSGIApplication.active_instance = WSGIApplication.app = self
+        # Register global variables.
+        WSGIApplication.set_globals(app=self)
+
+    @classmethod
+    def set_globals(cls, app=None, request=None):
+        """Registers the global variables for app and request.
+
+        App Engine doesn't have threading, so we just assign them directly.
+        For a threaded environment, direct assignment must be replaced by
+        assigning to a proxy object that returns app and request using
+        thread locals.
+        """
+        cls.app = cls.active_instance = app
+        cls.request = request
 
     def __call__(self, environ, start_response):
         """Called by WSGI when a request comes in. Calls :meth:`dispatch`."""
@@ -1140,8 +1155,8 @@ class WSGIApplication(object):
             A callable accepting a status code, a list of headers and an
             optional exception context to start the response.
         """
-        response = self.response_class()
-        with self.request_context_class(self, environ) as request:
+        with self.request_context_class(self, environ) as context:
+            request, response = context
             try:
                 if request.method not in self.allowed_methods:
                     # 501 Not Implemented.
@@ -1163,7 +1178,7 @@ class WSGIApplication(object):
                     # 500 Internal Server Error.
                     response = webob.exc.HTTPInternalServerError()
 
-        return response(environ, start_response)
+            return response(environ, start_response)
 
     def handle_exception(self, request, response, e):
         """Handles an exception. To set app-wide error handlers, define them
