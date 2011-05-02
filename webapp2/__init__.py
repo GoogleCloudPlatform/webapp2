@@ -380,8 +380,9 @@ class RedirectHandler(RequestHandler):
         url = kwargs.pop('url', '/')
         permanent = kwargs.pop('permanent', True)
 
-        if callable(url):
-            url = url(self, *args, **kwargs)
+        func = getattr(url, '__call__', None)
+        if func:
+            url = func(self, *args, **kwargs)
 
         self.redirect(url, permanent=permanent)
 
