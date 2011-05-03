@@ -403,17 +403,16 @@ class cached_property(object):
     The class has to have a `__dict__` in order for this property to
     work.
 
+    .. note:: Implementation detail: this property is implemented as non-data
+       descriptor.  non-data descriptors are only invoked if there is
+       no entry with the same name in the instance's __dict__.
+       this allows us to completely get rid of the access function call
+       overhead.  If one choses to invoke __get__ by hand the property
+       will still work as expected because the lookup logic is replicated
+       in __get__ for manual invocation.
+
     This class was borrowed from `Werkzeug`_.
     """
-
-    # implementation detail: this property is implemented as non-data
-    # descriptor.  non-data descriptors are only invoked if there is
-    # no entry with the same name in the instance's __dict__.
-    # this allows us to completely get rid of the access function call
-    # overhead.  If one choses to invoke __get__ by hand the property
-    # will still work as expected because the lookup logic is replicated
-    # in __get__ for manual invocation.
-
     def __init__(self, func, name=None, doc=None):
         self.__name__ = name or func.__name__
         self.__module__ = func.__module__

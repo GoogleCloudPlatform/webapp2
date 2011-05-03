@@ -59,6 +59,7 @@ Utilities
 These are some other utilities used internally that are also available for
 general use.
 
+.. autoclass:: cached_property
 .. autofunction:: abort
 .. autofunction:: import_string
 .. autofunction:: to_utf8
