@@ -63,23 +63,20 @@ class BrokenButFixedHandler(BrokenHandler):
         self.response.out.write('that was close!')
 
 
-class Handle404(webapp2.RequestHandler):
-    def handle_exception(self, exception, debug_mode):
-        self.response.out.write('404 custom handler')
-        self.response.set_status(404)
+def handle_404(request, response):
+    response.out.write('404 custom handler')
+    response.set_status(404)
 
 
-class Handle405(webapp2.RequestHandler):
-    def handle_exception(self, exception, debug_mode):
-        self.response.out.write('405 custom handler')
-        self.response.set_status(405, 'Custom Error Message')
-        self.response.headers['Allow'] = 'GET'
+def handle_405(request, response):
+    response.out.write('405 custom handler')
+    response.set_status(405, 'Custom Error Message')
+    response.headers['Allow'] = 'GET'
 
 
-class Handle500(webapp2.RequestHandler):
-    def handle_exception(self, exception, debug_mode):
-        self.response.out.write('500 custom handler')
-        self.response.set_status(500)
+def handle_500(request, response):
+    response.out.write('500 custom handler')
+    response.set_status(500)
 
 
 class PositionalHandler(webapp2.RequestHandler):
@@ -214,11 +211,17 @@ class TestHandler(test_base.BaseTestCase):
 
     def test_custom_error_handlers(self):
         app.error_handlers = {
-            404: Handle404,
-            405: Handle405,
-            500: Handle500,
+            404: handle_404,
+            405: handle_405,
+            500: handle_500,
         }
 
+        '''
+        request = webapp2.Request.blank('/nowhere')
+        res = request.get_response(app, catch_exc_info=True)
+        self.assertEqual(res.status, '404 Not Found')
+        self.assertEqual(res.body, '404 custom handler')
+        '''
         res = test_app.get('/nowhere', status=404)
         self.assertEqual(res.status, '404 Not Found')
         self.assertEqual(res.body, '404 custom handler')
@@ -345,13 +348,16 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         request.app = app
 
         handler = BrokenHandler(request, None)
+        handler.app = app
         self.assertEqual(handler.get_valid_methods().sort(), ['GET'].sort())
 
         handler = HomeHandler(request, None)
+        handler.app = app
         self.assertEqual(handler.get_valid_methods().sort(),
             ['GET', 'POST'].sort())
 
         handler = MethodsHandler(request, None)
+        handler.app = app
         self.assertEqual(handler.get_valid_methods().sort(),
             ['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'TRACE'].sort())
 
@@ -360,6 +366,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         request.app = app
         app.request = request
         handler = webapp2.RequestHandler(request, None)
+        handler.app = app
 
         for func in (app.url_for, handler.url_for):
             self.assertEqual(func('home'), '/')
@@ -434,6 +441,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         request.app = app
         app.request = request
         handler = webapp2.RequestHandler(request, None)
+        handler.app = app
 
         for func in (app.url_for, handler.url_for):
             res = test_app.get(func('escape', name='with space'))
@@ -453,13 +461,13 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             def get(self, **kwargs):
                 raise TypeError()
 
-            def handle_exception(self, exception, debug_mode):
-                raise ValueError()
+        def handle_exception(request, response):
+            raise ValueError()
 
         app = webapp2.WSGIApplication([
             webapp2.Route('/', HomeHandler, name='home'),
         ], debug=False)
-        app.error_handlers[500] = HomeHandler
+        app.error_handlers[500] = handle_exception
 
         test_app = TestApp(app)
         res = test_app.get('/', status=500)

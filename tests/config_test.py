@@ -4,7 +4,8 @@ Tests for webapp2.Config
 """
 import unittest
 
-from webapp2 import Config, WSGIApplication, RequestHandler, REQUIRED_VALUE
+from webapp2 import (Config, WSGIApplication, Request, RequestHandler,
+    REQUIRED_VALUE)
 
 import test_base
 
@@ -270,8 +271,11 @@ class TestLoadConfig(test_base.BaseTestCase):
 
     def test_request_handler_get_config(self):
         app = WSGIApplication()
+        request = Request.blank('http://localhost:80/')
+        request.app = app
 
-        handler = RequestHandler(app, None)
+        handler = RequestHandler(request, None)
+        handler.app = app
 
         self.assertEqual(handler.get_config('resources.i18n', 'locale'), 'en_US')
         self.assertEqual(handler.get_config('resources.i18n', 'locale', 'foo'), 'en_US')

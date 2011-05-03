@@ -130,14 +130,19 @@ class RequestHandler(object):
            doesn't take any arguments. Consider them as required.
 
         :param request:
-            A ``webapp.Request`` instance.
+            A :class:`Request` instance.
         :param response:
             A :class:`Response` instance.
         """
         self.request = request
         self.response = response
-        if request:
+        if request and response:
+            # Only when using webapp2.Router. When dispatched by
+            # webapp.WSGIApplication, request and response are None.
             self.app = request.app
+            if request.route:
+                # Dispatch if route was matched.
+                self.dispatch()
 
     def initialize(self, request, response):
         """Initializes this request handler with the given WSGI application,
@@ -148,7 +153,7 @@ class RequestHandler(object):
            Use __init__() instead.
 
         :param request:
-            A ``webapp.Request`` instance.
+            A :class:`Request` instance.
         :param response:
             A :class:`Response` instance.
         """
@@ -158,10 +163,6 @@ class RequestHandler(object):
         self.request = request
         self.response = response
         self.app = WSGIApplication.app
-
-    def __call__(self):
-        """Dispatches the requested method."""
-        self.dispatch()
 
     def dispatch(self):
         method_name = self.request.route.handler_method
@@ -644,7 +645,7 @@ class BaseRoute(object):
         """Matches this route against the current request.
 
         :param request:
-            A ``webapp.Request`` instance.
+            A :class:`Request` instance.
         :returns:
             A tuple ``(handler, args, kwargs)`` if the route matches, or None.
         """
@@ -960,7 +961,7 @@ class Router(object):
         matches is returned.
 
         :param request:
-            A ``webapp.Request`` instance.
+            A :class:`Request` instance.
         :returns:
             A tuple ``(route, args, kwargs)`` if a route matched, or None.
         """
@@ -974,7 +975,7 @@ class Router(object):
         the matched :class:`Route`.
 
         :param request:
-            A ``webapp.Request`` instance.
+            A :class:`Request` instance.
         :param response:
             A :class:`Response` instance.
         :raises:
@@ -1005,10 +1006,6 @@ class Router(object):
         else:
             # A function or webapp2.RequestHandler.
             handler = handler_spec(request, response)
-            if hasattr(handler, '__call__'):
-                # If handler_spec is a function, we're done. But if it is
-                # a class with __call__, we call it again.
-                handler()
 
     def build(self, name, request, args, kwargs):
         """Builds and returns a URL for a named :class:`Route`.
@@ -1225,15 +1222,14 @@ class WSGIApplication(object):
         dictionary of :class:`WSGIApplication`. For example, to set a custom
         `Not Found` page::
 
-            class Handle404(RequestHandler):
-                def handle_exception(self, exception, debug_mode):
-                    self.response.out.write('Oops! I could swear this page was here!')
-                    self.response.set_status(404)
+            def handle_404(request, response):
+                response.out.write('Oops! I could swear this page was here!')
+                response.set_status(404)
 
             app = WSGIApplication([
                 (r'/', MyHandler),
             ])
-            app.error_handlers[404] = Handle404
+            app.error_handlers[404] = handle_404
 
         When an ``HTTPException`` is raised using :func:`abort` or because the
         app could not fulfill the request, the error handler defined for the
@@ -1249,7 +1245,7 @@ class WSGIApplication(object):
            status code, as shown in the example above.
 
         :param request:
-            A ``webapp.Request`` instance.
+            A :class:`Request` instance.
         :param response:
             A :class:`Response` instance.
         :param e:
@@ -1266,10 +1262,6 @@ class WSGIApplication(object):
             request.exception = e
             # Handle the exception using a custom handler.
             handler = handler_spec(request, response)
-            if hasattr(handler, 'handle_exception'):
-                # If handler_spec is a function or doesn't have a
-                # 'handle_exception' method, we're done. Otherwise call it.
-                handler.handle_exception(e, self.debug)
         else:
             # No exception handler. Catch it in the WSGI app.
             raise
@@ -1439,3 +1431,7 @@ def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):
         fragment = urllib.quote(to_utf8(fragment))
 
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
+
+
+Request.ResponseClass = Response
+Response.RequestClass = Request
