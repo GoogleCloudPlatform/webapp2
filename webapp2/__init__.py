@@ -387,6 +387,51 @@ class RedirectHandler(RequestHandler):
         self.redirect(url, permanent=permanent)
 
 
+class cached_property(object):
+    """A decorator that converts a function into a lazy property.  The
+    function wrapped is called the first time to retrieve the result
+    and then that calculated result is used the next time you access
+    the value::
+
+        class Foo(object):
+
+            @cached_property
+            def foo(self):
+                # calculate something important here
+                return 42
+
+    The class has to have a `__dict__` in order for this property to
+    work.
+
+    This class was borrowed from `Werkzeug`_.
+    """
+
+    # implementation detail: this property is implemented as non-data
+    # descriptor.  non-data descriptors are only invoked if there is
+    # no entry with the same name in the instance's __dict__.
+    # this allows us to completely get rid of the access function call
+    # overhead.  If one choses to invoke __get__ by hand the property
+    # will still work as expected because the lookup logic is replicated
+    # in __get__ for manual invocation.
+
+    def __init__(self, func, name=None, doc=None):
+        self.__name__ = name or func.__name__
+        self.__module__ = func.__module__
+        self.__doc__ = doc or func.__doc__
+        self.func = func
+
+    def __get__(self, obj, type=None):
+        if obj is None:
+            return self
+
+        value = obj.__dict__.get(self.__name__, DEFAULT_VALUE)
+        if value is DEFAULT_VALUE:
+            value = self.func(obj)
+            obj.__dict__[self.__name__] = value
+
+        return value
+
+
 class Config(dict):
     """A simple configuration dictionary keyed by module name. This is a
     dictionary of dictionaries. It requires all values to be dictionaries
@@ -585,6 +630,8 @@ class BaseRoute(object):
     """Interface for URL routes. Custom routes must implement some or all
     methods and attributes from this class.
     """
+    #: The regex template.
+    template = None
     #: Route name, used to build URLs.
     name = None
     #: True if this route is only used for URL generation and never matches.
@@ -664,26 +711,23 @@ class SimpleRoute(BaseRoute):
         """
         self.template = template
         self.handler = handler
-        # Lazy property.
-        self.regex = None
 
-    def _regex(self):
+    @cached_property
+    def regex(self):
         if not self.template.startswith('^'):
             self.template = '^' + self.template
 
         if not self.template.endswith('$'):
             self.template += '$'
 
-        self.regex = re.compile(self.template)
-        return self.regex
+        return re.compile(self.template)
 
     def match(self, request):
         """Matches this route against the current request.
 
         .. seealso:: :meth:`BaseRoute.match`.
         """
-        regex = self.regex or self._regex()
-        match = regex.match(request.path)
+        match = self.regex.match(request.path)
         if match:
             return self.handler, match.groups(), {}
 
@@ -704,6 +748,15 @@ class Route(BaseRoute):
     Based on `Another Do-It-Yourself Framework`_, by Ian Bicking. We added
     URL building, non-keyword variables and other improvements.
     """
+    handler_method = None
+    defaults = None
+
+    # Lazy properties.
+    regex = None
+    reverse_template = None
+    variables = None
+    has_positional_variables = False
+
     def __init__(self, template, handler=None, name=None, defaults=None,
         build_only=False, handler_method=None):
         """Initializes a URL route.
@@ -745,10 +798,6 @@ class Route(BaseRoute):
         self.name = name
         self.defaults = defaults or {}
         self.build_only = build_only
-        # Lazy properties.
-        self.regex = None
-        self.variables = None
-        self.reverse_template = None
         # If a handler string has a colon, we take it as the method from a
         # handler class, e.g., 'my_module.MyClass:my_method', and store it
         # in the route as 'handler_method'. Not every route mapping to a class
@@ -763,8 +812,9 @@ class Route(BaseRoute):
             else:
                 self.handler, self.handler_method = handler.rsplit(':', 1)
 
-    def _parse_template(self):
-        self.variables = {}
+    @cached_property
+    def regex(self):
+        variables = {}
         last = count = 0
         regex = reverse_template = ''
         for match in _ROUTE_REGEX.finditer(self.template):
@@ -779,32 +829,20 @@ class Route(BaseRoute):
 
             reverse_template += '%s%%(%s)s' % (part, name)
             regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
-            self.variables[name] = re.compile('^%s$' % expr)
+            variables[name] = re.compile('^%s$' % expr)
 
         regex = '^%s%s$' % (regex, re.escape(self.template[last:]))
-        self.regex = re.compile(regex)
+        self.variables = variables
         self.reverse_template = reverse_template + self.template[last:]
         self.has_positional_variables = count > 0
-
-    def _regex(self):
-        self._parse_template()
-        return self.regex
-
-    def _variables(self):
-        self._parse_template()
-        return self.variables
-
-    def _reverse_template(self):
-        self._parse_template()
-        return self.reverse_template
+        return re.compile(regex)
 
     def match(self, request):
         """Matches this route against the current request.
 
         .. seealso:: :meth:`BaseRoute.match`.
         """
-        regex = self.regex or self._regex()
-        match = regex.match(request.path)
+        match = self.regex.match(request.path)
         if match:
             kwargs = self.defaults.copy()
             kwargs.update(match.groupdict())
@@ -841,7 +879,9 @@ class Route(BaseRoute):
             A tuple ``(path, kwargs)`` with the built URL path and extra
             keywords to be used as URL query arguments.
         """
-        variables = self.variables or self._variables()
+        # Access self.regex just to set the lazy properties.
+        regex = self.regex
+        variables = self.variables
         if self.has_positional_variables:
             for index, value in enumerate(args):
                 key = '__%d__' % index
@@ -1039,7 +1079,7 @@ class RequestContext(object):
         in debug mode. In this case the locals are kept to be inspected.
         """
         if exc_type is None or not self.app.debug:
-            self.app.set_globals()
+            self.app.set_globals(app=None, request=None)
 
 
 class WSGIApplication(object):

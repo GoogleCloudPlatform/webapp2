@@ -155,23 +155,27 @@ class TestRoute(test_base.BaseTestCase):
 
     def test_reverse_template(self):
         route = Route('/foo', None)
-        template = route.reverse_template or route._reverse_template()
-        self.assertEqual(template, '/foo')
+        # Access route.regex just to set the lazy properties.
+        regex = route.regex
+        self.assertEqual(route.reverse_template, '/foo')
 
         route = Route('/foo/<bar>', None)
-        template = route.reverse_template or route._reverse_template()
-        self.assertEqual(template, '/foo/%(bar)s')
+        # Access route.regex just to set the lazy properties.
+        regex = route.regex
+        self.assertEqual(route.reverse_template, '/foo/%(bar)s')
 
         route = Route('/foo/<bar>/<baz:\d>', None)
-        template = route.reverse_template or route._reverse_template()
-        self.assertEqual(template, '/foo/%(bar)s/%(baz)s')
+        # Access route.regex just to set the lazy properties.
+        regex = route.regex
+        self.assertEqual(route.reverse_template, '/foo/%(bar)s/%(baz)s')
 
     def test_invalid_template(self):
         # To break it:
         # <>foo:><bar<:baz>
         route = Route('/<foo/<:bar', None)
-        template = route.reverse_template or route._reverse_template()
-        self.assertEqual(template, '/<foo/<:bar')
+        # Access route.regex just to set the lazy properties.
+        regex = route.regex
+        self.assertEqual(route.reverse_template, '/<foo/<:bar')
 
     def test_build_full_without_request(self):
         router = Router(None)
