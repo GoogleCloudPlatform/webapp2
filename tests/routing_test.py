@@ -13,51 +13,51 @@ import test_base
 class TestRoute(test_base.BaseTestCase):
     def test_no_variable(self):
         route = Route(r'/hello', None)
-        handler, args, kwargs = route.match(Request.blank('/hello'))
+        args, kwargs = route.match(Request.blank('/hello'))
         self.assertEqual(kwargs, {})
         url = route.build(Request.blank('/'), (), {})
         self.assertEqual(url, '/hello')
 
         route = Route(r'/hello/world/', None)
-        handler, args, kwargs = route.match(Request.blank('/hello/world/'))
+        args, kwargs = route.match(Request.blank('/hello/world/'))
         self.assertEqual(kwargs, {})
         url = route.build(Request.blank('/'), (), {})
         self.assertEqual(url, '/hello/world/')
 
     def test_repetition_operator(self):
         route = Route(r'/<:\d>', None)
-        self.assertEqual(route.match(Request.blank('/1')), (None, ('1',), {}))
-        self.assertEqual(route.match(Request.blank('/2')), (None, ('2',), {}))
+        self.assertEqual(route.match(Request.blank('/1')), (('1',), {}))
+        self.assertEqual(route.match(Request.blank('/2')), (('2',), {}))
 
         route = Route(r'/<:\d{2,3}>', None)
-        self.assertEqual(route.match(Request.blank('/11')), (None, ('11',), {}))
-        self.assertEqual(route.match(Request.blank('/111')), (None, ('111',), {}))
+        self.assertEqual(route.match(Request.blank('/11')), (('11',), {}))
+        self.assertEqual(route.match(Request.blank('/111')), (('111',), {}))
         self.assertEqual(route.match(Request.blank('/1111')), None)
 
     def test_unnamed_variable(self):
         route = Route(r'/<:\d{4}>', None)
-        self.assertEqual(route.match(Request.blank('/2010')), (None, ('2010',), {}))
+        self.assertEqual(route.match(Request.blank('/2010')), (('2010',), {}))
         self.assertEqual(route.match(Request.blank('/aaaa')), None)
 
         route = Route(r'/<:\d{2}>.<:\d{2}>', None)
-        self.assertEqual(route.match(Request.blank('/98.99')), (None, ('98', '99'), {}))
+        self.assertEqual(route.match(Request.blank('/98.99')), (('98', '99'), {}))
         self.assertEqual(route.match(Request.blank('/aa.aa')), None)
 
         route = Route(r'/<:\d{2}>.<:\d{2}>/<foo>', None)
-        self.assertEqual(route.match(Request.blank('/98.99/test')), (None, ('98', '99'), {'foo': 'test'}))
+        self.assertEqual(route.match(Request.blank('/98.99/test')), (('98', '99'), {'foo': 'test'}))
         self.assertEqual(route.match(Request.blank('/aa.aa/test')), None)
 
     def test_simple_variable(self):
         route = Route(r'/<foo>', None)
-        self.assertEqual(route.match(Request.blank('/bar')), (None, (), {'foo': 'bar'}))
+        self.assertEqual(route.match(Request.blank('/bar')), ((), {'foo': 'bar'}))
         url = route.build(Request.blank('/'), (), dict(foo='baz'))
         self.assertEqual(url, '/baz')
 
     def test_expr_variable(self):
         route = Route(r'/<year:\d{4}>', None)
         self.assertEqual(route.match(Request.blank('/bar')), None)
-        self.assertEqual(route.match(Request.blank('/2010')), (None, (), {'year': '2010'}))
-        self.assertEqual(route.match(Request.blank('/1900')), (None, (), {'year': '1900'}))
+        self.assertEqual(route.match(Request.blank('/2010')), ((), {'year': '2010'}))
+        self.assertEqual(route.match(Request.blank('/1900')), ((), {'year': '1900'}))
         url = route.build(Request.blank('/'), (), dict(year='2010'))
         self.assertEqual(url, '/2010')
 
@@ -189,7 +189,7 @@ class TestRoute(test_base.BaseTestCase):
         url_res = '/' + '/'.join(args)
 
         route = Route(template, None)
-        self.assertEqual(route.match(Request.blank(url_res)), (None, args, {}))
+        self.assertEqual(route.match(Request.blank(url_res)), (args, {}))
         url = route.build(Request.blank('/'), args, {})
         self.assertEqual(url_res, url)
 
@@ -197,7 +197,7 @@ class TestRoute(test_base.BaseTestCase):
         random.shuffle(args)
         args = tuple(args[:98])
         url_res = '/' + '/'.join(args)
-        self.assertEqual(route.match(Request.blank(url_res)), (None, args, {}))
+        self.assertEqual(route.match(Request.blank(url_res)), (args, {}))
         url = route.build(Request.blank('/'), args, {})
         self.assertEqual(url_res, url)
 

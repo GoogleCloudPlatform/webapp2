@@ -102,7 +102,7 @@ class DomainRoute(MultiRoute):
             for route in self.match_routes:
                 match = route.match(request)
                 if match:
-                    match[2]['_host_match'] = host_match.groups()
+                    match[1]['_host_match'] = host_match.groups()
                     return match
 
 

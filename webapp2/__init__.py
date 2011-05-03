@@ -728,7 +728,7 @@ class SimpleRoute(BaseRoute):
         """
         match = self.regex.match(request.path)
         if match:
-            return self.handler, match.groups(), {}
+            return match.groups(), {}
 
     def __repr__(self):
         return '<SimpleRoute(%r, %r)>' % (self.template, self.handler)
@@ -852,7 +852,7 @@ class Route(BaseRoute):
             else:
                 args = ()
 
-            return self.handler, args, kwargs
+            return args, kwargs
 
     def build(self, request, args, kwargs):
         """Builds a URL for this route.
@@ -963,15 +963,11 @@ class Router(object):
             A ``webapp.Request`` instance.
         :returns:
             A tuple ``(route, args, kwargs)`` if a route matched, or None.
-        :raises:
-            ``webob.exc.HTTPNotFound`` if no route matched.
         """
         for route in self.match_routes:
             match = route.match(request)
             if match:
-                request.route = route
-                request.route_args, request.route_kwargs = match[1], match[2]
-                return match
+                return route, match[0], match[1]
 
     def dispatch(self, request, response):
         """Dispatches a request. This calls the :class:`RequestHandler` from
@@ -981,12 +977,16 @@ class Router(object):
             A ``webapp.Request`` instance.
         :param response:
             A :class:`Response` instance.
+        :raises:
+            ``webob.exc.HTTPNotFound`` if no route matched.
         """
         match = self.match(request)
         if not match:
             raise webob.exc.HTTPNotFound()
 
-        handler_spec, args, kwargs = match
+        request.route, request.route_args, request.route_kwargs = match
+        route, args, kwargs = match
+        handler_spec = route.handler
         if isinstance(handler_spec, basestring):
             if handler_spec not in self._handlers:
                 self._handlers[handler_spec] = import_string(handler_spec)
