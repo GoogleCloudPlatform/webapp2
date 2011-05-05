@@ -1017,7 +1017,11 @@ class Router(object):
             if not method:
                 # 501 Not Implemented.
                 raise exc.HTTPNotImplemented()
-            method(*args, **kwargs)
+
+            try:
+                method(*args, **kwargs)
+            except Exception, e:
+                handler.handle_exception(e, request.app.debug)
         else:
             # A function or webapp2.RequestHandler: just call it.
             handler_spec(request, response)
