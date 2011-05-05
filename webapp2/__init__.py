@@ -16,18 +16,18 @@ import urllib
 import urlparse
 
 from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_bare_wsgi_app, run_wsgi_app
+from google.appengine.ext.webapp import util
 
 import webob
-import webob.exc
+from webob import exc
 
 #: Base HTTP exception, set here as public interface.
-HTTPException = webob.exc.HTTPException
+HTTPException = exc.HTTPException
 
-# Value used for missing default values.
+#: Value used for missing default values.
 DEFAULT_VALUE = object()
 
-# Value used for required values.
+#: Value used for required values.
 REQUIRED_VALUE = object()
 
 #: Regex for URL definitions.
@@ -988,11 +988,11 @@ class Router(object):
         :param response:
             A :class:`Response` instance.
         :raises:
-            ``webob.exc.HTTPNotFound`` if no route matched.
+            ``exc.HTTPNotFound`` if no route matched.
         """
         match = self.match(request)
         if not match:
-            raise webob.exc.HTTPNotFound()
+            raise exc.HTTPNotFound()
 
         request.route, request.route_args, request.route_kwargs = match
         route, args, kwargs = match
@@ -1013,10 +1013,10 @@ class Router(object):
             # webapp.RequestHandler: call initialize() and the request method.
             handler = handler_spec()
             handler.initialize(request, response)
-            method = getattr(handler, _normalize_method(request.method))
+            method = getattr(handler, _normalize_method(request.method), None)
             if not method:
                 # 501 Not Implemented.
-                raise webob.exc.HTTPNotImplemented()
+                raise exc.HTTPNotImplemented()
             method(*args, **kwargs)
         else:
             # A function or webapp2.RequestHandler: just call it.
@@ -1211,13 +1211,13 @@ class WSGIApplication(object):
             try:
                 if request.method not in self.allowed_methods:
                     # 501 Not Implemented.
-                    raise webob.exc.HTTPNotImplemented()
+                    raise exc.HTTPNotImplemented()
 
                 self.router.dispatch(request, response)
             except Exception, e:
                 try:
                     self.handle_exception(request, response, e)
-                except webob.exc.WSGIHTTPException, e:
+                except exc.WSGIHTTPException, e:
                     # Use the exception as response.
                     response = e
                 except Exception, e:
@@ -1227,7 +1227,7 @@ class WSGIApplication(object):
                         raise
 
                     # 500 Internal Server Error.
-                    response = webob.exc.HTTPInternalServerError()
+                    response = exc.HTTPInternalServerError()
 
             return response(environ, start_response)
 
@@ -1235,7 +1235,7 @@ class WSGIApplication(object):
         """Handles an exception. To set app-wide error handlers, define them
         using the corresponent HTTP status code in the ``error_handlers``
         dictionary of :class:`WSGIApplication`. For example, to set a custom
-        `Not Found` page::
+        `Not Found` error handler::
 
             def handle_404(request, response, exception):
                 response.out.write('Oops! I could swear this page was here!')
@@ -1252,11 +1252,7 @@ class WSGIApplication(object):
         exception is re-raised.
 
         .. note::
-           Although being a :class:`RequestHandler`, the error handler will
-           execute the ``handle_exception`` method after instantiation, instead
-           of the method corresponding to the current request.
-
-           Also, the error handler is responsible for setting the response
+           The error handler is responsible for setting the response
            status code, as shown in the example above.
 
         :param request:
@@ -1264,7 +1260,7 @@ class WSGIApplication(object):
         :param response:
             A :class:`Response` instance.
         :param e:
-            The raised exception.
+            The caught exception.
         """
         if isinstance(e, HTTPException):
             code = e.code
@@ -1315,9 +1311,9 @@ class WSGIApplication(object):
             which doesn't add WSGI middleware.
         """
         if bare:
-            run_bare_wsgi_app(self)
+            util.run_bare_wsgi_app(self)
         else:
-            run_wsgi_app(self)
+            util.run_wsgi_app(self)
 
 
 def abort(code, *args, **kwargs):
@@ -1325,14 +1321,14 @@ def abort(code, *args, **kwargs):
     *args* and *kwargs*.
 
     :param code:
-        A valid HTTP error code from ``webob.exc.status_map``, a dictionary
+        A valid HTTP error code from ``exc.status_map``, a dictionary
         mapping status codes to subclasses of ``HTTPException``.
     :param args:
-        Arguments to be used to instantiate the exception.
+        Positional arguments to instantiate the exception.
     :param kwargs:
-        Keyword arguments to be used to instantiate the exception.
+        Keyword arguments to instantiate the exception.
     """
-    cls = webob.exc.status_map.get(code)
+    cls = exc.status_map.get(code)
     if not cls:
         raise KeyError('No exception is defined for code %r.' % code)
 
