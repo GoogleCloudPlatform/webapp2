@@ -169,6 +169,12 @@ class RequestHandler(object):
         self.app = WSGIApplication.app
 
     def dispatch(self):
+        """Dispatches the request.
+
+        This will first check if there's a handler_method defined in the
+        matched route, and if not it'll use the method correspondent to the
+        request method (get, post etc).
+        """
         method_name = self.request.route.handler_method
         if not method_name:
             method_name = _normalize_method(self.request.method)
@@ -1008,6 +1014,9 @@ class Router(object):
             handler = handler_spec()
             handler.initialize(request, response)
             method = getattr(handler, _normalize_method(request.method))
+            if not method:
+                # 501 Not Implemented.
+                raise webob.exc.HTTPNotImplemented()
             method(*args, **kwargs)
         else:
             # A function or webapp2.RequestHandler: just call it.
