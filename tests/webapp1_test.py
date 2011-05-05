@@ -8,8 +8,6 @@ from google.appengine.ext import webapp
 
 import webapp2
 
-from webtest import TestApp
-
 import test_base
 
 
@@ -23,8 +21,6 @@ app = webapp.WSGIApplication([
     (r'/test/(.*)', NewStyleHandler),
 ])
 
-test_app = TestApp(app)
-
 # New WSGIApplication, old RequestHandler.
 class OldStyleHandler(webapp.RequestHandler):
     def get(self, text):
@@ -34,29 +30,31 @@ app2 = webapp2.WSGIApplication([
     (r'/test/(.*)', OldStyleHandler),
 ])
 
-test_app2 = TestApp(app2)
-
 
 class TestWSGIApplication(test_base.BaseTestCase):
     def test_old_app_new_handler(self):
-        res = test_app.get('/test/foo')
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.body, 'foo')
+        req = webapp2.Request.blank('/test/foo')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.body, 'foo')
 
-        res = test_app.get('/test/bar')
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.body, 'bar')
+        req = webapp2.Request.blank('/test/bar')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.body, 'bar')
 
 
 class TestRequestHandler(test_base.BaseTestCase):
     def test_new_app_old_handler(self):
-        res = test_app2.get('/test/foo')
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.body, 'foo')
+        req = webapp2.Request.blank('/test/foo')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.body, 'foo')
 
-        res = test_app2.get('/test/bar')
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.body, 'bar')
+        req = webapp2.Request.blank('/test/bar')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.body, 'bar')
 
 
 if __name__ == '__main__':

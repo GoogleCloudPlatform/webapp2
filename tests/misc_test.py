@@ -4,8 +4,6 @@ Tests for webapp2 RequestHandler
 """
 import unittest
 
-from webtest import TestApp
-
 import webob
 import webob.exc
 

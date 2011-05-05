@@ -40,16 +40,14 @@ _ROUTE_REGEX = re.compile(r'''
 
 
 class Request(webapp.Request):
-    #: A reference to the WSGIApplication instance.
+    #: A reference to the :class:`WSGIApplication` instance.
     app = None
-    #: The matched route.
+    #: A reference to the matched :class:`Route`.
     route = None
     #: The matched route positional arguments.
     route_args = None
     #: The matched route keyword arguments.
     route_kwargs = None
-    #: Store exceptions so exception handler functions can access it.
-    exception = None
 
     def __init__(self, *args, **kwargs):
         super(Request, self).__init__(*args, **kwargs)
@@ -121,6 +119,13 @@ class RequestHandler(object):
 
     Implements most of ``webapp.RequestHandler`` interface.
     """
+    #: A :class:`Request` instance.
+    request = None
+    #: A :class:`Response` instance.
+    response = None
+    #: A :class:`WSGIApplication` instance.
+    app = None
+
     def __init__(self, request=None, response=None):
         """Initializes this request handler with the given WSGI application,
         Request and Response.
@@ -134,15 +139,14 @@ class RequestHandler(object):
         :param response:
             A :class:`Response` instance.
         """
+        if not request or not response:
+            # When dispatched by webapp.WSGIApplication, both are None.
+            return
+
         self.request = request
         self.response = response
-        if request and response:
-            # Only when using webapp2.Router. When dispatched by
-            # webapp.WSGIApplication, request and response are None.
-            self.app = request.app
-            if request.route:
-                # Dispatch if route was matched.
-                self.dispatch()
+        self.app = request.app
+        self.dispatch()
 
     def initialize(self, request, response):
         """Initializes this request handler with the given WSGI application,
@@ -167,7 +171,7 @@ class RequestHandler(object):
     def dispatch(self):
         method_name = self.request.route.handler_method
         if not method_name:
-            method_name = self.request.method.lower().replace('-', '_')
+            method_name = _normalize_method(self.request.method)
 
         method = getattr(self, method_name, None)
         if method is None:
@@ -178,7 +182,6 @@ class RequestHandler(object):
             valid = ', '.join(self.get_valid_methods())
             self.abort(405, headers=[('Allow', valid)])
 
-        # Execute the method.
         try:
             method(*self.request.route_args, **self.request.route_kwargs)
         except Exception, e:
@@ -192,7 +195,7 @@ class RequestHandler(object):
         """
         methods = []
         for method in self.app.allowed_methods:
-            if getattr(self, method.lower().replace('-', '_'), None):
+            if getattr(self, _normalize_method(method), None):
                 methods.append(method)
 
         return methods
@@ -994,18 +997,21 @@ class Router(object):
 
             request.route.handler = handler_spec = self._handlers[handler_spec]
 
-        if isinstance(handler_spec, type) and \
-            issubclass(handler_spec, webapp.RequestHandler):
-            # Support webapp: use initialize() and call the request method
-            # directly. No duck-typing here.
+        try:
+            # Functions don't like issubclass().
+            is_webapp = issubclass(handler_spec, webapp.RequestHandler)
+        except TypeError:
+            is_webapp = False
+
+        if is_webapp:
+            # webapp.RequestHandler: call initialize() and the request method.
             handler = handler_spec()
             handler.initialize(request, response)
-            method_name = request.method.lower().replace('-', '_')
-            method = getattr(handler, method_name)
+            method = getattr(handler, _normalize_method(request.method))
             method(*args, **kwargs)
         else:
-            # A function or webapp2.RequestHandler.
-            handler = handler_spec(request, response)
+            # A function or webapp2.RequestHandler: just call it.
+            handler_spec(request, response)
 
     def build(self, name, request, args, kwargs):
         """Builds and returns a URL for a named :class:`Route`.
@@ -1222,7 +1228,7 @@ class WSGIApplication(object):
         dictionary of :class:`WSGIApplication`. For example, to set a custom
         `Not Found` page::
 
-            def handle_404(request, response):
+            def handle_404(request, response, exception):
                 response.out.write('Oops! I could swear this page was here!')
                 response.set_status(404)
 
@@ -1256,12 +1262,10 @@ class WSGIApplication(object):
         else:
             code = 500
 
-        handler_spec = self.error_handlers.get(code)
-        if handler_spec:
-            # Store the exception so it is available for functions.
-            request.exception = e
+        error_handler = self.error_handlers.get(code)
+        if error_handler:
             # Handle the exception using a custom handler.
-            handler = handler_spec(request, response)
+            handler = error_handler(request, response, e)
         else:
             # No exception handler. Catch it in the WSGI app.
             raise
@@ -1431,6 +1435,10 @@ def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):
         fragment = urllib.quote(to_utf8(fragment))
 
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
+
+
+def _normalize_method(method):
+    return method.lower().replace('-', '_')
 
 
 Request.ResponseClass = Response
