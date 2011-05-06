@@ -148,10 +148,10 @@ class TestRoute(test_base.BaseTestCase):
         router = Router(None)
         router.add(Route('/<year:\d{4}>', None, name='year-page'))
 
-        url = router.build('year-page', Request.blank('/'), (), dict(year='2010'))
+        url = router.build(Request.blank('/'), 'year-page', (), dict(year='2010'))
         self.assertEqual(url, '/2010')
 
-        self.assertRaises(KeyError, router.build, 'i-dont-exist', Request.blank('/'), (), dict(year='2010'))
+        self.assertRaises(KeyError, router.build, Request.blank('/'), 'i-dont-exist', (), dict(year='2010'))
 
     def test_reverse_template(self):
         route = Route('/foo', None)
@@ -180,8 +180,8 @@ class TestRoute(test_base.BaseTestCase):
     def test_build_full_without_request(self):
         router = Router(None)
         router.add(Route(r'/hello', None, name='hello'))
-        self.assertRaises(AttributeError, router.build, 'hello', None, (), dict(_full=True))
-        self.assertRaises(AttributeError, router.build, 'hello', None, (), dict(_scheme='https'))
+        self.assertRaises(AttributeError, router.build, None, 'hello', (), dict(_full=True))
+        self.assertRaises(AttributeError, router.build, None, 'hello', (), dict(_scheme='https'))
 
     def test_positions(self):
         template = '/<:\d+>' * 98

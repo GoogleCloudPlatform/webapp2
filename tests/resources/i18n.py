@@ -1,7 +1,7 @@
-from webapp2 import REQUIRED_VALUE
+from webapp2_extras import config
 
 default_config = {
     'locale': 'en_US',
     'timezone': 'America/Chicago',
-    'required': REQUIRED_VALUE,
+    'required': config.REQUIRED_VALUE,
 }

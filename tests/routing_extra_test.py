@@ -7,8 +7,8 @@ import unittest
 
 import webapp2
 
-from extras.routes import (DomainRoute, HandlerPrefixRoute, ImprovedRoute,
-    NamePrefixRoute, PathPrefixRoute)
+from webapp2_extras.routes import (DomainRoute, HandlerPrefixRoute,
+    ImprovedRoute, NamePrefixRoute, PathPrefixRoute)
 
 import test_base
 
@@ -92,32 +92,32 @@ class TestPrefixRoutes(test_base.BaseTestCase):
         path = '/a/'
         match = ((), {})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build('name-a', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a', match[0], match[1]), path)
 
         path = '/a/b'
         match = ((), {})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build('name-a/b', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a/b', match[0], match[1]), path)
 
         path = '/a/c'
         match = ((), {})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build('name-a/c', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a/c', match[0], match[1]), path)
 
         path = '/a/d/'
         match = ((), {})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build('name-a/d', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a/d', match[0], match[1]), path)
 
         path = '/a/d/b'
         match = ((), {})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build('name-a/d/b', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a/d/b', match[0], match[1]), path)
 
         path = '/a/d/c'
         match = ((), {})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build('name-a/d/c', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a/d/c', match[0], match[1]), path)
 
     def test_with_variables_name_and_handler(self):
         router = webapp2.Router(None, [
@@ -135,17 +135,17 @@ class TestPrefixRoutes(test_base.BaseTestCase):
         path = '/user/calvin/'
         match = ((), {'username': 'calvin'})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build('user-overview', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-overview', match[0], match[1]), path)
 
         path = '/user/calvin/profile'
         match = ((), {'username': 'calvin'})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build('user-profile', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-profile', match[0], match[1]), path)
 
         path = '/user/calvin/projects'
         match = ((), {'username': 'calvin'})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build('user-projects', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-projects', match[0], match[1]), path)
 
 
 class TestDomainRoute(test_base.BaseTestCase):
@@ -167,7 +167,7 @@ class TestDomainRoute(test_base.BaseTestCase):
         match = router.match(webapp2.Request.blank('http://another-subdomain.app-id.appspot.com/foo'))
         self.assertEqual(match[1:], ((), {'_host_match': ('another-subdomain',)}))
 
-        url = router.build('subdomain-thingie', None, (), {'_netloc': 'another-subdomain.app-id.appspot.com'})
+        url = router.build(None, 'subdomain-thingie', (), {'_netloc': 'another-subdomain.app-id.appspot.com'})
         self.assertEqual(url, 'http://another-subdomain.app-id.appspot.com/foo')
 
     def test_with_variables_name_and_handler(self):
@@ -192,21 +192,21 @@ class TestDomainRoute(test_base.BaseTestCase):
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
         match[1].pop('_host_match')
         match[1]['_netloc'] = 'my-subdomain.app-id.appspot.com'
-        self.assertEqual(router.build('user-overview', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-overview', match[0], match[1]), path)
 
         path = 'http://my-subdomain.app-id.appspot.com/user/calvin/profile'
         match = ((), {'username': 'calvin', '_host_match': ('my-subdomain',)})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
         match[1].pop('_host_match')
         match[1]['_netloc'] = 'my-subdomain.app-id.appspot.com'
-        self.assertEqual(router.build('user-profile', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-profile', match[0], match[1]), path)
 
         path = 'http://my-subdomain.app-id.appspot.com/user/calvin/projects'
         match = ((), {'username': 'calvin', '_host_match': ('my-subdomain',)})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
         match[1].pop('_host_match')
         match[1]['_netloc'] = 'my-subdomain.app-id.appspot.com'
-        self.assertEqual(router.build('user-projects', webapp2.Request.blank('/'), match[0], match[1]), path)
+        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-projects', match[0], match[1]), path)
 
 
 if __name__ == '__main__':

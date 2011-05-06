@@ -24,12 +24,6 @@ from webob import exc
 #: Base HTTP exception, set here as public interface.
 HTTPException = exc.HTTPException
 
-#: Value used for missing default values.
-DEFAULT_VALUE = object()
-
-#: Value used for required values.
-REQUIRED_VALUE = object()
-
 #: Regex for URL definitions.
 _ROUTE_REGEX = re.compile(r'''
     \<            # The exact character "<"
@@ -199,12 +193,7 @@ class RequestHandler(object):
         :returns:
             A list of HTTP methods supported by this handler.
         """
-        methods = []
-        for method in self.app.allowed_methods:
-            if getattr(self, _normalize_method(method), None):
-                methods.append(method)
-
-        return methods
+        return get_valid_methods(self)
 
     def error(self, code):
         """Clears the response output stream and sets the given HTTP error
@@ -283,71 +272,9 @@ class RequestHandler(object):
     def url_for(self, _name, *args, **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
-        For example, if you have these routes defined for the application::
-
-            app = WSGIApplication([
-                Route(r'/', 'handlers.HomeHandler', 'home'),
-                Route(r'/wiki', WikiHandler, 'wiki'),
-                Route(r'/wiki/<page>', WikiHandler, 'wiki-page'),
-            ])
-
-        Here are some examples of how to generate URLs inside a handler::
-
-            # /
-            url = self.url_for('home')
-            # http://localhost:8080/
-            url = self.url_for('home', _full=True)
-            # /wiki
-            url = self.url_for('wiki')
-            # http://localhost:8080/wiki
-            url = self.url_for('wiki', _full=True)
-            # http://localhost:8080/wiki#my-heading
-            url = self.url_for('wiki', _full=True, _anchor='my-heading')
-            # /wiki/my-first-page
-            url = self.url_for('wiki-page', page='my-first-page')
-            # /wiki/my-first-page?format=atom
-            url = self.url_for('wiki-page', page='my-first-page', format='atom')
-
-        :param _name:
-            The route name.
-        :param args:
-            Positional arguments to build the URL. All positional variables
-            defined in the route must be passed and must conform to the
-            format set in the route. Extra arguments are ignored.
-        :param kwargs:
-            Keyword arguments to build the URL. All variables not set in the
-            route default values must be passed and must conform to the format
-            set in the route. Extra keywords are appended as URL arguments.
-
-            A few keywords have special meaning:
-
-            - **_full**: If True, builds an absolute URL.
-            - **_scheme**: URL scheme, e.g., `http` or `https`. If defined,
-              an absolute URL is always returned.
-            - **_netloc**: Network location, e.g., `www.google.com`. If
-              defined, an absolute URL is always returned.
-            - **_anchor**: If set, appends an anchor to generated URL.
-        :returns:
-            An absolute or relative URL.
-
-        .. note::
-           This method, like :meth:`WSGIApplication.url_for`, needs the request
-           attribute to be set to build absolute URLs. This is because some
-           routes may need to retrieve information from the request to set the
-           URL host. We pass the request object explicitly instead of relying
-           on ``os.environ`` mainly for better testability, but it also helps
-           middleware.
-
         .. seealso:: :meth:`Router.build`.
         """
-        return self.app.router.build(_name, self.request, args, kwargs)
-
-    def get_config(self, module, key=None, default=REQUIRED_VALUE):
-        """Returns a configuration value for a module.
-
-        .. seealso:: :meth:`Config.get_config`.
-        """
-        return self.app.config.get_config(module, key=key, default=default)
+        return self.app.router.build(self.request, _name, args, kwargs)
 
     def handle_exception(self, exception, debug_mode):
         """Called if this handler throws an exception during execution.
@@ -423,6 +350,8 @@ class cached_property(object):
 
     This class was borrowed from `Werkzeug`_.
     """
+    _default_value = object()
+
     def __init__(self, func, name=None, doc=None):
         self.__name__ = name or func.__name__
         self.__module__ = func.__module__
@@ -433,204 +362,10 @@ class cached_property(object):
         if obj is None:
             return self
 
-        value = obj.__dict__.get(self.__name__, DEFAULT_VALUE)
-        if value is DEFAULT_VALUE:
+        value = obj.__dict__.get(self.__name__, self._default_value)
+        if value is self._default_value:
             value = self.func(obj)
             obj.__dict__[self.__name__] = value
-
-        return value
-
-
-class Config(dict):
-    """A simple configuration dictionary keyed by module name. This is a
-    dictionary of dictionaries. It requires all values to be dictionaries
-    and applies updates and default values to the inner dictionaries instead
-    of the first level one.
-
-    The configuration object is available as a ``config`` attribute of
-    :class:`WSGIApplication`. If is instantiated and populated when the app
-    is built::
-
-        config = {}
-
-        config['my.module'] = {
-            'foo': 'bar',
-        }
-
-        app = WSGIApplication(routes=[Rule('/', name='home', handler=MyHandler)], config=config)
-
-    Then to read configuration values, use :meth:`RequestHandler.get_config`::
-
-        class MyHandler(RequestHandler):
-            def get(self):
-                foo = self.get_config('my.module', 'foo')
-
-                # ...
-    """
-    #: Loaded module configurations.
-    loaded = None
-
-    def __init__(self, values=None, defaults=None):
-        """Initializes the configuration object.
-
-        :param values:
-            A dictionary of configuration dictionaries for modules.
-        :param defaults:
-            A dictionary of configuration dictionaries for initial default
-            values. These modules are marked as loaded.
-        """
-        self.loaded = []
-        if values is not None:
-            assert isinstance(values, dict)
-            for module, config in values.iteritems():
-                self.update(module, config)
-
-        if defaults is not None:
-            assert isinstance(defaults, dict)
-            for module, config in defaults.iteritems():
-                self.setdefault(module, config)
-                self.loaded.append(module)
-
-    def __getitem__(self, module):
-        """Returns the configuration for a module. If it is not already
-        set, loads a ``default_config`` variable from the given module and
-        updates the configuration with those default values
-
-        Every module that allows some kind of configuration sets a
-        ``default_config`` global variable that is loaded by this function,
-        cached and used in case the requested configuration was not defined
-        by the user.
-
-        :param module:
-            The module name.
-        :returns:
-            A configuration value.
-        """
-        if module not in self.loaded:
-            # Load default configuration and update config.
-            values = import_string(module + '.default_config', silent=True)
-            if values:
-                self.setdefault(module, values)
-
-            self.loaded.append(module)
-
-        try:
-            return dict.__getitem__(self, module)
-        except KeyError:
-            raise KeyError('Module %r is not configured.' % module)
-
-    def __setitem__(self, module, values):
-        """Sets a configuration for a module, requiring it to be a dictionary.
-
-        :param module:
-            A module name for the configuration, e.g.: `webapp2.ext.i18n`.
-        :param values:
-            A dictionary of configurations for the module.
-        """
-        assert isinstance(values, dict), 'Module configuration must be a dict.'
-        dict.__setitem__(self, module, SubConfig(module, values))
-
-    def get(self, module, default=DEFAULT_VALUE):
-        """Returns a configuration for a module. If default is not provided,
-        returns an empty dict if the module is not configured.
-
-        :param module:
-            The module name.
-        :params default:
-            Default value to return if the module is not configured. If not
-            set, returns an empty dict.
-        :returns:
-            A module configuration.
-        """
-        if default is DEFAULT_VALUE:
-            default = {}
-
-        return dict.get(self, module, default)
-
-    def setdefault(self, module, values):
-        """Sets a default configuration dictionary for a module.
-
-        :param module:
-            The module to set default configuration, e.g.: `webapp2.ext.i18n`.
-        :param values:
-            A dictionary of configurations for the module.
-        :returns:
-            The module configuration dictionary.
-        """
-        assert isinstance(values, dict), 'Module configuration must be a dict.'
-        if module not in self:
-            dict.__setitem__(self, module, SubConfig(module))
-
-        module_dict = dict.__getitem__(self, module)
-
-        for key, value in values.iteritems():
-            module_dict.setdefault(key, value)
-
-        return module_dict
-
-    def update(self, module, values):
-        """Updates the configuration dictionary for a module.
-
-        :param module:
-            The module to update the configuration, e.g.: `webapp2.ext.i18n`.
-        :param values:
-            A dictionary of configurations for the module.
-        """
-        assert isinstance(values, dict), 'Module configuration must be a dict.'
-        if module not in self:
-            dict.__setitem__(self, module, SubConfig(module))
-
-        dict.__getitem__(self, module).update(values)
-
-    def get_config(self, module, key=None, default=REQUIRED_VALUE):
-        """Returns a configuration value for a module and optionally a key.
-        Will raise a KeyError if they the module is not configured or the key
-        doesn't exist and a default is not provided.
-
-        :param module:
-            The module name.
-        :params key:
-            The configuration key.
-        :param default:
-            Default value to return if the key doesn't exist.
-        :returns:
-            A module configuration.
-        """
-        module_dict = self.__getitem__(module)
-
-        if key is None:
-            return module_dict
-
-        return module_dict.get(key, default)
-
-
-class SubConfig(dict):
-    def __init__(self, module, values=None):
-        dict.__init__(self, values or ())
-        self.module = module
-
-    def __getitem__(self, key):
-        try:
-            value = dict.__getitem__(self, key)
-        except KeyError:
-            raise KeyError('Module %r does not have the config key %r' %
-                (self.module, key))
-
-        if value is REQUIRED_VALUE:
-            raise KeyError('Module %r requires the config key %r to be '
-                'set.' % (self.module, key))
-
-        return value
-
-    def get(self, key, default=None):
-        if key not in self:
-            value = default
-        else:
-            value = dict.__getitem__(self, key)
-
-        if value is REQUIRED_VALUE:
-            raise KeyError('Module %r requires the config key %r to be '
-                'set.' % (self.module, key))
 
         return value
 
@@ -664,7 +399,7 @@ class BaseRoute(object):
         """Builds and returns a URL for this route.
 
         :param request:
-            The current ``Request`` object.
+            The current :class:`Request` object.
         :param args:
             Tuple of positional arguments to build the URL.
         :param kwargs:
@@ -791,8 +526,6 @@ class Route(BaseRoute):
         :param handler:
             A :class:`RequestHandler` class or dotted name for a class to be
             lazily imported, e.g., ``my.module.MyHandler``.
-        :param handler_method:
-            A custom handler method to be used.
         :param name:
             The name of this route, used to build URLs based on it.
         :param defaults:
@@ -801,6 +534,8 @@ class Route(BaseRoute):
             when they are missing.
         :param build_only:
             If True, this route never matches and is used only to build URLs.
+        :param handler_method:
+            A custom handler method to be used.
         """
         self.template = template
         self.handler = handler
@@ -1015,8 +750,8 @@ class Router(object):
             handler.initialize(request, response)
             method = getattr(handler, _normalize_method(request.method), None)
             if not method:
-                # 501 Not Implemented.
-                raise exc.HTTPNotImplemented()
+                valid = ', '.join(get_valid_methods(handler))
+                abort(405, headers=[('Allow', valid)])
 
             try:
                 method(*args, **kwargs)
@@ -1026,21 +761,65 @@ class Router(object):
             # A function or webapp2.RequestHandler: just call it.
             handler_spec(request, response)
 
-    def build(self, name, request, args, kwargs):
+    def build(self, request, name, args, kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
+        For example, if you have these routes defined for the application::
+
+            app = WSGIApplication([
+                Route(r'/', 'handlers.HomeHandler', 'home'),
+                Route(r'/wiki', WikiHandler, 'wiki'),
+                Route(r'/wiki/<page>', WikiHandler, 'wiki-page'),
+            ])
+
+        Here are some examples of how to generate URLs inside a handler::
+
+            # /
+            url = self.url_for('home')
+            # http://localhost:8080/
+            url = self.url_for('home', _full=True)
+            # /wiki
+            url = self.url_for('wiki')
+            # http://localhost:8080/wiki
+            url = self.url_for('wiki', _full=True)
+            # http://localhost:8080/wiki#my-heading
+            url = self.url_for('wiki', _full=True, _anchor='my-heading')
+            # /wiki/my-first-page
+            url = self.url_for('wiki-page', page='my-first-page')
+            # /wiki/my-first-page?format=atom
+            url = self.url_for('wiki-page', page='my-first-page', format='atom')
+
+        .. note::
+           This method requires the request attribute to be set to build
+           absolute URLs because some routes may need to retrieve information
+           from the request to set the URL host. We pass the request object
+           explicitly instead of relying on ``os.environ`` for better
+           testability.
+
+        :param request:
+            The current :class:`Request` object.
         :param name:
             The route name.
-        :param request:
-            The current ``Request`` object.
         :param args:
-            Tuple of positional arguments to build the URL.
+            Tuple of positional arguments to build the URL. All positional
+            variables defined in the route must be passed and must conform
+            to the format set in the route. Extra arguments are ignored.
         :param kwargs:
-            Dictionary of keyword arguments to build the URL.
+            Dictionary of keyword arguments to build the URL. All variables
+            not set in the route default values must be passed and must
+            conform to the format set in the route. Extra keywords are
+            appended as URL arguments.
+
+            A few keywords have special meaning:
+
+            - **_full**: If True, builds an absolute URL.
+            - **_scheme**: URL scheme, e.g., `http` or `https`. If defined,
+              an absolute URL is always returned.
+            - **_netloc**: Network location, e.g., `www.google.com`. If
+              defined, an absolute URL is always returned.
+            - **_anchor**: If set, appends an anchor to generated URL.
         :returns:
             An absolute or relative URL.
-
-        .. seealso:: :meth:`RequestHandler.url_for`.
         """
         route = self.build_routes.get(name)
         if not route:
@@ -1091,9 +870,10 @@ class RequestContext(object):
         """Exits the request context.
 
         This release the context locals except if an exception is caught
-        in debug mode. In this case the locals are kept to be inspected.
+        in debug mode. In this case they are kept to be inspected.
         """
         if exc_type is None or not self.app.debug:
+            # Unregister global variables.
             self.app.set_globals(app=None, request=None)
 
 
@@ -1133,16 +913,14 @@ class WSGIApplication(object):
     .. seealso:: :class:`Route`.
     """
     #: Allowed request methods.
-    allowed_methods = ('GET', 'POST', 'HEAD', 'OPTIONS', 'PUT',
-        'DELETE', 'TRACE')
+    allowed_methods = frozenset(('GET', 'POST', 'HEAD', 'OPTIONS', 'PUT',
+                                 'DELETE', 'TRACE'))
     #: Default class used for the request object.
     request_class = Request
     #: Default class used for the response object.
     response_class = Response
     #: Default class used for the router object.
     router_class = Router
-    #: Default class used for the config object.
-    config_class = Config
     #: Context class used when a request comes in.
     request_context_class = RequestContext
     #: Global variables.
@@ -1151,18 +929,16 @@ class WSGIApplication(object):
     #: Same as app, for compatibility with webapp.
     active_instance = None
 
-    def __init__(self, routes=None, debug=False, config=None):
+    def __init__(self, routes=None, debug=False):
         """Initializes the WSGI application.
 
         :param routes:
-            List of URL definitions as tuples ``(route, RequestHandler class)``.
+            List of URL definitions as tuples (route, RequestHandler class)
+            or :class:`Route` instances.
         :param debug:
             True if this is debug mode, False otherwise.
-        :param config:
-            A configuration dictionary for the application.
         """
         self.debug = debug
-        self.config = self.config_class(config)
         self.router = self.router_class(self, routes)
         # A dictionary mapping HTTP error codes to :class:`RequestHandler`
         # classes used to handle them.
@@ -1175,10 +951,17 @@ class WSGIApplication(object):
     def set_globals(self, app=None, request=None):
         """Registers the global variables for app and request.
 
-        App Engine doesn't have threading, so we just assign them directly.
+        App Engine doesn't support threading, so we just assign them directly.
         For a threaded environment, direct assignment must be replaced by
         assigning to a proxy object that returns app and request using
-        thread locals.
+        thread-local.
+
+        :param app:
+            A :class:`WSGIApplication` instance or None to remove it from
+            the globals.
+        :param request:
+            A :class:`Request` instance or None to remove it from
+            the globals.
         """
         cls = WSGIApplication
         cls.app = cls.active_instance = app
@@ -1282,26 +1065,19 @@ class WSGIApplication(object):
     def url_for(self, _name, *args, **kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
-        .. seealso:: :meth:`RequestHandler.url_for` and :meth:`Router.build`.
+        .. seealso:: :meth:`Router.build`.
         """
-        return self.router.build(_name, self.request, args, kwargs)
-
-    def get_config(self, module, key=None, default=REQUIRED_VALUE):
-        """Returns a configuration value for a module.
-
-        .. seealso:: :meth:`Config.get_config`.
-        """
-        return self.config.get_config(module, key=key, default=default)
+        return self.router.build(self.request, _name, args, kwargs)
 
     def run(self, bare=False):
         """Runs the app using ``google.appengine.ext.webapp.util.run_wsgi_app``.
         This is generally called inside a ``main()`` function of the file
         mapped in *app.yaml* to run the application::
 
-            # ...
+            import webapp2
 
-            app = WSGIApplication([
-                Route(r'/', HelloWorldHandler),
+            app = webapp2.WSGIApplication([
+                webapp2.Route(r'/', 'handlers.HelloWorldHandler'),
             ])
 
             def main():
@@ -1318,6 +1094,27 @@ class WSGIApplication(object):
             util.run_bare_wsgi_app(self)
         else:
             util.run_wsgi_app(self)
+
+
+def get_valid_methods(handler):
+    """Returns a list of request methods supported by this handler.
+
+    :param handler:
+        A :class:`RequestHandler` instance.
+    :returns:
+        A list of HTTP methods supported by this handler.
+    """
+    # webapp won't have the list of allowed methods defined so we fallback to
+    # the class attribute.
+    cls = WSGIApplication
+    allowed_methods = getattr(cls.active_instance,
+                              'allowed_methods', cls.allowed_methods)
+    methods = []
+    for method in allowed_methods:
+        if getattr(handler, _normalize_method(method), None):
+            methods.append(method)
+
+    return methods
 
 
 def abort(code, *args, **kwargs):
