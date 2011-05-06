@@ -24,6 +24,7 @@ setup(
     platforms = 'any',
     packages = [
         'webapp2',
+        'webapp2_extras',
     ],
     classifiers = [
         'Development Status :: 5 - Production/Stable',
