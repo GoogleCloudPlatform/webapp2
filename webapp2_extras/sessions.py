@@ -1,13 +1,15 @@
 import webapp2
 
+from webapp2_extras import config as webapp_config
 from webapp2_extras import json
 from webapp2_extras import securecookie
+
 
 #: Default configuration values for this module. Keys are:
 #:
 #: secret_key
 #:     Secret key to generate session cookies. Set this to something random
-#:     and unguessable. Default is :data:`tipfy.REQUIRED_VALUE` (an exception
+#:     and unguessable. Default is `REQUIRED_VALUE` (an exception
 #:     is raised if it is not set).
 #:
 #: cookie_name
@@ -39,7 +41,7 @@ from webapp2_extras import securecookie
 #:
 #:     - httponly: Disallow JavaScript to access the cookie.
 default_config = {
-    'secret_key':      webapp2.REQUIRED_VALUE,
+    'secret_key':      webapp_config.REQUIRED_VALUE,
     'cookie_name':     'session',
     'session_max_age': None,
     'cookie_args': {
@@ -150,7 +152,7 @@ class BaseSessionFactory(object):
 
 class SecureCookieSessionFactory(BaseSessionFactory):
     """A session that stores data serialized in a signed cookie."""
-    def get_session(self, max_age=webapp2.DEFAULT_VALUE):
+    def get_session(self, max_age=webapp_config.DEFAULT_VALUE):
         if self.session is None:
             data = self.session_store.get_secure_cookie(self.name,
                                                         max_age=max_age)
@@ -168,6 +170,39 @@ class SecureCookieSessionFactory(BaseSessionFactory):
 
 
 class SessionStore(object):
+    """A session provider.
+
+    Example usage. Define a base handler that extends dispatch() method to
+    start the session store and save all sessions at the end of a request::
+
+        import webapp2
+
+        from webapp2_extras import sessions
+
+        class BaseHandler(webapp2.RequestHandler):
+            def dispatch(self):
+                # Start the session store.
+                self.session_store = sessions.SessionStore(self.request)
+
+                # Dispatch the request.
+                webapp2.RequestHandler.dispatch(self)
+
+                # Save all sessions.
+                self.session_store.save_sessions(self.response)
+
+            @webapp2.cached_property
+            def session(self):
+                # Returns a session using the default cookie key.
+                return self.session_store.get_session()
+
+    Then just use the session as a dictionary inside a handler::
+
+        # To set a value:
+        self.session['foo'] = 'bar'
+
+        # To get a value:
+        foo = self.session.get('foo')
+    """
     def __init__(self, request):
         self.request = request
         # Base configuration.
@@ -186,7 +221,7 @@ class SessionStore(object):
 
         return self.sessions[name]
 
-    def get_session(self, name=None, max_age=webapp2.DEFAULT_VALUE,
+    def get_session(self, name=None, max_age=webapp_config.DEFAULT_VALUE,
                     factory=SecureCookieSessionFactory):
         """Returns a session for a given name. If the session doesn't exist, a
         new session is returned.
@@ -199,7 +234,7 @@ class SessionStore(object):
         """
         name = name or self.config['cookie_name']
 
-        if max_age is webapp2.DEFAULT_VALUE:
+        if max_age is webapp_config.DEFAULT_VALUE:
             max_age = self.config['session_max_age']
 
         container = self._get_session_container(name, factory)
@@ -207,7 +242,7 @@ class SessionStore(object):
 
     # Signed cookies ----------------------------------------------------------
 
-    def get_secure_cookie(self, name, max_age=webapp2.DEFAULT_VALUE):
+    def get_secure_cookie(self, name, max_age=webapp_config.DEFAULT_VALUE):
         """Returns a deserialized secure cookie value.
 
         :param name:
@@ -218,7 +253,7 @@ class SessionStore(object):
         :returns:
             A secure cookie value or None if it is not set.
         """
-        if max_age is webapp2.DEFAULT_VALUE:
+        if max_age is webapp_config.DEFAULT_VALUE:
             max_age = self.config['session_max_age']
 
         value = self.request.cookies.get(name)
