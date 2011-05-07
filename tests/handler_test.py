@@ -384,7 +384,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         request.route_args = tuple()
         request.route_kwargs = {}
         request.app = app
-        app.request = request
+        app.request = webapp2.WSGIApplication.request = request
         handler = Handler(request, webapp2.Response())
         handler.app = app
 
