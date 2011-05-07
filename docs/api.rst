@@ -1,9 +1,9 @@
 .. _contents:
 
-.. module:: webapp2
-
 API Reference
 =============
+.. module:: webapp2
+
 .. contents:: Table of Contents
    :depth: 3
    :backlinks: none
@@ -32,53 +32,54 @@ URL Routing
 .. autoclass:: Router
    :members: route_class, __init__, add, build, match, dispatch
 
-
 .. autoclass:: BaseRoute
    :members: name, build_only, match, build, get_routes, get_match_routes,
              get_build_routes
 
-
 .. autoclass:: SimpleRoute
    :members: __init__, match
-
 
 .. autoclass:: Route
    :members: __init__, match, build
 
 
-.. module:: webapp2_extras.config
-
 Configuration
 -------------
+.. module:: webapp2_extras.config
 .. autoclass:: Config
    :members: loaded, __init__, __setitem__, update, setdefault, get,
              get_config
 
 
-.. module:: webapp2_extras.json
-
 JSON
 ----
+.. module:: webapp2_extras.json
+
 .. autofunction:: encode
+
 .. autofunction:: decode
+
 .. autofunction:: b64encode
+
 .. autofunction:: b64decode
+
 .. autofunction:: quote
+
 .. autofunction:: unquote
 
 
-.. module:: webapp2_extras.securecookie
-
 Secure Cookies
 --------------
+.. module:: webapp2_extras.securecookie
+
 .. autoclass:: SecureCookieSerializer
    :members: __init__, serialize, deserialize
 
 
-.. module:: webapp2_extras.sessions
-
 Sessions
 --------
+.. module:: webapp2_extras.sessions
+
 .. autodata:: default_config
 
 .. autoclass:: SessionStore
@@ -88,19 +89,40 @@ Sessions
 .. autoclass:: SessionDict
    :members: get_flashes, add_flash
 
+Secure cookie sessions
+~~~~~~~~~~~~~~~~~~~~~~
+.. autoclass:: SecureCookieSessionFactory
 
-.. module:: webapp2
+Datastore sessions
+~~~~~~~~~~~~~~~~~~
+.. module:: webapp2_extras.sessions_ndb
+
+.. autoclass:: DatastoreSessionFactory
+
+Memcache sessions
+~~~~~~~~~~~~~~~~~
+.. module:: webapp2_extras.sessions_memcache
+
+.. autoclass:: MemcacheSessionFactory
+
 
 Utilities
 ---------
 These are some other utilities used internally that are also available for
 general use.
 
+.. module:: webapp2
+
 .. autoclass:: cached_property
+
 .. autofunction:: abort
+
 .. autofunction:: import_string
+
 .. autofunction:: to_utf8
+
 .. autofunction:: to_unicode
+
 .. autofunction:: urlunsplit
 
 

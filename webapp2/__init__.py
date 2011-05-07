@@ -599,7 +599,7 @@ class Route(BaseRoute):
                 kwargs.pop(key)) for key in \
                 kwargs.keys() if key.startswith('__')))
         else:
-            args = tuple()
+            args = ()
 
         return args, kwargs
 

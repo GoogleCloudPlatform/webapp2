@@ -3,17 +3,18 @@
     webapp2_extras.sessions
     =======================
 
-    Lightweight and flexible session support for webapp2.
+    Lightweight but robust session support for webapp2.
 
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
+import uuid
+import re
+
 import webapp2
 
 from webapp2_extras import config as webapp_config
-from webapp2_extras import json
 from webapp2_extras import securecookie
-
 
 #: Default configuration values for this module. Keys are:
 #:
@@ -64,18 +65,19 @@ default_config = {
 }
 
 
-class UpdateDictMixin(object):
+class _UpdateDictMixin(object):
     """Makes dicts call `self.on_update` on modifications.
 
     From werkzeug.datastructures.
     """
+
     on_update = None
 
     def calls_update(name):
         def oncall(self, *args, **kw):
-            rv = getattr(super(UpdateDictMixin, self), name)(*args, **kw)
+            rv = getattr(super(_UpdateDictMixin, self), name)(*args, **kw)
             if self.on_update is not None:
-                self.on_update(self)
+                self.on_update()
             return rv
         oncall.__name__ = name
         return oncall
@@ -90,40 +92,19 @@ class UpdateDictMixin(object):
     del calls_update
 
 
-class ModificationTrackingDict(UpdateDictMixin, dict):
-    """
+class SessionDict(_UpdateDictMixin, dict):
+    """A dictionary for session data."""
 
-    From werkzeug.contrib.session.
-    """
-    __slots__ = ('modified',)
+    __slots__ = ('container', 'new', 'modified')
 
-    def __init__(self, *args, **kwargs):
-        def on_update(self):
-            self.modified = True
-        self.on_update = on_update
-        self.modified = False
-        dict.update(self, *args, **kwargs)
-
-    def copy(self):
-        """Create a flat copy of the dict."""
-        missing = object()
-        result = object.__new__(self.__class__)
-        for name in self.__slots__:
-            val = getattr(self, name, missing)
-            if val is not missing:
-                setattr(result, name, val)
-        return result
-
-    def __copy__(self):
-        return self.copy()
-
-
-class SessionDict(ModificationTrackingDict):
-    __slots__ = ModificationTrackingDict.__slots__ + ('new',)
-
-    def __init__(self, data=None, new=False):
-        ModificationTrackingDict.__init__(self, data or ())
+    def __init__(self, container, data=None, new=False):
+        self.container = container
         self.new = new
+        self.modified = False
+        dict.update(self, data or ())
+
+    def on_update(self):
+        self.modified = True
 
     def get_flashes(self, key='_flash'):
         """Returns a flash message. Flash messages are deleted when first read.
@@ -153,21 +134,43 @@ class SessionDict(ModificationTrackingDict):
 
 
 class BaseSessionFactory(object):
+    """Base class for all session factories."""
+
+    #: Name of the session.
+    name = None
+    #: A reference to :class:`SessionStore`.
+    session_store = None
+    #: Keyword arguments to save the session.
+    session_args = None
+    #: The session data, a :class:`SessionDict` instance.
+    session = None
+
     def __init__(self, name, session_store):
         self.name = name
         self.session_store = session_store
         self.session_args = session_store.config['cookie_args'].copy()
         self.session = None
 
+    def get_session(self, max_age=webapp_config.DEFAULT_VALUE):
+        raise NotImplementedError()
+
+    def save_session(self, response):
+        raise NotImplementedError()
+
 
 class SecureCookieSessionFactory(BaseSessionFactory):
-    """A session that stores data serialized in a signed cookie."""
+    """A session factory that stores data serialized in a signed cookie.
+
+    This is the default factory passed as the `factory` keyword to
+    :meth:`SessionStore.get_session`.
+    """
+
     def get_session(self, max_age=webapp_config.DEFAULT_VALUE):
         if self.session is None:
             data = self.session_store.get_secure_cookie(self.name,
                                                         max_age=max_age)
             new = data is None
-            self.session = SessionDict(data=data, new=new)
+            self.session = SessionDict(self, data=data, new=new)
 
         return self.session
 
@@ -179,11 +182,47 @@ class SecureCookieSessionFactory(BaseSessionFactory):
             response, self.name, dict(self.session), **self.session_args)
 
 
+class CustomBackendSessionFactory(BaseSessionFactory):
+    """Base class for sessions that use custom backends, e.g., memcache."""
+
+    #: The session unique id.
+    sid = None
+
+    #: Used to validate session ids.
+    _sid_re = re.compile(r'^[a-f0-9]{32}$')
+
+    def get_session(self, max_age=webapp_config.DEFAULT_VALUE):
+        if self.session is None:
+            data = self.session_store.get_secure_cookie(self.name,
+                                                        max_age=max_age)
+            if data is not None:
+                sid = data.get('_sid')
+                if self._is_valid_sid(sid):
+                    self.sid = sid
+                    self.session = self._get_by_sid(sid)
+
+            if self.session is None:
+                self.sid = self._get_new_sid()
+                self.session = SessionDict(self, new=True)
+
+        return self.session
+
+    def _is_valid_sid(self, sid):
+        """Check if a session id has the correct format."""
+        return sid and self._sid_re.match(sid) is not None
+
+    def _get_by_sid(self, sid):
+        raise NotImplementedError()
+
+    def _get_new_sid(self):
+        return uuid.uuid4().hex
+
+
 class SessionStore(object):
     """A session provider.
 
-    Example usage. Define a base handler that extends dispatch() method to
-    start the session store and save all sessions at the end of a request::
+    To use, define a base handler that extends the dispatch() method to start
+    the session store and save all sessions at the end of a request::
 
         import webapp2
 
@@ -296,7 +335,7 @@ class SessionStore(object):
         """Saves all cookies and sessions to a response object.
 
         :param response:
-            A ``tipfy.app.Response`` object.
+            A :class:`webapp.Response` object.
         """
         for session in self.sessions.values():
             session.save_session(response)

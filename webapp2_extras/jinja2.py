@@ -77,11 +77,9 @@ class Jinja2(object):
         '''
         if enable_i18n:
             # Install i18n.
-            from tipfy import i18n
             env.install_gettext_callables(
-                lambda x: get_request().i18n.translations.ugettext(x),
-                lambda s, p, n: get_request().i18n.translations.ungettext(s,
-                    p, n),
+                lambda x: ugettext(x),
+                lambda s, p, n: ungettext(s, p, n),
                 newstyle=True)
             format_functions = {
                 'format_date':      i18n.format_date,
@@ -89,7 +87,6 @@ class Jinja2(object):
                 'format_datetime':  i18n.format_datetime,
                 'format_timedelta': i18n.format_timedelta,
             }
-            env.globals.update(format_functions)
             env.filters.update(format_functions)
 
         env.globals['url_for'] = url_for
@@ -141,7 +138,7 @@ class Jinja2(object):
 """
 # Example of using signals.
 
-from tipfyext.jinja2 import environment_created
+from webapp2_extras.jinja2 import environment_created
 
 def setup_environment(jinja2, environment):
     environment.globals.update({
