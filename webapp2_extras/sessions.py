@@ -163,6 +163,12 @@ class SecureCookieSessionFactory(BaseSessionFactory):
 
     This is the default factory passed as the `factory` keyword to
     :meth:`SessionStore.get_session`.
+
+    .. warning:: The values stored in a signed cookie will be visible in the
+                 cookie, however they can't be altered using cookie forgery
+                 because the signature won't match. Do not use secure cookie
+                 sessions if you need to store data you don't want the user
+                 to see. For this, use datastore or memcache sessions.
     """
 
     def get_session(self, max_age=webapp_config.DEFAULT_VALUE):

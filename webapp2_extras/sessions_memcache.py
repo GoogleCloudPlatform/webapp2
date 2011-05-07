@@ -17,7 +17,17 @@ class MemcacheSessionFactory(sessions.CustomBackendSessionFactory):
     """A session factory that stores data serialized in memcache.
 
     To use memcache sessions, pass this class as the `factory` keyword to
-    :meth:`webapp2_extras.sessions.SessionStore.get_session`.
+    :meth:`webapp2_extras.sessions.SessionStore.get_session`::
+
+        from webapp2_extras import sessions_memcache
+
+        # [...]
+
+        session = self.session_store.get_session(
+            name='mc_session', factory=sessions_memcache.MemcacheSessionFactory)
+
+    See in :meth:`webapp2_extras.sessions.SessionStore` an example of how to
+    make sessions available in a :class:`webapp2.RequestHandler`.
     """
 
     def _get_by_sid(self, sid):

@@ -75,7 +75,17 @@ class DatastoreSessionFactory(sessions.CustomBackendSessionFactory):
     """A session factory that stores data serialized in datastore.
 
     To use datastore sessions, pass this class as the `factory` keyword to
-    :meth:`webapp2_extras.sessions.SessionStore.get_session`.
+    :meth:`webapp2_extras.sessions.SessionStore.get_session`::
+
+        from webapp2_extras import sessions_ndb
+
+        # [...]
+
+        session = self.session_store.get_session(
+            name='db_session', factory=sessions_ndb.DatastoreSessionFactory)
+
+    See in :meth:`webapp2_extras.sessions.SessionStore` an example of how to
+    make sessions available in a :class:`webapp2.RequestHandler`.
     """
 
     def _get_by_sid(self, sid):

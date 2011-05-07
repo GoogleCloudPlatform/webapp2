@@ -19,6 +19,7 @@ API Reference
    :maxdepth: 3
 
    api.rst
+   api_extras.rst
 
 
 Indices and tables
