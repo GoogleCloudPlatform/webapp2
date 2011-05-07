@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+    webapp2_extras.config
+    =====================
+
+    Configuration object for webapp2.
+
+    :copyright: 2011 by tipfy.org.
+    :license: Apache Sotware License, see LICENSE for details.
+"""
 import webapp2
 
 #: Value used for missing default values.

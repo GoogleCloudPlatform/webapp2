@@ -1,5 +1,12 @@
+# -*- coding: utf-8 -*-
 """
-Extra route classes. Proof of concepts for webapp2's routing system.
+    webapp2_extras.routes
+    =====================
+
+    Extra route classes for webapp2.
+
+    :copyright: 2011 by tipfy.org.
+    :license: Apache Sotware License, see LICENSE for details.
 """
 import re
 

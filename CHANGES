@@ -1,3 +1,17 @@
+Version 1.2 - May 6, 2011
+=========================
+- Removed Config from webapp2 core. It is now part of the new "webapp2_extras"
+  package.
+- Added the package webapp2_extras. These are all optional modules that
+  complement webapp2 with common functionalities. Currently they include:
+  - webapp2_extras.config: Configuration object.
+  - webapp2_extras.jinja2: Support for Jinja2 templating.
+  - webapp2_extras.json: JSON utilities.
+  - webapp2_extras.routes: Extended route classes.
+  - webapp2_extras.securecookie: Signed cookie serializer.
+  - webapp2_extras.sessions: Sessions support.
+
+
 Version 1.1 - May 5, 2011
 =========================
 - Simplified routing with an unified dispatch method for classes and functions.

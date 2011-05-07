@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+    webapp2_extras.securecookie
+    ===========================
+
+    A serializer for signed cookies.
+
+    :copyright: 2011 by tipfy.org.
+    :license: Apache Sotware License, see LICENSE for details.
+"""
 import hashlib
 import hmac
 import logging

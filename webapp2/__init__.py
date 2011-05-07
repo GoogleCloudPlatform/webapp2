@@ -5,7 +5,7 @@
 
     Taking Google App Engine's webapp to the next level!
 
-    :copyright: 2010 by tipfy.org.
+    :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
 from __future__ import with_statement
@@ -451,7 +451,7 @@ class SimpleRoute(BaseRoute):
             A regex to be matched.
         :param handler:
             A :class:`RequestHandler` class or dotted name for a class to be
-            lazily imported, e.g., ``my.module.MyHandler``.
+            lazily imported, e.g., ``'my.module.MyHandler'``.
         """
         self.template = template
         self.handler = handler
@@ -477,8 +477,6 @@ class SimpleRoute(BaseRoute):
 
     def __repr__(self):
         return '<SimpleRoute(%r, %r)>' % (self.template, self.handler)
-
-    __str__ = __repr__
 
 
 class Route(BaseRoute):
@@ -524,8 +522,9 @@ class Route(BaseRoute):
             The same template can mix parts with name, regular expression or
             both.
         :param handler:
-            A :class:`RequestHandler` class or dotted name for a class to be
-            lazily imported, e.g., ``my.module.MyHandler``.
+            A :class:`RequestHandler` class, a function or dotted name for a
+            class or function to be lazily imported, e.g.,
+            ``'my.module.MyHandler'`` or ``'my.module.my_function'``.
         :param name:
             The name of this route, used to build URLs based on it.
         :param defaults:
@@ -535,7 +534,10 @@ class Route(BaseRoute):
         :param build_only:
             If True, this route never matches and is used only to build URLs.
         :param handler_method:
-            A custom handler method to be used.
+            The name of a custom handler method to be called, in case `handler`
+            is a class. If not defined, the default behavior is to call the
+            handler method correspondent to the HTTP request method in lower
+            case (e.g., `get()`, `post()` etc).
         """
         self.template = template
         self.handler = handler
@@ -587,17 +589,19 @@ class Route(BaseRoute):
         .. seealso:: :meth:`BaseRoute.match`.
         """
         match = self.regex.match(request.path)
-        if match:
-            kwargs = self.defaults.copy()
-            kwargs.update(match.groupdict())
-            if kwargs and self.has_positional_variables:
-                args = tuple(value[1] for value in sorted((int(key[2:-2]), \
-                    kwargs.pop(key)) for key in \
-                    kwargs.keys() if key.startswith('__')))
-            else:
-                args = ()
+        if not match:
+            return None
 
-            return args, kwargs
+        kwargs = self.defaults.copy()
+        kwargs.update(match.groupdict())
+        if kwargs and self.has_positional_variables:
+            args = tuple(value[1] for value in sorted((int(key[2:-2]), \
+                kwargs.pop(key)) for key in \
+                kwargs.keys() if key.startswith('__')))
+        else:
+            args = tuple()
+
+        return args, kwargs
 
     def build(self, request, args, kwargs):
         """Builds a URL for this route.
@@ -654,8 +658,6 @@ class Route(BaseRoute):
         return '<Route(%r, %r, name=%r, defaults=%r, build_only=%r)>' % \
             (self.template, self.handler, self.name, self.defaults,
             self.build_only)
-
-    __str__ = __repr__
 
 
 class Router(object):
@@ -833,8 +835,6 @@ class Router(object):
 
         return '<Router(%r)>' % routes
 
-    __str__ = __repr__
-
 
 class RequestContext(object):
     """Sets and releases the request context during a request."""
@@ -888,7 +888,7 @@ class WSGIApplication(object):
 
         class HelloWorldHandler(RequestHandler):
             def get(self):
-                self.response.out.write('Hello, World!')
+                self.response.write('Hello, World!')
 
         app = WSGIApplication([
             (r'/', HelloWorldHandler),
@@ -899,6 +899,9 @@ class WSGIApplication(object):
 
         if __name__ == '__main__':
             main()
+
+    .. note:: for compatibility with webapp, ``self.response.out.write()``
+       also works. It is just an alias to ``self.response.write()``.
 
     The URL mapping is first-match based on the list ordering. Items in the
     list can also be an object that implements the method ``match(request)``.
@@ -1025,7 +1028,7 @@ class WSGIApplication(object):
         `Not Found` error handler::
 
             def handle_404(request, response, exception):
-                response.out.write('Oops! I could swear this page was here!')
+                response.write('Oops! I could swear this page was here!')
                 response.set_status(404)
 
             app = WSGIApplication([
@@ -1067,7 +1070,7 @@ class WSGIApplication(object):
 
         .. seealso:: :meth:`Router.build`.
         """
-        return self.router.build(self.request, _name, args, kwargs)
+        return self.router.build(WSGIApplication.request, _name, args, kwargs)
 
     def run(self, bare=False):
         """Runs the app using ``google.appengine.ext.webapp.util.run_wsgi_app``.

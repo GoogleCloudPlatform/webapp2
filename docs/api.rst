@@ -1,9 +1,9 @@
 .. _contents:
 
-API Reference
-=============
 .. module:: webapp2
 
+API Reference
+=============
 .. contents:: Table of Contents
    :depth: 3
    :backlinks: none
@@ -12,16 +12,15 @@ API Reference
 WSGI App
 --------
 .. autoclass:: WSGIApplication
-   :members: request_class, response_class, router_class, config_class,
-             __init__, __call__, dispatch, handle_exception, url_for,
-             get_config, run
+   :members: request_class, response_class, router_class, __init__, __call__,
+             dispatch, handle_exception, url_for, run
 
 
 Request Handlers
 ----------------
 .. autoclass:: RequestHandler
    :members: __init__, __call__, abort, error, redirect, redirect_to, url_for,
-             get_config, handle_exception, get_valid_methods
+             handle_exception, get_valid_methods
 
 
 .. autoclass:: RedirectHandler
@@ -47,12 +46,50 @@ URL Routing
    :members: __init__, match, build
 
 
+.. module:: webapp2_extras.config
+
 Configuration
 -------------
 .. autoclass:: Config
    :members: loaded, __init__, __setitem__, update, setdefault, get,
              get_config
 
+
+.. module:: webapp2_extras.json
+
+JSON
+----
+.. autofunction:: encode
+.. autofunction:: decode
+.. autofunction:: b64encode
+.. autofunction:: b64decode
+.. autofunction:: quote
+.. autofunction:: unquote
+
+
+.. module:: webapp2_extras.securecookie
+
+Secure Cookies
+--------------
+.. autoclass:: SecureCookieSerializer
+   :members: __init__, serialize, deserialize
+
+
+.. module:: webapp2_extras.sessions
+
+Sessions
+--------
+.. autodata:: default_config
+
+.. autoclass:: SessionStore
+   :members: __init__, get_session, get_secure_cookie, set_secure_cookie,
+             save_sessions
+
+.. autoclass:: SessionDict
+   :members: get_flashes, add_flash
+
+
+.. module:: webapp2
 
 Utilities
 ---------

@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+    webapp2_extras.sessions
+    =======================
+
+    Lightweight and flexible session support for webapp2.
+
+    :copyright: 2011 by tipfy.org.
+    :license: Apache Sotware License, see LICENSE for details.
+"""
 import webapp2
 
 from webapp2_extras import config as webapp_config
@@ -204,6 +214,11 @@ class SessionStore(object):
         foo = self.session.get('foo')
     """
     def __init__(self, request):
+        """Initializes the session store.
+
+        :param request:
+            A :class:`webapp2.Request` instance.
+        """
         self.request = request
         # Base configuration.
         self.config = request.app.config[__name__]
