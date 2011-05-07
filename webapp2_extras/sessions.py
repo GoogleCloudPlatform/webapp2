@@ -283,6 +283,16 @@ class SessionStore(object):
         :param name:
             Cookie name. If not provided, uses the ``cookie_name``
             value configured for this module.
+        :param max_age:
+            A maximum age in seconds for the session to be valid. Sessions
+            store a timestamp to invalidate them if needed. If `max_age` is
+            None, the timestamp won't be checked.
+        :param factory:
+            A session factory that creates the session using the preferred
+            backend. Default is :class:`SecureCookieSessionFactory`. Other
+            available factories are
+            :class:`webapp2_extras.sessions_ndb.DatastoreSessionFactory` and
+            :class:`webapp2_extras.sessions_memcache.MemcacheSessionFactory`.
         :returns:
             A dictionary-like session object.
         """
