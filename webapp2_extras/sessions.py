@@ -3,7 +3,7 @@
     webapp2_extras.sessions
     =======================
 
-    Lightweight but robust session support for webapp2.
+    Lightweight but flexible session support for webapp2.
 
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
