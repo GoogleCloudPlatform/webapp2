@@ -32,9 +32,11 @@ class MemcacheSessionFactory(sessions.CustomBackendSessionFactory):
 
     def _get_by_sid(self, sid):
         """Returns a session given a session id."""
-        data = memcache.get(sid)
-        if data is not None:
-            return sessions.SessionDict(self, data=data)
+        if self._is_valid_sid(sid):
+            data = memcache.get(sid)
+            if data is not None:
+                self.sid = sid
+                return sessions.SessionDict(self, data=data)
 
         self.sid = self._get_new_sid()
         return sessions.SessionDict(self, new=True)

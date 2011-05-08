@@ -996,8 +996,7 @@ class WSGIApplication(object):
             A callable accepting a status code, a list of headers and an
             optional exception context to start the response.
         """
-        with self.request_context_class(self, environ) as context:
-            request, response = context
+        with self.request_context_class(self, environ) as (request, response):
             try:
                 if request.method not in self.allowed_methods:
                     # 501 Not Implemented.
@@ -1040,6 +1039,9 @@ class WSGIApplication(object):
         app could not fulfill the request, the error handler defined for the
         current HTTP status code will be called. If it is not set, the
         exception is re-raised.
+
+        The error handler is called passing (request, response, exception) as
+        arguments.
 
         .. note::
            The error handler is responsible for setting the response

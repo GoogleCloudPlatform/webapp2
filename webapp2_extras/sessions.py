@@ -161,14 +161,15 @@ class BaseSessionFactory(object):
 class SecureCookieSessionFactory(BaseSessionFactory):
     """A session factory that stores data serialized in a signed cookie.
 
+    Signed cookies can't be forged because the HMAC signature won't match.
+
     This is the default factory passed as the `factory` keyword to
     :meth:`SessionStore.get_session`.
 
-    .. warning:: The values stored in a signed cookie will be visible in the
-                 cookie, however they can't be altered using cookie forgery
-                 because the signature won't match. Do not use secure cookie
-                 sessions if you need to store data you don't want the user
-                 to see. For this, use datastore or memcache sessions.
+    .. warning::
+       The values stored in a signed cookie will be visible in the cookie,
+       so do not use secure cookie sessions if you need to store data that
+       can't be visible to users. For this, use datastore or memcache sessions.
     """
 
     def get_session(self, max_age=webapp_config.DEFAULT_VALUE):
@@ -201,24 +202,17 @@ class CustomBackendSessionFactory(BaseSessionFactory):
         if self.session is None:
             data = self.session_store.get_secure_cookie(self.name,
                                                         max_age=max_age)
-            if data is not None:
-                sid = data.get('_sid')
-                if self._is_valid_sid(sid):
-                    self.sid = sid
-                    self.session = self._get_by_sid(sid)
-
-            if self.session is None:
-                self.sid = self._get_new_sid()
-                self.session = SessionDict(self, new=True)
+            sid = data.get('_sid') if data else None
+            self.session = self._get_by_sid(sid)
 
         return self.session
+
+    def _get_by_sid(self, sid):
+        raise NotImplementedError()
 
     def _is_valid_sid(self, sid):
         """Check if a session id has the correct format."""
         return sid and self._sid_re.match(sid) is not None
-
-    def _get_by_sid(self, sid):
-        raise NotImplementedError()
 
     def _get_new_sid(self):
         return uuid.uuid4().hex
