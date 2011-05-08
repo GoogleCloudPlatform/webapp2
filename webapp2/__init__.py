@@ -160,7 +160,7 @@ class RequestHandler(object):
             'Use __init__() instead.'))
         self.request = request
         self.response = response
-        self.app = WSGIApplication.app
+        self.app = WSGIApplication.active_instance
 
     def dispatch(self):
         """Dispatches the request.
@@ -1099,6 +1099,32 @@ class WSGIApplication(object):
             util.run_bare_wsgi_app(self)
         else:
             util.run_wsgi_app(self)
+
+
+def get_app():
+    """Returns the active app instance.
+
+    :returns:
+        A :class:`WSGIApplication` instance.
+    :raises:
+        ``AssertionError`` if the app is not set.
+    """
+    app = WSGIApplication.app
+    assert app is not None, 'WSGIApplication.app is not set.'
+    return app
+
+
+def get_request():
+    """Returns the active request instance.
+
+    :returns:
+        A :class:`Request` instance.
+    :raises:
+        ``AssertionError`` if the request is not set.
+    """
+    request = WSGIApplication.request
+    assert request is not None, 'WSGIApplication.request is not set.'
+    return request
 
 
 def get_valid_methods(handler):

@@ -12,9 +12,9 @@
 """
 from __future__ import absolute_import
 
-import blinker
-
 import jinja2
+
+import webapp2
 
 #: Default configuration values for this module. Keys are:
 #:
@@ -43,12 +43,13 @@ default_config = {
         'autoescape': True,
         'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_'],
     },
+    'globals': None,
+    'filters': None,
 }
 
 
 class Jinja2(object):
-    def __init__(self, app, _globals=None, filters=None):
-        self.app = app
+    def __init__(self, app):
         config = app.config[__name__]
         kwargs = config['environment_args'].copy()
         enable_i18n = 'jinja2.ext.i18n' in kwargs.get('extensions', [])
@@ -68,11 +69,11 @@ class Jinja2(object):
         # Initialize the environment.
         env = jinja2.Environment(**kwargs)
 
-        if _globals:
-            env.globals.update(_globals)
+        if config['globals']:
+            env.globals.update(config['globals'])
 
-        if filters:
-            env.filters.update(filters)
+        if config['filters']:
+            env.filters.update(config['filters'])
 
         '''
         if enable_i18n:
@@ -135,21 +136,21 @@ class Jinja2(object):
         return getattr(template.module, attribute)
 
 
-"""
-# Example of using signals.
+# Factories -------------------------------------------------------------------
 
-from webapp2_extras.jinja2 import environment_created
 
-def setup_environment(jinja2, environment):
-    environment.globals.update({
-        # ... custom globals ...
-    })
-    environment.filters.update({
-        # ... custom filters ...
-    })
+#: Key used to store :class:`Jinja2` in the app registry.
+_registry_key = 'webapp2_extras.jinja2.Jinja2'
 
-environment_created.connect(setup_environment)
-"""
-_signals = blinker.Namespace()
-environment_created = _signals.signal('environment-created')
-template_rendered = _signals.signal('template-rendered')
+
+def get_jinja2(factory=Jinja2, key=_registry_key):
+    app = webapp2.get_app()
+    jinja2 = app.registry.get(key)
+    if not jinja2:
+        jinja2 = app.registry[key] = factory(app)
+
+    return jinja2
+
+
+def set_jinja2(jinja2, key=_registry_key):
+    webapp2.get_app().registry[key] = jinja2

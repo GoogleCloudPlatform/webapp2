@@ -43,7 +43,7 @@ class BaseTestCase(unittest.TestCase):
         self.testbed.init_memcache_stub()
 
         # Only when testing ndb.
-        # self.setup_context_cache()
+        self.setup_context_cache()
 
     def tearDown(self):
         # This restores the original stubs so that tests do not interfere

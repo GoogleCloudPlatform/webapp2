@@ -13,7 +13,7 @@ import re
 
 import webapp2
 
-from webapp2_extras import config as webapp_config
+from webapp2_extras import config as webapp2_config
 from webapp2_extras import securecookie
 
 #: Default configuration values for this module. Keys are:
@@ -52,7 +52,7 @@ from webapp2_extras import securecookie
 #:
 #:     - httponly: Disallow JavaScript to access the cookie.
 default_config = {
-    'secret_key':      webapp_config.REQUIRED_VALUE,
+    'secret_key':      webapp2_config.REQUIRED_VALUE,
     'cookie_name':     'session',
     'session_max_age': None,
     'cookie_args': {
@@ -151,7 +151,7 @@ class BaseSessionFactory(object):
         self.session_args = session_store.config['cookie_args'].copy()
         self.session = None
 
-    def get_session(self, max_age=webapp_config.DEFAULT_VALUE):
+    def get_session(self, max_age=webapp2_config.DEFAULT_VALUE):
         raise NotImplementedError()
 
     def save_session(self, response):
@@ -172,7 +172,7 @@ class SecureCookieSessionFactory(BaseSessionFactory):
        can't be visible to users. For this, use datastore or memcache sessions.
     """
 
-    def get_session(self, max_age=webapp_config.DEFAULT_VALUE):
+    def get_session(self, max_age=webapp2_config.DEFAULT_VALUE):
         if self.session is None:
             data = self.session_store.get_secure_cookie(self.name,
                                                         max_age=max_age)
@@ -198,7 +198,7 @@ class CustomBackendSessionFactory(BaseSessionFactory):
     #: Used to validate session ids.
     _sid_re = re.compile(r'^[a-f0-9]{32}$')
 
-    def get_session(self, max_age=webapp_config.DEFAULT_VALUE):
+    def get_session(self, max_age=webapp2_config.DEFAULT_VALUE):
         if self.session is None:
             data = self.session_store.get_secure_cookie(self.name,
                                                         max_age=max_age)
@@ -275,7 +275,7 @@ class SessionStore(object):
 
         return self.sessions[name]
 
-    def get_session(self, name=None, max_age=webapp_config.DEFAULT_VALUE,
+    def get_session(self, name=None, max_age=webapp2_config.DEFAULT_VALUE,
                     factory=SecureCookieSessionFactory):
         """Returns a session for a given name. If the session doesn't exist, a
         new session is returned.
@@ -298,7 +298,7 @@ class SessionStore(object):
         """
         name = name or self.config['cookie_name']
 
-        if max_age is webapp_config.DEFAULT_VALUE:
+        if max_age is webapp2_config.DEFAULT_VALUE:
             max_age = self.config['session_max_age']
 
         container = self._get_session_container(name, factory)
@@ -306,7 +306,7 @@ class SessionStore(object):
 
     # Signed cookies ----------------------------------------------------------
 
-    def get_secure_cookie(self, name, max_age=webapp_config.DEFAULT_VALUE):
+    def get_secure_cookie(self, name, max_age=webapp2_config.DEFAULT_VALUE):
         """Returns a deserialized secure cookie value.
 
         :param name:
@@ -317,7 +317,7 @@ class SessionStore(object):
         :returns:
             A secure cookie value or None if it is not set.
         """
-        if max_age is webapp_config.DEFAULT_VALUE:
+        if max_age is webapp2_config.DEFAULT_VALUE:
             max_age = self.config['session_max_age']
 
         value = self.request.cookies.get(name)
@@ -353,3 +353,23 @@ class SessionStore(object):
     def save_secure_cookie(self, response, name, value, **kwargs):
         value = self.serializer.serialize(name, value)
         response.set_cookie(name, value, **kwargs)
+
+
+# Factories -------------------------------------------------------------------
+
+
+#: Key used to store :class:`SessionStore` in the request registry.
+_registry_key = 'webapp2_extras.sessions.SessionStore'
+
+
+def get_store(factory=SessionStore, key=_registry_key):
+    request = webapp2.get_request()
+    store = request.registry.get(key)
+    if not store:
+        store = app.registry[key] = factory(request)
+
+    return store
+
+
+def set_store(store, key=_registry_key):
+    webapp2.get_request().registry[key] = store

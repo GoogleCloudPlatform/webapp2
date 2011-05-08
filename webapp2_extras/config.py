@@ -8,6 +8,8 @@
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
+from __future__ import absolute_import
+
 import webapp2
 
 #: Value used for missing default values.
@@ -27,7 +29,7 @@ class Config(dict):
     :class:`WSGIApplication`::
 
         import webapp2
-        from webapp2_extras import config
+        from webapp2_extras import config as webapp2_config
 
         my_config = {}
 
@@ -38,13 +40,14 @@ class Config(dict):
         app = webapp2.WSGIApplication(routes=[
             webapp2.Route('/', name='home', handler=MyHandler)
         ])
-        app.config = config.Config(my_config)
+        webapp2_config.set_config(webapp2_config.Config(my_config))
 
     Then to read configuration values, get them from the app::
 
         class MyHandler(RequestHandler):
             def get(self):
-            foo = self.app.config['my.module']['foo']
+                app_config = webapp2_config.get_config()
+                foo = app_config['my.module']['foo']
 
                 # ...
     """
