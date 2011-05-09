@@ -92,22 +92,27 @@ class I18nStore(object):
 
     #: A dictionary with all loaded translations.
     translations = None
-    #:
+    #: Path to where traslations are stored.
     translations_path = None
-    #:
+    #: Translation domains to merge.
     domains = None
-    #:
+    #: Default locale code.
     default_locale = None
-    #:
+    #: Default timezone code.
     default_timezone = None
-    #:
+    #: Dictionary of default date formats.
     date_formats = None
-    #:
+    #: A callable that returns the locale for a request.
     locale_selector = None
-    #:
+    #: A callable that returns the timezone for a request.
     timezone_selector = None
 
     def __init__(self, app):
+        """Initializes the i18n store.
+
+        :param request:
+            A :class:`webapp2.WSGIApplication` instance.
+        """
         config = app.config[__name__]
         self.translations = {}
         self.translations_path = config.get('translations_path')
@@ -119,6 +124,12 @@ class I18nStore(object):
         self.set_timezone_selector(config.get('timezone_selector'))
 
     def set_locale_selector(self, func):
+        """Sets the function that defines the locale for a request.
+
+        :param func:
+            A callable that receives (request, store) and returns the locale
+            for a request.
+        """
         if func is None:
             func = self._locale_selector
         elif isinstance(func, basestring):
@@ -127,6 +138,12 @@ class I18nStore(object):
         self.locale_selector = func
 
     def set_timezone_selector(self, func):
+        """Sets the function that defines the timezone for a request.
+
+        :param func:
+            A callable that receives (request, store) and returns the timezone
+            for a request.
+        """
         if func is None:
             func = self._timezone_selector
         elif isinstance(func, basestring):
@@ -141,6 +158,14 @@ class I18nStore(object):
         return self.default_timezone
 
     def get_translations(self, locale):
+        """Returns a translation catalog for a locale.
+
+        :param locale:
+            A locale code.
+        :returns:
+            A ``babel.support.Translations`` instance, or
+            ``gettext.NullTranslations`` if none was found.
+        """
         trans = self.translations.get(locale)
         if not trans:
             locales = (locale, self.default_locale)
@@ -151,6 +176,18 @@ class I18nStore(object):
         return trans
 
     def load_translations(self, dirname, locales, domains):
+        """Loads a translation catalog.
+
+        :param dirname:
+            Path to where translations are stored.
+        :param locales:
+            A list of locale codes.
+        :param domains:
+            A list of domains to be merged.
+        :returns:
+            A ``babel.support.Translations`` instance, or
+            ``gettext.NullTranslations`` if none was found.
+        """
         trans = None
         trans_null = None
         for domain in domains:
@@ -181,15 +218,30 @@ class I18n(object):
     translations = None
 
     def __init__(self, request):
+        """Initializes the i18n provider for a request.
+
+        :param request:
+            A :class:`webapp2.Request` instance.
+        """
         self.store = store = get_store()
         self.set_locale(store.locale_selector(request, store))
         self.set_timezone(store.timezone_selector(request, store))
 
     def set_locale(self, locale):
+        """Sets the locale code for this request.
+
+        :param locale:
+            A locale code.
+        """
         self.locale = locale
         self.translations = self.store.get_translations(locale)
 
     def set_timezone(self, timezone):
+        """Sets the timezone code for this request.
+
+        :param timezone:
+            A timezone code.
+        """
         self.timezone = timezone
         self.tzinfo = pytz.timezone(timezone)
 
