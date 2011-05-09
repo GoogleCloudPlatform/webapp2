@@ -35,6 +35,12 @@ import webapp2
 #:     'jinja2.ext.autoescape' and 'jinja2.ext.with_'. For production it may
 #:     be a godd idea to set 'auto_reload' to False -- we don't need to check
 #:     if templates changed after deployed.
+#:
+#: globals
+#:     Extra global variables for the Jinja2 environment.
+#:
+#: filters
+#:     Extra filters for the Jinja2 environment.
 default_config = {
     'template_path': 'templates',
     'compiled_path': None,
@@ -49,6 +55,27 @@ default_config = {
 
 
 class Jinja2(object):
+    """Wrapper for configurable and cached Jinja2 environment.
+
+    To used it, set it as a cached property in a base `RequestHandler`::
+
+        import webapp2
+
+        from webapp2_extras import jinja2
+
+        class BaseHandler(webapp2.RequestHandler):
+
+            @webapp2.cached_property
+            def jinja2(self):
+                return jinja2.get_jinja2()
+
+    Then extended handlers can render templates directly::
+
+        class MyHandler(BaseHandler):
+            def get(self):
+                context = {'message': 'Hello, world!'}
+                return self.jinja2.render_template('my_template.html', **context)
+    """
     def __init__(self, app):
         config = app.config[__name__]
         kwargs = config['environment_args'].copy()
@@ -92,10 +119,9 @@ class Jinja2(object):
 
         env.globals['url_for'] = url_for
         '''
-        environment_created.send(self, environment=env)
         self.environment = env
 
-    def render_template(self, _handler, _filename, **context):
+    def render_template(self, _filename, **context):
         """Renders a template and returns a response object.
 
         :param _filename:
@@ -106,10 +132,7 @@ class Jinja2(object):
        :returns:
             A rendered template.
         """
-        res = self.environment.get_template(_filename).render(**context)
-        template_rendered.send(self, template=_filename, context=context,
-          result=res)
-        return res
+        return self.environment.get_template(_filename).render(**context)
 
     def get_template_attribute(self, filename, attribute):
         """Loads a macro (or variable) a template exports.  This can be used to

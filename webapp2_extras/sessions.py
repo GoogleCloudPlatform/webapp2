@@ -231,7 +231,7 @@ class SessionStore(object):
         class BaseHandler(webapp2.RequestHandler):
             def dispatch(self):
                 # Start the session store.
-                self.session_store = sessions.SessionStore(self.request)
+                self.session_store = sessions.get_store()
 
                 # Dispatch the request.
                 webapp2.RequestHandler.dispatch(self)
@@ -366,7 +366,7 @@ def get_store(factory=SessionStore, key=_registry_key):
     request = webapp2.get_request()
     store = request.registry.get(key)
     if not store:
-        store = app.registry[key] = factory(request)
+        store = request.registry[key] = factory(request)
 
     return store
 
