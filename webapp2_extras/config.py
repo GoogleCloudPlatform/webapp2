@@ -40,14 +40,13 @@ class Config(dict):
         app = webapp2.WSGIApplication(routes=[
             webapp2.Route('/', name='home', handler=MyHandler)
         ])
-        webapp2_config.set_config(webapp2_config.Config(my_config))
+        app.config = webapp2_config.Config(my_config)
 
     Then to read configuration values, get them from the app::
 
         class MyHandler(RequestHandler):
             def get(self):
-                app_config = webapp2_config.get_config()
-                foo = app_config['my.module']['foo']
+                foo = self.app.config['my.module']['foo']
 
                 # ...
     """
