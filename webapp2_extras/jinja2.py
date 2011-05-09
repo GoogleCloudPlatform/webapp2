@@ -168,6 +168,22 @@ _registry_key = 'webapp2_extras.jinja2.Jinja2'
 
 
 def get_jinja2(factory=Jinja2, key=_registry_key, app=None):
+    """Returns an instance of :class:`Jinja2` from the app registry.
+
+    It'll try to get it from the current app registry, and if it is not
+    registered it'll be instantiated and registered. A second call to this
+    function will return the same instance.
+
+    :param factory:
+        The callable used to build and register the instance if it is not yet
+        registered. The default is the class :class:`Jinja2` itself.
+    :param key:
+        The key used to store the instance in the registry. A default is used
+        if it is not set.
+    :param app:
+        A :class:`webapp2.WSGIApplication` instance used to store the instance.
+        The active app is used if it is not set.
+    """
     app = app or webapp2.get_app()
     jinja2 = app.registry.get(key)
     if not jinja2:
@@ -177,5 +193,16 @@ def get_jinja2(factory=Jinja2, key=_registry_key, app=None):
 
 
 def set_jinja2(jinja2, key=_registry_key, app=None):
+    """Sets an instance of :class:`Jinja2` in the app registry.
+
+    :param store:
+        An instance of :class:`Jinja2`.
+    :param key:
+        The key used to retrieve the instance from the registry. A default
+        is used if it is not set.
+    :param request:
+        A :class:`webapp2.WSGIApplication` instance used to retrieve the
+        instance. The active app is used if it is not set.
+    """
     app = app or webapp2.get_app()
     app.registry[key] = jinja2

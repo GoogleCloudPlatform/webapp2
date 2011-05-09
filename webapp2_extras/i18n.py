@@ -817,6 +817,22 @@ _i18n_registry_key = 'webapp2_extras.i18n.I18n'
 
 
 def get_store(factory=I18nStore, key=_store_registry_key, app=None):
+    """Returns an instance of :class:`I18nStore` from the app registry.
+
+    It'll try to get it from the current app registry, and if it is not
+    registered it'll be instantiated and registered. A second call to this
+    function will return the same instance.
+
+    :param factory:
+        The callable used to build and register the instance if it is not yet
+        registered. The default is the class :class:`I18nStore` itself.
+    :param key:
+        The key used to store the instance in the registry. A default is used
+        if it is not set.
+    :param app:
+        A :class:`webapp2.WSGIApplication` instance used to store the instance.
+        The active app is used if it is not set.
+    """
     app = app or webapp2.get_app()
     store = app.registry.get(key)
     if not store:
@@ -826,11 +842,38 @@ def get_store(factory=I18nStore, key=_store_registry_key, app=None):
 
 
 def set_store(store, key=_store_registry_key, app=None):
+    """Sets an instance of :class:`I18nStore` in the app registry.
+
+    :param store:
+        An instance of :class:`I18nStore`.
+    :param key:
+        The key used to retrieve the instance from the registry. A default
+        is used if it is not set.
+    :param request:
+        A :class:`webapp2.WSGIApplication` instance used to retrieve the
+        instance. The active app is used if it is not set.
+    """
     app = app or webapp2.get_app()
     app.registry[key] = store
 
 
 def get_i18n(factory=I18n, key=_i18n_registry_key, request=None):
+    """Returns an instance of :class:`I18n` from the request registry.
+
+    It'll try to get it from the current request registry, and if it is not
+    registered it'll be instantiated and registered. A second call to this
+    function will return the same instance.
+
+    :param factory:
+        The callable used to build and register the instance if it is not yet
+        registered. The default is the class :class:`I18n` itself.
+    :param key:
+        The key used to store the instance in the registry. A default is used
+        if it is not set.
+    :param request:
+        A :class:`webapp2.Request` instance used to store the instance. The
+        active request is used if it is not set.
+    """
     request = request or webapp2.get_request()
     i18n = request.registry.get(key)
     if not i18n:
@@ -840,5 +883,16 @@ def get_i18n(factory=I18n, key=_i18n_registry_key, request=None):
 
 
 def set_i18n(i18n, key=_i18n_registry_key, request=None):
+    """Sets an instance of :class:`I18n` in the request registry.
+
+    :param store:
+        An instance of :class:`I18n`.
+    :param key:
+        The key used to retrieve the instance from the registry. A default
+        is used if it is not set.
+    :param request:
+        A :class:`webapp2.Request` instance used to retrieve the instance. The
+        active request is used if it is not set.
+    """
     request = request or webapp2.get_request()
     request.registry[key] = i18n

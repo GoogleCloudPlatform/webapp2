@@ -366,6 +366,22 @@ _registry_key = 'webapp2_extras.sessions.SessionStore'
 
 
 def get_store(factory=SessionStore, key=_registry_key, request=None):
+    """Returns an instance of :class:`SessionStore` from the request registry.
+
+    It'll try to get it from the current request registry, and if it is not
+    registered it'll be instantiated and registered. A second call to this
+    function will return the same instance.
+
+    :param factory:
+        The callable used to build and register the instance if it is not yet
+        registered. The default is the class :class:`SessionStore` itself.
+    :param key:
+        The key used to store the instance in the registry. A default is used
+        if it is not set.
+    :param request:
+        A :class:`webapp2.Request` instance used to store the instance. The
+        active request is used if it is not set.
+    """
     request = request or webapp2.get_request()
     store = request.registry.get(key)
     if not store:
@@ -375,5 +391,16 @@ def get_store(factory=SessionStore, key=_registry_key, request=None):
 
 
 def set_store(store, key=_registry_key, request=None):
+    """Sets an instance of :class:`SessionStore` in the request registry.
+
+    :param store:
+        An instance of :class:`SessionStore`.
+    :param key:
+        The key used to retrieve the instance from the registry. A default
+        is used if it is not set.
+    :param request:
+        A :class:`webapp2.Request` instance used to retrieve the instance. The
+        active request is used if it is not set.
+    """
     request = request or webapp2.get_request()
     request.registry[key] = store

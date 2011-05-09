@@ -71,7 +71,7 @@ class TestResponse(test_base.BaseTestCase):
         res.write(u'foo')
 
         self.assertEqual(res.body, u'foo')
-        self.assertEqual(res.charset, 'utf8')
+        self.assertEqual(res.charset, 'utf-8')
 
 
 if __name__ == '__main__':

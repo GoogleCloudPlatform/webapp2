@@ -1,3 +1,12 @@
+Version 1.3 - May 9, 2011
+=========================
+- Added webapp2_extras modules:
+  - webapp2_extras.i18n: internationalization support.
+  - webapp2_extras.sessions_memcache: memcache based sessions.
+  - webapp2_extras.sessions_ndb: datastore based sessions.
+- Several api improvements in webapp2_extras.
+
+
 Version 1.2 - May 6, 2011
 =========================
 - Removed Config from webapp2 core. It is now part of the new "webapp2_extras"
