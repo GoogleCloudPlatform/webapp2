@@ -47,7 +47,10 @@ default_config = {
     'force_compiled': False,
     'environment_args': {
         'autoescape': True,
-        'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_'],
+        'extensions': [
+            'jinja2.ext.autoescape',
+            'jinja2.ext.with_',
+        ],
     },
     'globals': None,
     'filters': None,
@@ -67,7 +70,8 @@ class Jinja2(object):
 
             @webapp2.cached_property
             def jinja2(self):
-                return jinja2.get_jinja2()
+                # Returns a Jinja2 renderer cached in the app registry.
+                return jinja2.get_jinja2(app=self.app)
 
     Then extended handlers can render templates directly::
 
@@ -102,23 +106,20 @@ class Jinja2(object):
         if config['filters']:
             env.filters.update(config['filters'])
 
-        '''
         if enable_i18n:
             # Install i18n.
+            from webapp2_extras import i18n
             env.install_gettext_callables(
-                lambda x: ugettext(x),
-                lambda s, p, n: ungettext(s, p, n),
+                lambda x: i18n.gettext(x),
+                lambda s, p, n: i18n.ngettext(s, p, n),
                 newstyle=True)
-            format_functions = {
+            env.filters.update({
                 'format_date':      i18n.format_date,
                 'format_time':      i18n.format_time,
                 'format_datetime':  i18n.format_datetime,
                 'format_timedelta': i18n.format_timedelta,
-            }
-            env.filters.update(format_functions)
+            })
 
-        env.globals['url_for'] = url_for
-        '''
         self.environment = env
 
     def render_template(self, _filename, **context):
@@ -166,8 +167,8 @@ class Jinja2(object):
 _registry_key = 'webapp2_extras.jinja2.Jinja2'
 
 
-def get_jinja2(factory=Jinja2, key=_registry_key):
-    app = webapp2.get_app()
+def get_jinja2(factory=Jinja2, key=_registry_key, app=None):
+    app = app or webapp2.get_app()
     jinja2 = app.registry.get(key)
     if not jinja2:
         jinja2 = app.registry[key] = factory(app)
@@ -175,5 +176,6 @@ def get_jinja2(factory=Jinja2, key=_registry_key):
     return jinja2
 
 
-def set_jinja2(jinja2, key=_registry_key):
-    webapp2.get_app().registry[key] = jinja2
+def set_jinja2(jinja2, key=_registry_key, app=None):
+    app = app or webapp2.get_app()
+    app.registry[key] = jinja2

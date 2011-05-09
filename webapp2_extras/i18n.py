@@ -816,8 +816,8 @@ _store_registry_key = 'webapp2_extras.i18n.I18nStore'
 _i18n_registry_key = 'webapp2_extras.i18n.I18n'
 
 
-def get_store(factory=I18nStore, key=_store_registry_key):
-    app = webapp2.get_app()
+def get_store(factory=I18nStore, key=_store_registry_key, app=None):
+    app = app or webapp2.get_app()
     store = app.registry.get(key)
     if not store:
         store = app.registry[key] = factory(app)
@@ -825,12 +825,13 @@ def get_store(factory=I18nStore, key=_store_registry_key):
     return store
 
 
-def set_store(store, key=_store_registry_key):
-    webapp2.get_app().registry[key] = store
+def set_store(store, key=_store_registry_key, app=None):
+    app = app or webapp2.get_app()
+    app.registry[key] = store
 
 
-def get_i18n(factory=I18n, key=_i18n_registry_key):
-    request = webapp2.get_request()
+def get_i18n(factory=I18n, key=_i18n_registry_key, request=None):
+    request = request or webapp2.get_request()
     i18n = request.registry.get(key)
     if not i18n:
         i18n = request.registry[key] = factory(request)
@@ -838,5 +839,6 @@ def get_i18n(factory=I18n, key=_i18n_registry_key):
     return i18n
 
 
-def set_i18n(i18n, key=_i18n_registry_key):
-    webapp2.get_request().registry[key] = i18n
+def set_i18n(i18n, key=_i18n_registry_key, request=None):
+    request = request or webapp2.get_request()
+    request.registry[key] = i18n

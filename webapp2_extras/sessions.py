@@ -219,7 +219,7 @@ class CustomBackendSessionFactory(BaseSessionFactory):
 
 
 class SessionStore(object):
-    """A session provider.
+    """A session provider for a single request.
 
     To use, define a base handler that extends the dispatch() method to start
     the session store and save all sessions at the end of a request::
@@ -230,14 +230,15 @@ class SessionStore(object):
 
         class BaseHandler(webapp2.RequestHandler):
             def dispatch(self):
-                # Start the session store.
-                self.session_store = sessions.get_store()
+                # Get a session store for this request.
+                self.session_store = sessions.get_store(request=self.request)
 
-                # Dispatch the request.
-                webapp2.RequestHandler.dispatch(self)
-
-                # Save all sessions.
-                self.session_store.save_sessions(self.response)
+                try:
+                    # Dispatch the request.
+                    webapp2.RequestHandler.dispatch(self)
+                finally:
+                    # Save all sessions.
+                    self.session_store.save_sessions(self.response)
 
             @webapp2.cached_property
             def session(self):
@@ -263,9 +264,11 @@ class SessionStore(object):
         self.config = request.app.config[__name__]
         # Tracked sessions.
         self.sessions = {}
+
+    @webapp2.cached_property
+    def serializer(self):
         # Serializer and deserializer for signed cookies.
-        secret_key = self.config['secret_key']
-        self.serializer = securecookie.SecureCookieSerializer(secret_key)
+        return securecookie.SecureCookieSerializer(self.config['secret_key'])
 
     # Backend based sessions --------------------------------------------------
 
@@ -342,7 +345,7 @@ class SessionStore(object):
     # Saving to a response object ---------------------------------------------
 
     def save_sessions(self, response):
-        """Saves all cookies and sessions to a response object.
+        """Saves all sessions in a response object.
 
         :param response:
             A :class:`webapp.Response` object.
@@ -362,8 +365,8 @@ class SessionStore(object):
 _registry_key = 'webapp2_extras.sessions.SessionStore'
 
 
-def get_store(factory=SessionStore, key=_registry_key):
-    request = webapp2.get_request()
+def get_store(factory=SessionStore, key=_registry_key, request=None):
+    request = request or webapp2.get_request()
     store = request.registry.get(key)
     if not store:
         store = request.registry[key] = factory(request)
@@ -371,5 +374,6 @@ def get_store(factory=SessionStore, key=_registry_key):
     return store
 
 
-def set_store(store, key=_registry_key):
-    webapp2.get_request().registry[key] = store
+def set_store(store, key=_registry_key, request=None):
+    request = request or webapp2.get_request()
+    request.registry[key] = store
