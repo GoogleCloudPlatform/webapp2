@@ -10,6 +10,10 @@ Development version
   This gives control of what is passed to the handler if a domain/subdomain
   matches, and allows to not pass anything if no regex groups are defined.
 
+- Routes now return the route on match() or routes with nested routes cannot
+  work. So instead of returning (args, kwargs) they return
+  (route, args, kwargs).
+
 
 Version 1.3 - May 9, 2011
 =========================

@@ -27,12 +27,17 @@ def get_suite(tests):
     return suite
 
 if __name__ == '__main__':
-    # To run all tests:
-    #     $ python run_tests.py
-    # To run a single test:
-    #     $ python run_tests.py app
-    # To run a couple of tests:
-    #     $ python run_tests.py app config sessions
+    """
+    To run all tests:
+        $ python run_tests.py
+    To run a single test:
+        $ python run_tests.py app
+    To run a couple of tests:
+        $ python run_tests.py app config sessions
+    To run code coverage:
+        $ coverage run run_tests.py
+        $ coverage report -m
+    """
     tests = sys.argv[1:]
     if not tests:
         tests = all_tests
