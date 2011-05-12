@@ -27,7 +27,7 @@ HTTPException = exc.HTTPException
 #: Regex for URL definitions.
 _ROUTE_REGEX = re.compile(r'''
     \<            # The exact character "<"
-    (\w*)         # The optional variable name (restricted to a-z, 0-9, _)
+    (\w+)?        # The optional variable name ([a-zA-Z0-9_])
     (?::([^>]*))? # The optional :regex part
     \>            # The exact character ">"
     ''', re.VERBOSE)
@@ -394,7 +394,7 @@ class BaseRoute(object):
         :param request:
             A :class:`Request` instance.
         :returns:
-            A tuple ``(handler, args, kwargs)`` if the route matches, or None.
+            A tuple ``(route, args, kwargs)`` if the route matches, or None.
         """
         raise NotImplementedError()
 
@@ -453,8 +453,9 @@ class SimpleRoute(BaseRoute):
         :param template:
             A regex to be matched.
         :param handler:
-            A :class:`RequestHandler` class or dotted name for a class to be
-            lazily imported, e.g., ``'my.module.MyHandler'``.
+            A callable or dotted name for a callable to be lazily imported,
+            e.g., ``'my.module.MyHandler'`` or ``'my.module.my_function'``.
+            The callable is called passing (request, response) as arguments.
         """
         self.template = template
         self.handler = handler
@@ -500,7 +501,8 @@ class Route(BaseRoute):
     regex = None
     reverse_template = None
     variables = None
-    has_positional_variables = False
+    arg_count = 0
+    kwd_count = 0
 
     def __init__(self, template, handler=None, name=None, defaults=None,
         build_only=False, handler_method=None):
@@ -525,9 +527,13 @@ class Route(BaseRoute):
             The same template can mix parts with name, regular expression or
             both.
         :param handler:
-            A :class:`RequestHandler` class, a function or dotted name for a
-            class or function to be lazily imported, e.g.,
-            ``'my.module.MyHandler'`` or ``'my.module.my_function'``.
+            A callable or dotted name for a callable to be lazily imported,
+            e.g., ``'my.module.MyHandler'`` or ``'my.module.my_function'``.
+            The callable is called passing (request, response) as arguments.
+            It is possible to define a method if the callable is a class,
+            separating it by a colon: ``'my.module.MyHandler:my_method'``.
+            This is a shortcut and has the same effect as defining the
+            `handler_method` parameter.
         :param name:
             The name of this route, used to build URLs based on it.
         :param defaults:
@@ -563,28 +569,13 @@ class Route(BaseRoute):
 
     @cached_property
     def regex(self):
-        variables = {}
-        last = count = 0
-        regex = reverse_template = ''
-        for match in _ROUTE_REGEX.finditer(self.template):
-            part = self.template[last:match.start()]
-            name = match.group(1)
-            expr = match.group(2) or '[^/]+'
-            last = match.end()
-
-            if not name:
-                name = '__%d__' % count
-                count += 1
-
-            reverse_template += '%s%%(%s)s' % (part, name)
-            regex += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
-            variables[name] = re.compile('^%s$' % expr)
-
-        regex = '^%s%s$' % (regex, re.escape(self.template[last:]))
+        regex, reverse_template, variables, arg_count, kwd_count = \
+            parse_route_template(self.template)
+        self.reverse_template = reverse_template
         self.variables = variables
-        self.reverse_template = reverse_template + self.template[last:]
-        self.has_positional_variables = count > 0
-        return re.compile(regex)
+        self.arg_count = arg_count
+        self.kwd_count = kwd_count
+        return regex
 
     def match(self, request):
         """Matches this route against the current request.
@@ -597,7 +588,7 @@ class Route(BaseRoute):
 
         kwargs = self.defaults.copy()
         kwargs.update(match.groupdict())
-        if kwargs and self.has_positional_variables:
+        if kwargs and self.arg_count:
             args = tuple(value[1] for value in sorted((int(key[2:-2]), \
                 kwargs.pop(key)) for key in \
                 kwargs.keys() if key.startswith('__')))
@@ -618,7 +609,7 @@ class Route(BaseRoute):
 
         if full or scheme or netloc:
             netloc = netloc or request.host
-            scheme = scheme or 'http'
+            scheme = scheme or request.scheme
 
         path, query = self._build(args, kwargs)
         return urlunsplit(scheme, netloc, path, query, anchor)
@@ -633,7 +624,7 @@ class Route(BaseRoute):
         # Access self.regex just to set the lazy properties.
         regex = self.regex
         variables = self.variables
-        if self.has_positional_variables:
+        if self.arg_count:
             for index, value in enumerate(args):
                 key = '__%d__' % index
                 if key in variables:
@@ -667,8 +658,15 @@ class Router(object):
     """A simple URL router used to match the current URL, dispatch the handler
     and build URLs for other resources.
     """
-    #: Class used when the route is a tuple. Default is compatible with webapp.
+    #: Class used when the route is a tuple, for compatibility with webapp.
     route_class = SimpleRoute
+    #: Several internal attributes.
+    app = None
+    match = None
+    build = None
+    match_routes = None
+    build_routes = None
+    _handlers = None
 
     def __init__(self, app, routes=None):
         """Initializes the router.
@@ -679,6 +677,9 @@ class Router(object):
             A list of :class:`Route` instances to initialize the router.
         """
         self.app = app
+        # Default matcher and builder.
+        self.match = self.do_match
+        self.build = self.do_build
         # Handler classes imported lazily.
         self._handlers = {}
         # All routes that can be matched.
@@ -696,7 +697,7 @@ class Router(object):
             A :class:`Route` instance.
         """
         if isinstance(route, tuple):
-            # Simple route, compatible with webapp.
+            # Exceptional compatibility case: route compatible with webapp.
             route = self.route_class(*route)
 
         for r in route.get_match_routes():
@@ -705,7 +706,16 @@ class Router(object):
         for r in route.get_build_routes():
             self.build_routes[r.name] = r
 
-    def match(self, request):
+    def set_matcher(self, func):
+        """Sets a the function called for matching URLs.
+
+        :param func:
+            A function that receives (request,) and returns
+            (route, args, kwargs) if the request matches any of the routes.
+        """
+        self.match = func
+
+    def do_match(self, request):
         """Matches all routes against the current request. The first one that
         matches is returned.
 
@@ -766,7 +776,16 @@ class Router(object):
             # A function or webapp2.RequestHandler: just call it.
             handler_spec(request, response)
 
-    def build(self, request, name, args, kwargs):
+    def set_builder(self, func):
+        """Sets a the function called for building URLs.
+
+        :param func:
+            A function that receives (request, name, args, kwargs) and returns
+            a URL.
+        """
+        self.build = func
+
+    def do_build(self, request, name, args, kwargs):
         """Builds and returns a URL for a named :class:`Route`.
 
         For example, if you have these routes defined for the application::
@@ -969,9 +988,8 @@ class WSGIApplication(object):
             A :class:`Request` instance or None to remove it from
             the globals.
         """
-        cls = WSGIApplication
-        cls.app = cls.active_instance = app
-        cls.request = request
+        WSGIApplication.app = WSGIApplication.active_instance = app
+        WSGIApplication.request = request
 
     def __call__(self, environ, start_response):
         """Called by WSGI when a request comes in. Calls :meth:`dispatch`."""
@@ -1227,6 +1245,31 @@ def to_unicode(value):
 
     assert isinstance(value, unicode)
     return value
+
+
+def parse_route_template(template):
+    variables = {}
+    pattern = reverse_template = ''
+    last = arg_count = kwd_count = 0
+    for match in _ROUTE_REGEX.finditer(template):
+        part = template[last:match.start()]
+        name = match.group(1)
+        expr = match.group(2) or '[^/]+'
+        last = match.end()
+
+        if name:
+            kwd_count += 1
+        else:
+            name = '__%d__' % arg_count
+            arg_count += 1
+
+        pattern += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
+        reverse_template += '%s%%(%s)s' % (part, name)
+        variables[name] = re.compile('^%s$' % expr)
+
+    regex = re.compile('^%s%s$' % (pattern, re.escape(template[last:])))
+    reverse_template += template[last:]
+    return regex, reverse_template, variables, arg_count, kwd_count
 
 
 def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):

@@ -16,6 +16,11 @@ WSGI App
              dispatch, handle_exception, url_for, run
 
 
+.. autofunction:: get_app
+
+.. autofunction:: get_request
+
+
 Request Handlers
 ----------------
 .. autoclass:: RequestHandler

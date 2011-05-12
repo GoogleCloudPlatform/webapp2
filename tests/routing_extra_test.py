@@ -150,7 +150,7 @@ class TestPrefixRoutes(test_base.BaseTestCase):
 
 class TestDomainRoute(test_base.BaseTestCase):
     def test_simple(self):
-        SUBDOMAIN_RE = '^([^.]+)\.app-id\.appspot\.com$'
+        SUBDOMAIN_RE = '^(?P<subdomain>[^.]+)\.app-id\.appspot\.com$'
 
         router = webapp2.Router(None, [
             DomainRoute(SUBDOMAIN_RE, [
@@ -162,16 +162,16 @@ class TestDomainRoute(test_base.BaseTestCase):
         self.assertEqual(match, None)
 
         match = router.match(webapp2.Request.blank('http://my-subdomain.app-id.appspot.com/foo'))
-        self.assertEqual(match[1:], ((), {'_host_match': ('my-subdomain',)}))
+        self.assertEqual(match[1:], ((), {'subdomain': 'my-subdomain'}))
 
         match = router.match(webapp2.Request.blank('http://another-subdomain.app-id.appspot.com/foo'))
-        self.assertEqual(match[1:], ((), {'_host_match': ('another-subdomain',)}))
+        self.assertEqual(match[1:], ((), {'subdomain': 'another-subdomain'}))
 
-        url = router.build(None, 'subdomain-thingie', (), {'_netloc': 'another-subdomain.app-id.appspot.com'})
+        url = router.build(webapp2.Request.blank('/'), 'subdomain-thingie', (), {'_netloc': 'another-subdomain.app-id.appspot.com'})
         self.assertEqual(url, 'http://another-subdomain.app-id.appspot.com/foo')
 
     def test_with_variables_name_and_handler(self):
-        SUBDOMAIN_RE = '^([^.]+)\.app-id\.appspot\.com$'
+        SUBDOMAIN_RE = '^(?P<subdomain>[^.]+)\.app-id\.appspot\.com$'
 
         router = webapp2.Router(None, [
             DomainRoute(SUBDOMAIN_RE, [
@@ -188,23 +188,23 @@ class TestDomainRoute(test_base.BaseTestCase):
         ])
 
         path = 'http://my-subdomain.app-id.appspot.com/user/calvin/'
-        match = ((), {'username': 'calvin', '_host_match': ('my-subdomain',)})
+        match = ((), {'username': 'calvin', 'subdomain': 'my-subdomain'})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        match[1].pop('_host_match')
+        match[1].pop('subdomain')
         match[1]['_netloc'] = 'my-subdomain.app-id.appspot.com'
         self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-overview', match[0], match[1]), path)
 
         path = 'http://my-subdomain.app-id.appspot.com/user/calvin/profile'
-        match = ((), {'username': 'calvin', '_host_match': ('my-subdomain',)})
+        match = ((), {'username': 'calvin', 'subdomain': 'my-subdomain'})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        match[1].pop('_host_match')
+        match[1].pop('subdomain')
         match[1]['_netloc'] = 'my-subdomain.app-id.appspot.com'
         self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-profile', match[0], match[1]), path)
 
         path = 'http://my-subdomain.app-id.appspot.com/user/calvin/projects'
-        match = ((), {'username': 'calvin', '_host_match': ('my-subdomain',)})
+        match = ((), {'username': 'calvin', 'subdomain': 'my-subdomain'})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        match[1].pop('_host_match')
+        match[1].pop('subdomain')
         match[1]['_netloc'] = 'my-subdomain.app-id.appspot.com'
         self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-projects', match[0], match[1]), path)
 

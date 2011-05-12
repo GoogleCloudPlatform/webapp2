@@ -3,11 +3,17 @@
 webapp2_extras
 ==============
 The webapp2_extras package provides common utilities that integrate well with
-webapp2.
+`webapp2 <http://code.google.com/p/webapp-improved/>`_.
 
 .. contents:: Table of Contents
    :depth: 3
    :backlinks: none
+
+Some webapp2_extras modules are not listed here yet but will be soon:
+
+- `i18n <http://code.google.com/p/webapp-improved/source/browse/webapp2_extras/i18n.py>`_ (localization and internationalization support)
+- `jinja2 <http://code.google.com/p/webapp-improved/source/browse/webapp2_extras/jinja2.py>`_ (jinja2 support)
+- `routes <http://code.google.com/p/webapp-improved/source/browse/webapp2_extras/routes.py>`_ (extra route classes)
 
 
 Configuration
@@ -71,3 +77,6 @@ Memcache sessions
 .. module:: webapp2_extras.sessions_memcache
 
 .. autoclass:: MemcacheSessionFactory
+
+
+.. _Tornado: http://www.tornadoweb.org/

@@ -223,7 +223,7 @@ class I18n(object):
         :param request:
             A :class:`webapp2.Request` instance.
         """
-        self.store = store = get_store()
+        self.store = store = get_store(app=request.app)
         self.set_locale(store.locale_selector(request, store))
         self.set_timezone(store.timezone_selector(request, store))
 
