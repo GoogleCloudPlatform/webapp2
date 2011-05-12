@@ -74,7 +74,7 @@ class DomainRoute(MultiRoute):
             for route in self.match_routes:
                 match = route.match(request)
                 if match:
-                    match[1].update(host_match.groupdict())
+                    match[2].update(host_match.groupdict())
                     return match
 
 

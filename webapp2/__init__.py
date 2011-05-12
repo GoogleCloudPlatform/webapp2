@@ -477,7 +477,7 @@ class SimpleRoute(BaseRoute):
         """
         match = self.regex.match(request.path)
         if match:
-            return match.groups(), {}
+            return self, match.groups(), {}
 
     def __repr__(self):
         return '<SimpleRoute(%r, %r)>' % (self.template, self.handler)
@@ -595,7 +595,7 @@ class Route(BaseRoute):
         else:
             args = ()
 
-        return args, kwargs
+        return self, args, kwargs
 
     def build(self, request, args, kwargs):
         """Builds a URL for this route.
@@ -727,7 +727,7 @@ class Router(object):
         for route in self.match_routes:
             match = route.match(request)
             if match:
-                return route, match[0], match[1]
+                return match
 
     def dispatch(self, request, response):
         """Dispatches a request. This calls the :class:`RequestHandler` from
