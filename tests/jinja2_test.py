@@ -65,6 +65,11 @@ class TestJinja2(test_base.BaseTestCase):
         hello = j.get_template_attribute('hello.html', 'hello')
         self.assertEqual(hello('World'), 'Hello, World!')
 
+    def get_jinja2(self):
+        app = webapp2.WSGIApplication(debug=True)
+        j = jinja2.get_jinja2(app=app)
+        self.assertTrue(isinstance(j, jinja2.Jinja2))
+
 
 if __name__ == '__main__':
     test_base.main()
