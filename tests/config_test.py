@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Tests for webapp2.app_config.Config
-"""
-import unittest
-
 import webapp2
 
 from webapp2_extras import config as app_config

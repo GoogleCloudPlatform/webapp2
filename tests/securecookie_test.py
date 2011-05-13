@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import unittest
-
 from webapp2_extras import securecookie
 
 import test_base

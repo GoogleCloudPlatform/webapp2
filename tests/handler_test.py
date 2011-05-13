@@ -5,7 +5,6 @@ Tests for webapp2 webapp2.RequestHandler
 import os
 import StringIO
 import sys
-import unittest
 import urllib
 
 import webapp2
@@ -357,19 +356,20 @@ The resource was found at http://localhost/somewhere; you should be redirected a
     """
 
     def test_get_valid_methods(self):
-        request = webapp2.Request.blank('http://localhost:80/')
-        request.app = app
+        req = webapp2.Request.blank('http://localhost:80/')
+        req.app = app
+        app.set_globals(app=app, request=req)
 
-        handler = BrokenHandler(request, None)
+        handler = BrokenHandler(req, None)
         handler.app = app
         self.assertEqual(handler.get_valid_methods().sort(), ['GET'].sort())
 
-        handler = HomeHandler(request, None)
+        handler = HomeHandler(req, None)
         handler.app = app
         self.assertEqual(handler.get_valid_methods().sort(),
             ['GET', 'POST'].sort())
 
-        handler = MethodsHandler(request, None)
+        handler = MethodsHandler(req, None)
         handler.app = app
         self.assertEqual(handler.get_valid_methods().sort(),
             ['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'TRACE'].sort())
@@ -553,6 +553,8 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         self.assertEqual(rsp.status, '200 OK')
         self.assertEqual(rsp.body, 'Hello again, custom method world!')
 
+    def test_custom_handler_exception(self):
+        self.assertRaises(ValueError, webapp2.Route, '/', handler='MyHandler:my_method', handler_method='my_method')
 
 if __name__ == '__main__':
     test_base.main()

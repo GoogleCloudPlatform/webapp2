@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-    Tests for webapp2_extras.i18n
-"""
 import datetime
 import gettext as gettext_stdlib
 import os
-import unittest
 
 from babel.numbers import NumberFormatError
 

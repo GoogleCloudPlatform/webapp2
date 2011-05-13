@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Tests for webapp2's Router, Route and BaseRoute.
-"""
 import random
-import unittest
 
 from webapp2 import BaseRoute, RedirectHandler, Request, Route, Router
 

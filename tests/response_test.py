@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Tests for webapp2's SimpleRoute
-"""
-import unittest
-
 from webapp2 import Response
 
 import test_base

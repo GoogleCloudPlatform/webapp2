@@ -561,7 +561,7 @@ class Route(BaseRoute):
         self.handler_method = handler_method
         if isinstance(handler, basestring) and handler.rfind(':') != -1:
             if handler_method:
-                raise BadArgumentError(
+                raise ValueError(
                     "If handler_method is defined in a Route, handler "
                     "can't have a colon (got %r)." % handler)
             else:
@@ -764,9 +764,6 @@ class Router(object):
             handler = handler_spec()
             handler.initialize(request, response)
             method = getattr(handler, _normalize_method(request.method), None)
-            if not method:
-                valid = ', '.join(get_valid_methods(handler))
-                abort(405, headers=[('Allow', valid)])
 
             try:
                 method(*args, **kwargs)
@@ -1156,13 +1153,8 @@ def get_valid_methods(handler):
     :returns:
         A list of HTTP methods supported by this handler.
     """
-    # webapp won't have the list of allowed methods defined so we fallback to
-    # the class attribute.
-    cls = WSGIApplication
-    allowed_methods = getattr(cls.active_instance,
-                              'allowed_methods', cls.allowed_methods)
     methods = []
-    for method in allowed_methods:
+    for method in get_app().allowed_methods:
         if getattr(handler, _normalize_method(method), None):
             methods.append(method)
 

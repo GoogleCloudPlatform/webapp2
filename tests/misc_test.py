@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Tests for webapp2 RequestHandler
-"""
-import unittest
-
 import webob
 import webob.exc
 

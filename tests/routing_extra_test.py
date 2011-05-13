@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Tests for extra routes not included in webapp2 (see extras/routes.py)
-"""
-import random
-import unittest
-
 import webapp2
 
 from webapp2_extras.routes import (DomainRoute, HandlerPrefixRoute,
