@@ -2,86 +2,104 @@
 import webob
 import webob.exc
 
-from webapp2 import (RedirectHandler, RequestHandler, Response,
-    WSGIApplication, abort, import_string, to_unicode, to_utf8)
+import webapp2
 
 import test_base
 
 
 class TestMiscellaneous(test_base.BaseTestCase):
     def test_abort(self):
-        self.assertRaises(webob.exc.HTTPOk, abort, 200)
-        self.assertRaises(webob.exc.HTTPCreated, abort, 201)
-        self.assertRaises(webob.exc.HTTPAccepted, abort, 202)
-        self.assertRaises(webob.exc.HTTPNonAuthoritativeInformation, abort, 203)
-        self.assertRaises(webob.exc.HTTPNoContent, abort, 204)
-        self.assertRaises(webob.exc.HTTPResetContent, abort, 205)
-        self.assertRaises(webob.exc.HTTPPartialContent, abort, 206)
-        self.assertRaises(webob.exc.HTTPMultipleChoices, abort, 300)
-        self.assertRaises(webob.exc.HTTPMovedPermanently, abort, 301)
-        self.assertRaises(webob.exc.HTTPFound, abort, 302)
-        self.assertRaises(webob.exc.HTTPSeeOther, abort, 303)
-        self.assertRaises(webob.exc.HTTPNotModified, abort, 304)
-        self.assertRaises(webob.exc.HTTPUseProxy, abort, 305)
-        self.assertRaises(webob.exc.HTTPTemporaryRedirect, abort, 307)
-        self.assertRaises(webob.exc.HTTPClientError, abort, 400)
-        self.assertRaises(webob.exc.HTTPUnauthorized, abort, 401)
-        self.assertRaises(webob.exc.HTTPPaymentRequired, abort, 402)
-        self.assertRaises(webob.exc.HTTPForbidden, abort, 403)
-        self.assertRaises(webob.exc.HTTPNotFound, abort, 404)
-        self.assertRaises(webob.exc.HTTPMethodNotAllowed, abort, 405)
-        self.assertRaises(webob.exc.HTTPNotAcceptable, abort, 406)
-        self.assertRaises(webob.exc.HTTPProxyAuthenticationRequired, abort, 407)
-        self.assertRaises(webob.exc.HTTPRequestTimeout, abort, 408)
-        self.assertRaises(webob.exc.HTTPConflict, abort, 409)
-        self.assertRaises(webob.exc.HTTPGone, abort, 410)
-        self.assertRaises(webob.exc.HTTPLengthRequired, abort, 411)
-        self.assertRaises(webob.exc.HTTPPreconditionFailed, abort, 412)
-        self.assertRaises(webob.exc.HTTPRequestEntityTooLarge, abort, 413)
-        self.assertRaises(webob.exc.HTTPRequestURITooLong, abort, 414)
-        self.assertRaises(webob.exc.HTTPUnsupportedMediaType, abort, 415)
-        self.assertRaises(webob.exc.HTTPRequestRangeNotSatisfiable, abort, 416)
-        self.assertRaises(webob.exc.HTTPExpectationFailed, abort, 417)
-        self.assertRaises(webob.exc.HTTPInternalServerError, abort, 500)
-        self.assertRaises(webob.exc.HTTPNotImplemented, abort, 501)
-        self.assertRaises(webob.exc.HTTPBadGateway, abort, 502)
-        self.assertRaises(webob.exc.HTTPServiceUnavailable, abort, 503)
-        self.assertRaises(webob.exc.HTTPGatewayTimeout, abort, 504)
-        self.assertRaises(webob.exc.HTTPVersionNotSupported, abort, 505)
+        self.assertRaises(webob.exc.HTTPOk, webapp2.abort, 200)
+        self.assertRaises(webob.exc.HTTPCreated, webapp2.abort, 201)
+        self.assertRaises(webob.exc.HTTPAccepted, webapp2.abort, 202)
+        self.assertRaises(webob.exc.HTTPNonAuthoritativeInformation, webapp2.abort, 203)
+        self.assertRaises(webob.exc.HTTPNoContent, webapp2.abort, 204)
+        self.assertRaises(webob.exc.HTTPResetContent, webapp2.abort, 205)
+        self.assertRaises(webob.exc.HTTPPartialContent, webapp2.abort, 206)
+        self.assertRaises(webob.exc.HTTPMultipleChoices, webapp2.abort, 300)
+        self.assertRaises(webob.exc.HTTPMovedPermanently, webapp2.abort, 301)
+        self.assertRaises(webob.exc.HTTPFound, webapp2.abort, 302)
+        self.assertRaises(webob.exc.HTTPSeeOther, webapp2.abort, 303)
+        self.assertRaises(webob.exc.HTTPNotModified, webapp2.abort, 304)
+        self.assertRaises(webob.exc.HTTPUseProxy, webapp2.abort, 305)
+        self.assertRaises(webob.exc.HTTPTemporaryRedirect, webapp2.abort, 307)
+        self.assertRaises(webob.exc.HTTPClientError, webapp2.abort, 400)
+        self.assertRaises(webob.exc.HTTPUnauthorized, webapp2.abort, 401)
+        self.assertRaises(webob.exc.HTTPPaymentRequired, webapp2.abort, 402)
+        self.assertRaises(webob.exc.HTTPForbidden, webapp2.abort, 403)
+        self.assertRaises(webob.exc.HTTPNotFound, webapp2.abort, 404)
+        self.assertRaises(webob.exc.HTTPMethodNotAllowed, webapp2.abort, 405)
+        self.assertRaises(webob.exc.HTTPNotAcceptable, webapp2.abort, 406)
+        self.assertRaises(webob.exc.HTTPProxyAuthenticationRequired, webapp2.abort, 407)
+        self.assertRaises(webob.exc.HTTPRequestTimeout, webapp2.abort, 408)
+        self.assertRaises(webob.exc.HTTPConflict, webapp2.abort, 409)
+        self.assertRaises(webob.exc.HTTPGone, webapp2.abort, 410)
+        self.assertRaises(webob.exc.HTTPLengthRequired, webapp2.abort, 411)
+        self.assertRaises(webob.exc.HTTPPreconditionFailed, webapp2.abort, 412)
+        self.assertRaises(webob.exc.HTTPRequestEntityTooLarge, webapp2.abort, 413)
+        self.assertRaises(webob.exc.HTTPRequestURITooLong, webapp2.abort, 414)
+        self.assertRaises(webob.exc.HTTPUnsupportedMediaType, webapp2.abort, 415)
+        self.assertRaises(webob.exc.HTTPRequestRangeNotSatisfiable, webapp2.abort, 416)
+        self.assertRaises(webob.exc.HTTPExpectationFailed, webapp2.abort, 417)
+        self.assertRaises(webob.exc.HTTPInternalServerError, webapp2.abort, 500)
+        self.assertRaises(webob.exc.HTTPNotImplemented, webapp2.abort, 501)
+        self.assertRaises(webob.exc.HTTPBadGateway, webapp2.abort, 502)
+        self.assertRaises(webob.exc.HTTPServiceUnavailable, webapp2.abort, 503)
+        self.assertRaises(webob.exc.HTTPGatewayTimeout, webapp2.abort, 504)
+        self.assertRaises(webob.exc.HTTPVersionNotSupported, webapp2.abort, 505)
 
         # Invalid use 500 as default.
-        self.assertRaises(KeyError, abort, 0)
-        self.assertRaises(KeyError, abort, 999999)
-        self.assertRaises(KeyError, abort, 'foo')
+        self.assertRaises(KeyError, webapp2.abort, 0)
+        self.assertRaises(KeyError, webapp2.abort, 999999)
+        self.assertRaises(KeyError, webapp2.abort, 'foo')
 
     def test_import_string(self):
-        self.assertEqual(import_string('webob.exc'), webob.exc)
-        self.assertEqual(import_string('webob'), webob)
+        self.assertEqual(webapp2.import_string('webob.exc'), webob.exc)
+        self.assertEqual(webapp2.import_string('webob'), webob)
 
-        self.assertEqual(import_string('dfasfasdfdsfsd', silent=True), None)
-        self.assertEqual(import_string('webob.dfasfasdfdsfsd', silent=True), None)
+        self.assertEqual(webapp2.import_string('dfasfasdfdsfsd', silent=True), None)
+        self.assertEqual(webapp2.import_string('webob.dfasfasdfdsfsd', silent=True), None)
 
-        self.assertRaises(ImportError, import_string, 'dfasfasdfdsfsd')
-        self.assertRaises(AttributeError, import_string, 'webob.dfasfasdfdsfsd')
+        self.assertRaises(ImportError, webapp2.import_string, 'dfasfasdfdsfsd')
+        self.assertRaises(AttributeError, webapp2.import_string, 'webob.dfasfasdfdsfsd')
 
     def test_to_utf8(self):
-        res = to_utf8('ábcdéf'.decode('utf-8'))
+        res = webapp2.to_utf8('ábcdéf'.decode('utf-8'))
         self.assertEqual(isinstance(res, str), True)
 
-        res = to_utf8('abcdef')
+        res = webapp2.to_utf8('abcdef')
         self.assertEqual(isinstance(res, str), True)
 
     def test_to_unicode(self):
-        res = to_unicode(unicode('foo'))
+        res = webapp2.to_unicode(unicode('foo'))
         self.assertEqual(isinstance(res, unicode), True)
 
-        res = to_unicode('foo')
+        res = webapp2.to_unicode('foo')
         self.assertEqual(isinstance(res, unicode), True)
 
     def test_http_status_message(self):
-        self.assertEqual(Response.http_status_message(404), 'Not Found')
-        self.assertEqual(Response.http_status_message(500), 'Internal Server Error')
-        self.assertRaises(KeyError, Response.http_status_message, 9999)
+        self.assertEqual(webapp2.Response.http_status_message(404), 'Not Found')
+        self.assertEqual(webapp2.Response.http_status_message(500), 'Internal Server Error')
+        self.assertRaises(KeyError, webapp2.Response.http_status_message, 9999)
+
+    def test_cached_property(self):
+        count = [0]
+
+        class Foo(object):
+            @webapp2.cached_property
+            def bar(self):
+                count[0] += 1
+                return count[0]
+
+        self.assertTrue(isinstance(Foo.bar, webapp2.cached_property))
+
+        foo = Foo()
+        self.assertEqual(foo.bar, 1)
+        self.assertEqual(foo.bar, 1)
+        self.assertEqual(foo.bar, 1)
+
+
+
 
 
 if __name__ == '__main__':

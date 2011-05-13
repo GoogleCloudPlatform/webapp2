@@ -330,30 +330,27 @@ class TestHandler(test_base.BaseTestCase):
 The resource was found at http://localhost/somewhere; you should be redirected automatically.  """)
         self.assertEqual(rsp.headers['Location'], 'http://localhost/somewhere')
 
-    """
     def test_run(self):
         os.environ['REQUEST_METHOD'] = 'GET'
 
         app.run()
-        self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
+        #self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
 
     def test_run_bare(self):
         os.environ['REQUEST_METHOD'] = 'GET'
         app.run(bare=True)
 
-        self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
+        #self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
 
     def test_run_debug(self):
         debug = app.debug
         app.debug = True
         os.environ['REQUEST_METHOD'] = 'GET'
 
-        app.run(bare=True)
-        self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
-
+        res = app.run(bare=True)
+        #self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
 
         app.debug = debug
-    """
 
     def test_get_valid_methods(self):
         req = webapp2.Request.blank('http://localhost:80/')
@@ -530,7 +527,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         self.assertEqual(rsp.status, '200 OK')
         self.assertEqual(rsp.body, 'Hello again, function world!')
 
-    def test_custom_handler_method(self):
+    def test_custom_method(self):
         class MyHandler(webapp2.RequestHandler):
             def my_method(self):
                 self.response.out.write('Hello, custom method world!')
@@ -553,8 +550,17 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         self.assertEqual(rsp.status, '200 OK')
         self.assertEqual(rsp.body, 'Hello again, custom method world!')
 
-    def test_custom_handler_exception(self):
-        self.assertRaises(ValueError, webapp2.Route, '/', handler='MyHandler:my_method', handler_method='my_method')
+    def test_custom_method_with_string(self):
+        app = webapp2.WSGIApplication([
+            webapp2.Route('/', handler='resources.handlers.CustomMethodHandler:custom_method'),
+        ], debug=True)
+
+        req = webapp2.Request.blank('/')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.body, 'I am a custom method.')
+
+        self.assertRaises(ValueError, webapp2.Route, '/', handler='resources.handlers.CustomMethodHandler:custom_method', handler_method='custom_method')
 
 if __name__ == '__main__':
     test_base.main()

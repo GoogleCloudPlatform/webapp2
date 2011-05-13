@@ -11,7 +11,6 @@ class NewStyleHandler(webapp2.RequestHandler):
     def get(self, text):
         self.response.out.write(text)
 
-
 app = webapp.WSGIApplication([
     (r'/test/(.*)', NewStyleHandler),
 ])
@@ -21,7 +20,16 @@ class OldStyleHandler(webapp.RequestHandler):
     def get(self, text):
         self.response.out.write(text)
 
+class OldStyleHandlerWithError(webapp.RequestHandler):
+    def get(self, text):
+        raise ValueError()
+
+    def handle_exception(self, e, debug):
+        self.response.set_status(500)
+        self.response.out.write('ValueError!')
+
 app2 = webapp2.WSGIApplication([
+    (r'/test/error', OldStyleHandlerWithError),
     (r'/test/(.*)', OldStyleHandler),
 ])
 
@@ -65,6 +73,12 @@ class TestRequestHandler(test_base.BaseTestCase):
         req.method = 'WHATMETHODISTHIS'
         rsp = req.get_response(app2)
         self.assertEqual(rsp.status, '501 Not Implemented')
+
+    def test_new_app_old_handler_with_error(self):
+        req = webapp2.Request.blank('/test/error')
+        rsp = req.get_response(app2)
+        self.assertEqual(rsp.status, '500 Internal Server Error')
+        self.assertEqual(rsp.body, 'ValueError!')
 
 
 if __name__ == '__main__':

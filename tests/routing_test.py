@@ -223,6 +223,26 @@ class TestRoute(test_base.BaseTestCase):
         route = BaseRoute()
         self.assertRaises(NotImplementedError, route.match, None)
 
+    def test_set_matcher(self):
+        req = Request.blank('/')
+        def custom_matcher(request):
+            self.assertEqual(request, req)
+
+        router = Router(None)
+        router.set_matcher(custom_matcher)
+        router.match(req)
+
+    def test_set_builder(self):
+        req = Request.blank('/')
+        def custom_builder(request, name, args, kwargs):
+            self.assertEqual(request, req)
+            return 'http://www.google.com'
+
+        router = Router(None)
+        router.set_builder(custom_builder)
+        res = router.build(req, '', (), {})
+        self.assertEqual(res, 'http://www.google.com')
+
 
 if __name__ == '__main__':
     test_base.main()
