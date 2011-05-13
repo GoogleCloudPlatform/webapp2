@@ -1,6 +1,6 @@
 # .coveragerc to control coverage.py
 [run]
-branch = True
+branch = False
 
 source =
     webapp2

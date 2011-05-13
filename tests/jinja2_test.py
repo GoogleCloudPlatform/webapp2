@@ -36,6 +36,23 @@ class TestJinja2(test_base.BaseTestCase):
         res = j.render_template('template2.html', message=message)
         self.assertEqual(res, message)
 
+    def test_render_template_globals_filters(self):
+        app = webapp2.WSGIApplication(debug=True)
+        app.config = config.Config({
+            'webapp2_extras.jinja2': {
+                'template_path': template_path,
+                'globals': dict(foo='fooglobal'),
+                'filters': dict(foo=lambda x: x + '-foofilter'),
+            },
+        })
+        req = webapp2.Request.blank('/')
+        app.set_globals(app=app, request=req)
+        j = jinja2.Jinja2(app)
+
+        message = 'fooglobal-foofilter'
+        res = j.render_template('template3.html', message=message)
+        self.assertEqual(res, message)
+
     def test_render_template_force_compiled(self):
         app = webapp2.WSGIApplication(debug=True)
         app.config = config.Config({
@@ -58,15 +75,24 @@ class TestJinja2(test_base.BaseTestCase):
         app.config = config.Config({
             'webapp2_extras.jinja2': {
                 'template_path': template_path,
-                'compiled_path': compiled_path,
             }
         })
         j = jinja2.Jinja2(app)
         hello = j.get_template_attribute('hello.html', 'hello')
         self.assertEqual(hello('World'), 'Hello, World!')
 
-    def get_jinja2(self):
+    def test_set_jinja2(self):
         app = webapp2.WSGIApplication(debug=True)
+        app.config = config.Config()
+        self.assertEqual(len(app.registry), 0)
+        jinja2.set_jinja2(jinja2.Jinja2(app), app=app)
+        self.assertEqual(len(app.registry), 1)
+        j = jinja2.get_jinja2(app=app)
+        self.assertTrue(isinstance(j, jinja2.Jinja2))
+
+    def test_get_jinja2(self):
+        app = webapp2.WSGIApplication(debug=True)
+        app.config = config.Config()
         j = jinja2.get_jinja2(app=app)
         self.assertTrue(isinstance(j, jinja2.Jinja2))
 
