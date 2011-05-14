@@ -343,6 +343,56 @@ class I18nTestCase(test_base.BaseTestCase):
         i18n.get_i18n().set_locale('de')
         self.assertRaises(NumberFormatError, i18n.parse_decimal, '2,109,998')
 
+    def test_set_i18n_store(self):
+        app = webapp2.WSGIApplication(debug=True)
+        app.config = config.Config()
+        req = webapp2.Request.blank('/')
+        req.app = app
+        store = i18n.I18nStore(app)
+
+        self.assertEqual(len(app.registry), 0)
+        i18n.set_store(store, app=app)
+        self.assertEqual(len(app.registry), 1)
+        s = i18n.get_store(app=app)
+        self.assertTrue(isinstance(s, i18n.I18nStore))
+
+    def test_get_i18n_store(self):
+        app = webapp2.WSGIApplication(debug=True)
+        app.config = config.Config()
+        req = webapp2.Request.blank('/')
+        req.app = app
+        self.assertEqual(len(app.registry), 0)
+        s = i18n.get_store(app=app)
+        self.assertEqual(len(app.registry), 1)
+        self.assertTrue(isinstance(s, i18n.I18nStore))
+
+    def test_set_i18n(self):
+        app = webapp2.WSGIApplication(debug=True)
+        app.config = config.Config()
+        req = webapp2.Request.blank('/')
+        req.app = app
+        store = i18n.I18n(req)
+
+        self.assertEqual(len(app.registry), 1)
+        self.assertEqual(len(req.registry), 0)
+        i18n.set_i18n(store, request=req)
+        self.assertEqual(len(app.registry), 1)
+        self.assertEqual(len(req.registry), 1)
+        i = i18n.get_i18n(request=req)
+        self.assertTrue(isinstance(i, i18n.I18n))
+
+    def test_get_i18n(self):
+        app = webapp2.WSGIApplication(debug=True)
+        app.config = config.Config()
+        req = webapp2.Request.blank('/')
+        req.app = app
+        self.assertEqual(len(app.registry), 0)
+        self.assertEqual(len(req.registry), 0)
+        i = i18n.get_i18n(request=req)
+        self.assertEqual(len(app.registry), 1)
+        self.assertEqual(len(req.registry), 1)
+        self.assertTrue(isinstance(i, i18n.I18n))
+
 
 if __name__ == '__main__':
     test_base.main()

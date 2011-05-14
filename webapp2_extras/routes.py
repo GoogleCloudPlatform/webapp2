@@ -132,20 +132,20 @@ class ImprovedRoute(webapp2.Route):
 
         :param redirect_to:
             A URL string or a callable that returns a URL. If set, this route
-            is used to redirect to the it. The callable is called passing
+            is used to redirect to it. The callable is called passing
             ``(handler, *args, **kwargs)`` as arguments. This is a
             convenience to use :class:`RedirectHandler`. These two are
             equivalent::
 
-                route = Route('/foo', RedirectHandler, defaults={'url': '/bar'})
+                route = Route('/foo', handler=webapp2.RedirectHandler, defaults={'url': '/bar'})
                 route = Route('/foo', redirect_to='/bar')
 
         :param redirect_to_name:
             Same as `redirect_to`, but the value is the name of a route to
             redirect to. In the example below, accessing '/hello-again' will
-            redirect to the url defined in the 'hello' route::
+            redirect to the route named 'hello'::
 
-                route = Route('/hello', HelloHandler, name='hello')
+                route = Route('/hello', handler=HelloHandler, name='hello')
                 route = Route('/hello-again', redirect_to_name='hello')
 
         :param strict_slash:
@@ -178,9 +178,6 @@ class ImprovedRoute(webapp2.Route):
             self.handler = webapp2.RedirectHandler
             self.defaults['url'] = redirect_to
 
-        if redirect_to_name is not None:
-            assert redirect_to is None
-
     def get_match_routes(self):
         """Generator to get all routes that can be matched from a route.
 
@@ -193,9 +190,7 @@ class ImprovedRoute(webapp2.Route):
             main_route = self
 
         if not self.build_only:
-            if self.redirect_to_name:
-                yield self._get_redirect_route(name=self.redirect_to_name)
-            elif self.strict_slash is True:
+            if self.strict_slash is True:
                 if self.template.endswith('/'):
                     template = self.template[:-1]
                 else:

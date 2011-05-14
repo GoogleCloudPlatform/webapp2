@@ -25,6 +25,13 @@ class TestJson(test_base.BaseTestCase):
             'IjxzY3JpcHQ+YWxlcnQoXCJoZWxsb1wiKTxcL3NjcmlwdD4i'),
             '<script>alert("hello")</script>')
 
+    def test_quote(self):
+        self.assertEqual(json.quote('<script>alert("hello")</script>'),
+            '%22%3Cscript%3Ealert%28%5C%22hello%5C%22%29%3C%5C/script%3E%22')
+
+    def test_unquote(self):
+        self.assertEqual(json.unquote('%22%3Cscript%3Ealert%28%5C%22hello%5C%22%29%3C%5C/script%3E%22'),
+            '<script>alert("hello")</script>')
 
 if __name__ == '__main__':
     test_base.main()

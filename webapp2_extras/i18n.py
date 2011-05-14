@@ -210,12 +210,12 @@ class I18n(object):
     store = None
     #: The current locale code.
     locale = None
+    #: The current translations.
+    translations = None
     #: The current timezone code.
     timezone = None
     #: The current tzinfo object.
     tzinfo = None
-    #: The current translations.
-    translations = None
 
     def __init__(self, request):
         """Initializes the i18n provider for a request.

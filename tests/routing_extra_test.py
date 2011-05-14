@@ -13,10 +13,13 @@ class HomeHandler(webapp2.RequestHandler):
 
 
 app = webapp2.WSGIApplication([
+    #ImprovedRoute('/', name='home', handler=HomeHandler),
     ImprovedRoute('/redirect-me-easily', redirect_to='/i-was-redirected-easily'),
     ImprovedRoute('/redirect-me-easily2', redirect_to='/i-was-redirected-easily', defaults={'permanent': False}),
     ImprovedRoute('/strict-foo', HomeHandler, 'foo-strict', strict_slash=True),
     ImprovedRoute('/strict-bar/', HomeHandler, 'bar-strict', strict_slash=True),
+    ImprovedRoute('/redirect-to-name-destination', name='redirect-to-name-destination', handler=HomeHandler),
+    ImprovedRoute('/redirect-to-name', redirect_to_name='redirect-to-name-destination'),
 ], debug=False)
 
 
@@ -42,6 +45,13 @@ class TestImprovedRoute(test_base.BaseTestCase):
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/i-was-redirected-easily')
 
+    def test_redirect_to_name(self):
+        req = webapp2.Request.blank('/redirect-to-name')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status, '301 Moved Permanently')
+        self.assertEqual(rsp.body, '')
+        self.assertEqual(rsp.headers['Location'], 'http://localhost/redirect-to-name-destination')
+
     def test_strict_slash(self):
         req = webapp2.Request.blank('/strict-foo')
         rsp = req.get_response(app)
@@ -66,6 +76,14 @@ class TestImprovedRoute(test_base.BaseTestCase):
         self.assertEqual(rsp.status, '301 Moved Permanently')
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/strict-bar/')
+
+        # Strict slash routes must have a name.
+
+        self.assertRaises(ValueError, ImprovedRoute, '/strict-bar/', handler=HomeHandler, strict_slash=True)
+
+    def test_build_only(self):
+        r = ImprovedRoute('/', handler=HomeHandler, build_only=True)
+        self.assertRaises(ValueError, webapp2.Router, None, [r])
 
 
 class TestPrefixRoutes(test_base.BaseTestCase):

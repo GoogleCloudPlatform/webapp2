@@ -182,7 +182,7 @@ class SecureCookieSessionFactory(BaseSessionFactory):
         return self.session
 
     def save_session(self, response):
-        if self.session is None or not self.session.modified:
+        if not self.session or not self.session.modified:
             return
 
         self.session_store.save_secure_cookie(
@@ -337,9 +337,10 @@ class SessionStore(object):
         :param kwargs:
             Options to save the cookie. See :meth:`get_session`.
         """
+        assert isinstance(value, dict), 'Secure cookie values must be a dict.'
         container = self._get_session_container(name,
                                                 SecureCookieSessionFactory)
-        container.session = value
+        container.get_session().update(value)
         container.session_args.update(kwargs)
 
     # Saving to a response object ---------------------------------------------

@@ -42,7 +42,7 @@ class MemcacheSessionFactory(sessions.CustomBackendSessionFactory):
         return sessions.SessionDict(self, new=True)
 
     def save_session(self, response):
-        if self.session is None or not self.session.modified:
+        if not self.session or not self.session.modified:
             return
 
         memcache.set(self.sid, dict(self.session))

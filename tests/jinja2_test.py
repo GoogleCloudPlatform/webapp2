@@ -93,7 +93,9 @@ class TestJinja2(test_base.BaseTestCase):
     def test_get_jinja2(self):
         app = webapp2.WSGIApplication(debug=True)
         app.config = config.Config()
+        self.assertEqual(len(app.registry), 0)
         j = jinja2.get_jinja2(app=app)
+        self.assertEqual(len(app.registry), 1)
         self.assertTrue(isinstance(j, jinja2.Jinja2))
 
 

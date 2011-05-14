@@ -28,11 +28,15 @@ class TestSecureCookieSession(test_base.BaseTestCase):
         store = sessions.SessionStore(req)
 
         session = store.get_session(factory=self.factory)
+
+        rsp = webapp2.Response()
+        # Nothing changed, we want to test anyway.
+        store.save_sessions(rsp)
+
         session['a'] = 'b'
         session['c'] = 'd'
         session['e'] = 'f'
 
-        rsp = webapp2.Response()
         store.save_sessions(rsp)
 
         # Round 2 -------------------------------------------------------------
@@ -116,6 +120,71 @@ class TestSecureCookieSession(test_base.BaseTestCase):
 
         flashes = session.get_flashes()
         self.assertEqual(flashes, [])
+
+    def test_set_secure_cookie(self):
+
+        rsp = webapp2.Response()
+
+        # Round 1 -------------------------------------------------------------
+
+        req = webapp2.Request.blank('/')
+        req.app = app
+        store = sessions.SessionStore(req)
+
+        store.set_secure_cookie('foo', {'bar': 'baz'})
+        store.save_sessions(rsp)
+
+        # Round 2 -------------------------------------------------------------
+
+        cookies = rsp.headers.get('Set-Cookie')
+        req = webapp2.Request.blank('/', headers=[('Cookie', cookies)])
+        req.app = app
+        store = sessions.SessionStore(req)
+        res = store.get_secure_cookie('foo')
+        self.assertEqual(res, {'bar': 'baz'})
+
+    def test_set_session_store(self):
+        app = webapp2.WSGIApplication(debug=True)
+        app.config = webapp2_config.Config({
+            'webapp2_extras.sessions': {
+                'secret_key': 'my-super-secret',
+            }
+        })
+        req = webapp2.Request.blank('/')
+        req.app = app
+        store = sessions.SessionStore(req)
+
+        self.assertEqual(len(req.registry), 0)
+        sessions.set_store(store, request=req)
+        self.assertEqual(len(req.registry), 1)
+        s = sessions.get_store(request=req)
+        self.assertTrue(isinstance(s, sessions.SessionStore))
+
+    def test_get_session_store(self):
+        app = webapp2.WSGIApplication(debug=True)
+        app.config = webapp2_config.Config({
+            'webapp2_extras.sessions': {
+                'secret_key': 'my-super-secret',
+            }
+        })
+        req = webapp2.Request.blank('/')
+        req.app = app
+        self.assertEqual(len(req.registry), 0)
+        s = sessions.get_store(request=req)
+        self.assertEqual(len(req.registry), 1)
+        self.assertTrue(isinstance(s, sessions.SessionStore))
+
+    def test_not_implemented(self):
+        req = webapp2.Request.blank('/')
+        req.app = app
+        store = sessions.SessionStore(req)
+
+        f = sessions.BaseSessionFactory('foo', store)
+        self.assertRaises(NotImplementedError, f.get_session)
+        self.assertRaises(NotImplementedError, f.save_session, None)
+
+        f = sessions.CustomBackendSessionFactory('foo', store)
+        self.assertRaises(NotImplementedError, f._get_by_sid, None)
 
 
 if __name__ == '__main__':

@@ -28,11 +28,15 @@ class TestMemcacheSession(test_base.BaseTestCase):
         store = sessions.SessionStore(req)
 
         session = store.get_session(factory=self.factory)
+
+        rsp = webapp2.Response()
+        # Nothing changed, we want to test anyway.
+        store.save_sessions(rsp)
+
         session['a'] = 'b'
         session['c'] = 'd'
         session['e'] = 'f'
 
-        rsp = webapp2.Response()
         store.save_sessions(rsp)
 
         # Round 2 -------------------------------------------------------------

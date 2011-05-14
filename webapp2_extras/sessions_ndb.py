@@ -18,18 +18,25 @@ from ndb import model
 from webapp2_extras import sessions
 
 
-class _PickledDictProperty(model.BlobProperty):
+class _PickledProperty(model.BlobProperty):
+    _type = None
     _indexed = False
 
-    def _validate(self, value):
-        if not isinstance(value, dict):
-            raise datastore_errors.BadValueError(
-                'Expected dict, got %r' % value)
+    def __init__(self, _type, *args, **kwargs):
+        super(self.__class__, self).__init__(*args, **kwargs)
+        self._type = _type
 
+    def _validate_type(self, value):
+        if not isinstance(value, self._type):
+            raise datastore_errors.BadValueError(
+                'Expected %r, got %r' % (self._type, value))
         return value
 
+    def _validate(self, value):
+        return self._validate_type(value)
+
     def _db_set_value(self, v, p, value):
-        assert isinstance(value, dict), (self._name)
+        value = self._validate_type(value)
         super(self.__class__, self)._db_set_value(v, p, pickle.dumps(value))
 
     def _db_get_value(self, v, p):
@@ -45,7 +52,7 @@ class Session(model.Model):
     #: Save time.
     updated = model.DateTimeProperty(auto_now=True)
     #: Session data, pickled.
-    data = _PickledDictProperty()
+    data = _PickledProperty(dict)
 
     @classmethod
     def get_by_sid(cls, sid):
@@ -100,7 +107,7 @@ class DatastoreSessionFactory(sessions.CustomBackendSessionFactory):
         return sessions.SessionDict(self, new=True)
 
     def save_session(self, response):
-        if self.session is None or not self.session.modified:
+        if not self.session or not self.session.modified:
             return
 
         Session(id=self.sid, data=dict(self.session))._put()
