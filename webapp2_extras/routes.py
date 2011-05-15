@@ -43,23 +43,21 @@ class DomainRoute(MultiRoute):
 
     For example, to restrict routes to a subdomain of the appspot domain::
 
-        SUBDOMAIN_RE = '^(?P<subdomain>[^.]+)\.app-id\.appspot\.com$'
-
         app = WSGIApplication([
-            DomainRoute(SUBDOMAIN_RE, [
+        DomainRoute('<subdomain>.app-id.appspot.com', [
                 Route('/foo', 'FooHandler', 'subdomain-thing'),
             ]),
             Route('/bar', 'BarHandler', 'normal-thing'),
         ])
 
-    The regex must define named subgroups if any value must be added to the
-    match results. In the example above, an extra `subdomain` keyword is added
-    to the results, but if the regex didn't define any named subgroups,
-    nothing would be added.
+    The template follows the same syntax used by :class:`webapp2.Route` and
+    must define named groups if any value must be added to the match results.
+    In the example above, an extra `subdomain` keyword is added to the results,
+    but if the regex didn't define any named subgroups, nothing would be added.
     """
-    def __init__(self, regex, routes):
+    def __init__(self, template, routes):
         super(DomainRoute, self).__init__(routes)
-        self.regex = re.compile(regex)
+        self.template = template
         self.match_routes = [r for r in self.routes if not r.build_only]
 
     def get_match_routes(self):
@@ -76,6 +74,24 @@ class DomainRoute(MultiRoute):
                 if match:
                     match[2].update(host_match.groupdict())
                     return match
+
+    @webapp2.cached_property
+    def regex(self):
+        pattern = ''
+        last = 0
+        template = self.template
+        for match in webapp2._ROUTE_REGEX.finditer(template):
+            part = template[last:match.start()]
+            name = match.group(1)
+            expr = match.group(2) or '[^\.]+'
+            last = match.end()
+
+            if name:
+                pattern += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
+            else:
+                pattern += '%s%s' % (re.escape(part), expr)
+
+        return re.compile('^%s%s$' % (pattern, re.escape(template[last:])))
 
 
 class PathPrefixRoute(MultiRoute):

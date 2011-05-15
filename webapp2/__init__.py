@@ -25,12 +25,12 @@ from webob import exc
 HTTPException = exc.HTTPException
 
 #: Regex for URL definitions.
-_ROUTE_REGEX = re.compile(r'''
-    \<            # The exact character "<"
-    (\w+)?        # The optional variable name ([a-zA-Z0-9_])
-    (?::([^>]*))? # The optional :regex part
-    \>            # The exact character ">"
-    ''', re.VERBOSE)
+_ROUTE_REGEX = re.compile(r"""
+    \<               # The exact character "<"
+    (\w+)?           # The optional variable name ([a-zA-Z0-9_]+)
+    (?::([^>]*))?    # The optional :regex part
+    \>               # The exact character ">"
+    """, re.VERBOSE)
 
 
 class Request(webapp.Request):
@@ -569,13 +569,27 @@ class Route(BaseRoute):
 
     @cached_property
     def regex(self):
-        regex, reverse_template, variables, arg_count, kwd_count = \
-            parse_route_template(self.template)
-        self.reverse_template = reverse_template
-        self.variables = variables
-        self.arg_count = arg_count
-        self.kwd_count = kwd_count
-        return regex
+        self.variables = {}
+        self.reverse_template = pattern = ''
+        self.arg_count = last = 0
+        for match in _ROUTE_REGEX.finditer(self.template):
+            part = self.template[last:match.start()]
+            name = match.group(1)
+            expr = match.group(2) or '[^/]+'
+            last = match.end()
+
+            if not name:
+                name = '__%d__' % self.arg_count
+                self.arg_count += 1
+
+            pattern += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
+            self.reverse_template += '%s%%(%s)s' % (part, name)
+            self.variables[name] = re.compile('^%s$' % expr)
+
+        part = self.template[last:]
+        self.kwd_count = len(self.variables) - self.arg_count
+        self.reverse_template += part
+        return re.compile('^%s%s$' % (pattern, re.escape(part)))
 
     def match(self, request):
         """Matches this route against the current request.
@@ -589,9 +603,9 @@ class Route(BaseRoute):
         kwargs = self.defaults.copy()
         kwargs.update(match.groupdict())
         if kwargs and self.arg_count:
-            args = tuple(value[1] for value in sorted((int(key[2:-2]), \
-                kwargs.pop(key)) for key in \
-                kwargs.keys() if key.startswith('__')))
+            args = tuple(value[1] for value in sorted(
+                (int(key[2:-2]), kwargs.pop(key)) for key in kwargs.keys() \
+                if key.startswith('__') and key.endswith('__')))
         else:
             args = ()
 
@@ -746,6 +760,13 @@ class Router(object):
 
         request.route, request.route_args, request.route_kwargs = match
         route, args, kwargs = match
+        # The handler only receives *args if no named variables are set.
+        # Otherwise, the handler only receives **kwargs. This allows users to
+        # use regexes that are not intended to be captured, mixing named and
+        # unnamed variables.
+        if kwargs:
+            args = ()
+
         handler_spec = route.handler
         if isinstance(handler_spec, basestring):
             if handler_spec not in self._handlers:
@@ -1237,31 +1258,6 @@ def to_unicode(value):
 
     assert isinstance(value, unicode)
     return value
-
-
-def parse_route_template(template):
-    variables = {}
-    pattern = reverse_template = ''
-    last = arg_count = kwd_count = 0
-    for match in _ROUTE_REGEX.finditer(template):
-        part = template[last:match.start()]
-        name = match.group(1)
-        expr = match.group(2) or '[^/]+'
-        last = match.end()
-
-        if name:
-            kwd_count += 1
-        else:
-            name = '__%d__' % arg_count
-            arg_count += 1
-
-        pattern += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
-        reverse_template += '%s%%(%s)s' % (part, name)
-        variables[name] = re.compile('^%s$' % expr)
-
-    regex = re.compile('^%s%s$' % (pattern, re.escape(template[last:])))
-    reverse_template += template[last:]
-    return regex, reverse_template, variables, arg_count, kwd_count
 
 
 def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):

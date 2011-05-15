@@ -162,10 +162,8 @@ class TestPrefixRoutes(test_base.BaseTestCase):
 
 class TestDomainRoute(test_base.BaseTestCase):
     def test_simple(self):
-        SUBDOMAIN_RE = '^(?P<subdomain>[^.]+)\.app-id\.appspot\.com$'
-
         router = webapp2.Router(None, [
-            DomainRoute(SUBDOMAIN_RE, [
+            DomainRoute('<subdomain>.<:.*>', [
                 webapp2.Route('/foo', 'FooHandler', 'subdomain-thingie'),
             ])
         ])
@@ -183,10 +181,8 @@ class TestDomainRoute(test_base.BaseTestCase):
         self.assertEqual(url, 'http://another-subdomain.app-id.appspot.com/foo')
 
     def test_with_variables_name_and_handler(self):
-        SUBDOMAIN_RE = '^(?P<subdomain>[^.]+)\.app-id\.appspot\.com$'
-
         router = webapp2.Router(None, [
-            DomainRoute(SUBDOMAIN_RE, [
+            DomainRoute('<subdomain>.<:.*>', [
                 PathPrefixRoute('/user/<username:\w+>', [
                     HandlerPrefixRoute('apps.users.', [
                         NamePrefixRoute('user-', [

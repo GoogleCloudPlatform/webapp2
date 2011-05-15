@@ -6,13 +6,22 @@ Development version
 - Added set_matcher() and set_builder() to Router, to set extended matcher and
   builder.
 
-- DomainRoute now updates matched keywords of the route using .groupdict().
-  This gives control of what is passed to the handler if a domain/subdomain
-  matches, and allows to not pass anything if no regex groups are defined.
-
 - Routes now return the route on match() or routes with nested routes cannot
   work. So instead of returning (args, kwargs) they return
   (route, args, kwargs).
+
+- Now handlers only receive **args if no named variables are set. Otherwise,
+  they only receive **kwargs. This allows users to use regexes that are not
+  intended to be captured, mixing named and unnamed variables.
+
+- DomainRoute now uses the same syntax used by webapp2.Route, instead of a
+  regex. The resulting keywords are added to the mathed route **kwargs.
+  This gives control of what is passed to the handler if a domain/subdomain
+  matches, and allows to not pass anything if no regex groups are defined.
+
+- Variable names
+
+- Several small bugs fixed and increased test coverage in webapp2_extras.
 
 
 Version 1.3 - May 9, 2011
