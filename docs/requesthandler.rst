@@ -25,10 +25,6 @@ Here's a correct way to override ``__init__()``::
             # Dispatch the requested method.
             self.dispatch()
 
-If you need to access the current :class:`webapp2.WSGIApplication` instance on
-``__init__()``, it is available as an attribute of request: use
-``request.app``.
-
 
 Overriding ``dispatch()``
 -------------------------
