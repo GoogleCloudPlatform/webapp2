@@ -4,9 +4,9 @@ The RequestHandler class
 
 Overriding ``__init__()``
 -------------------------
-If you want to override the :class:`webapp2.RequestHandler.__init__` method,
-you must call :class:`webapp2.RequestHandler.initialize` at the beginning and
-:class:`webapp2.RequestHandler.dispatch` at the end of the method. This is
+If you want to override the :meth:`webapp2.RequestHandler.__init__` method,
+you must call :meth:`webapp2.RequestHandler.initialize` at the beginning and
+:meth:`webapp2.RequestHandler.dispatch` at the end of the method. This is
 because in webapp2 the handler dispatches the requested method on construction.
 If you call the parent class at the beginning of the method, any other
 initializations you do after it will be lost because the requested method will
@@ -31,7 +31,7 @@ Overriding ``dispatch()``
 One of the advantadges of webapp2 over webapp is that you can wrap the
 dispatching process of :class:`webapp2.RequestHandler` to perform actions
 before and/or after the requested method is dispatched. You can do this
-overriding the :class:`webapp2.RequestHandler.dispatch` method. This can be
+overriding the :meth:`webapp2.RequestHandler.dispatch` method. This can be
 useful, for example, to test if requirements were met before actually
 dispatching the requested method, or to perform actions in the response object
 after the method was dispatched. Here's an example::
