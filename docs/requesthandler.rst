@@ -5,22 +5,25 @@ The RequestHandler class
 Overriding ``__init__()``
 -------------------------
 If you want to override the :class:`webapp2.RequestHandler.__init__` method,
-you must take care to call the parent class only at the end of the method.
-This is because in webapp2 the handler dispatches the requested method on
-construction. If you call the parent class at the beginning of the method,
-any other initializations you do after it will be lost because the requested
-method will have been dispatched already.
+you must call :class:`webapp2.RequestHandler.initialize` at the beginning and
+:class:`webapp2.RequestHandler.dispatch` at the end of the method. This is
+because in webapp2 the handler dispatches the requested method on construction.
+If you call the parent class at the beginning of the method, any other
+initializations you do after it will be lost because the requested method will
+have been dispatched already.
 
 Here's a correct way to override ``__init__()``::
 
     class MyHandler(webapp2.RequestHandler):
         def __init__(self, request, response):
+            # Set self.request, self.response and self.app.
+            self.initialize(request, response)
+
             # ... add your custom initializations here ...
             # ...
 
-            # Parent class will set basic attributes and call the method to be
-            # dispatched -- get() or post() or etc.
-            super(self.__class__, self).__init__(request, response)
+            # Dispatch the requested method.
+            self.dispatch()
 
 If you need to access the current :class:`webapp2.WSGIApplication` instance on
 ``__init__()``, it is available as an attribute of request: use

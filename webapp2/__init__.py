@@ -127,6 +127,15 @@ class RequestHandler(object):
         """Initializes this request handler with the given WSGI application,
         Request and Response.
 
+        When instantiated by ``webapp.WSGIApplication``, request and response
+        are not set on instantiation. Instead, initialize() is called right
+        after the handler is created to set them.
+
+        Also in webapp dispatching is done by the WSGI app, while webapp2
+        does it here to allow more flexibility in extended classes: handlers
+        can wrap meth:`dispatch` to check for conditions before executing the
+        requested method and/or post-process the response.
+
         .. note::
            Parameters are optional only to support webapp's constructor which
            doesn't take any arguments. Consider them as required.
@@ -136,31 +145,19 @@ class RequestHandler(object):
         :param response:
             A :class:`Response` instance.
         """
-        if not request or not response:
-            # When dispatched by webapp.WSGIApplication, both are None.
-            return
-
-        self.request = request
-        self.response = response
-        self.app = request.app
-        self.dispatch()
+        if request and response:
+            self.initialize(request, response)
+            self.dispatch()
 
     def initialize(self, request, response):
         """Initializes this request handler with the given WSGI application,
         Request and Response.
-
-        .. warning::
-           This is deprecated. It is here for compatibility with webapp only.
-           Use __init__() instead.
 
         :param request:
             A :class:`Request` instance.
         :param response:
             A :class:`Response` instance.
         """
-        from warnings import warn
-        warn(DeprecationWarning('RequestHandler.initialize() is deprecated. '
-            'Use __init__() instead.'))
         self.request = request
         self.response = response
         self.app = WSGIApplication.active_instance
