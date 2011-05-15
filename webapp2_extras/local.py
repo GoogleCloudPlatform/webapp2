@@ -238,8 +238,6 @@ class LocalProxy(object):
 # WSGIApplication -------------------------------------------------------------
 
 
-from wsgiref import handlers
-
 import webapp2
 
 
@@ -273,11 +271,3 @@ class WSGIApplication(_app_class):
         else:
             _local.app = app
             _local.request = request
-
-    def run(self, bare=False):
-        """Runs the app using ``wsgiref.handlers.CGIHandler``.
-
-        :param bare:
-            NOOP for this class.
-        """
-        handlers.CGIHandler().run(self)

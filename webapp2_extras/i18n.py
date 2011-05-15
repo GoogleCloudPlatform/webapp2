@@ -19,9 +19,12 @@ from babel import numbers
 from babel import support
 
 try:
-    from pytz.gae import pytz
+    # Monkeypatches pytz for gae.
+    import pytz.gae
 except ImportError:
-    import pytz
+    pass
+
+import pytz
 
 import webapp2
 

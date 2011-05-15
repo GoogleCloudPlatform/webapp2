@@ -15,11 +15,26 @@ import re
 import urllib
 import urlparse
 
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import util
-
 import webob
 from webob import exc
+
+try:
+    from google.appengine.ext import webapp
+    from google.appengine.ext.webapp import util
+except ImportError:
+    # Let's allow running webapp2 outside of GAE!
+    from wsgiref import handlers
+
+    class webapp(object):
+        Request = webob.Request
+        RequestHandler = type('RequestHandler', (object,), {})
+
+    class util(object):
+        def _run(self, app):
+            handlers.CGIHandler().run(app)
+
+        run_bare_wsgi_app = classmethod(_run)
+        run_wsgi_app = classmethod(_run)
 
 #: Base HTTP exception, set here as public interface.
 HTTPException = exc.HTTPException
@@ -44,7 +59,7 @@ class Request(webapp.Request):
     route_kwargs = None
 
     def __init__(self, *args, **kwargs):
-        super(Request, self).__init__(*args, **kwargs)
+        super(self.__class__, self).__init__(*args, **kwargs)
         # A registry for objects used during the request lifetime.
         self.registry = {}
 
@@ -59,7 +74,7 @@ class Response(webob.Response):
     default_charset = 'utf-8'
 
     def __init__(self, *args, **kwargs):
-        super(Response, self).__init__(*args, **kwargs)
+        super(self.__class__, self).__init__(*args, **kwargs)
         # webapp uses response.out.write(), so we point `.out` to `self`
         # and it will use `Response.write()`.
         self.out = self
@@ -74,7 +89,7 @@ class Response(webob.Response):
         if isinstance(text, unicode) and not self.charset:
             self.charset = self.default_charset
 
-        super(Response, self).write(text)
+        super(self.__class__, self).write(text)
 
     def set_status(self, code, message=None):
         """Sets the HTTP status code of this response.
@@ -133,7 +148,7 @@ class RequestHandler(object):
 
         Also in webapp dispatching is done by the WSGI app, while webapp2
         does it here to allow more flexibility in extended classes: handlers
-        can wrap meth:`dispatch` to check for conditions before executing the
+        can wrap :meth:`dispatch` to check for conditions before executing the
         requested method and/or post-process the response.
 
         .. note::
@@ -299,8 +314,8 @@ class RedirectHandler(RequestHandler):
             return handler.url_for('new-route-name')
 
         app = WSGIApplication([
-            Route(r'/old-url', RedirectHandler, defaults={'url': '/new-url'}),
-            Route(r'/other-old-url', RedirectHandler, defaults={'url': get_redirect_url}),
+            Route('/old-url', RedirectHandler, defaults={'url': '/new-url'}),
+            Route('/other-old-url', RedirectHandler, defaults={'url': get_redirect_url}),
         ])
 
     Based on idea from `Tornado`_.
@@ -484,9 +499,9 @@ class Route(BaseRoute):
     """A URL route definition. A route template contains parts enclosed by
     ``<>`` and is used to match requested URLs. Here are some examples::
 
-        route = Route(r'/article/<id:[\d]+>', ArticleHandler)
-        route = Route(r'/wiki/<page_name:\w+>', WikiPageHandler)
-        route = Route(r'/blog/<year:\d{4}>/<month:\d{2}>/<day:\d{2}>/<slug:\w+>', BlogItemHandler)
+        route = Route('/article/<id:[\d]+>', ArticleHandler)
+        route = Route('/wiki/<page_name:\w+>', WikiPageHandler)
+        route = Route('/blog/<year:\d{4}>/<month:\d{2}>/<day:\d{2}>/<slug:\w+>', BlogItemHandler)
 
     Based on `Another Do-It-Yourself Framework`_, by Ian Bicking. We added
     URL building, non-keyword variables and other improvements.
@@ -509,20 +524,34 @@ class Route(BaseRoute):
             A route template to be matched, containing parts enclosed by ``<>``
             that can have only a name, only a regular expression or both:
 
-              =============================  ==================================
-              Format                         Example
-              =============================  ==================================
-              ``<name>``                     ``r'/<year>/<month>'``
-              ``<:regular expression>``      ``r'/<:\d{4}>/<:\d{2}>'``
-              ``<name:regular expression>``  ``r'/<year:\d{4}>/<month:\d{2}>'``
-              =============================  ==================================
+              =================  ==================================
+              Format             Example
+              =================  ==================================
+              ``<name>``         ``'/<year>/<month>'``
+              ``<:regex>``       ``'/<:\d{4}>/<:\d{2}>'``
+              ``<name:regex>``   ``'/<year:\d{4}>/<month:\d{2}>'``
+              =================  ==================================
 
             If the name is set, the value of the matched regular expression
             is passed as keyword argument to the :class:`RequestHandler`.
             Otherwise it is passed as positional argument.
 
+            If only the name is set, it will match anything except a slash.
+            So these routes are equivalent::
+
+                Route('/<user_id>/settings', handler=SettingsHandler, name='user-settings')
+                Route('/<user_id:[^/]+>/settings', handler=SettingsHandler, name='user-settings')
+
             The same template can mix parts with name, regular expression or
             both.
+
+            .. note::
+               The handler only receives *args if no named variables are set.
+               Otherwise, the handler only receives **kwargs. This allows to
+               set regular expressions that are not intended to be captured:
+               you just mix named and unnamed variables and the handler will
+               only receive the named ones.
+
         :param handler:
             A callable or dotted name for a callable to be lazily imported,
             e.g., ``'my.module.MyHandler'`` or ``'my.module.my_function'``.
@@ -806,9 +835,9 @@ class Router(object):
         For example, if you have these routes defined for the application::
 
             app = WSGIApplication([
-                Route(r'/', 'handlers.HomeHandler', 'home'),
-                Route(r'/wiki', WikiHandler, 'wiki'),
-                Route(r'/wiki/<page>', WikiHandler, 'wiki-page'),
+                Route('/', 'handlers.HomeHandler', 'home'),
+                Route('/wiki', WikiHandler, 'wiki'),
+                Route('/wiki/<page>', WikiHandler, 'wiki-page'),
             ])
 
         Here are some examples of how to generate URLs inside a handler::
@@ -928,7 +957,7 @@ class WSGIApplication(object):
                 self.response.write('Hello, World!')
 
         app = WSGIApplication([
-            (r'/', HelloWorldHandler),
+            ('/', HelloWorldHandler),
         ])
 
         def main():
@@ -946,8 +975,8 @@ class WSGIApplication(object):
     reversible URLs and keyword arguments passed to the handler. Example::
 
         app = WSGIApplication([
-            Route(r'/articles', ArticlesHandler, 'articles'),
-            Route(r'/articles/<id:[\d]+>', ArticleHandler, 'article'),
+            Route('/articles', ArticlesHandler, 'articles'),
+            Route('/articles/<id:[\d]+>', ArticleHandler, 'article'),
         ])
 
     .. seealso:: :class:`Route`.
@@ -1067,7 +1096,7 @@ class WSGIApplication(object):
                 response.set_status(404)
 
             app = WSGIApplication([
-                (r'/', MyHandler),
+                ('/', MyHandler),
             ])
             app.error_handlers[404] = handle_404
 
@@ -1118,7 +1147,7 @@ class WSGIApplication(object):
             import webapp2
 
             app = webapp2.WSGIApplication([
-                webapp2.Route(r'/', 'handlers.HelloWorldHandler'),
+                webapp2.Route('/', 'handlers.HelloWorldHandler'),
             ])
 
             def main():
