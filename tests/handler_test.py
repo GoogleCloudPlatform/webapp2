@@ -151,7 +151,7 @@ The resource could not be found.
 
 class TestHandler(test_base.BaseTestCase):
     def tearDown(self):
-        super(self.__class__, self).tearDown()
+        super(TestHandler, self).tearDown()
         app.error_handlers = {}
 
     def test_200(self):

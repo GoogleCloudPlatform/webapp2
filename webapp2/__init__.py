@@ -59,7 +59,7 @@ class Request(webapp.Request):
     route_kwargs = None
 
     def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(Request, self).__init__(*args, **kwargs)
         # A registry for objects used during the request lifetime.
         self.registry = {}
 
@@ -74,7 +74,7 @@ class Response(webob.Response):
     default_charset = 'utf-8'
 
     def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(Response, self).__init__(*args, **kwargs)
         # webapp uses response.out.write(), so we point `.out` to `self`
         # and it will use `Response.write()`.
         self.out = self
@@ -89,7 +89,7 @@ class Response(webob.Response):
         if isinstance(text, unicode) and not self.charset:
             self.charset = self.default_charset
 
-        super(self.__class__, self).write(text)
+        super(Response, self).write(text)
 
     def set_status(self, code, message=None):
         """Sets the HTTP status code of this response.
@@ -521,20 +521,24 @@ class Route(BaseRoute):
         """Initializes a URL route.
 
         :param template:
-            A route template to be matched, containing parts enclosed by ``<>``
-            that can have only a name, only a regular expression or both:
+            A route template to match against the request path. A template
+            can have variables enclosed by ``<>`` that define a name, a
+            regular expression or both. Examples:
 
               =================  ==================================
               Format             Example
               =================  ==================================
-              ``<name>``         ``'/<year>/<month>'``
-              ``<:regex>``       ``'/<:\d{4}>/<:\d{2}>'``
-              ``<name:regex>``   ``'/<year:\d{4}>/<month:\d{2}>'``
+              ``<name>``         ``'/blog/<year>/<month>'``
+              ``<:regex>``       ``'/blog/<:\d{4}>/<:\d{2}>'``
+              ``<name:regex>``   ``'/blog/<year:\d{4}>/<month:\d{2}>'``
               =================  ==================================
 
+            The same template can mix parts with name, regular expression or
+            both.
+
             If the name is set, the value of the matched regular expression
-            is passed as keyword argument to the :class:`RequestHandler`.
-            Otherwise it is passed as positional argument.
+            is passed as keyword argument to the handler. Otherwise it is
+            passed as positional argument.
 
             If only the name is set, it will match anything except a slash.
             So these routes are equivalent::
@@ -542,14 +546,11 @@ class Route(BaseRoute):
                 Route('/<user_id>/settings', handler=SettingsHandler, name='user-settings')
                 Route('/<user_id:[^/]+>/settings', handler=SettingsHandler, name='user-settings')
 
-            The same template can mix parts with name, regular expression or
-            both.
-
             .. note::
-               The handler only receives *args if no named variables are set.
-               Otherwise, the handler only receives **kwargs. This allows to
-               set regular expressions that are not intended to be captured:
-               you just mix named and unnamed variables and the handler will
+               The handler only receives ``*args`` if no named variables are
+               set. Otherwise, the handler only receives ``**kwargs``. This
+               allows you to set regular expressions that are not captured:
+               just mix named and unnamed variables and the handler will
                only receive the named ones.
 
         :param handler:
@@ -787,9 +788,6 @@ class Router(object):
         request.route, request.route_args, request.route_kwargs = match
         route, args, kwargs = match
         # The handler only receives *args if no named variables are set.
-        # Otherwise, the handler only receives **kwargs. This allows users to
-        # use regexes that are not intended to be captured, mixing named and
-        # unnamed variables.
         if kwargs:
             args = ()
 

@@ -23,7 +23,7 @@ class _PickledProperty(model.BlobProperty):
     _indexed = False
 
     def __init__(self, _type, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(_PickledProperty, self).__init__(*args, **kwargs)
         self._type = _type
 
     def _validate_type(self, value):
@@ -37,7 +37,7 @@ class _PickledProperty(model.BlobProperty):
 
     def _db_set_value(self, v, p, value):
         value = self._validate_type(value)
-        super(self.__class__, self)._db_set_value(v, p, pickle.dumps(value))
+        super(_PickledProperty, self)._db_set_value(v, p, pickle.dumps(value))
 
     def _db_get_value(self, v, p):
         if not v.has_stringvalue():
@@ -75,7 +75,7 @@ class Session(model.Model):
     def _put(self):
         """Saves the session and updates the memcache entry."""
         memcache.set(self._key.id(), self.data)
-        super(self.__class__, self).put()
+        super(Session, self).put()
 
 
 class DatastoreSessionFactory(sessions.CustomBackendSessionFactory):

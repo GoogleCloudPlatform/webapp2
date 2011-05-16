@@ -13,8 +13,9 @@ Some webapp2_extras modules are not listed here yet but will be soon:
 
 - `i18n <http://code.google.com/p/webapp-improved/source/browse/webapp2_extras/i18n.py>`_ (localization and internationalization support)
 - `jinja2 <http://code.google.com/p/webapp-improved/source/browse/webapp2_extras/jinja2.py>`_ (Jinja2 support)
-- `local <http://code.google.com/p/webapp-improved/source/browse/webapp2_extras/local.py>`_ (support for threaded environments - yup, you can use webapp2 outside of GAE!)
-- `routes <http://code.google.com/p/webapp-improved/source/browse/webapp2_extras/routes.py>`_ (extra route classes)
+- `local <http://code.google.com/p/webapp-improved/source/browse/webapp2_extras/local.py>`_ (support for threaded environments -- for non-GAE servers)
+- `protorpc <http://code.google.com/p/webapp-improved/source/browse/webapp2_extras/protorpc.py>`_ (support for `ProtoRPC <http://code.google.com/p/google-protorpc/>`_)
+- `routes <http://code.google.com/p/webapp-improved/source/browse/webapp2_extras/routes.py>`_ (extra route classes -- to match subdomains and other conveniences)
 
 
 Configuration

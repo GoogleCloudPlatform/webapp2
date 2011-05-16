@@ -53,9 +53,17 @@ class DomainRoute(MultiRoute):
     The template follows the same syntax used by :class:`webapp2.Route` and
     must define named groups if any value must be added to the match results.
     In the example above, an extra `subdomain` keyword is added to the results,
-    but if the regex didn't define any named subgroups, nothing would be added.
+    but if the regex didn't define any named groups, nothing would be added.
     """
     def __init__(self, template, routes):
+        """Initializes a URL route.
+
+        :param template:
+            A route template to match against ``environ['SERVER_NAME']``.
+            See a syntax description in :meth:`webapp2.Route.__init__`.
+        :param routes:
+            A list of :class:`webapp2.Route` instances.
+        """
         super(DomainRoute, self).__init__(routes)
         self.template = template
         self.match_routes = [r for r in self.routes if not r.build_only]
@@ -117,6 +125,13 @@ class PathPrefixRoute(MultiRoute):
     _attr = 'template'
 
     def __init__(self, prefix, routes):
+        """Initializes a URL route.
+
+        :param prefix:
+            The path prefix.
+        :param routes:
+            A list of :class:`webapp2.Route` instances.
+        """
         self.prefix = prefix
         self.routes = []
         # Extract all nested routes, prepending a prefix to a route attribute.
@@ -179,7 +194,7 @@ class ImprovedRoute(webapp2.Route):
             - Access to ``/foo/`` will redirect to ``/foo``.
             - Access to ``/bar`` will redirect to ``/bar/``.
         """
-        super(self.__class__, self).__init__(
+        super(ImprovedRoute, self).__init__(
             template, handler=handler, name=name, defaults=defaults,
             build_only=build_only, handler_method=handler_method)
 

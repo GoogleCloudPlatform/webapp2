@@ -16,7 +16,7 @@ import test_base
 class I18nTestCase(test_base.BaseTestCase):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(I18nTestCase, self).setUp()
 
         app = webapp2.WSGIApplication()
         request = webapp2.Request.blank('/')
