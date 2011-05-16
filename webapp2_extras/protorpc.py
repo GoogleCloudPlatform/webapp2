@@ -144,9 +144,32 @@ class ServiceHandlerFactory(object):
         return factory
 
 
+def _normalize_services(mixed_services):
+    if isinstance(mixed_services, dict):
+        mixed_services = mixed_services.iteritems()
+
+    services = []
+    for service_item in mixed_services:
+        if isinstance(service_item, (list, tuple)):
+            path, service = service_item
+        else:
+            path = None
+            service = service_item
+
+        if isinstance(service, basestring):
+            # Lazily import the service class.
+            service = webapp2.import_string(service)
+
+        services.append((path, service))
+
+    return services
+
+
 def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
-    if isinstance(services, dict):
-        services = services.iteritems()
+    # TODO: clean the convoluted API? Accept services as tuples only, or
+    # make different functions to accept different things.
+    # For now we are just following the same API from protorpc.
+    services = _normalize_services(services)
 
     mapping = []
     registry_map = {}
@@ -159,13 +182,9 @@ def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
         mapping.append((registry_path + r'/form/(.+)', forms.ResourceHandler))
 
     paths = set()
-    for service_item in services:
-        if isinstance(service_item, (list, tuple)):
-            path, service = service_item
-            service_class = getattr(service, 'service_class', service)
-        else:
-            service = service_item
-            service_class = getattr(service, 'service_class', service)
+    for path, service in services:
+        service_class = getattr(service, 'service_class', service)
+        if not path:
             path = '/' + service_class.definition_name().replace('.', '/')
 
         if path in paths:

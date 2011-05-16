@@ -250,16 +250,18 @@ class RequestHandler(object):
 
         .. seealso:: :meth:`redirect_to`.
         """
-        absolute_url = str(urlparse.urljoin(self.request.uri, uri))
+        if uri.startswith(('.', '/')):
+            uri = str(urlparse.urljoin(self.request.uri, uri))
+
         if permanent:
             code = 301
         else:
             code = 302
 
         if abort:
-            self.abort(code, headers=[('Location', absolute_url)])
+            self.abort(code, headers=[('Location', uri)])
 
-        self.response.headers['Location'] = absolute_url
+        self.response.headers['Location'] = uri
         self.response.set_status(code)
         self.response.clear()
 

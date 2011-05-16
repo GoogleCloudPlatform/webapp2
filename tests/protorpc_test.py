@@ -19,7 +19,7 @@ class HelloResponse(messages.Message):
 class HelloService(remote.Service):
     @remote.method(HelloRequest, HelloResponse)
     def hello(self, request):
-        return HelloResponse(hello='Hello there, %s!' %
+        return HelloResponse(hello='Hello, %s!' %
                              request.my_name)
 
     @remote.method(HelloRequest, HelloResponse)
@@ -29,13 +29,13 @@ class HelloService(remote.Service):
 class AhoyService(remote.Service):
     @remote.method(HelloRequest, HelloResponse)
     def ahoy(self, request):
-        return HelloResponse(hello='Ahoy there, %s!' %
+        return HelloResponse(hello='Ahoy, %s!' %
                              request.my_name)
 
 class HolaService(remote.Service):
     @remote.method(HelloRequest, HelloResponse)
     def hola(self, request):
-        return HelloResponse(hello='Hola there, %s!' %
+        return HelloResponse(hello='Hola, %s!' %
                              request.my_name)
 
 service_mappings = service_handlers.service_mapping([
@@ -52,6 +52,7 @@ app2 = webapp2.WSGIApplication(service_mappings2, debug=True)
 # Tests -----------------------------------------------------------------------
 
 class TestProtoRPC(test_base.BaseTestCase):
+
     def test_example(self):
         req = webapp2.Request.blank('/hello.hello')
         req.method = 'POST'
@@ -60,7 +61,7 @@ class TestProtoRPC(test_base.BaseTestCase):
 
         resp = req.get_response(app)
         self.assertEqual(resp.status, '200 OK')
-        self.assertEqual(resp.body, '{"hello": "Hello there, bob!"}')
+        self.assertEqual(resp.body, '{"hello": "Hello, bob!"}')
 
     def test_ahoy(self):
         req = webapp2.Request.blank('/protorpc_test/AhoyService.ahoy')
@@ -70,7 +71,7 @@ class TestProtoRPC(test_base.BaseTestCase):
 
         resp = req.get_response(app)
         self.assertEqual(resp.status, '200 OK')
-        self.assertEqual(resp.body, '{"hello": "Ahoy there, bob!"}')
+        self.assertEqual(resp.body, '{"hello": "Ahoy, bob!"}')
 
     def test_hola(self):
         req = webapp2.Request.blank('/hola.hola')
@@ -80,7 +81,7 @@ class TestProtoRPC(test_base.BaseTestCase):
 
         resp = req.get_response(app2)
         self.assertEqual(resp.status, '200 OK')
-        self.assertEqual(resp.body, '{"hello": "Hola there, bob!"}')
+        self.assertEqual(resp.body, '{"hello": "Hola, bob!"}')
 
     def test_unrecognized_rpc_format(self):
         # No content type
@@ -156,7 +157,36 @@ class TestProtoRPC(test_base.BaseTestCase):
             ]
         )
 
+    def test_lazy_services(self):
+        service_mappings = service_handlers.service_mapping([
+            ('/bonjour', 'resources.protorpc_services.BonjourService'),
+            'resources.protorpc_services.CiaoService',
+        ])
+        app = webapp2.WSGIApplication(service_mappings, debug=True)
+
+        # Bonjour
+        req = webapp2.Request.blank('/bonjour.bonjour')
+        req.method = 'POST'
+        req.headers['Content-Type'] = 'application/json'
+        req.body = '{"my_name": "bob"}'
+
+        resp = req.get_response(app)
+        self.assertEqual(resp.status, '200 OK')
+        self.assertEqual(resp.body, '{"hello": "Bonjour, bob!"}')
+
+        # Ciao
+        req = webapp2.Request.blank('/resources/protorpc_services/CiaoService.ciao')
+        req.method = 'POST'
+        req.headers['Content-Type'] = 'application/json'
+        req.body = '{"my_name": "bob"}'
+
+        resp = req.get_response(app)
+        self.assertEqual(resp.status, '200 OK')
+        self.assertEqual(resp.body, '{"hello": "Ciao, bob!"}')
+
     def test_run_services(self):
+        import os
+        os.environ['REQUEST_METHOD'] = 'POST'
         service_handlers.run_services([('/hello', HelloService)])
 
 
