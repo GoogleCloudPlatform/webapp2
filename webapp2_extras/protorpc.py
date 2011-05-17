@@ -144,6 +144,14 @@ class ServiceHandlerFactory(object):
         return factory
 
 
+def _forms_handler_factory(registry_path=forms.DEFAULT_REGISTRY_PATH):
+    class FormsHandler(webapp2.RequestHandler, forms.FormsHandler):
+        def __init__(self, registry_path=registry_path):
+            forms.FormsHandler.__init__(self, registry_path=registry_path)
+
+    return FormsHandler
+
+
 def _normalize_services(mixed_services):
     if isinstance(mixed_services, dict):
         mixed_services = mixed_services.iteritems()
@@ -166,6 +174,38 @@ def _normalize_services(mixed_services):
 
 
 def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
+    """
+    Full example of a HelloService::
+
+        import webapp2
+        from webapp2_extras import protorpc
+
+        from protorpc import messages
+        from protorpc import remote
+
+        class HelloRequest(messages.Message):
+            my_name = messages.StringField(1, required=True)
+
+        class HelloResponse(messages.Message):
+            hello = messages.StringField(1, required=True)
+
+        class HelloService(remote.Service):
+            @remote.method(HelloRequest, HelloResponse)
+            def hello(self, request):
+                return HelloResponse(hello='Hello, %s!' %
+                                     request.my_name)
+
+        mappings = protorpc.service_mapping([
+            ('/hello', HelloService),
+        ])
+        app = webapp2.WSGIApplication(routes=mappings)
+
+        def main():
+            app.run()
+
+        if __name__ == '__main__':
+            main()
+    """
     # TODO: clean the convoluted API? Accept services as tuples only, or
     # make different functions to accept different things.
     # For now we are just following the same API from protorpc.
@@ -177,8 +217,8 @@ def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
     if registry_path is not None:
         registry_service = registry.RegistryService.new_factory(registry_map)
         services = list(services) + [(registry_path, registry_service)]
-        mapping.append((registry_path + r'/form(?:/)?',
-                        forms.FormsHandler.new_factory(registry_path)))
+        forms_handler = _forms_handler_factory(registry_path=registry_path)
+        mapping.append((registry_path + r'/form(?:/)?', forms_handler))
         mapping.append((registry_path + r'/form/(.+)', forms.ResourceHandler))
 
     paths = set()
@@ -202,10 +242,3 @@ def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
         registry_map[path] = service_class
 
     return mapping
-
-
-def run_services(services, registry_path=forms.DEFAULT_REGISTRY_PATH,
-                 debug=False):
-    mappings = service_mapping(services, registry_path=registry_path)
-    app = webapp2.WSGIApplication(routes=mappings, debug=debug)
-    app.run()

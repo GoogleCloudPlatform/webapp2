@@ -184,11 +184,6 @@ class TestProtoRPC(test_base.BaseTestCase):
         self.assertEqual(resp.status, '200 OK')
         self.assertEqual(resp.body, '{"hello": "Ciao, bob!"}')
 
-    def test_run_services(self):
-        import os
-        os.environ['REQUEST_METHOD'] = 'POST'
-        service_handlers.run_services([('/hello', HelloService)])
-
 
 if __name__ == '__main__':
     test_base.main()

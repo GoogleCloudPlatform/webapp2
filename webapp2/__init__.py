@@ -251,7 +251,7 @@ class RequestHandler(object):
         .. seealso:: :meth:`redirect_to`.
         """
         if uri.startswith(('.', '/')):
-            uri = str(urlparse.urljoin(self.request.uri, uri))
+            uri = str(urlparse.urljoin(self.request.url, uri))
 
         if permanent:
             code = 301
@@ -705,6 +705,7 @@ class Router(object):
     route_class = SimpleRoute
     #: Several internal attributes.
     app = None
+    dispatch = None
     match = None
     build = None
     match_routes = None
@@ -720,7 +721,8 @@ class Router(object):
             A list of :class:`Route` instances to initialize the router.
         """
         self.app = app
-        # Default matcher and builder.
+        # Default dispatcher, matcher and builder.
+        self.dispatch = self.do_dispatch
         self.match = self.do_match
         self.build = self.do_build
         # Handler classes imported lazily.
@@ -772,7 +774,16 @@ class Router(object):
             if match:
                 return match
 
-    def dispatch(self, request, response):
+    def set_dispatcher(self, func):
+        """Sets a the function called for dispatch the current request.
+
+        :param func:
+            A function that receives (request, response) and dispatches a
+            handler.
+        """
+        self.dispatch = func
+
+    def do_dispatch(self, request, response):
         """Dispatches a request. This calls the :class:`RequestHandler` from
         the matched :class:`Route`.
 

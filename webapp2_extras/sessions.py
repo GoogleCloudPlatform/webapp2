@@ -103,6 +103,14 @@ class SessionDict(_UpdateDictMixin, dict):
         self.modified = False
         dict.update(self, data or ())
 
+    def pop(self, key, *args):
+        # Only pop if key doesn't exist, do not alter the dictionary.
+        if key in self:
+            return super(SessionDict, self).pop(key, *args)
+        if args:
+            return args[0]
+        raise KeyError(key)
+
     def on_update(self):
         self.modified = True
 
@@ -114,10 +122,6 @@ class SessionDict(_UpdateDictMixin, dict):
         :returns:
             The data stored in the flash, or an empty list.
         """
-        if key not in self:
-            # Avoid popping if the key doesn't exist to not modify the session.
-            return []
-
         return self.pop(key, [])
 
     def add_flash(self, value, level=None, key='_flash'):
