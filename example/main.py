@@ -1,19 +1,19 @@
-from webapp2 import RedirectHandler, RequestHandler, Route, WSGIApplication
+import webapp2
 
 
-class HomeHandler(RequestHandler):
+class HomeHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
         html = '<a href="%s">test item</a>' % self.url_for('view', item='test')
         self.response.out.write(html)
 
 
-class ViewHandler(RequestHandler):
+class ViewHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
         item = kwargs.get('item')
         self.response.out.write('You are viewing item "%s".' % item)
 
 
-class HandlerWithError(RequestHandler):
+class HandlerWithError(webapp2.RequestHandler):
     def get(self, **kwargs):
         raise ValueError('Oops!')
 
@@ -22,19 +22,19 @@ def get_redirect_url(handler, **kwargs):
     return handler.url_for('view', item='i-came-from-a-redirect')
 
 
-app = WSGIApplication([
+app = webapp2.WSGIApplication([
     # Home sweet home.
-    Route('/', HomeHandler, name='home'),
+    webapp2.Route('/', HomeHandler, name='home'),
     # A route with a named variable.
-    Route('/view/<item>', ViewHandler, name='view'),
+    webapp2.Route('/view/<item>', ViewHandler, name='view'),
     # Loads a handler lazily.
-    Route('/lazy', 'handlers.LazyHandler', name='lazy'),
+    webapp2.Route('/lazy', 'handlers.LazyHandler', name='lazy'),
     # Redirects to a given path.
-    Route('/redirect-me', RedirectHandler, defaults={'url': '/lazy'}),
+    webapp2.Route('/redirect-me', webapp2.RedirectHandler, defaults={'url': '/lazy'}),
     # Redirects to a URL using a callable to get the destination URL.
-    Route('/redirect-me2', RedirectHandler, defaults={'url': get_redirect_url}),
+    webapp2.Route('/redirect-me2', webapp2.RedirectHandler, defaults={'url': get_redirect_url}),
     # No exception should pass. If exceptions are not handled, a 500 page is displayed.
-    Route('/exception', HandlerWithError),
+    webapp2.Route('/exception', HandlerWithError),
 ])
 
 

@@ -9,30 +9,28 @@ webapp2
    :backlinks: none
 
 
-WSGI App
+WSGI app
 --------
 .. autoclass:: WSGIApplication
-   :members: request_class, response_class, router_class, __init__, __call__,
-             dispatch, handle_exception, url_for, run
+   :members: request_class, response_class, router_class, request_context_class,
+             debug, router, registry, error_handlers, app, request,
+             active_instance, allowed_methods,
+             __init__, __call__, set_globals, handle_exception, run
 
 
-.. autofunction:: get_app
-
-.. autofunction:: get_request
-
-
-Request Handlers
+Request handlers
 ----------------
 .. autoclass:: RequestHandler
-   :members: __init__, __call__, abort, error, redirect, redirect_to, url_for,
-             handle_exception, get_valid_methods
+   :members: app, request, response, __init__, initialize, dispatch, error,
+             abort, redirect, redirect_to, uri_for, handle_exception,
+             get_valid_methods, factory
 
 
 .. autoclass:: RedirectHandler
    :members: get
 
 
-URL Routing
+URI routing
 -----------
 .. autoclass:: Router
    :members: route_class, __init__, add, build, match, dispatch
@@ -55,13 +53,13 @@ general use.
 
 .. autoclass:: cached_property
 
+.. autofunction:: get_app
+
+.. autofunction:: get_request
+
 .. autofunction:: abort
 
 .. autofunction:: import_string
-
-.. autofunction:: to_utf8
-
-.. autofunction:: to_unicode
 
 .. autofunction:: urlunsplit
 

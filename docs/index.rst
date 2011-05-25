@@ -6,11 +6,30 @@
 Welcome to webapp2's documentation!
 ===================================
 
-This is the manual for `webapp2 <http://code.google.com/p/webapp-improved/>`_,
-an attempt to improve Google App Engine's webapp framework keeping maximum
-compatibility.
+This is the guide for `webapp2 <http://code.google.com/p/webapp-improved/>`_,
+an improved Google App Engine's webapp framework that is compatible with apps
+created using the original.
 
-This is a work in progress. For now, only the API reference is available.
+
+Tutorial
+--------
+.. toctree::
+   :maxdepth: 3
+
+   tutorials/gettingstarted/index.rst
+
+
+Guide
+-----
+.. toctree::
+   :maxdepth: 3
+
+   guide/app.rst
+   guide/handlers.rst
+   guide/routing.rst
+   guide/request.rst
+   guide/response.rst
+   guide/exceptions.rst
 
 
 API Reference
@@ -18,8 +37,8 @@ API Reference
 .. toctree::
    :maxdepth: 3
 
-   api.rst
-   api_extras.rst
+   api/webapp2.rst
+   api/webapp2_extras.rst
 
 
 Indices and tables

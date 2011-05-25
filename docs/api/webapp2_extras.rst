@@ -1,4 +1,4 @@
-.. _contents:
+.. _api.extras:
 
 webapp2_extras
 ==============

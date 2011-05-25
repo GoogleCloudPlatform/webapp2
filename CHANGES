@@ -1,3 +1,17 @@
+Development version
+===================
+- Handlers registered in WSGIApplication.error_handlers can now also be a
+  string to be lazily imported.
+
+- The request object now has the active response available as an attribute:
+  request.response.
+
+- API cleanup: removed WSGIApplication.url_for(), to_unicode(), to_utf8().
+
+- Added a factory method to RequestHandler, to better deal with libraries that
+  use a custom webapp.RequestHandler constructor (like ProtoRPC).
+
+
 Version 1.5 - May 16, 2011
 ==========================
 - Added webapp2_extras.local, with an extended WSGIApplication that uses

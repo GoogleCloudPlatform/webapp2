@@ -115,7 +115,7 @@ class HandlerWithEscapedArg(webapp2.RequestHandler):
         self.response.out.write(urllib.unquote_plus(name))
 
 def get_redirect_url(handler, **kwargs):
-    return handler.url_for('methods')
+    return handler.uri_for('methods')
 
 
 app = webapp2.WSGIApplication([
@@ -124,7 +124,7 @@ app = webapp2.WSGIApplication([
     webapp2.Route('/broken', BrokenHandler),
     webapp2.Route('/broken-but-fixed', BrokenButFixedHandler),
     webapp2.Route('/<year:\d{4}>/<month:\d\d>/<name>', None, name='route-test'),
-    webapp2.Route('/<:\d\d>/<:\d{2}>/<slug>', PositionalHandler, name='positional'),
+    webapp2.Route('/<:\d\d>/<:\d{2}>/<:\w+>', PositionalHandler, name='positional'),
     webapp2.Route('/redirect-me', webapp2.RedirectHandler, defaults={'url': '/broken'}),
     webapp2.Route('/redirect-me2', webapp2.RedirectHandler, defaults={'url': get_redirect_url}),
     webapp2.Route('/redirect-me3', webapp2.RedirectHandler, defaults={'url': '/broken', 'permanent': False}),
@@ -234,6 +234,7 @@ class TestHandler(test_base.BaseTestCase):
         self.assertEqual(rsp.body, '500 custom handler')
 
     def test_methods(self):
+        app.debug = True
         req = webapp2.Request.blank('/methods')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status, '200 OK')
@@ -274,6 +275,7 @@ class TestHandler(test_base.BaseTestCase):
         rsp = req.get_response(app)
         self.assertEqual(rsp.status, '200 OK')
         self.assertEqual(rsp.body, 'home sweet home - TRACE')
+        app.debug = False
 
     def test_positional(self):
         req = webapp2.Request.blank('/07/31/test')
@@ -352,6 +354,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
         app.debug = debug
 
+    '''
     def test_get_valid_methods(self):
         req = webapp2.Request.blank('http://localhost:80/')
         req.app = app
@@ -370,8 +373,9 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         handler.app = app
         self.assertEqual(handler.get_valid_methods().sort(),
             ['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'TRACE'].sort())
+    '''
 
-    def test_url_for(self):
+    def test_uri_for(self):
         class Handler(webapp2.RequestHandler):
             def get(self, *args, **kwargs):
                 pass
@@ -385,7 +389,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         handler = Handler(request, webapp2.Response())
         handler.app = app
 
-        for func in (app.url_for, handler.url_for):
+        for func in (handler.uri_for,):
             self.assertEqual(func('home'), '/')
             self.assertEqual(func('home', foo='bar'), '/?foo=bar')
             self.assertEqual(func('home', _anchor='my-anchor', foo='bar'), '/?foo=bar#my-anchor')
@@ -453,7 +457,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         handler = webapp2.RequestHandler(request, None)
         handler.app = app
 
-        for func in (app.url_for, handler.url_for):
+        for func in (handler.uri_for,):
             url = func('escape', name='with space')
             req = webapp2.Request.blank(url)
             rsp = req.get_response(app)
@@ -522,6 +526,18 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         self.assertEqual(rsp.status, '200 OK')
         self.assertEqual(rsp.body, 'Hello, function world!')
 
+        # Twice to test factory.
+        req = webapp2.Request.blank('/')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.body, 'Hello, function world!')
+
+        req = webapp2.Request.blank('/other')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.body, 'Hello again, function world!')
+
+        # Twice to test factory.
         req = webapp2.Request.blank('/other')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status, '200 OK')

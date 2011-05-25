@@ -13,7 +13,7 @@ class NewStyleHandler(webapp2.RequestHandler):
 
 app = webapp.WSGIApplication([
     (r'/test/(.*)', NewStyleHandler),
-])
+], debug=True)
 
 # New WSGIApplication, old RequestHandler.
 class OldStyleHandler(webapp.RequestHandler):
@@ -31,7 +31,7 @@ class OldStyleHandlerWithError(webapp.RequestHandler):
 app2 = webapp2.WSGIApplication([
     (r'/test/error', OldStyleHandlerWithError),
     (r'/test/(.*)', OldStyleHandler),
-])
+], debug=True)
 
 
 class TestWSGIApplication(test_base.BaseTestCase):

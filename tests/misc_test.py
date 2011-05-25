@@ -63,6 +63,8 @@ class TestMiscellaneous(test_base.BaseTestCase):
         self.assertRaises(ImportError, webapp2.import_string, 'dfasfasdfdsfsd')
         self.assertRaises(AttributeError, webapp2.import_string, 'webob.dfasfasdfdsfsd')
 
+    '''
+    # These were removed to simplify the codebase.
     def test_to_utf8(self):
         res = webapp2.to_utf8('ábcdéf'.decode('utf-8'))
         self.assertEqual(isinstance(res, str), True)
@@ -76,6 +78,7 @@ class TestMiscellaneous(test_base.BaseTestCase):
 
         res = webapp2.to_unicode('foo')
         self.assertEqual(isinstance(res, unicode), True)
+    '''
 
     def test_http_status_message(self):
         self.assertEqual(webapp2.Response.http_status_message(404), 'Not Found')

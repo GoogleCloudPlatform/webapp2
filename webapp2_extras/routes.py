@@ -248,4 +248,4 @@ class ImprovedRoute(webapp2.Route):
         return new_route
 
     def _redirect(self, handler, *args, **kwargs):
-        return handler.url_for(kwargs.pop('_name'), *args, **kwargs)
+        return handler.uri_for(kwargs.pop('_name'), *args, **kwargs)

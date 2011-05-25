@@ -145,7 +145,7 @@ class ServiceHandlerFactory(object):
 
 
 def _forms_handler_factory(registry_path=forms.DEFAULT_REGISTRY_PATH):
-    class FormsHandler(webapp2.RequestHandler, forms.FormsHandler):
+    class FormsHandler(forms.FormsHandler):
         def __init__(self, registry_path=registry_path):
             forms.FormsHandler.__init__(self, registry_path=registry_path)
 
