@@ -846,7 +846,7 @@ class Router(object):
                 # A view function.
                 handler.factory = factory = handler
 
-        factory(request, response)
+        return factory(request, response)
 
     def set_builder(self, func):
         """Sets the function called for building URIs.
@@ -1030,11 +1030,15 @@ class WSGIApplication(object):
                     # 501 Not Implemented.
                     raise exc.HTTPNotImplemented()
 
-                self.router.dispatch(request, response)
+                rv = self.router.dispatch(request, response)
+                if isinstance(rv, self.response_class):
+                    response = rv
             except Exception, e:
                 try:
                     # Try to handle it with a custom error handler.
-                    self.handle_exception(request, response, e)
+                    rv = self.handle_exception(request, response, e)
+                    if isinstance(rv, self.response_class):
+                        response = rv
                 except exc.WSGIHTTPException, e:
                     # Use the HTTP exception as response.
                     response = e
@@ -1080,7 +1084,7 @@ class WSGIApplication(object):
             if isinstance(handler, basestring):
                 self.error_handlers[code] = handler = import_string(handler)
 
-            handler(request, response, e)
+            return handler(request, response, e)
         else:
             # Re-raise it to be caught by the WSGI app.
             raise
