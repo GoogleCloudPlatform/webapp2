@@ -22,7 +22,7 @@ try:
     from google.appengine.ext import webapp
     from google.appengine.ext.webapp import util
 except ImportError:
-    # Let's allow running webapp2 outside of GAE!
+    # Let's allow running webapp2 outside of GAE.
     from wsgiref import handlers
 
     class webapp(object):
@@ -66,7 +66,6 @@ class Request(webapp.Request):
 
     def __init__(self, *args, **kwargs):
         super(Request, self).__init__(*args, **kwargs)
-        # A registry for objects used during the request lifetime.
         self.registry = {}
 
 
@@ -343,8 +342,9 @@ class RedirectHandler(RequestHandler):
     """
 
     def get(self, *args, **kwargs):
-        """Performs the redirect. Two keyword arguments can be passed through
-        the URI route:
+        """Performs a redirect.
+
+        Two keyword arguments can be passed through the URI route:
 
         - **url**: A URI string or a callable that returns a URI. The callable
           is called passing ``(handler, *args, **kwargs)`` as arguments.
@@ -362,8 +362,9 @@ class RedirectHandler(RequestHandler):
 
 
 class cached_property(object):
-    """A decorator that converts a function into a lazy property.  The
-    function wrapped is called the first time to retrieve the result
+    """A decorator that converts a function into a lazy property.
+
+    The function wrapped is called the first time to retrieve the result
     and then that calculated result is used the next time you access
     the value::
 
@@ -814,6 +815,8 @@ class Router(object):
             A :class:`Response` instance.
         :raises:
             ``exc.HTTPNotFound`` if no route matched.
+        :returns:
+            The returned value from the handler.
         """
         match = self.match(request)
         if not match:
@@ -872,7 +875,7 @@ class Router(object):
             Dictionary of keyword arguments to build the URI. All variables
             not set in the route default values must be passed and must
             conform to the format set in the route. Extra keywords are
-            appended as URI arguments.
+            appended as a query string.
 
             A few keywords have special meaning:
 
@@ -881,7 +884,8 @@ class Router(object):
               an absolute URI is always returned.
             - **_netloc**: Network location, e.g., `www.google.com`. If
               defined, an absolute URI is always returned.
-            - **_anchor**: If set, appends an anchor to generated URI.
+            - **_fragment**: If set, appends a fragment (or "anchor") to the
+              generated URI.
         :returns:
             An absolute or relative URI.
         """
@@ -1073,6 +1077,8 @@ class WSGIApplication(object):
             A :class:`Response` instance.
         :param e:
             The uncaught exception.
+        :returns:
+            The returned value from the error handler.
         """
         if isinstance(e, HTTPException):
             code = e.code
