@@ -248,4 +248,10 @@ class ImprovedRoute(webapp2.Route):
         return new_route
 
     def _redirect(self, handler, *args, **kwargs):
-        return handler.uri_for(kwargs.pop('_name'), *args, **kwargs)
+        # Need to get from request because args is empty if named routes are
+        # set.
+        args, kwargs = handler.request.route_args, handler.request.route_kwargs
+        name = kwargs.pop('_name')
+        kwargs.pop('url', None)
+        kwargs.pop('permanent', None)
+        return handler.uri_for(name, *args, **kwargs)
