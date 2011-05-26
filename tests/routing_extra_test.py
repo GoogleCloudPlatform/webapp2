@@ -20,7 +20,7 @@ app = webapp2.WSGIApplication([
     ImprovedRoute('/strict-bar/', HomeHandler, 'bar-strict', strict_slash=True),
     ImprovedRoute('/redirect-to-name-destination', name='redirect-to-name-destination', handler=HomeHandler),
     ImprovedRoute('/redirect-to-name', redirect_to_name='redirect-to-name-destination'),
-], debug=False)
+], debug=True)
 
 
 class TestImprovedRoute(test_base.BaseTestCase):
