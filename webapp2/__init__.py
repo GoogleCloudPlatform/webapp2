@@ -777,10 +777,10 @@ class Router(object):
         """Sets the function called to match URIs.
 
         :param func:
-            A function that receives the :class:`Request` object and returns a
-            tuple (route, args, kwargs) if any route matches.
+            A function that receives ``(router, request)`` and returns
+            a tuple ``(route, args, kwargs)``  if any route matches.
         """
-        self.match = func
+        self.match = lambda *args, **kwargs: func(self, *args, **kwargs)
 
     def do_match(self, request):
         """Matches all routes against a request object.
@@ -801,10 +801,10 @@ class Router(object):
         """Sets the function called for dispatch the handler.
 
         :param func:
-            A function that receives a tuple (request, response) and
-            dispatches a handler.
+            A function that receives ``(router, request, response)``
+            and returns the value returned by the dispatched handler.
         """
-        self.dispatch = func
+        self.dispatch = lambda *args, **kwargs: func(self, *args, **kwargs)
 
     def do_dispatch(self, request, response):
         """Dispatches a handler.
@@ -855,10 +855,10 @@ class Router(object):
         """Sets the function called for building URIs.
 
         :param func:
-            A function that receives a tuple (request, name, args, kwargs)
+            A function that receives ``(router, request, name, args, kwargs)``
             and returns a URI.
         """
-        self.build = func
+        self.build = lambda *args, **kwargs: func(self, *args, **kwargs)
 
     def do_build(self, request, name, args, kwargs):
         """Returns a URI for a named :class:`Route`.
