@@ -21,12 +21,13 @@ class SecureCookieSerializer(object):
 
     Extracted from `Tornado`_ and modified.
     """
+
     def __init__(self, secret_key):
         """Initiliazes the serializer/deserializer.
 
         :param secret_key:
-            A long, random sequence of bytes to be used as the HMAC secret
-            for the cookie signature.
+            A random string to be used as the HMAC secret for the cookie
+            signature.
         """
         self.secret_key = secret_key
 
@@ -59,27 +60,28 @@ class SecureCookieSerializer(object):
             The deserialized secure cookie, or None if it is not valid.
         """
         if not value:
-            return
+            return None
 
         parts = value.split('|')
         if len(parts) != 3:
-            return
+            return None
 
         signature = self._get_signature(name, parts[0], parts[1])
 
         if not self._check_signature(parts[2], signature):
             logging.warning('Invalid cookie signature %r', value)
-            return
+            return None
 
         if max_age is not None:
             if int(parts[1]) < self._get_timestamp() - max_age:
                 logging.warning('Expired cookie %r', value)
-                return
+                return None
 
         try:
             return self._decode(parts[0])
         except Exception, e:
             logging.warning('Cookie value failed to be decoded: %r', parts[0])
+            return None
 
     def _encode(self, value):
         return json.b64encode(value)

@@ -7,9 +7,12 @@ Development version
   request.response.
 
 - API cleanup: removed WSGIApplication.url_for(), to_unicode(), to_utf8().
+  RequestHandler.url_for was renamed to uri_for, with url_for kept as an alias.
 
 - Added a factory method to RequestHandler, to better deal with libraries that
   use a custom webapp.RequestHandler constructor (like ProtoRPC).
+
+- Added set_dispatcher() to Router, to set extended dispatching.
 
 
 Version 1.5 - May 16, 2011

@@ -44,7 +44,7 @@ class DomainRoute(MultiRoute):
     For example, to restrict routes to a subdomain of the appspot domain::
 
         app = WSGIApplication([
-        DomainRoute('<subdomain>.app-id.appspot.com', [
+            DomainRoute('<subdomain>.app-id.appspot.com', [
                 Route('/foo', 'FooHandler', 'subdomain-thing'),
             ]),
             Route('/bar', 'BarHandler', 'normal-thing'),
@@ -52,7 +52,7 @@ class DomainRoute(MultiRoute):
 
     The template follows the same syntax used by :class:`webapp2.Route` and
     must define named groups if any value must be added to the match results.
-    In the example above, an extra `subdomain` keyword is added to the results,
+    In the example above, an extra `subdomain` keyword is passed to the handler,
     but if the regex didn't define any named groups, nothing would be added.
     """
     def __init__(self, template, routes):
@@ -157,8 +157,8 @@ class ImprovedRoute(webapp2.Route):
     """
 
     def __init__(self, template, handler=None, name=None, defaults=None,
-                 build_only=False, handler_method=None, redirect_to=None,
-                 redirect_to_name=None, strict_slash=False):
+                 build_only=False, handler_method=None, methods=None,
+                 redirect_to=None, redirect_to_name=None, strict_slash=False):
         """Initializes a URL route. Extra arguments:
 
         :param redirect_to:
@@ -168,7 +168,7 @@ class ImprovedRoute(webapp2.Route):
             convenience to use :class:`RedirectHandler`. These two are
             equivalent::
 
-                route = Route('/foo', handler=webapp2.RedirectHandler, defaults={'url': '/bar'})
+                route = Route('/foo', handler=webapp2.RedirectHandler, defaults={'_uri': '/bar'})
                 route = Route('/foo', redirect_to='/bar')
 
         :param redirect_to_name:
@@ -196,7 +196,8 @@ class ImprovedRoute(webapp2.Route):
         """
         super(ImprovedRoute, self).__init__(
             template, handler=handler, name=name, defaults=defaults,
-            build_only=build_only, handler_method=handler_method)
+            build_only=build_only, handler_method=handler_method,
+            methods=methods)
 
         if strict_slash and not name:
             raise ValueError('Routes with strict_slash must have a name.')
@@ -207,7 +208,7 @@ class ImprovedRoute(webapp2.Route):
         if redirect_to is not None:
             assert redirect_to_name is None
             self.handler = webapp2.RedirectHandler
-            self.defaults['url'] = redirect_to
+            self.defaults['_uri'] = redirect_to
 
     def get_match_routes(self):
         """Generator to get all routes that can be matched from a route.
@@ -240,7 +241,7 @@ class ImprovedRoute(webapp2.Route):
         name = name or self.name
         defaults = self.defaults.copy()
         defaults.update({
-            'url': self._redirect,
+            '_uri': self._redirect,
             '_name': name,
         })
         new_route = webapp2.Route(template, webapp2.RedirectHandler,
@@ -248,10 +249,8 @@ class ImprovedRoute(webapp2.Route):
         return new_route
 
     def _redirect(self, handler, *args, **kwargs):
-        # Need to get from request because args is empty if named routes are
-        # set.
+        # Get from request because args is empty if named routes are set.
         args, kwargs = handler.request.route_args, handler.request.route_kwargs
-        name = kwargs.pop('_name')
-        kwargs.pop('url', None)
-        kwargs.pop('permanent', None)
-        return handler.uri_for(name, *args, **kwargs)
+        kwargs.pop('_uri', None)
+        kwargs.pop('_code', None)
+        return handler.uri_for(kwargs.pop('_name'), *args, **kwargs)

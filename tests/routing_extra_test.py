@@ -15,7 +15,8 @@ class HomeHandler(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     #ImprovedRoute('/', name='home', handler=HomeHandler),
     ImprovedRoute('/redirect-me-easily', redirect_to='/i-was-redirected-easily'),
-    ImprovedRoute('/redirect-me-easily2', redirect_to='/i-was-redirected-easily', defaults={'permanent': False}),
+    ImprovedRoute('/redirect-me-easily2', redirect_to='/i-was-redirected-easily', defaults={'_code': 302}),
+    ImprovedRoute('/redirect-me-easily3', redirect_to='/i-was-redirected-easily', defaults={'_permanent': False}),
     ImprovedRoute('/strict-foo', HomeHandler, 'foo-strict', strict_slash=True),
     ImprovedRoute('/strict-bar/', HomeHandler, 'bar-strict', strict_slash=True),
     ImprovedRoute('/redirect-to-name-destination', name='redirect-to-name-destination', handler=HomeHandler),
@@ -30,7 +31,7 @@ class TestImprovedRoute(test_base.BaseTestCase):
         route_match, args, kwargs = router.match(webapp2.Request.blank('/foo'))
         self.assertEqual(route_match, route)
         self.assertEqual(args, ())
-        self.assertEqual(kwargs, {'url': '/bar'})
+        self.assertEqual(kwargs, {'_uri': '/bar'})
 
     def test_easy_redirect_to(self):
         req = webapp2.Request.blank('/redirect-me-easily')
@@ -40,6 +41,12 @@ class TestImprovedRoute(test_base.BaseTestCase):
         self.assertEqual(rsp.headers['Location'], 'http://localhost/i-was-redirected-easily')
 
         req = webapp2.Request.blank('/redirect-me-easily2')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status, '302 Found')
+        self.assertEqual(rsp.body, '')
+        self.assertEqual(rsp.headers['Location'], 'http://localhost/i-was-redirected-easily')
+
+        req = webapp2.Request.blank('/redirect-me-easily3')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status, '302 Found')
         self.assertEqual(rsp.body, '')

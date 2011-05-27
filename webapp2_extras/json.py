@@ -17,6 +17,8 @@ from django.utils import simplejson as json
 def encode(value, *args, **kwargs):
     """Serializes a value to JSON.
 
+    This comes from `Tornado`_.
+
     :param value:
         A value to be serialized.
     :param args:
@@ -38,6 +40,8 @@ def encode(value, *args, **kwargs):
 
 def decode(value, *args, **kwargs):
     """Deserializes a value from JSON.
+
+    This comes from `Tornado`_.
 
     :param value:
         A value to be deserialized.

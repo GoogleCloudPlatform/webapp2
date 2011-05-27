@@ -238,7 +238,7 @@ class RequestHandler(object):
         """
         abort(code, *args, **kwargs)
 
-    def redirect(self, uri, permanent=False, abort=False):
+    def redirect(self, uri, permanent=False, abort=False, code=None):
         """Issues an HTTP redirect to the given relative URI.
 
         This won't stop code execution unless **abort** is True. A common
@@ -252,16 +252,25 @@ class RequestHandler(object):
             If True, uses a 301 redirect instead of a 302 redirect.
         :param abort:
             If True, raises an exception to perform the redirect.
+        :param code:
+            The redirect status code. Supported codes are 301, 302, 303, 305,
+            and 307.  300 is not supported because it's not a real redirect
+            and 304 because it's the answer for a request with defined
+            ``If-Modified-Since`` headers.
 
         .. seealso:: :meth:`redirect_to`.
         """
         if uri.startswith(('.', '/')):
             uri = str(urlparse.urljoin(self.request.url, uri))
 
-        if permanent:
-            code = 301
-        else:
-            code = 302
+        if code is None:
+            if permanent:
+                code = 301
+            else:
+                code = 302
+
+        assert code in (301, 302, 303, 305, 307), \
+            'Invalid redirect status code.'
 
         if abort:
             self.abort(code, headers=[('Location', uri)])
@@ -270,27 +279,23 @@ class RequestHandler(object):
         self.response.set_status(code)
         self.response.clear()
 
-    def redirect_to(self, _name, _permanent=False, _abort=False, *args,
-        **kwargs):
+    def redirect_to(self, _name, _permanent=False, _abort=False, _code=None,
+        *args, **kwargs):
         """Convenience method mixing :meth:`redirect` and :meth:`uri_for`.
 
         Issues an HTTP redirect to a named URI built using :meth:`uri_for`.
 
         :param _name:
             The route name to redirect to.
-        :param _permanent:
-            If True, uses a 301 redirect instead of a 302 redirect.
-        :param _abort:
-            If True, raises an exception to perform the redirect.
         :param args:
             Positional arguments to build the URI.
         :param kwargs:
             Keyword arguments to build the URI.
 
-        .. seealso:: :meth:`redirect` and :meth:`uri_for`.
+        The other arguments are described in :meth:`redirect`.
         """
         url = self.uri_for(_name, *args, **kwargs)
-        self.redirect(url, permanent=_permanent, abort=_abort)
+        self.redirect(url, permanent=_permanent, abort=_abort, code=_code)
 
     def uri_for(self, _name, *args, **kwargs):
         """Returns a URI for a named :class:`Route`.
@@ -346,19 +351,20 @@ class RedirectHandler(RequestHandler):
 
         Two keyword arguments can be passed through the URI route:
 
-        - **url**: A URI string or a callable that returns a URI. The callable
+        - **_uri**: A URI string or a callable that returns a URI. The callable
           is called passing ``(handler, *args, **kwargs)`` as arguments.
-        - **permanent**: If False, uses a 301 redirect instead of a 302
-          redirect Default is True.
+        - **_code**: The redirect status code. Default is 301 (permanent
+          redirect).
         """
-        url = kwargs.pop('url', '/')
-        permanent = kwargs.pop('permanent', True)
+        uri = kwargs.pop('_uri', '/')
+        permanent = kwargs.pop('_permanent', True)
+        code = kwargs.pop('_code', None)
 
-        func = getattr(url, '__call__', None)
+        func = getattr(uri, '__call__', None)
         if func:
-            url = func(self, *args, **kwargs)
+            uri = func(self, *args, **kwargs)
 
-        self.redirect(url, permanent=permanent)
+        self.redirect(uri, permanent=permanent, code=code)
 
 
 class cached_property(object):
@@ -540,7 +546,7 @@ class Route(BaseRoute):
     kwd_count = 0
 
     def __init__(self, template, handler=None, name=None, defaults=None,
-        build_only=False, handler_method=None):
+        build_only=False, handler_method=None, methods=None):
         """Initializes this route.
 
         :param template:
@@ -597,12 +603,16 @@ class Route(BaseRoute):
             is a class. If not defined, the default behavior is to call the
             handler method correspondent to the HTTP request method in lower
             case (e.g., `get()`, `post()` etc).
+        :param methods:
+            A sequence of HTTP methods. If set, the route will only match if
+            the request method is allowed.
         """
         self.template = template
         self.handler = handler
         self.name = name
         self.defaults = defaults or {}
         self.build_only = build_only
+        self.methods = methods
         # If a handler string has a colon, we take it as the method from a
         # handler class, e.g., 'my_module.MyClass:my_method', and store it
         # in the route as 'handler_method'. Not every route mapping to a class
@@ -648,7 +658,7 @@ class Route(BaseRoute):
         .. seealso:: :meth:`BaseRoute.match`.
         """
         match = self.regex.match(request.path)
-        if not match:
+        if not match or (self.methods and request.method not in self.methods):
             return None
 
         kwargs = self.defaults.copy()
@@ -964,10 +974,10 @@ class WSGIApplication(object):
     response_class = Response
     #: Class used for the router object.
     router_class = Router
-    #: Class used for the request context.
+    #: Class used for the request context object.
     request_context_class = RequestContext
     #: A general purpose flag to indicate development mode: if True, uncaught
-    #: exceptions are raised instead of using HTTPInternalServerError.
+    #: exceptions are raised instead of using ``HTTPInternalServerError``.
     debug = False
     #: A :class:`Router` instance with all URIs registered for the application.
     router = None
@@ -1070,6 +1080,8 @@ class WSGIApplication(object):
         a callable or a string in dotted notation to be lazily imported.
 
         If no error handler is found, the exception is re-raised.
+
+        Based on idea from `Flask`_.
 
         :param request:
             A :class:`Request` instance.

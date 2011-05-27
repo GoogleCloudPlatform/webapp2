@@ -153,7 +153,8 @@ routes are equivalent::
 Building URIs
 ~~~~~~~~~~~~~
 Because our routes now have a ``name``, we can use it to build URIs whenever
-we need to reference those resources inside the application.
+we need to reference those resources inside the application. This is done
+using the method :meth:`webapp2.RequestHandler.uri_for` in a handler.
 
 For example, if you have these routes defined for the application::
 
@@ -184,31 +185,70 @@ Check :meth:`webapp2.Router.build` in the API reference for a complete
 explanation of the parameters used to build URIs.
 
 
-Domain and subdomain matching
------------------------------
-webapp2 can also handle domain and subdomain matching. This is done using a
-special route class provided in the ``webapp2_extras.routes`` module: the
-``DomainRoute``. This is a class that is initialized with a pattern to match
-the current host name and list of nested :class:`webapp2.Route` that will only
-be tested if the domain or subdomain matches.
+Domain and subdomain routing
+----------------------------
+The routing system can also handle domain and subdomain matching. This is done
+using a special route class provided in the ``webapp2_extras.routes`` module:
+the ``DomainRoute``. This is a class that is initialized with a pattern to
+match the current host name and a list of nested :class:`webapp2.Route` that
+will only be tested if the domain or subdomain matches.
 
 For example, to restrict routes to a subdomain of the appspot domain::
 
-    app = WSGIApplication([
-    DomainRoute('<subdomain>.app-id.appspot.com', [
-            Route('/', handler=SubdomainHomeHandler, name='subdomain-home'),
+    app = webapp2.WSGIApplication([
+        routes.DomainRoute('<subdomain>.app-id.appspot.com', [
+            webapp2.Route('/', handler=SubdomainHomeHandler, name='subdomain-home'),
         ]),
-        Route('/', handler=HomeHandler, name='home'),
+        webapp2.Route('/', handler=HomeHandler, name='home'),
     ])
 
-In the example above, the route ``/foo`` will only match when a subdomain of
-the ``app-id.appspot.com`` domain is accessed, because we restricted the nested
-routes using a template ``'<subdomain>.app-id.appspot.com'`` for the domain.
-When a subdomain is accessed and the path is ``/``, the handler
-``SubdomainHomeHandler`` will be used, otherwise the ``HomeHandler`` will be
-used instead.
+In the example above, we define a template ``'<subdomain>.app-id.appspot.com'``
+for the domain matching. When a request comes in, only if the request server
+name matches that pattern, the nested rules will be tested. Otherwise the
+routing system will test the next rule until one matches. So the first route
+``/foo`` will only match when a subdomain of the ``app-id.appspot.com`` domain
+is accessed: when a subdomain is accessed and the path is ``/``, the handler
+``SubdomainHomeHandler`` will be used, but when no subdomain is accessed (or
+the domain is different) the ``HomeHandler`` will be used instead.
 
 The template follows the same syntax used by :class:`webapp2.Route` and
 must define named groups if any value must be added to the match results.
 In the example above, an extra `subdomain` keyword is passed to the handler,
 but if the regex didn't define any named groups, nothing would be added.
+
+Matching only www, or anything except www
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A common need it to set some routes for the main subdomain (``www``) and
+different routes for other submains. The webapp2 routing system can handle
+this easily.
+
+To match only the ``www`` subdomain, simple set the domain template to a fixed
+value::
+
+    routes.DomainRoute('www.mydomain.com', [
+        webapp2.Route('/', handler=HomeHandler, name='home'),
+    ])
+
+To match any subdomain expect the ``www`` subdomain, set a regular expression
+that excludes ``www``::
+
+    routes.DomainRoute(r'<subdomain:(?!www\.)[^.]+>.mydomain.com', [
+        webapp2.Route('/', handler=HomeHandler, name='home'),
+    ])
+
+Any subdomain that matches and is not ``www`` will be passed as a parameter
+``subdomain`` to the handler.
+
+Similarly, you can restrict matches to the main ``appspot`` domain **or**
+a ``www`` domain from a custom domain::
+
+    routes.DomainRoute(r'<:app-id\.appspot\.com|www\.somedomain\.com>', [
+        webapp2.Route('/', handler=HomeHandler, name='home'),
+    ])
+
+And then have a route that matches subdomains of the main ``appspot`` domain
+**or** from a custom domain, except ``www``::
+
+    routes.DomainRoute(r'<subdomain:(?!www\.)[^.]+>.<:app-id\.appspot\.com|mydomain\.com>', [
+        webapp2.Route('/', handler=HomeHandler, name='home'),
+    ])

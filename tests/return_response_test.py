@@ -47,7 +47,7 @@ class TestReturnResponse(test_base.BaseTestCase):
 
         def custom_dispatcher(router, request, response):
             response_tuple = router.do_dispatch(request, response)
-            return request.app.response_class(*response_str)
+            return request.app.response_class(*response_tuple)
 
         app.router.set_dispatcher(custom_dispatcher)
 

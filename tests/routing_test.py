@@ -225,7 +225,7 @@ class TestRoute(test_base.BaseTestCase):
 
     def test_set_matcher(self):
         req = Request.blank('/')
-        def custom_matcher(request):
+        def custom_matcher(router, request):
             self.assertEqual(request, req)
 
         router = Router(None)
@@ -234,7 +234,7 @@ class TestRoute(test_base.BaseTestCase):
 
     def test_set_builder(self):
         req = Request.blank('/')
-        def custom_builder(request, name, args, kwargs):
+        def custom_builder(router, request, name, args, kwargs):
             self.assertEqual(request, req)
             return 'http://www.google.com'
 
@@ -242,6 +242,16 @@ class TestRoute(test_base.BaseTestCase):
         router.set_builder(custom_builder)
         res = router.build(req, '', (), {})
         self.assertEqual(res, 'http://www.google.com')
+
+    def test_methods(self):
+        route = Route(r'/', methods=['GET', 'POST'])
+        req = Request.blank('/')
+        req.method = 'GET'
+        self.assertTrue(route.match(req) is not None)
+        req.method = 'POST'
+        self.assertTrue(route.match(req) is not None)
+        req.method = 'PUT'
+        self.assertTrue(route.match(req) is None)
 
 
 if __name__ == '__main__':

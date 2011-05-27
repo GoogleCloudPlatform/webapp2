@@ -1,19 +1,40 @@
 # -*- coding: utf-8 -*-
 """
 webapp2
-~~~~~~~
+=======
+webapp2 is a lightweight Python web framework compatible with Google App
+Engine's `webapp <http://code.google.com/appengine/docs/python/tools/webapp/>`_.
 
-This is an attempt to improve Google App Engine's
-`webapp <http://code.google.com/appengine/docs/python/tools/webapp/>`_
-framework keeping maximum compatibility and same performance.
+webapp2 is a `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2/__init__.py>`_
+that follows the simplicity of webapp, but improves it in some ways:
+it extends webapp to offer better URI routing and exception handling,
+a full featured response object and a more flexible dispatching mechanism.
 
-Features overview: http://code.google.com/p/webapp-improved/
+webapp2 also includes the package `webapp2_extras <http://code.google.com/p/webapp-improved/source/browse/#hg%2Fwebapp2_extras>`_
+with several optional utilities: sessions, internationalization, domain and
+subdomain routing, configuration system, secure cookies and support for
+threaded environments.
+
+webapp2 can also be used outside of Google App Engine, independently of the
+App Engine SDK.
+
+
+Quick links
+-----------
+
+- `Download version 1.5 <http://webapp-improved.googlecode.com/files/webapp2-1.5.zip>`_
+- `User Manual <http://webapp-improved.appspot.com/>`_
+- `PyPi Page <http://pypi.python.org/pypi/webapp2/>`_
+- `Official Repository <http://code.google.com/p/webapp-improved/>`_
+- `GitHub Repository <http://github.com/moraes/webapp-improved>`_
+
+**Featured link:** Nick Johnson's `Using BlobReader, wildcard subdomains and webapp2 <http://blog.notdot.net/2010/08/Using-BlobReader-wildcard-subdomains-and-webapp2>`_
 """
 from setuptools import setup
 
 setup(
     name = 'webapp2',
-    version = '1.5',
+    version = '1.6',
     license = 'Apache Software License',
     url = 'http://www.tipfy.org/',
     description = "Taking Google App Engine's webapp to the next level!",
