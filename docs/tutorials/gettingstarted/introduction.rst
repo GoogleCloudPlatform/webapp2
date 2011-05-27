@@ -24,6 +24,7 @@ In this tutorial, you will learn how to:
 By the end of the tutorial, you will have implemented a working application,
 a simple guest book that lets users post messages to a public message board.
 
+
 Next...
 -------
 To get started developing Google App Engine applications, you download and

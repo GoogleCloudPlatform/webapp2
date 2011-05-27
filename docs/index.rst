@@ -11,12 +11,9 @@ an improved Google App Engine's webapp framework that is compatible with apps
 created using the original.
 
 
-Tutorial
---------
-.. toctree::
-   :maxdepth: 3
-
-   tutorials/gettingstarted/index.rst
+Tutorials
+---------
+- :ref:`tutorials.gettingstarted.index`
 
 
 Guide

@@ -17,13 +17,26 @@ Simple routes
 The simplest form of URI route in webapp2 is a tuple ``(regex, handler)``,
 where `regex` is a regular expression to match the requested URI path and
 `handler` is a :class:`webapp2.RequestHandler` to handle the request.
+This routing mechanism is fully compatible with App Engine's webapp framework.
 
-.. note::
-   This routing mechanism is fully compatible with App Engine's webapp
-   framework.
+This is how it works: a list of routes is registered in the WSGI application.
+When the application receives a request, it tries to match each one in order
+until one matches, and then call the corresponding handler. Here, for example,
+we define three handlers and register three routes that pointing to those
+handlers::
 
-A list of routes is registered in the WSGI application, which will try each
-one in order until one matches, and then call the corresponding handler::
+    class HomeHandler(webapp2.RequestHandler):
+        def get(self):
+            self.response.write('This is the HomeHandler.')
+
+    class ProductListHandler(webapp2.RequestHandler):
+        def get(self):
+            self.response.write('This is the ProductListHandler.')
+
+    class ProductHandler(webapp2.RequestHandler):
+        def get(self, product_id):
+            self.response.write('This is the ProductHandler. '
+                'The product id is %s' % product_id)
 
     app = webapp2.WSGIApplication([
         (r'/', HomeHandler),
@@ -31,8 +44,9 @@ one in order until one matches, and then call the corresponding handler::
         (r'/products/(\d+)', ProductHandler),
     ])
 
-If no route matches, an ``HTTPException`` is raised with status code 404,
-and the WSGI application can handle it accordingly (see
+When a request comes in, the application will match the request path to find
+the corresponding handler. If no route matches, an ``HTTPException`` is raised
+with status code 404, and the WSGI application can handle it accordingly (see
 :ref:`guide.exceptions`).
 
 The `regex` part is an ordinary regular expression (see the :py:mod:`re`
@@ -71,11 +85,130 @@ routing mechanism that we'll see next.
 Extended routes
 ---------------
 webapp2 introduces a routing mechanism that extends the webapp model to provide
-additional features [...]
+additional features:
 
-TBD
+- **URI building:** the registered routes can be built when needed, avoiding
+  hardcoded URIs in the app code and templates. If you change the route
+  definition in a compatible way during development, all places that use that
+  route will continue to point to the correct URI. This is less error prone and
+  easier to maintain.
+- **Keyword arguments:** handlers can receive keyword arguments from the
+  matched URIs. This is easier to use and also more maintanable than positional
+  arguments.
+- **Nested routes:** routes can be extended to match more than the request
+  path. We will see below a route class that can also match domains and
+  subdomains.
+
+And several other features and benefits.
+
+The concept is similar to the simple routes we saw before, but instead of a
+tuple ``(regex, handler)``, we define each route using the class
+:class:`webapp2.Route`. Let's remake our previous routes using it::
+
+    app = webapp2.WSGIApplication([
+        webapp2.Route(r'/', handler=HomeHandler, name='home'),
+        webapp2.Route(r'/products', handler=ProductListHandler, name='product-list'),
+        webapp2.Route(r'/products/<product_id:\d+>', handler=ProductHandler, name='product'),
+    ])
+
+The first argument in the routes above is a regex template, the second
+argument is the handler to be used, and the third is a name used to build
+a URI for that route. We already know what the handler is for, so let's
+explain the other two.
+
+Check :meth:`webapp2.Route.__init__` in the API reference for the other
+parameters accepted by the ``Route`` constructor.
+
+The regex template
+~~~~~~~~~~~~~~~~~~
+The regex template can have variables enclosed by ``<>`` that define a name, a
+regular expression or both. Examples:
+
+=================  ==================================
+Format             Example
+=================  ==================================
+``<name>``         ``'/blog/<year>/<month>'``
+``<:regex>``       ``'/blog/<:\d{4}>/<:\d{2}>'``
+``<name:regex>``   ``'/blog/<year:\d{4}>/<month:\d{2}>'``
+=================  ==================================
+
+The same template can mix parts with name, regular expression or both.
+
+If the name is set, the value of the matched regular expression is passed as
+keyword argument to the handler. Otherwise it is passed as positional argument.
+
+If only the name is set, it will match anything except a slash. So these
+routes are equivalent::
+
+    Route('/<user_id>/settings', handler=SettingsHandler, name='user-settings')
+    Route('/<user_id:[^/]+>/settings', handler=SettingsHandler, name='user-settings')
+
+.. note::
+   The handler only receives ``*args`` if no named variables are
+   set. Otherwise, the handler only receives ``**kwargs``. This
+   allows you to set regular expressions that are not captured:
+   just mix named and unnamed variables and the handler will
+   only receive the named ones.
+
+Building URIs
+~~~~~~~~~~~~~
+Because our routes now have a ``name``, we can use it to build URIs whenever
+we need to reference those resources inside the application.
+
+For example, if you have these routes defined for the application::
+
+    app = webapp2.WSGIApplication([
+        webapp2.Route('/', handler='handlers.HomeHandler', name='home'),
+        webapp2.Route('/wiki', handler=WikiHandler, name='wiki'),
+        webapp2.Route('/wiki/<page>', handler=WikiHandler, name='wiki-page'),
+    ])
+
+Here are some examples of how to generate URIs inside a handler::
+
+    # /
+    url = self.url_for('home')
+    # http://localhost:8080/
+    url = self.url_for('home', _full=True)
+    # /wiki
+    url = self.url_for('wiki')
+    # http://localhost:8080/wiki
+    url = self.url_for('wiki', _full=True)
+    # http://localhost:8080/wiki#my-heading
+    url = self.url_for('wiki', _full=True, _fragment='my-heading')
+    # /wiki/my-first-page
+    url = self.url_for('wiki-page', page='my-first-page')
+    # /wiki/my-first-page?format=atom
+    url = self.url_for('wiki-page', page='my-first-page', format='atom')
+
+Check :meth:`webapp2.Router.build` in the API reference for a complete
+explanation of the parameters used to build URIs.
 
 
 Domain and subdomain matching
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-TBD
+-----------------------------
+webapp2 can also handle domain and subdomain matching. This is done using a
+special route class provided in the ``webapp2_extras.routes`` module: the
+``DomainRoute``. This is a class that is initialized with a pattern to match
+the current host name and list of nested :class:`webapp2.Route` that will only
+be tested if the domain or subdomain matches.
+
+For example, to restrict routes to a subdomain of the appspot domain::
+
+    app = WSGIApplication([
+    DomainRoute('<subdomain>.app-id.appspot.com', [
+            Route('/', handler=SubdomainHomeHandler, name='subdomain-home'),
+        ]),
+        Route('/', handler=HomeHandler, name='home'),
+    ])
+
+In the example above, the route ``/foo`` will only match when a subdomain of
+the ``app-id.appspot.com`` domain is accessed, because we restricted the nested
+routes using a template ``'<subdomain>.app-id.appspot.com'`` for the domain.
+When a subdomain is accessed and the path is ``/``, the handler
+``SubdomainHomeHandler`` will be used, otherwise the ``HomeHandler`` will be
+used instead.
+
+The template follows the same syntax used by :class:`webapp2.Route` and
+must define named groups if any value must be added to the match results.
+In the example above, an extra `subdomain` keyword is passed to the handler,
+but if the regex didn't define any named groups, nothing would be added.
