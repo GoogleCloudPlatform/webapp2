@@ -2,7 +2,7 @@
 import webapp2
 
 from webapp2_extras.routes import (DomainRoute, HandlerPrefixRoute,
-    ImprovedRoute, NamePrefixRoute, PathPrefixRoute)
+    RedirectRoute, NamePrefixRoute, PathPrefixRoute)
 
 import test_base
 
@@ -13,20 +13,20 @@ class HomeHandler(webapp2.RequestHandler):
 
 
 app = webapp2.WSGIApplication([
-    #ImprovedRoute('/', name='home', handler=HomeHandler),
-    ImprovedRoute('/redirect-me-easily', redirect_to='/i-was-redirected-easily'),
-    ImprovedRoute('/redirect-me-easily2', redirect_to='/i-was-redirected-easily', defaults={'_code': 302}),
-    ImprovedRoute('/redirect-me-easily3', redirect_to='/i-was-redirected-easily', defaults={'_permanent': False}),
-    ImprovedRoute('/strict-foo', HomeHandler, 'foo-strict', strict_slash=True),
-    ImprovedRoute('/strict-bar/', HomeHandler, 'bar-strict', strict_slash=True),
-    ImprovedRoute('/redirect-to-name-destination', name='redirect-to-name-destination', handler=HomeHandler),
-    ImprovedRoute('/redirect-to-name', redirect_to_name='redirect-to-name-destination'),
+    #RedirectRoute('/', name='home', handler=HomeHandler),
+    RedirectRoute('/redirect-me-easily', redirect_to='/i-was-redirected-easily'),
+    RedirectRoute('/redirect-me-easily2', redirect_to='/i-was-redirected-easily', defaults={'_code': 302}),
+    RedirectRoute('/redirect-me-easily3', redirect_to='/i-was-redirected-easily', defaults={'_permanent': False}),
+    RedirectRoute('/strict-foo', HomeHandler, 'foo-strict', strict_slash=True),
+    RedirectRoute('/strict-bar/', HomeHandler, 'bar-strict', strict_slash=True),
+    RedirectRoute('/redirect-to-name-destination', name='redirect-to-name-destination', handler=HomeHandler),
+    RedirectRoute('/redirect-to-name', redirect_to_name='redirect-to-name-destination'),
 ], debug=True)
 
 
-class TestImprovedRoute(test_base.BaseTestCase):
+class TestRedirectRoute(test_base.BaseTestCase):
     def test_route_redirect_to(self):
-        route = ImprovedRoute('/foo', redirect_to='/bar')
+        route = RedirectRoute('/foo', redirect_to='/bar')
         router = webapp2.Router(None, [route])
         route_match, args, kwargs = router.match(webapp2.Request.blank('/foo'))
         self.assertEqual(route_match, route)
@@ -86,10 +86,10 @@ class TestImprovedRoute(test_base.BaseTestCase):
 
         # Strict slash routes must have a name.
 
-        self.assertRaises(ValueError, ImprovedRoute, '/strict-bar/', handler=HomeHandler, strict_slash=True)
+        self.assertRaises(ValueError, RedirectRoute, '/strict-bar/', handler=HomeHandler, strict_slash=True)
 
     def test_build_only(self):
-        r = ImprovedRoute('/', handler=HomeHandler, build_only=True)
+        r = RedirectRoute('/', handler=HomeHandler, build_only=True)
         self.assertRaises(ValueError, webapp2.Router, None, [r])
 
 

@@ -6,13 +6,33 @@ Development version
 - The request object now has the active response available as an attribute:
   request.response.
 
-- API cleanup: removed WSGIApplication.url_for(), to_unicode(), to_utf8().
-  RequestHandler.url_for was renamed to uri_for, with url_for kept as an alias.
-
 - Added a factory method to RequestHandler, to better deal with libraries that
-  use a custom webapp.RequestHandler constructor (like ProtoRPC).
+  use a custom webapp.RequestHandler constructors (like ProtoRPC).
 
 - Added set_dispatcher() to Router, to set extended dispatching.
+
+- Handlers and error handlers can now return a response object, which will be
+  used instead of the default response created by the WSGI app. This allows
+  webapp2 to be used following the common pattern of handlers that return a
+  response, instead of the webapp way of a handler that writes to an existing
+  response.
+
+- Request.Handler.redirect() now can receive a `code` parameter, to set the
+  status code. This is preferable than the `permanent` parameter, kept for
+  compatibility with webapp.
+
+- API cleanup:
+  - Removed WSGIApplication.url_for(), to_unicode(), to_utf8().
+  - RequestHandler.url_for was renamed to uri_for, with url_for kept
+    as an alias.
+  - Renamed webapp2_extras.routes.ImprovedRoute to RedirectRoute, as it
+    basically adds redirect conveniences.
+  - For consistency with uri building parameters, RedirectHandler parameters
+    are now prefixed with a underscore: `url` becomes `_uri` and `permanent`
+    becomes `_permanent`. A parameter `_code` was added to set status code.
+
+- webapp2 is now a file webapp2.py, instead of a package with a __init__.py
+  file.
 
 
 Version 1.5 - May 16, 2011

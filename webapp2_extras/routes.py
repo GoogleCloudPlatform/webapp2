@@ -151,15 +151,18 @@ class HandlerPrefixRoute(PathPrefixRoute):
     _attr = 'handler'
 
 
-class ImprovedRoute(webapp2.Route):
-    """An improved route class that adds redirect_to, redirect_to_name and
-    strict_slash options.
+class RedirectRoute(webapp2.Route):
+    """An convenience route class for easy redirects.
+
+    It adds redirect_to, redirect_to_name and strict_slash options to
+    :class:`webapp2.Route`.
     """
 
     def __init__(self, template, handler=None, name=None, defaults=None,
                  build_only=False, handler_method=None, methods=None,
                  redirect_to=None, redirect_to_name=None, strict_slash=False):
-        """Initializes a URL route. Extra arguments:
+        """Initializes a URL route. Extra arguments compared to
+        :meth:`webapp2.Route.__init__`:
 
         :param redirect_to:
             A URL string or a callable that returns a URL. If set, this route
@@ -194,7 +197,7 @@ class ImprovedRoute(webapp2.Route):
             - Access to ``/foo/`` will redirect to ``/foo``.
             - Access to ``/bar`` will redirect to ``/bar/``.
         """
-        super(ImprovedRoute, self).__init__(
+        super(RedirectRoute, self).__init__(
             template, handler=handler, name=name, defaults=defaults,
             build_only=build_only, handler_method=handler_method,
             methods=methods)
