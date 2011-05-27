@@ -5,7 +5,7 @@ webapp2
 webapp2 is a lightweight Python web framework compatible with Google App
 Engine's `webapp <http://code.google.com/appengine/docs/python/tools/webapp/>`_.
 
-webapp2 is a `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2/__init__.py>`_
+webapp2 is a `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_
 that follows the simplicity of webapp, but improves it in some ways:
 it extends webapp to offer better URI routing and exception handling,
 a full featured response object and a more flexible dispatching mechanism.
@@ -43,8 +43,10 @@ setup(
     author_email = 'rodrigo.moraes@gmail.com',
     zip_safe = False,
     platforms = 'any',
-    packages = [
+    py_modules = [
         'webapp2',
+    ],
+    packages = [
         'webapp2_extras',
     ],
     include_package_data=True,
