@@ -257,6 +257,10 @@ class SessionStore(object):
         # To get a value:
         foo = self.session.get('foo')
     """
+
+    #: Configuration key.
+    config_key = __name__
+
     def __init__(self, request):
         """Initializes the session store.
 
@@ -265,7 +269,7 @@ class SessionStore(object):
         """
         self.request = request
         # Base configuration.
-        self.config = request.app.config[__name__]
+        self.config = request.app.config[self.config_key]
         # Tracked sessions.
         self.sessions = {}
 

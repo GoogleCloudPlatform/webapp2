@@ -35,7 +35,17 @@ API Reference
    :maxdepth: 3
 
    api/webapp2.rst
-   api/webapp2_extras.rst
+   api/extras.config.rst
+   api/extras.i18n.rst
+   api/extras.jinja2.rst
+   api/extras.json.rst
+   api/extras.local.rst
+   api/extras.routes.rst
+   api/extras.securecookie.rst
+   api/extras.sessions.rst
+   api/extras.sessions_memcache.rst
+   api/extras.sessions_ndb.rst
+   api/extras.users.rst
 
 
 Indices and tables

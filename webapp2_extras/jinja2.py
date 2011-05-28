@@ -80,8 +80,12 @@ class Jinja2(object):
                 context = {'message': 'Hello, world!'}
                 return self.jinja2.render_template('my_template.html', **context)
     """
+
+    #: Configuration key.
+    config_key = __name__
+
     def __init__(self, app):
-        config = app.config[__name__]
+        config = app.config[self.config_key]
         kwargs = config['environment_args'].copy()
         enable_i18n = 'jinja2.ext.i18n' in kwargs.get('extensions', [])
 
@@ -149,7 +153,7 @@ class Jinja2(object):
             hello = get_template_attribute('_foo.html', 'hello')
             return hello('World')
 
-        This function is borrowed from `Flask`.
+        This function comes from `Flask`.
 
         :param filename:
             The template filename.

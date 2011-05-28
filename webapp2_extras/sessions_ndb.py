@@ -95,10 +95,13 @@ class DatastoreSessionFactory(sessions.CustomBackendSessionFactory):
     make sessions available in a :class:`webapp2.RequestHandler`.
     """
 
+    #: The session model class.
+    session_model = Session
+
     def _get_by_sid(self, sid):
         """Returns a session given a session id."""
         if self._is_valid_sid(sid):
-            data = Session.get_by_sid(sid)
+            data = self.session_model.get_by_sid(sid)
             if data is not None:
                 self.sid = sid
                 return sessions.SessionDict(self, data=data)
@@ -110,6 +113,6 @@ class DatastoreSessionFactory(sessions.CustomBackendSessionFactory):
         if not self.session or not self.session.modified:
             return
 
-        Session(id=self.sid, data=dict(self.session))._put()
+        self.session_model(id=self.sid, data=dict(self.session))._put()
         self.session_store.save_secure_cookie(
             response, self.name, {'_sid': self.sid}, **self.session_args)

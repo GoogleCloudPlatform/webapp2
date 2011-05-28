@@ -27,7 +27,7 @@ class TestReturnResponse(test_base.BaseTestCase):
         ], debug=True)
 
         def custom_dispatcher(router, request, response):
-            response_str = router.do_dispatch(request, response)
+            response_str = router.default_dispatcher(request, response)
             return request.app.response_class(response_str)
 
         app.router.set_dispatcher(custom_dispatcher)
@@ -46,7 +46,7 @@ class TestReturnResponse(test_base.BaseTestCase):
         ], debug=True)
 
         def custom_dispatcher(router, request, response):
-            response_tuple = router.do_dispatch(request, response)
+            response_tuple = router.default_dispatcher(request, response)
             return request.app.response_class(*response_tuple)
 
         app.router.set_dispatcher(custom_dispatcher)

@@ -21,6 +21,9 @@ Development version
   status code. This is preferable than the `permanent` parameter, kept for
   compatibility with webapp.
 
+- webapp2 is now a file webapp2.py, instead of a package with a __init__.py
+  file.
+
 - API cleanup:
   - Removed WSGIApplication.url_for(), to_unicode(), to_utf8().
   - RequestHandler.url_for was renamed to uri_for, with url_for kept
@@ -30,9 +33,9 @@ Development version
   - For consistency with uri building parameters, RedirectHandler parameters
     are now prefixed with a underscore: `url` becomes `_uri` and `permanent`
     becomes `_permanent`. A parameter `_code` was added to set status code.
-
-- webapp2 is now a file webapp2.py, instead of a package with a __init__.py
-  file.
+  - Router.do_match and do_build renamed to default_matcher and
+    default_dispatcher.
+  - URI building accepts a _fragment argument, with _anchor as fallback.
 
 
 Version 1.5 - May 16, 2011

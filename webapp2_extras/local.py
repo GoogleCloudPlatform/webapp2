@@ -87,39 +87,28 @@ class Local(object):
 
 
 class LocalProxy(object):
-    """Acts as a proxy for a werkzeug local.  Forwards all operations to
+    """Acts as a proxy for a local.  Forwards all operations to
     a proxied object.  The only operations not supported for forwarding
     are right handed operands and any kind of assignment.
 
     Example usage::
 
-        from werkzeug import Local
+        from webapp2_extras import Local
         l = Local()
 
         # these are proxies
         request = l('request')
         user = l('user')
 
-
-        from werkzeug import LocalStack
-        _response_local = LocalStack()
-
-        # this is a proxy
-        response = _response_local()
-
     Whenever something is bound to l.user / l.request the proxy objects
     will forward all operations.  If no object is bound a :exc:`RuntimeError`
     will be raised.
 
-    To create proxies to :class:`Local` or :class:`LocalStack` objects,
-    call the object as shown above.  If you want to have a proxy to an
-    object looked up by a function, you can (as of Werkzeug 0.6.1) pass
-    a function to the :class:`LocalProxy` constructor::
+    To create proxies to :class:`Local` object, call the object as shown above.
+    If you want to have a proxy to an object looked up by a function, you can
+    pass  a function to the :class:`LocalProxy` constructor::
 
         session = LocalProxy(lambda: get_current_request().session)
-
-    .. versionchanged:: 0.6.1
-       The class can be instanciated with a callable as well now.
     """
     __slots__ = ('__local', '__dict__', '__name__')
 

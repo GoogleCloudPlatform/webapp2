@@ -22,7 +22,7 @@ try:
     from google.appengine.ext import webapp
     from google.appengine.ext.webapp import util
 except ImportError:
-    # Let's allow running webapp2 outside of GAE.
+    # Allow running webapp2 outside of GAE.
     from wsgiref import handlers
 
     class webapp(object):
@@ -35,6 +35,9 @@ except ImportError:
 
         run_bare_wsgi_app = classmethod(_run)
         run_wsgi_app = classmethod(_run)
+
+__version_info__ = ('1', '6')
+__version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
 HTTPException = exc.HTTPException
@@ -339,8 +342,8 @@ class RedirectHandler(RequestHandler):
             return handler.uri_for('new-route-name')
 
         app = WSGIApplication([
-            Route('/old-url', RedirectHandler, defaults={'url': '/new-url'}),
-            Route('/other-old-url', RedirectHandler, defaults={'url': get_redirect_url}),
+            Route('/old-url', RedirectHandler, defaults={'_uri': '/new-url'}),
+            Route('/other-old-url', RedirectHandler, defaults={'_uri': get_redirect_url}),
         ])
 
     Based on idea from `Tornado`_.
@@ -734,11 +737,14 @@ class Router(object):
 
     #: Class used when the route is a tuple, for compatibility with webapp.
     route_class = SimpleRoute
+    #: Function to match a request. Default is :meth:`default_matcher`.
+    match = None
+    #: Function to dispatch a request. Default is :meth:`default_dispatcher`.
+    dispatch = None
+    #: Function to build a URI. Default is :meth:`default_builder`.
+    build = None
     #: Several internal attributes.
     app = None
-    dispatch = None
-    match = None
-    build = None
     match_routes = None
     build_routes = None
     _handlers = None
@@ -754,9 +760,9 @@ class Router(object):
         """
         self.app = app
         # Default dispatcher, matcher and builder.
-        self.dispatch = self.do_dispatch
-        self.match = self.do_match
-        self.build = self.do_build
+        self.match = self.default_matcher
+        self.dispatch = self.default_dispatcher
+        self.build = self.default_builder
         # Handler classes imported lazily.
         self._handlers = {}
         # All routes that can be matched.
@@ -792,7 +798,7 @@ class Router(object):
         """
         self.match = lambda *args, **kwargs: func(self, *args, **kwargs)
 
-    def do_match(self, request):
+    def default_matcher(self, request):
         """Matches all routes against a request object.
 
         The first one that matches is returned.
@@ -816,7 +822,7 @@ class Router(object):
         """
         self.dispatch = lambda *args, **kwargs: func(self, *args, **kwargs)
 
-    def do_dispatch(self, request, response):
+    def default_dispatcher(self, request, response):
         """Dispatches a handler.
 
         :param request:
@@ -856,7 +862,7 @@ class Router(object):
 
                 factory = handler.factory
             except TypeError:
-                # A view function.
+                # A "view" function.
                 handler.factory = factory = handler
 
         return factory(request, response)
@@ -870,7 +876,7 @@ class Router(object):
         """
         self.build = lambda *args, **kwargs: func(self, *args, **kwargs)
 
-    def do_build(self, request, name, args, kwargs):
+    def default_builder(self, request, name, args, kwargs):
         """Returns a URI for a named :class:`Route`.
 
         :param request:

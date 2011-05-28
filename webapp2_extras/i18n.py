@@ -93,6 +93,8 @@ class I18nStore(object):
     Caches loaded translations and configuration to be used between requests.
     """
 
+    #: Configuration key.
+    config_key = __name__
     #: A dictionary with all loaded translations.
     translations = None
     #: Path to where traslations are stored.
@@ -116,7 +118,7 @@ class I18nStore(object):
         :param request:
             A :class:`webapp2.WSGIApplication` instance.
         """
-        config = app.config[__name__]
+        config = app.config[self.config_key]
         self.translations = {}
         self.translations_path = config.get('translations_path')
         self.domains = config.get('domains')

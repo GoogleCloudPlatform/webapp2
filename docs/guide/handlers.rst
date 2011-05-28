@@ -83,14 +83,6 @@ etc. An app can have mixed handler classes and functions.
    though, they are synonyms.
 
 
-Custom methods
---------------
-TBD
-
-The RequestHandler class
-------------------------
-TBD
-
 Overriding ``__init__()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 If you want to override the :meth:`webapp2.RequestHandler.__init__` method,
