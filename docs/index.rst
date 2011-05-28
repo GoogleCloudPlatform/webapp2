@@ -3,17 +3,39 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to webapp2's documentation!
-===================================
+Welcome to webapp2!
+===================
+`webapp2 <http://code.google.com/p/webapp-improved/>`_ is a lightweight Python
+web framework compatible with Google App Engine's
+`webapp <http://code.google.com/appengine/docs/python/tools/webapp/>`_.
 
-This is the guide for `webapp2 <http://code.google.com/p/webapp-improved/>`_,
-an improved Google App Engine's webapp framework that is compatible with apps
-created using the original.
+webapp2 is a `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_
+that follows the simplicity of webapp, but improves it in some ways: it extends
+webapp to offer better URI routing and exception handling, a full featured
+response object and a more flexible dispatching mechanism.
+
+webapp2 also offers the package `webapp2_extras <http://code.google.com/p/webapp-improved/source/browse/#hg%2Fwebapp2_extras`_
+with several optional utilities: sessions, internationalization, domain and
+subdomain routing, configuration system, secure cookies and support for
+threaded environments.
+
+webapp2 can even be used outside of Google App Engine, independently of the
+App Engine SDK.
+
+For a more complete comparison with webapp, see **:ref:`features`**.
+
+
+Quick links
+-----------
+- `Download <http://code.google.com/p/webapp-improved/downloads/list>`_
+- `Google Code repository <http://code.google.com/p/webapp-improved/>`_
 
 
 Tutorials
 ---------
-- :ref:`tutorials.gettingstarted.index`
+- :ref:`tutorials.quickstart`
+- :ref:`tutorials.quickstart.nogae`
+- :ref:`tutorials.gettingstarted.index` (for those new to App Engine)
 
 
 Guide
@@ -54,4 +76,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

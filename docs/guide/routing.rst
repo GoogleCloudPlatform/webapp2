@@ -112,9 +112,9 @@ tuple ``(regex, handler)``, we define each route using the class
     ])
 
 The first argument in the routes above is a regex template, the second
-argument is the handler to be used, and the third is a name used to build
-a URI for that route. We already know what the handler is for, so let's
-explain the other two.
+argument is the request handler to be used, and the third is a name used to
+build a URI for that route. We already about the :ref:`guide.handlers`, so
+let's explain the other two.
 
 Check :meth:`webapp2.Route.__init__` in the API reference for the other
 parameters accepted by the ``Route`` constructor.
@@ -190,7 +190,7 @@ Domain and subdomain routing
 The routing system can also handle domain and subdomain matching. This is done
 using a special route class provided in the ``webapp2_extras.routes`` module:
 the ``DomainRoute``. This is a class that is initialized with a pattern to
-match the current host name and a list of nested :class:`webapp2.Route` that
+match the current server name and a list of nested :class:`webapp2.Route` that
 will only be tested if the domain or subdomain matches.
 
 For example, to restrict routes to a subdomain of the appspot domain::
