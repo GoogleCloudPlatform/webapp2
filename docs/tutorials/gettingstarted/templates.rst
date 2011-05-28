@@ -50,7 +50,7 @@ Replace the ``MainPage`` handler with code that resembles the following::
             self.response.out.write(template.render(path, template_values))
 
 Finally, create a new file in the ``helloworld`` directory named ``index.html``,
-with the following contents::
+with the following contents:
 
 .. code-block:: html+django
 

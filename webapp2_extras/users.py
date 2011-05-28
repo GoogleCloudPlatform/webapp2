@@ -14,7 +14,7 @@ from google.appengine.api import users
 def login_required(handler_method):
       """A decorator to require that a user be logged in to access a handler.
 
-      To use it, decorate your get() method like this:
+To use it, decorate your get() method like this::
 
         @login_required
         def get(self):
@@ -43,7 +43,7 @@ def admin_required(handler_method):
       """A decorator to require that a user be an admin for this application
       to access a handler.
 
-      To use it, decorate your get() method like this:
+To use it, decorate your get() method like this::
 
         @admin_required
         def get(self):

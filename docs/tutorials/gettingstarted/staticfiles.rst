@@ -16,7 +16,7 @@ without your having to code your own handler.
 
 Using Static Files
 ------------------
-Edit ``helloworld/app.yaml`` and replace its contents with the following::
+Edit ``helloworld/app.yaml`` and replace its contents with the following:
 
 .. code-block:: yaml
 
@@ -51,7 +51,7 @@ on URL mapping and other options you can specify in ``app.yaml``, see
 `the app.yaml reference <http://code.google.com/appengine/docs/python/config/appconfig.html>`_.
 
 Create the directory ``helloworld/stylesheets``. In this new directory, create
-a new file named ``main.css`` with the following contents::
+a new file named ``main.css`` with the following contents:
 
 .. code-block:: css
 
@@ -61,9 +61,10 @@ a new file named ``main.css`` with the following contents::
    }
 
 Finally, edit ``helloworld/index.html`` and insert the following lines just
-after the ``<html>`` line at the top::
+after the ``<html>`` line at the top:
 
 .. code-block:: html
+
    <head>
      <link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
    </head>

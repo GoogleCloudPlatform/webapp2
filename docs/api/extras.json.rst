@@ -10,3 +10,5 @@ JSON
 .. autofunction:: b64decode
 .. autofunction:: quote
 .. autofunction:: unquote
+
+.. _Tornado: http://www.tornadoweb.org/

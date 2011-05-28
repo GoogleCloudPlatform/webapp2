@@ -1,4 +1,4 @@
-.. _guide.request:
+.. _guide.response:
 
 The Response object
 ===================

@@ -25,7 +25,7 @@ Google App Engine Launcher users can reach this URL by clicking the Dashboard
 button.
 
 Sign in to App Engine using your Google account. If you do not have a Google
-account, you can `create a Google account <https://www.google.com/accounts/`_
+account, you can `create a Google account <https://www.google.com/accounts/>`_
 with an email address and password.
 
 To create a new application, click the "Create an Application" button. Follow

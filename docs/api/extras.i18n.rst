@@ -7,11 +7,11 @@ i18n
 .. autodata:: default_config
 
 .. autoclass:: I18nStore
-   :members: config_key, translations, translations_path, domains,
+   :members: translations, translations_path, domains,
              default_locale, default_timezone, date_formats, locale_selector,
              timezone_selector,
              __init__, set_locale_selector, set_timezone_selector,
-             get_translations, load_translations,
+             get_translations, load_translations
 
 .. autoclass:: I18n
    :members: store, locale, translations, timezone, tzinfo,

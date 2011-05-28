@@ -32,9 +32,9 @@ import webapp2
 #: environment_args
 #:     Keyword arguments used to instantiate the Jinja2 environment. By
 #:     default autoescaping is enabled and two extensions are set:
-#:     'jinja2.ext.autoescape' and 'jinja2.ext.with_'. For production it may
-#:     be a godd idea to set 'auto_reload' to False -- we don't need to check
-#:     if templates changed after deployed.
+#:     ``jinja2.ext.autoescape`` and ``jinja2.ext.with_``. For production it
+#:     may be a godd idea to set 'auto_reload' to False -- we don't need to
+#:     check if templates changed after deployed.
 #:
 #: globals
 #:     Extra global variables for the Jinja2 environment.
@@ -134,7 +134,7 @@ class Jinja2(object):
         :param context:
             Keyword arguments used as variables in the rendered template.
             These will override values set in the request context.
-       :returns:
+        :returns:
             A rendered template.
         """
         return self.environment.get_template(_filename).render(**context)

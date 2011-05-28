@@ -6,3 +6,5 @@ Secure cookies
 
 .. autoclass:: SecureCookieSerializer
    :members: __init__, serialize, deserialize
+
+.. _Tornado: http://www.tornadoweb.org/

@@ -14,7 +14,7 @@ that follows the simplicity of webapp, but improves it in some ways: it extends
 webapp to offer better URI routing and exception handling, a full featured
 response object and a more flexible dispatching mechanism.
 
-webapp2 also offers the package `webapp2_extras <http://code.google.com/p/webapp-improved/source/browse/#hg%2Fwebapp2_extras`_
+webapp2 also offers the package `webapp2_extras <http://code.google.com/p/webapp-improved/source/browse/#hg%2Fwebapp2_extras>`_
 with several optional utilities: sessions, internationalization, domain and
 subdomain routing, configuration system, secure cookies and support for
 threaded environments.
@@ -22,7 +22,7 @@ threaded environments.
 webapp2 can even be used outside of Google App Engine, independently of the
 App Engine SDK.
 
-For a more complete comparison with webapp, see **:ref:`features`**.
+For a more complete comparison with webapp, see :ref:`features`.
 
 
 Quick links

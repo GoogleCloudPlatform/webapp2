@@ -23,7 +23,7 @@ Request handlers
 .. autoclass:: RequestHandler
    :members: app, request, response, __init__, initialize, dispatch, error,
              abort, redirect, redirect_to, uri_for, handle_exception,
-             get_valid_methods, factory
+             factory
 
 
 .. autoclass:: RedirectHandler

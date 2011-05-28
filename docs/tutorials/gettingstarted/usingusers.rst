@@ -72,7 +72,7 @@ account::
 
     self.redirect(users.create_login_url(self.request.uri))
 
-For more information about the Users API, see the `Users reference <http://code.google.com/appengine/docs/python/users/`_.
+For more information about the Users API, see the `Users reference <http://code.google.com/appengine/docs/python/users/>`_.
 
 
 Next...

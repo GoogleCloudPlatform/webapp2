@@ -10,4 +10,4 @@ Configuration
 
 .. autoclass:: Config
    :members: __init__, __getitem__, __setitem__, get, setdefault, update,
-             get_config,
+             get_config
