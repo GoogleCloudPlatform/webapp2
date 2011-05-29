@@ -43,6 +43,38 @@ fetch a corresponding record from a database and set an appropriate response
 
 For more details about how URI variables are defined, see :ref:`guide.routing`.
 
+HTTP methods translated to class methods
+----------------------------------------
+The default behavior of the :class:`webapp2.RequestHandler` is to call a
+method that corresponds with the HTTP action of the request, such as the
+``get()`` method for a HTTP GET request. The method processes the request and
+prepares a response, then returns. Finally, the application sends the response
+to the client.
+
+The following example defines a request handler that responds to HTTP GET
+requests::
+
+    class AddTwoNumbers(webapp2.RequestHandler):
+        def get(self):
+            try:
+                first = int(self.request.get('first'))
+                second = int(self.request.get('second'))
+
+                self.response.write("<html><body><p>%d + %d = %d</p></body></html>" %
+                                        (first, second, first + second))
+            except (TypeError, ValueError):
+                self.response.write("<html><body><p>Invalid inputs</p></body></html>")
+
+A request handler can define any of the following methods to handle the
+corresponding HTTP actions:
+
+- ``get()``
+- ``post()``
+- ``head()``
+- ``options()``
+- ``put()``
+- ``delete()``
+- ``trace()``
 
 View functions
 --------------

@@ -36,8 +36,6 @@ Tutorials
 .. toctree::
    :maxdepth: 3
 
-   tutorials/quickstart.rst
-   tutorials/quickstart.nogae.rst
    tutorials/gettingstarted/index.rst
 
 
@@ -46,7 +44,6 @@ Guide
 .. toctree::
    :maxdepth: 3
 
-   guide/app.rst
    guide/handlers.rst
    guide/routing.rst
    guide/request.rst
@@ -85,3 +82,12 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+Credits
+-------
+Because webapp2 is intended to be compatible with webapp, the official webapp
+documentation is valid for webapp2 too. Parts of this documentation were ported
+from `the official documentation for App Engine/Python <http://code.google.com/appengine/docs/python/>`_,
+written by the App Engine team and licensed under the Creative Commons
+Attribution 3.0 License.

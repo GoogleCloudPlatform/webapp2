@@ -19,11 +19,10 @@ to bundle a single file with your application code to use it. We will use
 
 Follow these steps to bundle the ``webapp2`` framework with your application:
 
-- `Download the latest version of webapp2 <http://code.google.com/p/webapp-improved/downloads/list>`_.
-- Uncompress the archive. There are many files and directories inside, but we
-  only need the ``webapp2`` directory, which contains a single file:
-  ``__init__.py``. Copy the ``webapp2`` directory to the ``helloworld``
-  directory.
+- Create a file ``webapp2.py`` inside your application directory. Paste the
+  contents from `webapp2.py <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_
+  inside it.
+- There's no second step. You can start using webapp2 right now.
 
 
 Hello, webapp2!

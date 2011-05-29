@@ -101,8 +101,8 @@ div.related {
   position: relative;
   border-top: 1px solid #36C;
   background-color: #E5ECF9;
-  height: 2.5em;
-  line-height: 2em;
+  height: 2.0em;
+  line-height: 1em;
   width: 100%;
   font-size: 100%;
   margin-top: 1em;
@@ -114,7 +114,7 @@ div.related ul {
   float: none;
   position: absolute;
   right: 5px;
-  top: 0.75em;
+  top: 0.3em;
 }
 div.related li.right {
   float: none;
@@ -157,7 +157,22 @@ div.sphinxsidebar {
   margin-right: -173px;
   border-right:3px solid #E5ECF9;
   padding-bottom: 50px;
-  font-size: 90%;
+  font-size: 13px;
+}
+div.sphinxsidebar h2, div.sphinxsidebar h3, div.sphinxsidebar h4,
+div.sphinxsidebar h2 a, div.sphinxsidebar h2 a:link, div.sphinxsidebar h2 a:active, div.sphinxsidebar h2 a:visited,
+div.sphinxsidebar h3 a, div.sphinxsidebar h3 a:link, div.sphinxsidebar h3 a:active, div.sphinxsidebar h3 a:visited,
+div.sphinxsidebar h4 a, div.sphinxsidebar h4 a:link, div.sphinxsidebar h4 a:active, div.sphinxsidebar h4 a:visited {
+  font-size: 13px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #000;
+  margin: 1em 0 .5em;
+  padding: 0;
+}
+div.sphinxsidebar p, div.sphinxsidebar p.topless {
+  margin-top: 0;
+  padding-top: 0;
 }
 div.documentwrapper {
   width:100%;
