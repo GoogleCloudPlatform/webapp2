@@ -24,11 +24,8 @@ For a complete description of how webapp2 improves webapp, see
 Quick links
 -----------
 
-- `Download version 1.5 <http://webapp-improved.googlecode.com/files/webapp2-1.5.zip>`_
 - `User Manual <http://webapp-improved.appspot.com/>`_
-- `PyPi Page <http://pypi.python.org/pypi/webapp2/>`_
 - `Official Repository <http://code.google.com/p/webapp-improved/>`_
-- `GitHub Repository <http://github.com/moraes/webapp-improved>`_
 
 **Featured link:** Nick Johnson's `Using BlobReader, wildcard subdomains and webapp2 <http://blog.notdot.net/2010/08/Using-BlobReader-wildcard-subdomains-and-webapp2>`_
 """

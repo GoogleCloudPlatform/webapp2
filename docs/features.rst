@@ -169,10 +169,10 @@ Old URIs can be conveniently redirected using a simple route::
         webapp2.Route('/old-view/<item>', RedirectHandler, defaults={'url': get_redirect_url}),
     ])
 
-single file, well-tested and documented
+Single file, well-tested and documented
 ---------------------------------------
 webapp2 is an extensively documented `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2/__init__.py>`_
-and has almost 100% test coverage and . The source code is explicit, magic-free
+and has almost 100% test coverage. The source code is explicit, magic-free
 and made to be extended. We like less.
 
 Fast, fast, fast
