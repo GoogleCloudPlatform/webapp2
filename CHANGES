@@ -1,5 +1,5 @@
-Development version
-===================
+Version 1.6 - May 29, 2011
+==========================
 - Handlers registered in WSGIApplication.error_handlers can now also be a
   string to be lazily imported.
 
