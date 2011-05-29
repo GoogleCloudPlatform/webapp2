@@ -4,10 +4,6 @@ webapp2
 =======
 .. module:: webapp2
 
-.. contents:: Table of Contents
-   :depth: 3
-   :backlinks: none
-
 
 WSGI app
 --------

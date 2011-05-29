@@ -84,7 +84,7 @@ etc. An app can have mixed handler classes and functions.
 
 
 Overriding __init__()
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 If you want to override the :meth:`webapp2.RequestHandler.__init__` method,
 you must call :meth:`webapp2.RequestHandler.initialize` at the beginning and
 :meth:`webapp2.RequestHandler.dispatch` at the end of the method. This is
@@ -108,7 +108,7 @@ Here's a correct way to override ``__init__()``::
 
 
 Overriding dispatch()
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 One of the advantadges of webapp2 over webapp is that you can wrap the
 dispatching process of :class:`webapp2.RequestHandler` to perform actions
 before and/or after the requested method is dispatched. You can do this

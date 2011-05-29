@@ -22,7 +22,7 @@ threaded environments.
 webapp2 can even be used outside of Google App Engine, independently of the
 App Engine SDK.
 
-For a more complete comparison with webapp, see :ref:`features`.
+For a complete description of how webapp2 improves webapp, see :ref:`features`.
 
 
 Quick links
@@ -33,9 +33,12 @@ Quick links
 
 Tutorials
 ---------
-- :ref:`tutorials.quickstart`
-- :ref:`tutorials.quickstart.nogae`
-- :ref:`tutorials.gettingstarted.index` (for those new to App Engine)
+.. toctree::
+   :maxdepth: 3
+
+   tutorials/quickstart.rst
+   tutorials/quickstart.nogae.rst
+   tutorials/gettingstarted/index.rst
 
 
 Guide
@@ -51,12 +54,18 @@ Guide
    guide/exceptions.rst
 
 
-API Reference
--------------
+API Reference - webapp2
+-----------------------
 .. toctree::
    :maxdepth: 3
 
    api/webapp2.rst
+
+API Reference - webapp2_extras
+------------------------------
+.. toctree::
+   :maxdepth: 3
+
    api/extras.config.rst
    api/extras.i18n.rst
    api/extras.jinja2.rst

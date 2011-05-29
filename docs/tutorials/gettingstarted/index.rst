@@ -1,7 +1,7 @@
 .. _tutorials.gettingstarted.index:
 
-Getting Started with webapp2
-============================
+Getting Started with App Engine
+===============================
 This tutorial describes how to develop and deploy a simple Python project with
 Google App Engine. The example project, a guest book, demonstrates how to setup
 the Python runtime environment, how to use webapp2 and several App Engine
