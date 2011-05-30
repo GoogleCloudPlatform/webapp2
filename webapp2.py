@@ -36,7 +36,7 @@ except ImportError:
         run_bare_wsgi_app = classmethod(_run)
         run_wsgi_app = classmethod(_run)
 
-__version_info__ = ('1', '6', '1')
+__version_info__ = ('1', '6', '2')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
@@ -167,9 +167,7 @@ class RequestHandler(object):
         :param response:
             A :class:`Response` instance.
         """
-        if request and response:
-            self.initialize(request, response)
-            self.dispatch()
+        self.initialize(request, response)
 
     def initialize(self, request, response):
         """Initializes this request handler with the given WSGI application,
@@ -211,9 +209,9 @@ class RequestHandler(object):
             args = ()
 
         try:
-            method(*args, **kwargs)
+            return method(*args, **kwargs)
         except Exception, e:
-            self.handle_exception(e, self.app.debug)
+            return self.handle_exception(e, self.app.debug)
 
     def error(self, code):
         """Clears the response and sets the given HTTP status code.
@@ -324,12 +322,9 @@ class RequestHandler(object):
 
     @classmethod
     def factory(cls, request, response):
-        """Constructs an instance of this class.
-
-        The default factory doesn't do much, but is useful to support
-        custom constructors for ``webapp.RequestHandler``.
-        """
-        return cls(request, response)
+        """Constructs an instance and dispatches this handler."""
+        handler = cls(request, response)
+        return handler.dispatch()
 
 
 class RedirectHandler(RequestHandler):
@@ -1051,27 +1046,32 @@ class WSGIApplication(object):
                     raise exc.HTTPNotImplemented()
 
                 rv = self.router.dispatch(request, response)
-                if isinstance(rv, self.response_class):
+                if rv is not None:
                     response = rv
             except Exception, e:
                 try:
                     # Try to handle it with a custom error handler.
                     rv = self.handle_exception(request, response, e)
-                    if isinstance(rv, self.response_class):
+                    if rv is not None:
                         response = rv
                 except exc.WSGIHTTPException, e:
                     # Use the HTTP exception as response.
                     response = e
                 except Exception, e:
                     # Error wasn't handled so we have nothing else to do.
-                    logging.exception(e)
-                    if self.debug:
-                        raise
+                    return self._internal_error(e, environ, start_response)
 
-                    # 500 Internal Server Error.
-                    response = exc.HTTPInternalServerError()
+            try:
+                return response(environ, start_response)
+            except Exception, e:
+                return self._internal_error(e, environ, start_response)
 
-            return response(environ, start_response)
+    def _internal_error(self, exception, environ, start_response):
+        logging.exception(exception)
+        if self.debug:
+            raise
+
+        return exc.HTTPInternalServerError()(environ, start_response)
 
     def handle_exception(self, request, response, e):
         """Handles a uncaught exception occurred in :meth:`__call__`.

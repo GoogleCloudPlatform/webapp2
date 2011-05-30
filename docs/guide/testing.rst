@@ -58,12 +58,10 @@ To test different HTTP methods, just change the request object::
 
 app.get_response()
 ------------------
-For convenience, we can get a response directly from the WSGI application,
-calling ``app.get_response()``.
-
-This is a convenience for unit testing purposes. It receives the same
-parameters as ``Request.blank()`` to build a request and calls the application,
-returning the resulting response::
+We can also get a response directly from the WSGI application, calling
+``app.get_response()``. This is a convenience for unit testing purposes.
+It receives the same parameters as ``Request.blank()`` to build a request
+and calls the application, returning the resulting response::
 
     class HelloHandler(webapp2.RequestHandler):
         def get(self):

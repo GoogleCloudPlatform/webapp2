@@ -1,3 +1,12 @@
+Version 1.6.2 - May 30, 2011
+============================
+- WSGIApplication.__call__ checks if the dispatcher didn't return None to
+  accept the returned value as a response. Previously it checked if it was an
+  instance of Response.
+
+- To support returned response, RequestHandler.dispatch() returns the result of
+  the dispatched method.
+
 Version 1.6.1 - May 30, 2011
 ============================
 - Fixed an indentation bug in webapp2_extras.users.
