@@ -1,3 +1,12 @@
+Version 1.6.1 - May 30, 2011
+============================
+- Fixed an indentation bug in webapp2_extras.users.
+
+- Added back _to_utf8() to convert values for import_string() and urlunsplit().
+
+- Added WSGIApplication.get_response(), a convenience for unit tests.
+
+
 Version 1.6 - May 29, 2011
 ==========================
 - Handlers registered in WSGIApplication.error_handlers can now also be a

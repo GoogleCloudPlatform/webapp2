@@ -36,7 +36,7 @@ except ImportError:
         run_bare_wsgi_app = classmethod(_run)
         run_wsgi_app = classmethod(_run)
 
-__version_info__ = ('1', '6')
+__version_info__ = ('1', '6', '1')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
@@ -1128,6 +1128,33 @@ class WSGIApplication(object):
         else:
             util.run_wsgi_app(self)
 
+    def get_response(self, *args, **kwargs):
+        """Creates a request and returns a response for this app.
+
+        This is a convenience for unit testing purposes. It receives
+        parameters to build a request and calls the application, returning
+        the resulting response::
+
+            class HelloHandler(webapp2.RequestHandler):
+                def get(self):
+                    self.response.write('Hello, world!')
+
+            app = webapp2.WSGIapplication([('/', HelloHandler)])
+
+            # Test the app, passing parameters to build a request.
+            response = app.get_response('/')
+            assert response.status == '200 OK'
+            assert response.body == 'Hello, world!'
+
+        :param args:
+            Positional arguments to be passed to ``Request.blank()``.
+        :param kwargs:
+            Keyword arguments to be passed to ``Request.blank()``.
+        :returns:
+            A :class:`Response` object.
+        """
+        return self.request_class.blank(*args, **kwargs).get_response(self)
+
 
 def get_app():
     """Returns the active app instance.
@@ -1185,7 +1212,7 @@ def import_string(import_name, silent=False):
     :returns:
         The imported object.
     """
-    assert isinstance(import_name, str)
+    import_name = _to_utf8(import_name)
     try:
         if '.' in import_name:
             module, obj = import_name.rsplit('.', 1)
@@ -1220,20 +1247,17 @@ def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):
         netloc = None
 
     if path:
-        assert isinstance(path, str)
-        path = urllib.quote(path)
+        path = urllib.quote(_to_utf8(path))
 
     if query and not isinstance(query, basestring):
         if isinstance(query, dict):
             query = query.iteritems()
 
-        # Sorting should be optional? Sorted args are commonly needed to build
-        # signatures for services.
+        # Sort args: commonly needed to build signatures for services.
         query = urllib.urlencode(sorted(query))
 
     if fragment:
-        assert isinstance(fragment, str)
-        fragment = urllib.quote(fragment)
+        fragment = urllib.quote(_to_utf8(fragment))
 
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
 
@@ -1276,6 +1300,14 @@ def _webapp_request_handler_factory(cls, request, response):
 def _normalize_handler_method(method):
     """Transforms an HTTP method into a valid Python identifier."""
     return method.lower().replace('-', '_')
+
+
+def _to_utf8(value):
+    """Encodes a unicode value to UTF-8 if not yet encoded."""
+    if isinstance(value, str):
+        return value
+
+    return value.encode('utf-8')
 
 
 Request.ResponseClass = Response

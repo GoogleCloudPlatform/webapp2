@@ -155,8 +155,7 @@ class TestHandler(test_base.BaseTestCase):
         app.error_handlers = {}
 
     def test_200(self):
-        req = webapp2.Request.blank('/')
-        rsp = req.get_response(app)
+        rsp = app.get_response('/')
         self.assertEqual(rsp.status, '200 OK')
         self.assertEqual(rsp.body, 'home sweet home')
 
