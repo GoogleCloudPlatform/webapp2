@@ -23,6 +23,5 @@ This tutorial has the following sections:
 .. note::
    This tutorial is a port from the official Python
    `Getting Started <http://code.google.com/appengine/docs/python/gettingstarted/>`_
-   guide from Google App Engine. It was created by the App Engine team and
-   adapted by Rodrigo Moraes. It is licensed under the Creative Commons
-   Attribution 3.0 License.
+   guide from Google App Engine, created by the App Engine team and licensed
+   under the Creative Commons Attribution 3.0 License.

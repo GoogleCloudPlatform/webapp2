@@ -8,8 +8,8 @@ Here's an overview of the main improvements of webapp2 compared to webapp.
    :depth: 3
    :backlinks: none
 
-Extreme compatibility
----------------------
+Compatible with webapp
+----------------------
 webapp2 is designed to work with existing webapp apps without any changes.
 See how this looks familiar::
 
@@ -31,12 +31,12 @@ See how this looks familiar::
         main()
 
 ``RequestHandler``, ``Request``, ``Response`` and ``WSGIApplicationm`` classes
-are compatible with the webapp API. Migrationg from webapp is intended to
+are compatible with the webapp API. Migrating from webapp is intended to
 be a breeze.
 
-Full-featured Response object
+Full-featured response object
 -----------------------------
-webapp2 uses a full-featured Response object from ``WebOb``. If offers several
+webapp2 uses a full-featured response object from ``WebOb``. If offers several
 conveniences to set headers, like easy cookies and other goodies::
 
     class MyHandler(webapp2.RequestHandler):
@@ -57,7 +57,6 @@ handlers can also be set::
     ])
     app.error_handlers[404] = handle_404
 
-
 Status code exceptions
 ----------------------
 ``abort()`` (or ``self.abort()`` inside handlers) raises a proper
@@ -70,7 +69,7 @@ Status code exceptions
 
 Lazy handlers
 -------------
-Lazy handlers are defined as a string to be imported only when needed::
+Lazy handlers can be defined as a string to be imported only when needed::
 
     app = webapp2.WSGIApplication([
         ('/', 'my.module.MyHandler'),
@@ -88,12 +87,13 @@ URIs (and you can also create custom route classes, examples
             self.response.write('Hello, keyword arguments world!')
 
     app = webapp2.WSGIApplication([
-        webapp2.Route('/<year:\d{4}>/<month:\d{2}>', BlogArchiveHandler, 'blog-archive'),
+        webapp2.Route('/<year:\d{4}>/<month:\d{2}>', handler=BlogArchiveHandler, name='blog-archive'),
     ])
 
-URI Routing fully compatible with webapp's
-------------------------------------------
-Positional arguments are also supported, like in webapp::
+Positional arguments from URI
+-----------------------------
+Positional arguments are also supported, as URI routing is fully compatible
+with webapp::
 
     class BlogArchiveHandler(webapp2.RequestHandler):
         def get(self, year, month):
@@ -101,6 +101,21 @@ Positional arguments are also supported, like in webapp::
 
     app = webapp2.WSGIApplication([
         ('/(\d{4})/(\d{2})', BlogArchiveHandler),
+    ])
+
+Returned responses
+------------------
+Several Python frameworks adopt the pattern on returning a response object,
+instead of writing to an existing response object like webapp. For those that
+prefer, webapp2 supports this: simply return a response object from a handler
+and it will be used instead of the one created by the application::
+
+    class BlogArchiveHandler(webapp2.RequestHandler):
+        def get(self):
+            return webapp2.Response('Hello, returned response world!')
+
+    app = webapp2.WSGIApplication([
+        webapp2.Route('/', handler=HomeHandler, name='home'),
     ])
 
 Custom handler methods
@@ -122,8 +137,8 @@ For example, handlers can also use custom methods::
 
 View functions
 --------------
-Handlers don't need to be classes. For those that prefer, functions can be used
-as well::
+In webapp2 handlers don't need necessarily to be classes. For those that
+prefer, functions can be used as well::
 
     def my_sweet_function(request, response):
         response.write('Hello, function world!')
@@ -134,20 +149,30 @@ as well::
 
 More flexible dispatching mechanism
 -----------------------------------
-The ``WSGIApplication`` in webapp is a hard to extend. It dispatches the
-handler giving little chance and extend how it is done, or to pre-process
-requests before a handler method is actually called. In webapp2, the handlers
+The ``WSGIApplication`` in webapp is hard to extend. It dispatches the
+handler giving little chance to extend how it is done, or to pre-process
+requests before a handler method is actually called. In webapp2 the handlers
 dispatch themselves, making it easy to implement before and after dispatch
 hooks.
 
 webapp2 is thought to be lightweight but flexible. It basically provides an
-easy to extend URI routing and dispatching mechanisms.
+easy to extend URI routing and dispatching mechanisms: you can even extend
+URI matching, dispatching or building without subclassing.
+
+Domain and subdomain routing
+----------------------------
+webapp2 supports `domain and subdomain routing <http://webapp-improved.appspot.com/guide/routing.html#domain-and-subdomain-routing>`_
+to restrict URI matches based on the server name::
+
+    routes.DomainRoute('www.mydomain.com', [
+        webapp2.Route('/', handler=HomeHandler, name='home'),
+    ])
 
 URI builder
 -----------
-URIs from routes can be built. THis is more maintanable than hardocding them
-in the code or templates. Simply use the ``uri_for()`` method inside a
-handler::
+URIs defined in the aplication can be built. This is more maintanable than
+hardcoding them in the code or templates. Simply use the ``uri_for()`` method
+inside a handler::
 
     url = self.uri_for('blog-archive', year='2010', month='07')
 
@@ -161,7 +186,7 @@ Redirection for legacy URIs
 Old URIs can be conveniently redirected using a simple route::
 
     def get_redirect_url(handler, *args, **kwargs):
-        return handler.url_for('view', item=kwargs.get('item'))
+        return handler.uri_for('view', item=kwargs.get('item'))
 
     app = webapp2.WSGIApplication([
         webapp2.Route('/view/<item>', ViewHandler, 'view'),
@@ -175,10 +200,11 @@ webapp2 is an extensively documented `single file <http://code.google.com/p/weba
 and has almost 100% test coverage. The source code is explicit, magic-free
 and made to be extended. We like less.
 
-Fast, fast, fast
-----------------
-webapp2 makes a lot of improvements but keeps same performance as webapp.
-Here are some start times and consumed CPU for a cold start:
+Performance
+-----------
+Best of all is that with all these features, there is no loss of performance:
+cold start times are the same as webapp. Here are some logs of a 'Hello World'
+cold start:
 
 .. code-block:: text
 

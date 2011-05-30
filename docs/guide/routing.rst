@@ -22,7 +22,7 @@ This routing mechanism is fully compatible with App Engine's webapp framework.
 This is how it works: a list of routes is registered in the WSGI application.
 When the application receives a request, it tries to match each one in order
 until one matches, and then call the corresponding handler. Here, for example,
-we define three handlers and register three routes that pointing to those
+we define three handlers and register three routes that point to those
 handlers::
 
     class HomeHandler(webapp2.RequestHandler):
@@ -167,19 +167,19 @@ For example, if you have these routes defined for the application::
 Here are some examples of how to generate URIs inside a handler::
 
     # /
-    url = self.url_for('home')
+    url = self.uri_for('home')
     # http://localhost:8080/
-    url = self.url_for('home', _full=True)
+    url = self.uri_for('home', _full=True)
     # /wiki
-    url = self.url_for('wiki')
+    url = self.uri_for('wiki')
     # http://localhost:8080/wiki
-    url = self.url_for('wiki', _full=True)
+    url = self.uri_for('wiki', _full=True)
     # http://localhost:8080/wiki#my-heading
-    url = self.url_for('wiki', _full=True, _fragment='my-heading')
+    url = self.uri_for('wiki', _full=True, _fragment='my-heading')
     # /wiki/my-first-page
-    url = self.url_for('wiki-page', page='my-first-page')
+    url = self.uri_for('wiki-page', page='my-first-page')
     # /wiki/my-first-page?format=atom
-    url = self.url_for('wiki-page', page='my-first-page', format='atom')
+    url = self.uri_for('wiki-page', page='my-first-page', format='atom')
 
 Check :meth:`webapp2.Router.build` in the API reference for a complete
 explanation of the parameters used to build URIs.

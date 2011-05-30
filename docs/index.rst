@@ -29,13 +29,15 @@ Quick links
 -----------
 - `Download <http://code.google.com/p/webapp-improved/downloads/list>`_
 - `Google Code repository <http://code.google.com/p/webapp-improved/>`_
+- `Upvote webapp2 on reddit <http://www.reddit.com/r/AppEngine/comments/hmt4p/new_webapp2_documentation_feature_list/>`_
 
 
 Tutorials
 ---------
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
+   tutorials/quickstart.rst
    tutorials/gettingstarted/index.rst
 
 
@@ -49,6 +51,7 @@ Guide
    guide/request.rst
    guide/response.rst
    guide/exceptions.rst
+   guide/testing.rst
 
 
 API Reference - webapp2
@@ -78,7 +81,6 @@ API Reference - webapp2_extras
 
 Indices and tables
 ------------------
-
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
@@ -91,3 +93,18 @@ documentation is valid for webapp2 too. Parts of this documentation were ported
 from `the official documentation for App Engine/Python <http://code.google.com/appengine/docs/python/>`_,
 written by the App Engine team and licensed under the Creative Commons
 Attribution 3.0 License.
+
+webapp2 uses code ported from `Werkzeug <http://werkzeug.pocoo.org/>`_.
+
+webapp2_extras uses code ported from `Werkzeug <http://werkzeug.pocoo.org/>`_
+and `Tornado Web Server <http://www.tornadoweb.org/>`_.
+
+The `Sphinx <http://sphinx.pocoo.org/>`_ theme mimics the
+`App Engine official documentation <http://code.google.com/appengine/docs/>`_.
+
+This library was not created and is not maintained by Google.
+
+License
+-------
+webapp2 is licensed under the
+`Apache License 2.0 <http://www.apache.org/licenses/LICENSE-2.0>`_.

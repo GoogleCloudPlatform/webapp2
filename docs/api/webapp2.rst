@@ -11,7 +11,8 @@ WSGI app
    :members: request_class, response_class, router_class, request_context_class,
              debug, router, registry, error_handlers, app, request,
              active_instance, allowed_methods,
-             __init__, __call__, set_globals, handle_exception, run
+             __init__, __call__, set_globals, handle_exception, run,
+             get_response
 
 
 Request handlers

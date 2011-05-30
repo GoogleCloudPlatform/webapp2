@@ -1,6 +1,8 @@
 @import url("./basic.css");
 @import url("./gcode.css");
 
+/* This stylesheet is stil a mess. :) */
+
 html,body{
   height:auto;
   margin:0;
@@ -201,4 +203,31 @@ div.sphinxsidebar ul ul li {
   height: 14px;
   padding: 0;
   margin: 0;
+}
+a.headerlink {
+  color: #000;
+  text-decoration: none;
+}
+/* API docs */
+dl.docutils {
+  margin-top: 0em;
+}
+dl.class,
+dl.attribute,
+dl.method,
+dl.function {
+  margin-top: 1em;
+  padding-top: 0.8em;
+  border-top: 1px dotted #B3B3B3;
+}
+dl.class {
+  margin-top: 2em;
+  padding-top: 1.8em;
+  border-top: 1px solid #999;
+}
+tt, tt.descname, tt.descclassname, dt big, dt em {
+  font-size: 13px;
+}
+blockquote {
+  margin-left: 1em;
 }

@@ -57,18 +57,20 @@
 {%- endmacro -%}
 
 {%- macro seachbox() %}
-  <div id="searchbox" style="display: none">
-      <form class="search" action="{{ pathto('search') }}" method="get">
-        <input type="text" name="q" size="18" style="width:345px"/>
-        <input type="submit" value="{{ _('Search') }}" />
-        <input type="hidden" name="check_keywords" value="yes" />
-        <input type="hidden" name="area" value="default" />
-      </form>
-      <p class="searchtip">
-      e.g. "request" or "routing"
-      </p>
-  </div>
-  <script type="text/javascript">$('#searchbox').show(0);</script>
+  {%- if pagename != "search" %}
+    <div id="searchbox" style="display: none">
+        <form class="search" action="{{ pathto('search') }}" method="get">
+          <input type="text" name="q" size="18" style="width:345px"/>
+          <input type="submit" value="{{ _('Search') }}" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </form>
+        <p class="searchtip">
+        e.g. "request" or "routing"
+        </p>
+    </div>
+    <script type="text/javascript">$('#searchbox').show(0);</script>
+  {%- endif %}
 {%- endmacro -%}
 
 <html>
@@ -146,7 +148,7 @@
     </a></p>
   {%- endif %}
   {%- endblock %}
-  {#{{ seachbox() }}#}
+  {{ seachbox() }}
   </div>
 {% endblock %}
 
@@ -194,5 +196,17 @@
     {%- endif %}
     </div>
 {%- endblock %}
+
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-7132932-5']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
   </body>
 </html>

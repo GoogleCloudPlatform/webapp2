@@ -42,5 +42,44 @@ the body of an HTTP PUT request, the request object provides the attributes
 
     uploaded_file = self.request.body
 
-WebOb is an open source third-party library. See the `WebOb <http://pythonpaste.org/webob/>`_
-documentation for a detailed API reference and examples.
+
+Common Request attributes
+-------------------------
+body
+  A file-like object that gives the body of the request.
+content_type
+  Content-type of the request body.
+method
+  The HTTP method, e.g., 'GET' or 'POST'.
+url
+  Full URI, e.g., ``'http://localhost/blog/article?id=1'``.
+scheme
+  URI scheme, e.g., 'http' or 'https'.
+host
+  URI host, e.g., ``'localhost:80'``.
+host_url
+  URI host including scheme, e.g., ``'http://localhost'``.
+path_url
+  URI host including scheme and path, e.g., ``'http://localhost/blog/article'``.
+path
+  URI path, e.g., ``'/blog/article'``.
+path_qs
+  URI path including the query string, e.g., ``'/blog/article?id=1'``.
+query_string
+  Query string, e.g., ``id=1``.
+headers
+  A dictionary like object with request headers. Keys are case-insensitive.
+GET
+  A dictionary-like object with variables from the query string, as unicode.
+str_GET
+  A dictionary-like object with variables from the query string, as a string.
+POST
+  A dictionary-like object with variables from a POST form, as unicode.
+str_POST
+  A dictionary-like object with variables from a POST form, as a strings.
+cookies
+  A dictionary-like object with cookie values.
+
+WebOb is an open source third-party library. See the
+`WebOb <http://pythonpaste.org/webob/>`_ documentation for a detailed API
+reference and examples.
