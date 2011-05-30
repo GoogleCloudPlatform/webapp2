@@ -55,6 +55,27 @@ To test different HTTP methods, just change the request object::
     # status code 405.
     self.assertEqual(response.status, '405 Method Not Allowed')
 
+
+app.get_response()
+------------------
+For convenience, we can get a response directly from the WSGI application,
+calling ``app.get_response()``.
+
+This is a convenience for unit testing purposes. It receives the same
+parameters as ``Request.blank()`` to build a request and calls the application,
+returning the resulting response::
+
+    class HelloHandler(webapp2.RequestHandler):
+        def get(self):
+            self.response.write('Hello, world!')
+
+    app = webapp2.WSGIapplication([('/', HelloHandler)])
+
+    # Test the app, passing parameters to build a request.
+    response = app.get_response('/')
+    assert response.status == '200 OK'
+    assert response.body == 'Hello, world!'
+
 Testing handlers could not be easier. Check the
 `WebOb <http://pythonpaste.org/webob/#methods>`_ documentation for more
 information about the ``Request.blank()`` parameters.
