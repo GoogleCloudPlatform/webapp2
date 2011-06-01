@@ -3,8 +3,7 @@
     webapp2_extras.local
     ~~~~~~~~~~~~~~~~~~~~
 
-    This module implements context-local objects and a WSGIApplication for
-    threaded environments.
+    This module implements context-local objects.
 
     The thread-local implementation comes from werkzeug.local.
 
@@ -100,7 +99,7 @@ class LocalProxy(object):
         request = l('request')
         user = l('user')
 
-    Whenever something is bound to l.user / l.request the proxy objects
+    Whenever something is bound to l.user or l.request the proxy objects
     will forward all operations.  If no object is bound a :exc:`RuntimeError`
     will be raised.
 
@@ -222,41 +221,3 @@ class LocalProxy(object):
     __coerce__ = lambda x, o: x.__coerce__(x, o)
     __enter__ = lambda x: x.__enter__()
     __exit__ = lambda x, *a, **kw: x.__exit__(*a, **kw)
-
-
-# WSGIApplication -------------------------------------------------------------
-
-
-import webapp2
-
-
-_local = Local()
-_app_class = webapp2.WSGIApplication
-_app_class.app = _app_class.active_instance = _local('app')
-_app_class.request = _local('request')
-
-
-class WSGIApplication(_app_class):
-    """A WSGIApplication for threaded environments.
-
-    This allows webapp2 to be used in non-GAE servers.
-    """
-
-    def set_globals(self, app=None, request=None):
-        """Registers the global variables for app and request.
-
-        For threaded environments, they are assigned to a proxy object that
-        returns app and request using thread-local.
-
-        :param app:
-            A :class:`webapp2.WSGIApplication` instance or None to remove it
-            from the globals.
-        :param request:
-            A :class:`webapp2.Request` instance or None to remove it from
-            the globals.
-        """
-        if app is None and request is None:
-            _local.__release_local__()
-        else:
-            _local.app = app
-            _local.request = request
