@@ -71,6 +71,7 @@ API Reference - webapp2_extras
    api/extras.jinja2.rst
    api/extras.json.rst
    api/extras.local.rst
+   api/extras.local_app.rst
    api/extras.routes.rst
    api/extras.securecookie.rst
    api/extras.sessions.rst
