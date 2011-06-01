@@ -122,8 +122,6 @@ you must call :meth:`webapp2.RequestHandler.initialize` at the beginning of
 the method. It'll set the current request, response and app objects as
 attributes of the handler. For example::
 
-Here's a correct way to override ``__init__()``::
-
     class MyHandler(webapp2.RequestHandler):
         def __init__(self, request, response):
             # Set self.request, self.response and self.app.

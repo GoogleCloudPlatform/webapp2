@@ -56,12 +56,33 @@ To test different HTTP methods, just change the request object::
     self.assertEqual(response.status, '405 Method Not Allowed')
 
 
+Request.blank()
+---------------
+``Request.blank(path, environ=None, base_url=None, headers=None)`` is a class
+method that creates a new request object for testing purposes. It receives the
+following parameters:
+
+path
+  A URI path, urlencoded. The path will become path_info, with any query
+  string split off and used.
+environ
+  An environ dictionary.
+base_url
+  If defined, wsgi.url_scheme, HTTP_HOST and SCRIPT_NAME will be filled in
+  from this value.
+headers=None
+  A list of tuples for the header values.
+
+All necessary keys will be added to the environ, but the values you pass in
+will take precedence.
+
+
 app.get_response()
 ------------------
 We can also get a response directly from the WSGI application, calling
-``app.get_response()``. This is a convenience for unit testing purposes.
-It receives the same parameters as ``Request.blank()`` to build a request
-and calls the application, returning the resulting response::
+``app.get_response()``. This is a convenience to test the app. It receives
+the same parameters as ``Request.blank()`` to build a request and call the
+application, returning the resulting response::
 
     class HelloHandler(webapp2.RequestHandler):
         def get(self):
@@ -75,5 +96,5 @@ and calls the application, returning the resulting response::
     assert response.body == 'Hello, world!'
 
 Testing handlers could not be easier. Check the
-`WebOb <http://pythonpaste.org/webob/#methods>`_ documentation for more
-information about the ``Request.blank()`` parameters.
+`WebOb <http://pythonpaste.org/webob/>`_ documentation for more
+information about the request and response objects.

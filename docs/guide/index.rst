@@ -10,3 +10,4 @@ webapp2's Guide to the Gaelaxy
    request.rst
    response.rst
    exceptions.rst
+   testing.rst
