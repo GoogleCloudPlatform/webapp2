@@ -5,8 +5,8 @@ URI routing
 `URI routing` is the process of taking the requested URI and deciding which
 application handler will handle the current request. For this, we initialize
 the :class:`WSGIApplication` defining a list of `routes`: each `route`
-analyses the current request URI and, if it matches certain criterias,
-returns the handler and optional variables extracted from the URI.
+analyses the current request and, if it matches certain criterias, returns
+the handler and optional variables extracted from the URI.
 
 webapp2 offers a powerful and extensible system to match and build URIs,
 which is explained in details in this section.
@@ -55,26 +55,9 @@ passed to the handler as positional arguments. In the example above, the last
 route defines a group, so the handler will receive the matched value when the
 route matches (one or more digits in this case).
 
-The `handler` part is a callable as explained in :ref:`guide.handlers`.
-One additional feature compared to webapp is that the handler can also be
-defined as a string in dotted notation to be lazily imported when needed.
-This is useful to avoid loading all modules when the app is initialized: we
-can define handlers in different modules without needing to import all of them
-to initialize the app. This is not only convenient but also speeds up the
-application startup.
-
-Our previous example could be rewritten using strings instead of handler
-classes and splitting our handlers in two files, ``handlers.py`` and
-``products.py``::
-
-    app = webapp2.WSGIApplication([
-        (r'/', 'handlers.HomeHandler'),
-        (r'/products', 'products.ProductListHandler'),
-        (r'/products/(\d+)', 'products.ProductHandler'),
-    ])
-
-When one of these routes matches, the handler will be imported by the routing
-system if needed.
+The `handler` part is a callable as explained in :ref:`guide.handlers`, and
+can also be a string in dotted notation to be lazily imported when needed
+(see explanation below in **Lazy Handlers**).
 
 Simple routes are easy to use and enough for a lot of cases but don't support
 keyword arguments, URI building, domain and subdomain matching, automatic
@@ -113,11 +96,12 @@ tuple ``(regex, handler)``, we define each route using the class
 
 The first argument in the routes above is a regex template, the second
 argument is the request handler to be used, and the third is a name used to
-build a URI for that route. We already about the :ref:`guide.handlers`, so
+build a URI for that route. We already know about :ref:`guide.handlers`, so
 let's explain the other two.
 
-Check :meth:`webapp2.Route.__init__` in the API reference for the other
-parameters accepted by the ``Route`` constructor.
+Check :meth:`webapp2.Route.__init__` in the API reference for the parameters
+accepted by the ``Route`` constructor. We will explain some of them in details
+below.
 
 The regex template
 ~~~~~~~~~~~~~~~~~~
@@ -150,39 +134,56 @@ routes are equivalent::
    just mix named and unnamed variables and the handler will
    only receive the named ones.
 
-Building URIs
+Lazy handlers
 ~~~~~~~~~~~~~
-Because our routes now have a ``name``, we can use it to build URIs whenever
-we need to reference those resources inside the application. This is done
-using the method :meth:`webapp2.RequestHandler.uri_for` in a handler.
+One additional feature compared to webapp is that the handler can also be
+defined as a string in dotted notation to be lazily imported when needed.
 
-For example, if you have these routes defined for the application::
+This is useful to avoid loading all modules when the app is initialized: we
+can define handlers in different modules without needing to import all of them
+to initialize the app. This is not only convenient but also speeds up the
+application startup.
+
+The string must contain the package or module name and the name of the handler
+(a class or function name). Our previous example could be rewritten using
+strings instead of handler classes and splitting our handlers in two files,
+``handlers.py`` and ``products.py``::
 
     app = webapp2.WSGIApplication([
-        webapp2.Route('/', handler='handlers.HomeHandler', name='home'),
-        webapp2.Route('/wiki', handler=WikiHandler, name='wiki'),
-        webapp2.Route('/wiki/<page>', handler=WikiHandler, name='wiki-page'),
+        (r'/', 'handlers.HomeHandler'),
+        (r'/products', 'products.ProductListHandler'),
+        (r'/products/(\d+)', 'products.ProductHandler'),
     ])
 
-Here are some examples of how to generate URIs inside a handler::
+In the first time that one of these routes matches, the handlers will be
+automatically imported by the routing system.
 
-    # /
-    url = self.uri_for('home')
-    # http://localhost:8080/
-    url = self.uri_for('home', _full=True)
-    # /wiki
-    url = self.uri_for('wiki')
-    # http://localhost:8080/wiki
-    url = self.uri_for('wiki', _full=True)
-    # http://localhost:8080/wiki#my-heading
-    url = self.uri_for('wiki', _full=True, _fragment='my-heading')
-    # /wiki/my-first-page
-    url = self.uri_for('wiki-page', page='my-first-page')
-    # /wiki/my-first-page?format=atom
-    url = self.uri_for('wiki-page', page='my-first-page', format='atom')
+Custom methods
+~~~~~~~~~~~~~~
+A parameter ``handler_method`` can define the method of the handler that will
+be called, if handler is a class. If not defined, the default behavior is to
+translate the HTTP method to a handler method, as explained in
+:ref:`guide.handlers`. For example::
 
-Check :meth:`webapp2.Router.build` in the API reference for a complete
-explanation of the parameters used to build URIs.
+    webapp2.Route(r'/products', handler='handlers.ProductsHandler', name='products-list', handler_method='list_products')
+
+Alternatively, the handler method can be defined in the handler string,
+separated by a colon. This is equivalent to the previous example::
+
+    webapp2.Route(r'/products', handler='handlers.ProductsHandler:list_products', name='products-list')
+
+Restricting HTTP methods
+~~~~~~~~~~~~~~~~~~~~~~~~
+If needed, the route can define a sequence of allowed HTTP methods. Only if the
+request method is in that list or tuple the route will match. If the method is
+not allowed, an ``HTTPMethodNotAllowed`` exception is raised with status code
+405. For example::
+
+    webapp2.Route(r'/products', handler='handlers.ProductsHandler', name='products-list', methods=['GET'])
+
+This is useful when using functions as handlers, or alternative handlers that
+don't translate the HTTP method to the handler method like the default
+:class:`webapp2.RequestHandler` does.
 
 
 Domain and subdomain routing
@@ -252,3 +253,58 @@ And then have a route that matches subdomains of the main ``appspot`` domain
     routes.DomainRoute(r'<subdomain:(?!www\.)[^.]+>.<:app-id\.appspot\.com|mydomain\.com>', [
         webapp2.Route('/', handler=HomeHandler, name='home'),
     ])
+
+
+Building URIs
+-------------
+Because our routes have a ``name``, we can use the routing system to build
+URIs whenever we need to reference those resources inside the application.
+This is done using the method :meth:`webapp2.RequestHandler.uri_for` in a
+handler, or calling :meth:`webapp2.Router.build` directly (a ``Router``
+instance is set as an attribute ``router`` in the WSGI application).
+
+For example, if you have these routes defined for the application::
+
+    app = webapp2.WSGIApplication([
+        webapp2.Route('/', handler='handlers.HomeHandler', name='home'),
+        webapp2.Route('/wiki', handler=WikiHandler, name='wiki'),
+        webapp2.Route('/wiki/<page>', handler=WikiHandler, name='wiki-page'),
+    ])
+
+Here are some examples of how to generate URIs inside a handler::
+
+    # /
+    url = self.uri_for('home')
+    # http://localhost:8080/
+    url = self.uri_for('home', _full=True)
+    # /wiki
+    url = self.uri_for('wiki')
+    # http://localhost:8080/wiki
+    url = self.uri_for('wiki', _full=True)
+    # http://localhost:8080/wiki#my-heading
+    url = self.uri_for('wiki', _full=True, _fragment='my-heading')
+    # /wiki/my-first-page
+    url = self.uri_for('wiki-page', page='my-first-page')
+    # /wiki/my-first-page?format=atom
+    url = self.uri_for('wiki-page', page='my-first-page', format='atom')
+
+Check :meth:`webapp2.Router.build` in the API reference for a complete
+explanation of the parameters used to build URIs.
+
+
+URI parameters are available in the request object
+--------------------------------------------------
+The parameters from the matched route are set as attributes of the request
+object when a route matches. They are ``request.route_args``, for positional
+arguments, and ``request.route_kwargs``, for keyword arguments. That's how
+a handler function can access those parameters::
+
+    def article_handler(request, response):
+        article_id = request.route_kwargs['article_id']
+        response.write('You requested article %r.' % article_id)
+
+    app = webapp2.WSGIApplication(
+        webapp2.Route('/<article_id:\d+>', handler=article_handler, name='article')
+    )
+
+The matched route object is also available as ``request.route``.

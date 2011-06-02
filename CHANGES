@@ -1,3 +1,15 @@
+Version 1.6.3 - June 3, 2011
+============================
+- Added webap2_extras.local_app, with the WSGIApplication previously in
+  webap2_extras.local. This allows using LocalProxy on App Engine, without
+  actually monkeypatching the WSGI app for threaded environments.
+
+- Route now raises exc.HTTPMethodNotAllowed if methods are set and the request
+  method doesn't match.
+
+- Router.default_matcher() now raises exc.HTTPNotFound if no route matches.
+
+
 Version 1.6.2 - May 30, 2011
 ============================
 - WSGIApplication.__call__ checks if the dispatcher didn't return None to

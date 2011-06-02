@@ -175,8 +175,7 @@ class TestDomainRoute(test_base.BaseTestCase):
             ])
         ])
 
-        match = router.match(webapp2.Request.blank('/foo'))
-        self.assertEqual(match, None)
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank('/foo'))
 
         match = router.match(webapp2.Request.blank('http://my-subdomain.app-id.appspot.com/foo'))
         self.assertEqual(match[1:], ((), {'subdomain': 'my-subdomain'}))

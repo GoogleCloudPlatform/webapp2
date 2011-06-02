@@ -1,15 +1,16 @@
 .. _tutorials.quickstart:
 
-Quickstart
-==========
-If you already know webapp, webapp2 is very easy to get started. You can use
-webapp2 exactly like webapp, and learn the new features as you go.
+Quick start
+===========
+If you already know `webapp <http://code.google.com/appengine/docs/python/tools/webapp/>`_,
+webapp2 is very easy to get started. You can use webapp2 exactly like webapp,
+and learn the new features as you go.
 
 If you are new to App Engine, read :ref:`tutorials.gettingstarted.index` first.
 
 
-Add webapp2 to your app
------------------------
+Create an application
+---------------------
 Create a directory ``hellowebapp2`` for your new app.
 `Download webapp2 <http://code.google.com/p/webapp-improved/downloads/list>`_,
 unpack it and add ``webapp2.py`` to that directory. If you want to use extra
@@ -17,8 +18,8 @@ features such as sessions, extra routes, internationalization and more, also
 add the ``webapp2_extras`` directory to your app.
 
 
-Create an application
----------------------
+Hello, webapp2!
+---------------
 Create an ``app.yaml`` file in your app directory with the following contents:
 
 .. code-block:: yaml
@@ -51,6 +52,9 @@ The create a file ``main.py`` and define a handler to display a
     if __name__ == '__main__':
         main()
 
+
+Test your app
+-------------
 If you're using the Google App Engine Launcher, you can set up the application
 by selecting the **File** menu, **Add Existing Application...**, then selecting
 the ``hellowebapp2`` directory. Select the application in the app list, click

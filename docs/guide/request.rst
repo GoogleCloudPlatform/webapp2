@@ -80,6 +80,20 @@ str_POST
 cookies
   A dictionary-like object with cookie values.
 
+
+Extra attributes
+----------------
+The parameters from the matched :class:`webapp2.Route` are set as attributes
+of the request object. They are ``request.route_args``, for positional
+arguments, and ``request.route_kwargs``, for keyword arguments. The matched
+route object is available as ``request.route``.
+
+A reference to the active WSGI application is also set as an attribute of the
+request. You can access it in ``request.app``.
+
+
+Learn more about WebOb
+----------------------
 WebOb is an open source third-party library. See the
 `WebOb <http://pythonpaste.org/webob/>`_ documentation for a detailed API
 reference and examples.

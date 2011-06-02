@@ -4,9 +4,9 @@ import urlparse
 import webapp2
 
 
-def url_for(_name, *args, **kwargs):
-    router = webapp2.get_app().router
-    return router.build(webapp2.get_request(), _name, args, kwargs)
+def uri_for(_name, *args, **kwargs):
+    request = webapp2.get_request()
+    return request.app.router.build(request, _name, args, kwargs)
 
 
 def redirect(response, uri, permanent=False, abort=False):
@@ -28,5 +28,5 @@ def redirect(response, uri, permanent=False, abort=False):
 
 def redirect_to(response, _name, _permanent=False, _abort=False, *args,
     **kwargs):
-    uri = url_for(_name, *args, **kwargs)
+    uri = uri_for(_name, *args, **kwargs)
     redirect(response, uri, permanent=_permanent, abort=_abort)

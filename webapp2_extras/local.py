@@ -36,6 +36,7 @@ else:
 
 
 class Local(object):
+
     __slots__ = ('__storage__', '__lock__')
 
     def __init__(self):
@@ -109,6 +110,7 @@ class LocalProxy(object):
 
         session = LocalProxy(lambda: get_current_request().session)
     """
+
     __slots__ = ('__local', '__dict__', '__name__')
 
     def __init__(self, local, name=None):

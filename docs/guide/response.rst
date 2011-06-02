@@ -7,7 +7,7 @@ This is initialized to an empty `WebOb <http://pythonpaste.org/webob/>`_
 ``Response`` object by the application.
 
 The response object's acts as a file-like object that can be used for
-writing the body of the response.:
+writing the body of the response::
 
     class MyHandler(webapp2.RequestHandler):
         def get(self):

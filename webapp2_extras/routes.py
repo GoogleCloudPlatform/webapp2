@@ -55,6 +55,7 @@ class DomainRoute(MultiRoute):
     In the example above, an extra `subdomain` keyword is passed to the handler,
     but if the regex didn't define any named groups, nothing would be added.
     """
+
     def __init__(self, template, routes):
         """Initializes a URL route.
 
@@ -122,6 +123,7 @@ class PathPrefixRoute(MultiRoute):
             Route('/users/<user:\w+>/projects', UserProjectsHandler, 'user-projects'),
         ])
     """
+
     _attr = 'template'
 
     def __init__(self, prefix, routes):
@@ -143,16 +145,18 @@ class PathPrefixRoute(MultiRoute):
 
 class NamePrefixRoute(PathPrefixRoute):
     """Same as :class:`PathPrefixRoute`, but prefixes the route name."""
+
     _attr = 'name'
 
 
 class HandlerPrefixRoute(PathPrefixRoute):
     """Same as :class:`PathPrefixRoute`, but prefixes the route handler."""
+
     _attr = 'handler'
 
 
 class RedirectRoute(webapp2.Route):
-    """An convenience route class for easy redirects.
+    """A convenience route class for easy redirects.
 
     It adds redirect_to, redirect_to_name and strict_slash options to
     :class:`webapp2.Route`.

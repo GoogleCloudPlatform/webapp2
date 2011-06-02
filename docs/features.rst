@@ -149,8 +149,8 @@ prefer, functions can be used as well::
 
 More flexible dispatching mechanism
 -----------------------------------
-The ``WSGIApplication`` in webapp is hard to extend. It dispatches the
-handler giving little chance to extend how it is done, or to pre-process
+The ``WSGIApplication`` in webapp is hard to modify. It dispatches the
+handler giving little chance to define how it is done, or to pre-process
 requests before a handler method is actually called. In webapp2 the handlers
 dispatch themselves, making it easy to implement before and after dispatch
 hooks.
@@ -196,7 +196,7 @@ Old URIs can be conveniently redirected using a simple route::
 
 Single file, well-tested and documented
 ---------------------------------------
-webapp2 is an extensively documented `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2/__init__.py>`_
+webapp2 is an extensively documented `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_
 and has almost 100% test coverage. The source code is explicit, magic-free
 and made to be extended. We like less.
 

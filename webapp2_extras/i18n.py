@@ -46,12 +46,12 @@ import webapp2
 #: locale_selector
 #:     A function that receives (request, i18n_store) and returns a locale
 #:     to be used for a request. If not defined, uses `default_locale`.
-#:     Can also be a function as string in dotted notation to be imported.
+#:     Can also be a string in dotted notation to be imported.
 #:
 #: timezone_selector
-#:     A function that receives (request, i18n_store) and returns a timrzone
+#:     A function that receives (request, i18n_store) and returns a timezone
 #:     to be used for a request. If not defined, uses `default_timezone`.
-#:     Can also be a function as string in dotted notation to be imported.
+#:     Can also be a string in dotted notation to be imported.
 #:
 #: date_formats
 #:     Default date formats for datetime, date and time.

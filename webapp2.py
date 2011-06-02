@@ -36,7 +36,7 @@ except ImportError:
         run_bare_wsgi_app = classmethod(_run)
         run_wsgi_app = classmethod(_run)
 
-__version_info__ = ('1', '6', '2')
+__version_info__ = ('1', '6', '3')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
@@ -103,7 +103,7 @@ class Response(webob.Response):
     def set_status(self, code, message=None):
         """Sets the HTTP status code of this response.
 
-        :param message:
+        :param code:
             The HTTP status string to use
         :param message:
             A status string. If none is given, uses the default from the
@@ -534,14 +534,18 @@ class Route(BaseRoute):
     Ian Bicking.
     """
 
+    #: Name of the method to be used, if handler is a class.
     handler_method = None
+    #: Default parameters values.
     defaults = None
-    # Lazy properties.
+    #: Sequence of allowed HTTP methods. If not set, all methods are allowed.
+    methods = None
+    # Lazy properties extracted from the route template.
     regex = None
     reverse_template = None
     variables = None
-    arg_count = 0
-    kwd_count = 0
+    args_count = 0
+    kwargs_count = 0
 
     def __init__(self, template, handler=None, name=None, defaults=None,
         build_only=False, handler_method=None, methods=None):
@@ -630,7 +634,7 @@ class Route(BaseRoute):
         """Lazy regex template parser."""
         self.variables = {}
         self.reverse_template = pattern = ''
-        self.arg_count = last = 0
+        self.args_count = last = 0
         for match in _ROUTE_REGEX.finditer(self.template):
             part = self.template[last:match.start()]
             name = match.group(1)
@@ -638,30 +642,37 @@ class Route(BaseRoute):
             last = match.end()
 
             if not name:
-                name = '__%d__' % self.arg_count
-                self.arg_count += 1
+                name = '__%d__' % self.args_count
+                self.args_count += 1
 
             pattern += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
             self.reverse_template += '%s%%(%s)s' % (part, name)
             self.variables[name] = re.compile('^%s$' % expr)
 
         part = self.template[last:]
-        self.kwd_count = len(self.variables) - self.arg_count
+        self.kwargs_count = len(self.variables) - self.args_count
         self.reverse_template += part
         return re.compile('^%s%s$' % (pattern, re.escape(part)))
 
     def match(self, request):
         """Matches this route against the current request.
 
+        :raises:
+            ``exc.HTTPMethodNotAllowed`` if the route defines :attr:`methods`
+            and the request method isn't allowed.
+
         .. seealso:: :meth:`BaseRoute.match`.
         """
         match = self.regex.match(request.path)
-        if not match or (self.methods and request.method not in self.methods):
+        if not match:
             return None
+
+        if self.methods and request.method not in self.methods:
+            raise exc.HTTPMethodNotAllowed()
 
         kwargs = self.defaults.copy()
         kwargs.update(match.groupdict())
-        if kwargs and self.arg_count:
+        if kwargs and self.args_count:
             args = tuple(value[1] for value in sorted(
                 (int(key[2:-2]), kwargs.pop(key)) for key in kwargs.keys() \
                 if key.startswith('__') and key.endswith('__')))
@@ -697,7 +708,7 @@ class Route(BaseRoute):
         # Access self.regex just to set the lazy properties.
         regex = self.regex
         variables = self.variables
-        if self.arg_count:
+        if self.args_count:
             for index, value in enumerate(args):
                 key = '__%d__' % index
                 if key in variables:
@@ -802,11 +813,15 @@ class Router(object):
             A :class:`Request` instance.
         :returns:
             A tuple ``(route, args, kwargs)`` if a route matched, or None.
+        :raises:
+            ``exc.HTTPNotFound`` if no route matched.
         """
         for route in self.match_routes:
             match = route.match(request)
             if match:
                 return match
+
+        raise exc.HTTPNotFound()
 
     def set_dispatcher(self, func):
         """Sets the function called for dispatch the handler.
@@ -829,11 +844,8 @@ class Router(object):
         :returns:
             The returned value from the handler.
         """
-        match = self.match(request)
-        if not match:
-            raise exc.HTTPNotFound()
-
-        request.route, request.route_args, request.route_kwargs = match
+        request.route, request.route_args, request.route_kwargs = \
+            self.match(request)
         handler = request.route.handler
         if isinstance(handler, basestring):
             if handler not in self._handlers:
@@ -1017,7 +1029,8 @@ class WSGIApplication(object):
 
         For threaded environments, direct assignment must be replaced by
         assigning to a proxy object that returns app and request using
-        thread-local. See :class:`webapp2_extras.local.WSGIApplication`.
+        thread-local. Check :class:`webapp2_extras.local_app.WSGIApplication`
+        for an example.
 
         :param app:
             A :class:`WSGIApplication` instance or None to remove it from
@@ -1054,7 +1067,7 @@ class WSGIApplication(object):
                     rv = self.handle_exception(request, response, e)
                     if rv is not None:
                         response = rv
-                except exc.WSGIHTTPException, e:
+                except HTTPException, e:
                     # Use the HTTP exception as response.
                     response = e
                 except Exception, e:

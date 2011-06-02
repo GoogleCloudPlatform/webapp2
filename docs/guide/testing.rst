@@ -70,8 +70,8 @@ environ
 base_url
   If defined, wsgi.url_scheme, HTTP_HOST and SCRIPT_NAME will be filled in
   from this value.
-headers=None
-  A list of tuples for the header values.
+headers
+  A list of ``(header_name, value)`` tuples for the request headers.
 
 All necessary keys will be added to the environ, but the values you pass in
 will take precedence.

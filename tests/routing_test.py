@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import random
 
+import webapp2
 from webapp2 import BaseRoute, RedirectHandler, Request, Route, Router
 
 import test_base
@@ -251,7 +252,7 @@ class TestRoute(test_base.BaseTestCase):
         req.method = 'POST'
         self.assertTrue(route.match(req) is not None)
         req.method = 'PUT'
-        self.assertTrue(route.match(req) is None)
+        self.assertRaises(webapp2.exc.HTTPMethodNotAllowed, route.match, req)
 
 
 if __name__ == '__main__':
