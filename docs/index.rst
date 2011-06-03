@@ -52,6 +52,7 @@ Guide
    guide/response.rst
    guide/exceptions.rst
    guide/testing.rst
+   guide/extras.rst
 
 
 API Reference - webapp2

@@ -231,3 +231,18 @@ tt, tt.descname, tt.descclassname, dt big, dt em {
 blockquote {
   margin-left: 1em;
 }
+table.indextable, table.genindextable, table.modindextable {
+  border-width: 0 !important;
+  border-color: #FFF !important;
+}
+table.indextable a, table.indextable a:link {
+  color: #000;
+  text-decoration: none;
+}
+table.indextable a:hover, table.indextable a:active {
+  color: #00c;
+  text-decoration: underline;
+}
+table.indextable a:visited {
+  color:#551a8b;
+}
