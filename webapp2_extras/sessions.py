@@ -186,7 +186,7 @@ class SecureCookieSessionFactory(BaseSessionFactory):
         return self.session
 
     def save_session(self, response):
-        if not self.session or not self.session.modified:
+        if self.session is None or not self.session.modified:
             return
 
         self.session_store.save_secure_cookie(
