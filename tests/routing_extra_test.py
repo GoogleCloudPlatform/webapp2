@@ -222,6 +222,69 @@ class TestDomainRoute(test_base.BaseTestCase):
         match[1]['_netloc'] = 'my-subdomain.app-id.appspot.com'
         self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-projects', match[0], match[1]), path)
 
+    def test_guide_examples(self):
+        router = webapp2.Router(None, [
+            DomainRoute(r'www.mydomain.com', [
+                webapp2.Route('/path1', 'Path1', 'path1'),
+            ]),
+            DomainRoute(r'<subdomain:(?!www\.)[^.]+>.mydomain.com', [
+                webapp2.Route('/path2', 'Path2', 'path2'),
+            ]),
+            DomainRoute(r'<:(app-id\.appspot\.com|www\.mydomain\.com)>', [
+                webapp2.Route('/path3', 'Path3', 'path3'),
+            ]),
+            DomainRoute(r'<subdomain:(?!www)[^.]+>.<:(app-id\.appspot\.com|mydomain\.com)>', [
+                webapp2.Route('/path4', 'Path4', 'path4'),
+            ]),
+        ])
+
+        uri1a = 'http://www.mydomain.com/path1'
+        uri1b = 'http://sub.mydomain.com/path1'
+        uri1c = 'http://www.mydomain.com/invalid-path'
+
+        uri2a = 'http://sub.mydomain.com/path2'
+        uri2b = 'http://www.mydomain.com/path2'
+        uri2c = 'http://sub.mydomain.com/invalid-path'
+        uri2d = 'http://www.mydomain.com/invalid-path'
+
+        uri3a = 'http://app-id.appspot.com/path3'
+        uri3b = 'http://www.mydomain.com/path3'
+        uri3c = 'http://sub.app-id.appspot.com/path3'
+        uri3d = 'http://sub.mydomain.com/path3'
+        uri3e = 'http://app-id.appspot.com/invalid-path'
+        uri3f = 'http://www.mydomain.com/invalid-path'
+
+        uri4a = 'http://sub.app-id.appspot.com/path4'
+        uri4b = 'http://sub.mydomain.com/path4'
+        uri4c = 'http://app-id.appspot.com/path4'
+        uri4d = 'http://www.app-id.appspot.com/path4'
+        uri4e = 'http://www.mydomain.com/path4'
+        uri4f = 'http://sub.app-id.appspot.com/invalid-path'
+        uri4g = 'http://sub.mydomain.com/invalid-path'
+
+        self.assertEqual(router.match(webapp2.Request.blank(uri1a))[1:], ((), {}))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri1b))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri1c))
+
+        self.assertEqual(router.match(webapp2.Request.blank(uri2a))[1:], ((), {'subdomain': 'sub'}))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri2b))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri2c))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri2d))
+
+        self.assertEqual(router.match(webapp2.Request.blank(uri3a))[1:], ((), {}))
+        self.assertEqual(router.match(webapp2.Request.blank(uri3b))[1:], ((), {}))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri3c))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri3d))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri3e))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri3f))
+
+        self.assertEqual(router.match(webapp2.Request.blank(uri4a))[1:], ((), {'subdomain': 'sub'}))
+        self.assertEqual(router.match(webapp2.Request.blank(uri4b))[1:], ((), {'subdomain': 'sub'}))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri4c))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri4d))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri4e))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri4f))
+        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri4g))
 
 if __name__ == '__main__':
     test_base.main()
