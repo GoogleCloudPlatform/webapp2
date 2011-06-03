@@ -130,7 +130,7 @@ class PathPrefixRoute(MultiRoute):
         """Initializes a URL route.
 
         :param prefix:
-            The path prefix.
+            The prefix to be prepended.
         :param routes:
             A list of :class:`webapp2.Route` instances.
         """
