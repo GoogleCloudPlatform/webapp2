@@ -190,9 +190,10 @@ Domain and subdomain routing
 ----------------------------
 The routing system can also handle domain and subdomain matching. This is done
 using a special route class provided in the ``webapp2_extras.routes`` module:
-the ``DomainRoute``. This is a class that is initialized with a pattern to
-match the current server name and a list of nested :class:`webapp2.Route` that
-will only be tested if the domain or subdomain matches.
+the :class:`webapp2_extras.routes.DomainRoute`. This is a class that is
+initialized with a pattern to match the current server name and a list of
+nested :class:`webapp2.Route` that will only be tested if the domain or
+subdomain matches.
 
 For example, to restrict routes to a subdomain of the appspot domain::
 
@@ -230,7 +231,7 @@ value::
         webapp2.Route('/', handler=HomeHandler, name='home'),
     ])
 
-To match any subdomain expect the ``www`` subdomain, set a regular expression
+To match any subdomain except the ``www`` subdomain, set a regular expression
 that excludes ``www``::
 
     routes.DomainRoute(r'<subdomain:(?!www\.)[^.]+>.mydomain.com', [
@@ -243,14 +244,14 @@ Any subdomain that matches and is not ``www`` will be passed as a parameter
 Similarly, you can restrict matches to the main ``appspot`` domain **or**
 a ``www`` domain from a custom domain::
 
-    routes.DomainRoute(r'<:app-id\.appspot\.com|www\.somedomain\.com>', [
+    routes.DomainRoute(r'<:(app-id\.appspot\.com|www\.mydomain\.com)>', [
         webapp2.Route('/', handler=HomeHandler, name='home'),
     ])
 
 And then have a route that matches subdomains of the main ``appspot`` domain
 **or** from a custom domain, except ``www``::
 
-    routes.DomainRoute(r'<subdomain:(?!www\.)[^.]+>.<:app-id\.appspot\.com|mydomain\.com>', [
+    routes.DomainRoute(r'<subdomain:(?!www)[^.]+>.<:(app-id\.appspot\.com|mydomain\.com)>', [
         webapp2.Route('/', handler=HomeHandler, name='home'),
     ])
 
