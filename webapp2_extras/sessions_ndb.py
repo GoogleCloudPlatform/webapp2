@@ -110,7 +110,7 @@ class DatastoreSessionFactory(sessions.CustomBackendSessionFactory):
         return sessions.SessionDict(self, new=True)
 
     def save_session(self, response):
-        if not self.session or not self.session.modified:
+        if self.session is None or not self.session.modified:
             return
 
         self.session_model(id=self.sid, data=dict(self.session))._put()

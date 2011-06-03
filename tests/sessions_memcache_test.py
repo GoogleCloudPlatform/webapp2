@@ -121,6 +121,19 @@ class TestMemcacheSession(test_base.BaseTestCase):
         flashes = session.get_flashes()
         self.assertEqual(flashes, [])
 
+        rsp = webapp2.Response()
+        store.save_sessions(rsp)
+
+        # Round 4 -------------------------------------------------------------
+
+        cookies = rsp.headers.get('Set-Cookie')
+        req = webapp2.Request.blank('/', headers=[('Cookie', cookies)])
+        req.app = app
+        store = sessions.SessionStore(req)
+
+        session = store.get_session(factory=self.factory)
+        flashes = session.get_flashes()
+        self.assertEqual(flashes, [])
 
 if __name__ == '__main__':
     test_base.main()

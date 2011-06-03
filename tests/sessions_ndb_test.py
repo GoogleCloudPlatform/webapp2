@@ -141,6 +141,20 @@ class TestNdbSession(test_base.BaseTestCase):
         flashes = session.get_flashes()
         self.assertEqual(flashes, [])
 
+        rsp = webapp2.Response()
+        store.save_sessions(rsp)
+
+        # Round 4 -------------------------------------------------------------
+
+        cookies = rsp.headers.get('Set-Cookie')
+        req = webapp2.Request.blank('/', headers=[('Cookie', cookies)])
+        req.app = app
+        store = sessions.SessionStore(req)
+
+        session = store.get_session(factory=self.factory)
+        flashes = session.get_flashes()
+        self.assertEqual(flashes, [])
+
     def test_misc(self):
         p = sessions_ndb._PickledProperty(dict)
         self.assertRaises(datastore_errors.BadValueError, p._validate, ['foo'])
