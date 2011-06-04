@@ -112,21 +112,26 @@ class I18nStore(object):
     #: A callable that returns the timezone for a request.
     timezone_selector = None
 
-    def __init__(self, app):
+    def __init__(self, app, config=None):
         """Initializes the i18n store.
 
-        :param request:
+        :param app:
             A :class:`webapp2.WSGIApplication` instance.
+        :param config:
+            A dictionary of configuration values to be overriden. See
+            the available keys in :data:`default_config`.
         """
-        config = app.config[self.config_key]
+        config = app.config.load_config(self.config_key,
+            default_values=default_config, user_values=config,
+            required_keys=None)
         self.translations = {}
-        self.translations_path = config.get('translations_path')
-        self.domains = config.get('domains')
-        self.default_locale = config.get('default_locale')
-        self.default_timezone = config.get('default_timezone')
-        self.date_formats = config.get('date_formats')
-        self.set_locale_selector(config.get('locale_selector'))
-        self.set_timezone_selector(config.get('timezone_selector'))
+        self.translations_path = config['translations_path']
+        self.domains = config['domains']
+        self.default_locale = config['default_locale']
+        self.default_timezone = config['default_timezone']
+        self.date_formats = config['date_formats']
+        self.set_locale_selector(config['locale_selector'])
+        self.set_timezone_selector(config['timezone_selector'])
 
     def set_locale_selector(self, func):
         """Sets the function that defines the locale for a request.

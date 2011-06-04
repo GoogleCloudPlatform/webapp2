@@ -8,11 +8,18 @@ webapp2
 WSGI app
 --------
 .. autoclass:: WSGIApplication
-   :members: request_class, response_class, router_class, request_context_class,
-             debug, router, registry, error_handlers, app, request,
+   :members: request_class, response_class, request_context_class,
+             router_class, config_class,
+             debug, router, config, registry, error_handlers, app, request,
              active_instance, allowed_methods,
              __init__, __call__, set_globals, handle_exception, run,
              get_response
+
+
+Configuration
+-------------
+.. autoclass:: Config
+   :members: __init__, load_config
 
 
 Request handlers

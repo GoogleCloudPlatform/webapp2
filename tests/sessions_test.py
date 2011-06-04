@@ -5,15 +5,11 @@ from webapp2_extras import sessions
 
 import test_base
 
-
-class App(object):
-    @property
-    def config(self):
-        config = sessions.default_config.copy()
-        config['secret_key'] = 'my-super-secret'
-        return {'webapp2_extras.sessions': config}
-
-app = App()
+app = webapp2.WSGIApplication(config={
+    'webapp2_extras.sessions': {
+        'secret_key': 'my-super-secret',
+    },
+})
 
 
 class TestSecureCookieSession(test_base.BaseTestCase):
@@ -158,8 +154,7 @@ class TestSecureCookieSession(test_base.BaseTestCase):
         self.assertEqual(res, {'bar': 'baz'})
 
     def test_set_session_store(self):
-        app = webapp2.WSGIApplication(debug=True)
-        app.config = webapp2_config.Config({
+        app = webapp2.WSGIApplication(debug=True, config={
             'webapp2_extras.sessions': {
                 'secret_key': 'my-super-secret',
             }
@@ -175,8 +170,7 @@ class TestSecureCookieSession(test_base.BaseTestCase):
         self.assertTrue(isinstance(s, sessions.SessionStore))
 
     def test_get_session_store(self):
-        app = webapp2.WSGIApplication(debug=True)
-        app.config = webapp2_config.Config({
+        app = webapp2.WSGIApplication(debug=True, config={
             'webapp2_extras.sessions': {
                 'secret_key': 'my-super-secret',
             }

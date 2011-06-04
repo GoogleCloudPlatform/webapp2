@@ -5,6 +5,8 @@
 
     Configuration object for webapp2.
 
+    This module is deprecated. See :class:`webapp2.WSGIApplication.config`.
+
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """

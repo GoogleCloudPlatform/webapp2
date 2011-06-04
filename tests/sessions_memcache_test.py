@@ -6,14 +6,11 @@ from webapp2_extras import sessions_memcache
 import test_base
 
 
-class App(object):
-    @property
-    def config(self):
-        config = sessions.default_config.copy()
-        config['secret_key'] = 'my-super-secret'
-        return {'webapp2_extras.sessions': config}
-
-app = App()
+app = webapp2.WSGIApplication(config={
+    'webapp2_extras.sessions': {
+        'secret_key': 'my-super-secret',
+    },
+})
 
 
 class TestMemcacheSession(test_base.BaseTestCase):

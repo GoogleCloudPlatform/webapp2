@@ -36,7 +36,7 @@ except ImportError:
         run_bare_wsgi_app = classmethod(_run)
         run_wsgi_app = classmethod(_run)
 
-__version_info__ = ('1', '6', '3')
+__version_info__ = ('1', '7')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
@@ -668,6 +668,8 @@ class Route(BaseRoute):
             return None
 
         if self.methods and request.method not in self.methods:
+            # Is this a good idea? What if other route is set for this path
+            # but different HTTP method?
             raise exc.HTTPMethodNotAllowed()
 
         kwargs = self.defaults.copy()
@@ -758,13 +760,10 @@ class Router(object):
     def __init__(self, app, routes=None):
         """Initializes the router.
 
-        :param app:
-            The :class:`WSGIApplication` instance.
         :param routes:
             A list of :class:`Route` instances. For compatibility with webapp,
             the list items can also be a tuple ``(regex, handler_class)``.
         """
-        self.app = app
         # Default dispatcher, matcher and builder.
         self.match = self.default_matcher
         self.dispatch = self.default_dispatcher
@@ -925,6 +924,58 @@ class Router(object):
         return '<Router(%r)>' % routes
 
 
+class Config(dict):
+    """A simple configuration dictionary for the :class:`WSGIApplication`."""
+
+    #: Loaded configurations.
+    loaded = None
+
+    def __init__(self, defaults=None):
+        dict.__init__(self, defaults or ())
+        self.loaded = []
+
+    def load_config(self, key, default_values=None, user_values=None,
+                    required_keys=None):
+        """Returns a configuration for a given key.
+
+        This can be used by objects that define a default configuration. It
+        will update the app configuration with the default values the first
+        time it is requested, and mark the key as loaded.
+
+        :param key:
+            A configuration key.
+        :param default_values:
+            Default values defined by a module or class.
+        :param user_values:
+            User values, used when an object can be initialized with
+            configuration. This overrides the app configuration.
+        :param required_keys:
+            Keys that can not be None.
+        :raises:
+            Exception, when a required key is None.
+        """
+        if key in self.loaded:
+            return self[key]
+
+        config = dict(default_values or ())
+
+        if key in self:
+            config.update(self[key])
+
+        if user_values:
+            config.update(user_values)
+
+        if required_keys:
+            for required_key in required_keys:
+                if config.get(required_key) is None:
+                    raise Exception('Config key %r for %r is required.' %
+                        (required_key, key))
+
+        self[key] = config
+        self.loaded.append(key)
+        return config
+
+
 class RequestContext(object):
     """Context for a single request.
 
@@ -989,11 +1040,15 @@ class WSGIApplication(object):
     router_class = Router
     #: Class used for the request context object.
     request_context_class = RequestContext
+    #: Class used for the configuration object.
+    config_class = Config
     #: A general purpose flag to indicate development mode: if True, uncaught
     #: exceptions are raised instead of using ``HTTPInternalServerError``.
     debug = False
     #: A :class:`Router` instance with all URIs registered for the application.
     router = None
+    #: A :class:`Config` instance with the application configuration.
+    config = None
     #: A dictionary to register objects used during the app lifetime.
     registry = None
     #: A dictionary mapping HTTP error codes to callables to handle those
@@ -1006,7 +1061,7 @@ class WSGIApplication(object):
     #: Same as :attr:`app`, for webapp compatibility. See :meth:`set_globals`.
     active_instance = None
 
-    def __init__(self, routes=None, debug=False):
+    def __init__(self, routes=None, debug=False, config=None):
         """Initializes the WSGI application.
 
         :param routes:
@@ -1014,9 +1069,12 @@ class WSGIApplication(object):
             the list items can also be a tuple ``(regex, handler_class)``.
         :param debug:
             True to enable debug mode, False otherwise.
+        :param config:
+            A configuration dictionary for the application.
         """
         self.debug = debug
         self.router = self.router_class(self, routes)
+        self.config = self.config_class(config)
         self.registry = {}
         self.error_handlers = {}
         self.set_globals(app=self)

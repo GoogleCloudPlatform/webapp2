@@ -2,6 +2,10 @@
 
 Configuration
 =============
+This module is deprecated. :class:`webapp2.WSGIApplication` now has a simple
+configuration dictionary used by default, stored in
+:class:`webapp2.WSGIApplication.config`. See also :class:`webapp2.Config`.
+
 .. module:: webapp2_extras.config
 
 .. autodata:: DEFAULT_VALUE

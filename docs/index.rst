@@ -67,7 +67,6 @@ API Reference - webapp2_extras
 .. toctree::
    :maxdepth: 3
 
-   api/extras.config.rst
    api/extras.i18n.rst
    api/extras.jinja2.rst
    api/extras.json.rst

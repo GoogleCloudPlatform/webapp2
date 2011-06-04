@@ -23,7 +23,6 @@ class I18nTestCase(test_base.BaseTestCase):
         request.app = app
 
         app.set_globals(app=app, request=request)
-        app.config = config.Config()
 
         self.app = app
         self.request = request
@@ -345,7 +344,6 @@ class I18nTestCase(test_base.BaseTestCase):
 
     def test_set_i18n_store(self):
         app = webapp2.WSGIApplication(debug=True)
-        app.config = config.Config()
         req = webapp2.Request.blank('/')
         req.app = app
         store = i18n.I18nStore(app)
@@ -358,7 +356,6 @@ class I18nTestCase(test_base.BaseTestCase):
 
     def test_get_i18n_store(self):
         app = webapp2.WSGIApplication(debug=True)
-        app.config = config.Config()
         req = webapp2.Request.blank('/')
         req.app = app
         self.assertEqual(len(app.registry), 0)
@@ -368,7 +365,6 @@ class I18nTestCase(test_base.BaseTestCase):
 
     def test_set_i18n(self):
         app = webapp2.WSGIApplication(debug=True)
-        app.config = config.Config()
         req = webapp2.Request.blank('/')
         req.app = app
         store = i18n.I18n(req)
@@ -383,7 +379,6 @@ class I18nTestCase(test_base.BaseTestCase):
 
     def test_get_i18n(self):
         app = webapp2.WSGIApplication(debug=True)
-        app.config = config.Config()
         req = webapp2.Request.blank('/')
         req.app = app
         self.assertEqual(len(app.registry), 0)

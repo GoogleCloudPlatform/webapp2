@@ -13,15 +13,14 @@ import re
 
 import webapp2
 
-from webapp2_extras import config as webapp2_config
 from webapp2_extras import securecookie
 
 #: Default configuration values for this module. Keys are:
 #:
 #: secret_key
 #:     Secret key to generate session cookies. Set this to something random
-#:     and unguessable. Default is `REQUIRED_VALUE` (an exception
-#:     is raised if it is not set).
+#:     and unguessable. This is the only required configuration key:
+#:     an exception is raised if it is not defined.
 #:
 #: cookie_name
 #:     Name of the cookie to save a session or session id. Default is
@@ -52,7 +51,7 @@ from webapp2_extras import securecookie
 #:
 #:     - httponly: Disallow JavaScript to access the cookie.
 default_config = {
-    'secret_key':      webapp2_config.REQUIRED_VALUE,
+    'secret_key':      None,
     'cookie_name':     'session',
     'session_max_age': None,
     'cookie_args': {
@@ -63,6 +62,8 @@ default_config = {
         'httponly':    False,
     }
 }
+
+DEFAULT_VALUE = object()
 
 
 class _UpdateDictMixin(object):
@@ -155,7 +156,7 @@ class BaseSessionFactory(object):
         self.session_args = session_store.config['cookie_args'].copy()
         self.session = None
 
-    def get_session(self, max_age=webapp2_config.DEFAULT_VALUE):
+    def get_session(self, max_age=DEFAULT_VALUE):
         raise NotImplementedError()
 
     def save_session(self, response):
@@ -176,7 +177,7 @@ class SecureCookieSessionFactory(BaseSessionFactory):
        can't be visible to users. For this, use datastore or memcache sessions.
     """
 
-    def get_session(self, max_age=webapp2_config.DEFAULT_VALUE):
+    def get_session(self, max_age=DEFAULT_VALUE):
         if self.session is None:
             data = self.session_store.get_secure_cookie(self.name,
                                                         max_age=max_age)
@@ -202,7 +203,7 @@ class CustomBackendSessionFactory(BaseSessionFactory):
     #: Used to validate session ids.
     _sid_re = re.compile(r'^[a-f0-9]{32}$')
 
-    def get_session(self, max_age=webapp2_config.DEFAULT_VALUE):
+    def get_session(self, max_age=DEFAULT_VALUE):
         if self.session is None:
             data = self.session_store.get_secure_cookie(self.name,
                                                         max_age=max_age)
@@ -261,15 +262,20 @@ class SessionStore(object):
     #: Configuration key.
     config_key = __name__
 
-    def __init__(self, request):
+    def __init__(self, request, config=None):
         """Initializes the session store.
 
         :param request:
             A :class:`webapp2.Request` instance.
+        :param config:
+            A dictionary of configuration values to be overriden. See
+            the available keys in :data:`default_config`.
         """
         self.request = request
         # Base configuration.
-        self.config = request.app.config[self.config_key]
+        self.config = request.app.config.load_config(self.config_key,
+            default_values=default_config, user_values=config,
+            required_keys=('secret_key',))
         # Tracked sessions.
         self.sessions = {}
 
@@ -286,7 +292,7 @@ class SessionStore(object):
 
         return self.sessions[name]
 
-    def get_session(self, name=None, max_age=webapp2_config.DEFAULT_VALUE,
+    def get_session(self, name=None, max_age=DEFAULT_VALUE,
                     factory=SecureCookieSessionFactory):
         """Returns a session for a given name. If the session doesn't exist, a
         new session is returned.
@@ -309,7 +315,7 @@ class SessionStore(object):
         """
         name = name or self.config['cookie_name']
 
-        if max_age is webapp2_config.DEFAULT_VALUE:
+        if max_age is DEFAULT_VALUE:
             max_age = self.config['session_max_age']
 
         container = self._get_session_container(name, factory)
@@ -317,7 +323,7 @@ class SessionStore(object):
 
     # Signed cookies ----------------------------------------------------------
 
-    def get_secure_cookie(self, name, max_age=webapp2_config.DEFAULT_VALUE):
+    def get_secure_cookie(self, name, max_age=DEFAULT_VALUE):
         """Returns a deserialized secure cookie value.
 
         :param name:
@@ -328,7 +334,7 @@ class SessionStore(object):
         :returns:
             A secure cookie value or None if it is not set.
         """
-        if max_age is webapp2_config.DEFAULT_VALUE:
+        if max_age is DEFAULT_VALUE:
             max_age = self.config['session_max_age']
 
         value = self.request.cookies.get(name)

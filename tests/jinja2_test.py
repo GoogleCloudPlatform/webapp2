@@ -13,8 +13,7 @@ compiled_path = os.path.join(current_dir, 'resources', 'templates_compiled')
 
 class TestJinja2(test_base.BaseTestCase):
     def test_render_template_with_i18n(self):
-        app = webapp2.WSGIApplication(debug=True)
-        app.config = config.Config({
+        app = webapp2.WSGIApplication(debug=True, config={
             'webapp2_extras.jinja2': {
                 'template_path': template_path,
                 'compiled_path': compiled_path,
@@ -37,8 +36,7 @@ class TestJinja2(test_base.BaseTestCase):
         self.assertEqual(res, message)
 
     def test_render_template_globals_filters(self):
-        app = webapp2.WSGIApplication(debug=True)
-        app.config = config.Config({
+        app = webapp2.WSGIApplication(debug=True, config={
             'webapp2_extras.jinja2': {
                 'template_path': template_path,
                 'globals': dict(foo='fooglobal'),
@@ -54,8 +52,7 @@ class TestJinja2(test_base.BaseTestCase):
         self.assertEqual(res, message)
 
     def test_render_template_force_compiled(self):
-        app = webapp2.WSGIApplication(debug=True)
-        app.config = config.Config({
+        app = webapp2.WSGIApplication(debug=True, config={
             'webapp2_extras.jinja2': {
                 'template_path': template_path,
                 'compiled_path': compiled_path,
@@ -71,8 +68,7 @@ class TestJinja2(test_base.BaseTestCase):
         self.assertEqual(res, message)
 
     def test_get_template_attribute(self):
-        app = webapp2.WSGIApplication(debug=True)
-        app.config = config.Config({
+        app = webapp2.WSGIApplication(debug=True, config={
             'webapp2_extras.jinja2': {
                 'template_path': template_path,
             }
@@ -83,7 +79,6 @@ class TestJinja2(test_base.BaseTestCase):
 
     def test_set_jinja2(self):
         app = webapp2.WSGIApplication(debug=True)
-        app.config = config.Config()
         self.assertEqual(len(app.registry), 0)
         jinja2.set_jinja2(jinja2.Jinja2(app), app=app)
         self.assertEqual(len(app.registry), 1)
@@ -92,7 +87,6 @@ class TestJinja2(test_base.BaseTestCase):
 
     def test_get_jinja2(self):
         app = webapp2.WSGIApplication(debug=True)
-        app.config = config.Config()
         self.assertEqual(len(app.registry), 0)
         j = jinja2.get_jinja2(app=app)
         self.assertEqual(len(app.registry), 1)
