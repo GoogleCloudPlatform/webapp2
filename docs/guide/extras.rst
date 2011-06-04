@@ -12,19 +12,15 @@ webapp2. It includes:
   App Engine
 
 Some of these modules (:ref:`api.extras.i18n`, :ref:`api.extras.jinja2` and
-:ref:`api.extras.sessions`) require a configuration object to be set in the
-WSGI application. The configuration object provides sensible defaults so that
-not every option must be set, and the configuration is loaded as needed.
-The API docs for each module describes the default configuration that you can
-override.
+:ref:`api.extras.sessions`) use configuration values that can be set in the
+WSGI application. When a config key is not set, the modules will use the
+default values they defined.
 
-To initialize the app with configuration for these modules, use
-:ref:`api.extras.config`. Here is an example that sets the ``secret_key``
-configuration required by the sessions module, and tests that the session
-is working::
+All configuration keys are optional, except ``secret_key`` that must be set
+for :ref:`api.extras.sessions`. Here is an example that sets the ``secret_key``
+configuration and tests that the session is working::
 
     import webapp2
-    from webapp2_extras import config as extras_config
     from webapp2_extras import sessions
 
     class BaseHandler(webapp2.RequestHandler):
@@ -53,15 +49,14 @@ is working::
                 self.session['test-value'] = 'Hello, session world!'
                 self.response.write('Session is empty.')
 
-    app_config = {}
-    app_config['webapp2_extras.sessions'] = {
+    config = {}
+    config['webapp2_extras.sessions'] = {
         'secret_key': 'some-secret-key',
     }
 
     app = webapp2.WSGIAppplication([
         ('/', HomeHandler),
-    ], debug=True)
-    app.config = extras_config.Config(app_config)
+    ], debug=True, config=config)
 
     def main():
         app.run()

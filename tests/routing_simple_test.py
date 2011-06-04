@@ -6,14 +6,14 @@ import test_base
 
 class TestSimpleRoute(test_base.BaseTestCase):
     def test_no_variable(self):
-        router = webapp2.Router(None, [(r'/', 'my_handler')])
+        router = webapp2.Router([(r'/', 'my_handler')])
 
         matched_route, args, kwargs = router.match(webapp2.Request.blank('/'))
         self.assertEqual(args, ())
         self.assertEqual(kwargs, {})
 
     def test_simple_variables(self):
-        router = webapp2.Router(None, [(r'/(\d{4})/(\d{2})', 'my_handler')])
+        router = webapp2.Router([(r'/(\d{4})/(\d{2})', 'my_handler')])
 
         matched_route, args, kwargs = router.match(webapp2.Request.blank('/2007/10'))
         self.assertEqual(args, ('2007', '10'))

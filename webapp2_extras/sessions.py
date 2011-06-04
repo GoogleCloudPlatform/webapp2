@@ -257,6 +257,21 @@ class SessionStore(object):
 
         # To get a value:
         foo = self.session.get('foo')
+
+    A configuration dict can be passed to :meth:`__init__`, or the application
+    must be initialized with the ``secret_key`` configuration defined. The
+    configuration is a simple dictionary::
+
+        config = {}
+        config['webapp2_extras.sessions'] = {
+            'secret_key': 'my-super-secret-key',
+        }
+
+        app = webapp2.WSGIApplication([
+            ('/', HomeHandler),
+        ], config=config)
+
+    Other configuration keys are optional.
     """
 
     #: Configuration key.

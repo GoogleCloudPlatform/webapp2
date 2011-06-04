@@ -63,6 +63,8 @@ general use.
 
 .. autofunction:: get_request
 
+.. autofunction:: uri_for
+
 .. autofunction:: abort
 
 .. autofunction:: import_string

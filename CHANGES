@@ -1,3 +1,22 @@
+Version 1.7 - June 4, 2011
+==========================
+- Added a simple configuration object for WSGIapplication, available in the
+  config attribute. Extras modules that use configuration (i18n, jinja2,
+  sessions) don't require app.config to be set manually anymore. Still, the
+  `secret_key` key config for sessions, if not defined, will result in an
+  exception.
+
+- Deprecated webapp2_extras.config, replaced by the simpler app dict.
+
+- Router no longer receives app on construction, for consistency with the
+  config object. App is set as global before router is initialized.
+
+- Fixed a bug in webapp2_extras.sessions that made it not save the session
+  when it was empty (like when flashes are popped).
+
+- Added standalone uri_for function, to be used in templates.
+
+
 Version 1.6.3 - June 3, 2011
 ============================
 - Added webap2_extras.local_app, with the WSGIApplication previously in

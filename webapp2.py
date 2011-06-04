@@ -757,7 +757,7 @@ class Router(object):
     build_routes = None
     _handlers = None
 
-    def __init__(self, app, routes=None):
+    def __init__(self, routes=None):
         """Initializes the router.
 
         :param routes:
@@ -1073,11 +1073,11 @@ class WSGIApplication(object):
             A configuration dictionary for the application.
         """
         self.debug = debug
-        self.router = self.router_class(self, routes)
-        self.config = self.config_class(config)
         self.registry = {}
         self.error_handlers = {}
         self.set_globals(app=self)
+        self.config = self.config_class(config)
+        self.router = self.router_class(routes)
 
     def set_globals(self, app=None, request=None):
         """Registers the global variables for app and request.
@@ -1251,6 +1251,15 @@ def get_request():
     request = WSGIApplication.request
     assert request is not None, 'WSGIApplication.request is not set.'
     return request
+
+
+def uri_for(_name, *args, **kwargs):
+    """A standalone uri_for version that can be passed to templates.
+
+    .. seealso:: :meth:`Router.build`.
+    """
+    request = get_request()
+    return request.app.router.build(request, _name, args, kwargs)
 
 
 def abort(code, *args, **kwargs):

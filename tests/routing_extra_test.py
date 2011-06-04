@@ -27,7 +27,7 @@ app = webapp2.WSGIApplication([
 class TestRedirectRoute(test_base.BaseTestCase):
     def test_route_redirect_to(self):
         route = RedirectRoute('/foo', redirect_to='/bar')
-        router = webapp2.Router(None, [route])
+        router = webapp2.Router([route])
         route_match, args, kwargs = router.match(webapp2.Request.blank('/foo'))
         self.assertEqual(route_match, route)
         self.assertEqual(args, ())
@@ -90,12 +90,12 @@ class TestRedirectRoute(test_base.BaseTestCase):
 
     def test_build_only(self):
         r = RedirectRoute('/', handler=HomeHandler, build_only=True)
-        self.assertRaises(ValueError, webapp2.Router, None, [r])
+        self.assertRaises(ValueError, webapp2.Router, [r])
 
 
 class TestPrefixRoutes(test_base.BaseTestCase):
     def test_simple(self):
-        router = webapp2.Router(None, [
+        router = webapp2.Router([
             PathPrefixRoute('/a', [
                 webapp2.Route('/', 'a', 'name-a'),
                 webapp2.Route('/b', 'a/b', 'name-a/b'),
@@ -139,7 +139,7 @@ class TestPrefixRoutes(test_base.BaseTestCase):
         self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a/d/c', match[0], match[1]), path)
 
     def test_with_variables_name_and_handler(self):
-        router = webapp2.Router(None, [
+        router = webapp2.Router([
             PathPrefixRoute('/user/<username:\w+>', [
                 HandlerPrefixRoute('apps.users.', [
                     NamePrefixRoute('user-', [
@@ -169,7 +169,7 @@ class TestPrefixRoutes(test_base.BaseTestCase):
 
 class TestDomainRoute(test_base.BaseTestCase):
     def test_simple(self):
-        router = webapp2.Router(None, [
+        router = webapp2.Router([
             DomainRoute('<subdomain>.<:.*>', [
                 webapp2.Route('/foo', 'FooHandler', 'subdomain-thingie'),
             ])
@@ -187,7 +187,7 @@ class TestDomainRoute(test_base.BaseTestCase):
         self.assertEqual(url, 'http://another-subdomain.app-id.appspot.com/foo')
 
     def test_with_variables_name_and_handler(self):
-        router = webapp2.Router(None, [
+        router = webapp2.Router([
             DomainRoute('<subdomain>.<:.*>', [
                 PathPrefixRoute('/user/<username:\w+>', [
                     HandlerPrefixRoute('apps.users.', [
@@ -223,7 +223,7 @@ class TestDomainRoute(test_base.BaseTestCase):
         self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-projects', match[0], match[1]), path)
 
     def test_guide_examples(self):
-        router = webapp2.Router(None, [
+        router = webapp2.Router([
             DomainRoute(r'www.mydomain.com', [
                 webapp2.Route('/path1', 'Path1', 'path1'),
             ]),
