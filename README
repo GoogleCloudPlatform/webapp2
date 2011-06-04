@@ -1,8 +1,7 @@
 webapp2
 =======
-webapp2 is an attempt to improve Google App Engine's webapp framework keeping
-maximum compatibility and same performance. Check the links below for more
-information.
+webapp2 is a lightweight Python web framework compatible with Google App
+Engine's webapp.
 
 - Project page: http://code.google.com/p/webapp-improved/
-- API reference: http://webapp-improved.appspot.com/
+- User manual: http://webapp-improved.appspot.com/
