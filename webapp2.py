@@ -1239,7 +1239,7 @@ def uri_for(_name, *args, **kwargs):
     return request.app.router.build(request, _name, args, kwargs)
 
 
-def redirect(uri, permanent=False, _abort=False, code=None, body=None,
+def redirect(uri, permanent=False, abort=False, code=None, body=None,
              request=None, response=None):
     """Issues an HTTP redirect to the given relative URI.
 
@@ -1252,7 +1252,7 @@ def redirect(uri, permanent=False, _abort=False, code=None, body=None,
         A relative or absolute URI (e.g., ``'../flowers.html'``).
     :param permanent:
         If True, uses a 301 redirect instead of a 302 redirect.
-    :param _abort:
+    :param abort:
         If True, raises an exception to perform the redirect.
     :param code:
         The redirect status code. Supported codes are 301, 302, 303, 305,
@@ -1287,8 +1287,8 @@ def redirect(uri, permanent=False, _abort=False, code=None, body=None,
     assert code in (301, 302, 303, 305, 307), \
         'Invalid redirect status code.'
 
-    if _abort:
-        abort(code, headers=[('Location', uri)])
+    if abort:
+        _abort(code, headers=[('Location', uri)])
 
     response.headers['Location'] = uri
     response.set_status(code)
@@ -1428,3 +1428,5 @@ def _to_utf8(value):
 
 Request.ResponseClass = Response
 Response.RequestClass = Request
+# Alias.
+_abort = abort
