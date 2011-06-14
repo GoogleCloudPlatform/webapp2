@@ -4,6 +4,42 @@ webapp2
 =======
 .. module:: webapp2
 
+- WSGI app
+
+  - :class:`WSGIApplication`
+  - :class:`RequestContext`
+
+- Configuration
+
+  - :class:`Config`
+
+- Request and Response
+
+  - :class:`Request`
+  - :class:`Response`
+
+- Request handlers
+
+  - :class:`RequestHandler`
+  - :class:`RedirectHandler`
+
+- URI routing
+
+  - :class:`Router`
+  - :class:`BaseRoute`
+  - :class:`SimpleRoute`
+  - :class:`Route`
+
+- Utilities
+
+  - :class:`cached_property`
+  - :func:`get_app`
+  - :func:`get_request`
+  - :func:`uri_for`
+  - :func:`abort`
+  - :func:`import_string`
+  - :func:`urlunsplit`
+
 
 WSGI app
 --------
@@ -15,11 +51,21 @@ WSGI app
              __init__, __call__, set_globals, handle_exception, run,
              get_response
 
+.. autoclass:: RequestContext
+   :members: __init__, __enter__, __exit__
+
 
 Configuration
 -------------
 .. autoclass:: Config
    :members: __init__, load_config
+
+
+Request and Response
+--------------------
+.. autoclass:: Request
+
+.. autoclass:: Response
 
 
 Request handlers

@@ -283,14 +283,14 @@ class SessionStore(object):
         :param request:
             A :class:`webapp2.Request` instance.
         :param config:
-            A dictionary of configuration values to be overriden. See
+            A dictionary of configuration values to be overridden. See
             the available keys in :data:`default_config`.
         """
         self.request = request
         # Base configuration.
-        self.config = request.app.config.load_config(self.config_key,
-            default_values=default_config, user_values=config,
-            required_keys=('secret_key',))
+        self.config = request.app.config.load_config(
+            self.config_key, default_values=default_config,
+            user_values=config, required_keys=('secret_key',))
         # Tracked sessions.
         self.sessions = {}
 

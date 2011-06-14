@@ -32,7 +32,8 @@ appear more than once as a list (possibly empty), give ``get()`` the argument
 
     # <select name="favorite_foods" multiple="true">...</select>
     favorite_foods = self.request.get("favorite_foods", allow_multiple=True)
-    for food in favorite_foods:
+
+    # for food in favorite_foods:
     # ...
 
 For requests with body content that is not a set of CGI parameters, such as
@@ -41,6 +42,91 @@ the body of an HTTP PUT request, the request object provides the attributes
 ``body_file`` provides a file-like interface to the same data::
 
     uploaded_file = self.request.body
+
+
+.GET
+----
+Query string variables are available in ``request.GET`` or ``request.str_GET``.
+Both carry the same values, but in the first they are converted to unicode,
+and in the latter they are strings.
+
+``GET`` or ``str_GET`` are a
+`MultiDict <http://pythonpaste.org/webob/class-webob.multidict.MultiDict.html>`_:
+they act as a dictionary but the same key can have multiple values. When you
+call ``.get(key)`` for a key that has multiple values, the last value is
+returned. To get all values for a key, use ``.getall(key)``. Examples::
+
+    request = Request.blank('/test?check=a&check=b&name=Bob')
+
+    # The whole MultiDict:
+    # GET([('check', 'a'), ('check', 'b'), ('name', 'Bob')])
+    get_values = request.str_GET
+
+    # The last value for a key: 'b'
+    check_value = request.str_GET['check']
+
+    # All values for a key: ['a', 'b']
+    check_values = request.str_GET.getall('check')
+
+    # An iterable with alll items in the MultiDict:
+    # [('check', 'a'), ('check', 'b'), ('name', 'Bob')]
+    request.str_GET.items()
+
+The name ``GET`` is a bit misleading, but has historical reasons:
+``request.GET`` is not only available when the HTTP method is GET. It is
+available for any request with query strings in the URI, for any HTTP method:
+GET, POST, PUT etc.
+
+
+.POST
+-----
+Variables url encoded in the body of a request (generally a POST form submitted
+using the ``application/x-www-form-urlencoded`` media type) are available in
+``request.POST`` or ``request.str_POST`` (the first as unicode and the latter
+as string).
+
+Like ``request.GET`` and ``request.str_GET``, they are a
+`MultiDict <http://pythonpaste.org/webob/class-webob.multidict.MultiDict.html>`_
+and can be accessed in the same way. Examples::
+
+    request = Request.blank('/')
+    request.method = 'POST'
+    request.body = 'check=a&check=b&name=Bob'
+
+    # The whole MultiDict:
+    # POST([('check', 'a'), ('check', 'b'), ('name', 'Bob')])
+    post_values = request.str_POST
+
+    # The last value for a key: 'b'
+    check_value = request.str_POST['check']
+
+    # All values for a key: ['a', 'b']
+    check_values = request.str_POST.getall('check')
+
+    # An iterable with alll items in the MultiDict:
+    # [('check', 'a'), ('check', 'b'), ('name', 'Bob')]
+    request.str_POST.items()
+
+Like ``GET``, the name ``POST`` is a bit misleading, but has historical
+reasons: they are also available when the HTTP method is PUT, and not only
+POST.
+
+
+.params
+-------
+``request.params`` combines the variables from ``GET`` and ``POST``. It can be
+used when you don't care where the variable comes from.
+
+
+Cookies
+-------
+Cookies can be accessed in ``request.cookies``. It is a simple dictionary::
+
+    request = Request.blank('/')
+    request.headers['Cookie'] = 'test=value'
+
+    # A value: 'value'
+    cookie_value = request.cookies.get('test')
 
 
 Common Request attributes
@@ -77,6 +163,8 @@ POST
   A dictionary-like object with variables from a POST form, as unicode.
 str_POST
   A dictionary-like object with variables from a POST form, as a strings.
+params
+  A dictionary-like object combining the variables GET and POST.
 cookies
   A dictionary-like object with cookie values.
 

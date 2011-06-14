@@ -197,6 +197,9 @@ subdomain matches.
 
 For example, to restrict routes to a subdomain of the appspot domain::
 
+    import webapp2
+    from webapp2_extras import routes
+
     app = webapp2.WSGIApplication([
         routes.DomainRoute('<subdomain>.app-id.appspot.com', [
             webapp2.Route('/', handler=SubdomainHomeHandler, name='subdomain-home'),
@@ -260,9 +263,10 @@ Building URIs
 -------------
 Because our routes have a ``name``, we can use the routing system to build
 URIs whenever we need to reference those resources inside the application.
-This is done using the method :meth:`webapp2.RequestHandler.uri_for` in a
-handler, or calling :meth:`webapp2.Router.build` directly (a ``Router``
-instance is set as an attribute ``router`` in the WSGI application).
+This is done using the function :func:`webapp2.uri_for` or the method
+:meth:`webapp2.RequestHandler.uri_for` inside a handler, or calling
+:meth:`webapp2.Router.build` directly (a ``Router`` instance is set as an
+attribute ``router`` in the WSGI application).
 
 For example, if you have these routes defined for the application::
 
@@ -275,26 +279,26 @@ For example, if you have these routes defined for the application::
 Here are some examples of how to generate URIs inside a handler::
 
     # /
-    url = self.uri_for('home')
+    url = uri_for('home')
     # http://localhost:8080/
-    url = self.uri_for('home', _full=True)
+    url = uri_for('home', _full=True)
     # /wiki
-    url = self.uri_for('wiki')
+    url = uri_for('wiki')
     # http://localhost:8080/wiki
-    url = self.uri_for('wiki', _full=True)
+    url = uri_for('wiki', _full=True)
     # http://localhost:8080/wiki#my-heading
-    url = self.uri_for('wiki', _full=True, _fragment='my-heading')
+    url = uri_for('wiki', _full=True, _fragment='my-heading')
     # /wiki/my-first-page
-    url = self.uri_for('wiki-page', page='my-first-page')
+    url = uri_for('wiki-page', page='my-first-page')
     # /wiki/my-first-page?format=atom
-    url = self.uri_for('wiki-page', page='my-first-page', format='atom')
+    url = uri_for('wiki-page', page='my-first-page', format='atom')
 
 Check :meth:`webapp2.Router.build` in the API reference for a complete
 explanation of the parameters used to build URIs.
 
 
-URI parameters are available in the request object
---------------------------------------------------
+Routing attributes in the request object
+----------------------------------------
 The parameters from the matched route are set as attributes of the request
 object when a route matches. They are ``request.route_args``, for positional
 arguments, and ``request.route_kwargs``, for keyword arguments. That's how

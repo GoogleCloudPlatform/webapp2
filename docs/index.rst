@@ -16,8 +16,7 @@ response object and a more flexible dispatching mechanism.
 
 webapp2 also offers the package `webapp2_extras <http://code.google.com/p/webapp-improved/source/browse/#hg%2Fwebapp2_extras>`_
 with several optional utilities: sessions, internationalization, domain and
-subdomain routing, configuration system, secure cookies and support for
-threaded environments.
+subdomain routing, secure cookies and support for threaded environments.
 
 webapp2 can even be used outside of Google App Engine, independently of the
 App Engine SDK.
@@ -104,6 +103,22 @@ The `Sphinx <http://sphinx.pocoo.org/>`_ theme mimics the
 `App Engine official documentation <http://code.google.com/appengine/docs/>`_.
 
 This library was not created and is not maintained by Google.
+
+
+Contribute
+----------
+webapp2 is considered feature complete and well tested, but if you think
+something is missing or is not working well, please describe it in our issue
+tracker:
+
+    http://code.google.com/p/webapp-improved/issues/list
+
+We'd love to know if you found a bug or if something can be improved. We are
+also interested in ideas for new webapp2_extras modules and more tests and
+documentation.
+
+Thanks!
+
 
 License
 -------

@@ -118,11 +118,11 @@ class I18nStore(object):
         :param app:
             A :class:`webapp2.WSGIApplication` instance.
         :param config:
-            A dictionary of configuration values to be overriden. See
+            A dictionary of configuration values to be overridden. See
             the available keys in :data:`default_config`.
         """
-        config = app.config.load_config(self.config_key,
-            default_values=default_config, user_values=config,
+        config = app.config.load_config(
+            self.config_key, default_values=default_config, user_values=config,
             required_keys=None)
         self.translations = {}
         self.translations_path = config['translations_path']
@@ -396,7 +396,7 @@ class I18n(object):
             kwargs['tzinfo'] = self.tzinfo
 
         return dates.format_datetime(datetime, format, locale=self.locale,
-            **kwargs)
+                                     **kwargs)
 
     def format_time(self, time=None, format=None, rebase=True):
         """Returns a time formatted according to the given pattern and
@@ -451,7 +451,8 @@ class I18n(object):
                 datetime_or_timedelta
 
         return dates.format_timedelta(datetime_or_timedelta, granularity,
-            threshold=threshold, locale=self.locale)
+                                      threshold=threshold,
+                                      locale=self.locale)
 
     def format_number(self, number):
         """Returns the given number formatted for the current locale. Example::
@@ -495,7 +496,7 @@ class I18n(object):
             The formatted decimal number.
         """
         return numbers.format_decimal(number, format=format,
-            locale=self.locale)
+                                      locale=self.locale)
 
     def format_currency(self, number, currency, format=None):
         """Returns a formatted currency value. Example::
@@ -522,7 +523,7 @@ class I18n(object):
             The formatted currency value.
         """
         return numbers.format_currency(number, currency, format=format,
-            locale=self.locale)
+                                       locale=self.locale)
 
     def format_percent(self, number, format=None):
         """Returns formatted percent value for the current locale. Example::
@@ -547,7 +548,7 @@ class I18n(object):
             The formatted percent number.
         """
         return numbers.format_percent(number, format=format,
-            locale=self.locale)
+                                      locale=self.locale)
 
     def format_scientific(self, number, format=None):
         """Returns value formatted in scientific notation for the current
@@ -569,7 +570,7 @@ class I18n(object):
             Value formatted in scientific notation.
         """
         return numbers.format_scientific(number, format=format,
-            locale=self.locale)
+                                         locale=self.locale)
 
     def parse_date(self, string):
         """Parses a date from a string.
@@ -740,7 +741,7 @@ def format_timedelta(datetime_or_timedelta, granularity='second',
     threshold=.85):
     """See :meth:`I18n.format_timedelta`."""
     return get_i18n().format_timedelta(datetime_or_timedelta,
-        granularity, threshold)
+                                       granularity, threshold)
 
 
 def format_number(number):

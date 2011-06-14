@@ -3,7 +3,6 @@ webapp2_extras
 webapp2_extras is a package with common utilities that work well with
 webapp2. It includes:
 
-- Configuration system
 - Localization and internationalization support
 - Sessions using secure cookies, memcache or datastore
 - Extra route classes -- to match subdomains and other conveniences

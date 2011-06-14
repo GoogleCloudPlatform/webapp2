@@ -9,6 +9,47 @@ exception handling mechanism and prepare the app to catch exceptions for the
 unexpected scenarios.
 
 
+HTTP exceptions
+---------------
+WebOb provides a collection of exceptions that correspond to HTTP status codes.
+They all extend a base class, ``webob.exc.HTTPException``, also available in
+webapp2 as ``webapp2.HTTPException``.
+
+An ``HTTPException`` is also a response object, meaning that it can be returned
+by the WSGI app to be used as response. If an ``HTTPException`` is not handled,
+it will be used as a standard response, setting the header status code and
+a default error message in the body.
+
+
+abort()
+-------
+The function :func:`webapp2.abort` (or :func:`webapp2.RequestHandler.abort`
+inside handlers) raises an ``HTTPException`` that can be caught by
+:func:`webapp2.RequestHandler.handle_exception` or by the WSGI app.
+
+``abort`` is just a factory for the HTTP exceptions provided by WebOb: it takes
+an HTTP status code (403, 404, 500 etc) and raises the corresponding exception.
+
+Besides the status code, some extra keyword arguments can be passed to
+``abort()``:
+
+detail
+  An explanation about the error.
+comment
+  An more detailed comment to be included in the response body.
+headers
+  Extra response headers to be set.
+body_template
+  A string to be used as template for the response body. The default template
+  has the following format, with variables replaced by arguments, if defined:
+
+.. code-block:: html
+
+   ${explanation}<br /><br />
+   ${detail}
+   ${html_comment}
+
+
 Exceptions in handlers
 ----------------------
 Handlers can catch exceptions implementing the method
@@ -71,11 +112,17 @@ used.
 Here we set error handlers to handle "404 Not Found" and "500 Internal Server
 Error"::
 
+    import logging
+
+    import webapp2
+
     def handle_404(request, response, exception):
+        logging.exception(exception)
         response.write('Oops! I could swear this page was here!')
         response.set_status(404)
 
     def handle_500(request, response, exception):
+        logging.exception(exception)
         response.write('A server error occurred!')
         response.set_status(500)
 
@@ -87,4 +134,5 @@ Error"::
 
 The error handler can be a simple function that accepts
 ``(request, response, exception)`` as parameters, and is responsible for
-identifying the exception type and setting the response status code.
+identifying the exception type, logging the exception and setting the
+response status code.

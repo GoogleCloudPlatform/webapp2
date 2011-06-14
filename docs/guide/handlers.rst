@@ -2,9 +2,10 @@
 
 Request handlers
 ================
-In the webapp2 vocabulary, `handler` is a common term that refers to the
-callable that contains the application logic to handle a request. This sounds
-a lot abstract, but we will explain everything in details in this section.
+In the webapp2 vocabulary, `request handler` or simply `handler` is a common
+term that refers to the callable that contains the application logic to handle
+a request. This sounds a lot abstract, but we will explain everything in
+details in this section.
 
 
 Handlers 101
@@ -43,6 +44,7 @@ fetch a corresponding record from a database and set an appropriate response
 
 For more details about how URI variables are defined, see :ref:`guide.routing`.
 
+
 HTTP methods translated to class methods
 ----------------------------------------
 The default behavior of the :class:`webapp2.RequestHandler` is to call a
@@ -76,6 +78,7 @@ corresponding HTTP actions:
 - ``delete()``
 - ``trace()``
 
+
 View functions
 --------------
 In some Python frameworks, handlers are called `view functions` or simply
@@ -98,8 +101,8 @@ demonstrates it::
     ])
 
 Here, our handler is a simple function, and the positional route variables are
-available in the request attribute ``.route_args``. Similarly, if the route
-defined named variables, they would be available in ``.route_kwargs``.
+available in the request attribute ``route_args``. Similarly, if the route
+defined named variables, they would be available in ``route_kwargs``.
 
 Functions are an alternative for those that prefer their simplicity or think
 that handlers don't benefit that much from the power and flexibility provided

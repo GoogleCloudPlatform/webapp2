@@ -33,7 +33,7 @@ import webapp2
 #:     Keyword arguments used to instantiate the Jinja2 environment. By
 #:     default autoescaping is enabled and two extensions are set:
 #:     ``jinja2.ext.autoescape`` and ``jinja2.ext.with_``. For production it
-#:     may be a godd idea to set 'auto_reload' to False -- we don't need to
+#:     may be a good idea to set 'auto_reload' to False -- we don't need to
 #:     check if templates changed after deployed.
 #:
 #: globals
@@ -90,11 +90,11 @@ class Jinja2(object):
         :param app:
             A :class:`webapp2.WSGIApplication` instance.
         :param config:
-            A dictionary of configuration values to be overriden. See
+            A dictionary of configuration values to be overridden. See
             the available keys in :data:`default_config`.
         """
-        config = app.config.load_config(self.config_key,
-            default_values=default_config, user_values=config,
+        config = app.config.load_config(
+            self.config_key, default_values=default_config, user_values=config,
             required_keys=None)
         kwargs = config['environment_args'].copy()
         enable_i18n = 'jinja2.ext.i18n' in kwargs.get('extensions', [])

@@ -2,7 +2,6 @@ include AUTHORS
 include CHANGES
 include LICENSE
 include README
-include TODO
 include Makefile
 include run_tests.py
 recursive-include docs *
@@ -10,5 +9,4 @@ recursive-exclude docs *.pyc
 recursive-exclude docs/_build *
 recursive-include tests *
 recursive-exclude tests *.pyc
-recursive-exclude webapp2 *.pyc
 recursive-exclude webapp2_extras *.pyc

@@ -7,6 +7,8 @@ webapp2 is very easy to get started. You can use webapp2 exactly like webapp,
 and learn the new features as you go.
 
 If you are new to App Engine, read :ref:`tutorials.gettingstarted.index` first.
+You will need the `App Engine SDK <http://code.google.com/appengine/docs/python/gettingstarted/devenvironment.html>`_
+installed for this quick start.
 
 
 Create an application

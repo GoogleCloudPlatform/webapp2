@@ -27,6 +27,54 @@ is ``text/html; charset=utf-8``, including the encoding behavior. If the
 output is a byte string to be sent verbatim.
 
 
+Setting cookies
+---------------
+Cookies are set in the response object. The methods to handle cookies are:
+
+set_cookie(key, value='', max_age=None, path='/', domain=None, secure=None, httponly=False, version=None, comment=None)
+  Sets a cookie.
+
+delete_cookie(key, path='/', domain=None)
+  Deletes a cookie previously set in the client.
+
+unset_cookie(key)
+  Unsets a cookie previously set in the response object. Note that this
+  doesn't delete the cookie from clients, only from the response.
+
+For example::
+
+    # Saves a cookie in the client.
+    response.set_cookie('some_key', 'value', max_age=360, path='/',
+                        domain='example.org', secure=True)
+
+    # Deletes a cookie previously set in the client.
+    response.delete_cookie('bad_cookie')
+
+    # Cancels a cookie previously set in the response.
+    response.unset_cookie('some_key')
+
+Only the ``key`` parameter is required. The parameters are:
+
+key
+  Cookie name.
+value
+  Cookie value.
+max_age
+  Cookie max age in seconds.
+path
+  URI path in which the cookie is valid.
+domain
+  URI domain in which the cookie is valid.
+secure
+  If True, the cookie is only available via HTTPS.
+httponly
+  Disallow JavaScript to access the cookie.
+version
+  Defines a cookie version number.
+comment
+  Defines a cookie comment.
+
+
 Common Response attributes
 --------------------------
 status

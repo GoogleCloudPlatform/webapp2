@@ -43,20 +43,6 @@ conveniences to set headers, like easy cookies and other goodies::
         def get(self):
             self.response.set_cookie('key', 'value', max_age=360, path='/')
 
-Improved exception handling
----------------------------
-Improved exception handling in many ways. For example, app-wide exception
-handlers can also be set::
-
-    def handle_404(request, response):
-        response.write('Oops! I could swear this page was here!')
-        response.set_status(404)
-
-    app = webapp2.WSGIApplication([
-        ('/', MyHandler),
-    ])
-    app.error_handlers[404] = handle_404
-
 Status code exceptions
 ----------------------
 ``abort()`` (or ``self.abort()`` inside handlers) raises a proper
@@ -66,6 +52,19 @@ Status code exceptions
     abort(404)
     # Raise a 'Forbidden' exception and let the 403 error handler do its job.
     self.abort(403)
+
+Improved exception handling
+---------------------------
+HTTP exceptions can be handled by the WSGI application::
+
+    def handle_404(request, response):
+        response.write('Oops! I could swear this page was here!')
+        response.set_status(404)
+
+    app = webapp2.WSGIApplication([
+        ('/', MyHandler),
+    ])
+    app.error_handlers[404] = handle_404
 
 Lazy handlers
 -------------
@@ -171,12 +170,12 @@ to restrict URI matches based on the server name::
 URI builder
 -----------
 URIs defined in the aplication can be built. This is more maintanable than
-hardcoding them in the code or templates. Simply use the ``uri_for()`` method
-inside a handler::
+hardcoding them in the code or templates. Simply use the ``uri_for()``
+function::
 
-    url = self.uri_for('blog-archive', year='2010', month='07')
+    url = uri_for('blog-archive', year='2010', month='07')
 
-And a helper for redirects builds the URI to redirect to.
+And a handler helper for redirects builds the URI to redirect to.
 redirect_to = redirect + uri_for::
 
     self.redirect_to('blog-archive', year='2010', month='07')
@@ -219,7 +218,6 @@ Extras
 The `webapp2_extras <http://code.google.com/p/webapp-improved/source/browse/#hg%2Fwebapp2_extras>`_
 package provides common utilities that integrate well with webapp2:
 
-- Configuration system
 - Localization and internationalization support
 - Sessions using secure cookies, memcache or datastore
 - Extra route classes -- to match subdomains and other conveniences

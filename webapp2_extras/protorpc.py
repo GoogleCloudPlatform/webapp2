@@ -9,6 +9,9 @@
 
     See: http://code.google.com/p/google-protorpc/
 
+    .. warning::
+       This is an experimental package, as the ProtoRPC API is not stable yet.
+
     :copyright: 2010 Google Inc.
     :copyright: 2011 tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.

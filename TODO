@@ -1,3 +1,13 @@
 TODO
-----
-Nothing here.
+====
+webapp2 is considered feature complete and well tested, but if you think
+something is missing or is not working well, please describe it in our issue
+tracker:
+
+    http://code.google.com/p/webapp-improved/issues/list
+
+We'd love to know if you found a bug or if something can be improved. We are
+also interested in ideas for new webapp2_extras modules and more tests and
+documentation.
+
+Thanks!

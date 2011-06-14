@@ -258,6 +258,8 @@ class RequestHandler(object):
             and 307.  300 is not supported because it's not a real redirect
             and 304 because it's the answer for a request with defined
             ``If-Modified-Since`` headers.
+        :returns:
+            A :class:`Response` instance.
 
         .. seealso:: :meth:`redirect_to`.
         """
@@ -281,7 +283,7 @@ class RequestHandler(object):
         self.response.clear()
 
     def redirect_to(self, _name, _permanent=False, _abort=False, _code=None,
-        *args, **kwargs):
+                    *args, **kwargs):
         """Convenience method mixing :meth:`redirect` and :meth:`uri_for`.
 
         Issues an HTTP redirect to a named URI built using :meth:`uri_for`.
@@ -292,11 +294,14 @@ class RequestHandler(object):
             Positional arguments to build the URI.
         :param kwargs:
             Keyword arguments to build the URI.
+        :returns:
+            A :class:`Response` instance.
 
         The other arguments are described in :meth:`redirect`.
         """
         url = self.uri_for(_name, *args, **kwargs)
-        self.redirect(url, permanent=_permanent, abort=_abort, code=_code)
+        return self.redirect(url, permanent=_permanent, abort=_abort,
+                             code=_code)
 
     def uri_for(self, _name, *args, **kwargs):
         """Returns a URI for a named :class:`Route`.
@@ -548,7 +553,7 @@ class Route(BaseRoute):
     kwargs_count = 0
 
     def __init__(self, template, handler=None, name=None, defaults=None,
-        build_only=False, handler_method=None, methods=None):
+                 build_only=False, handler_method=None, methods=None):
         """Initializes this route.
 
         :param template:
@@ -952,7 +957,7 @@ class Config(dict):
         :param required_keys:
             Keys that can not be None.
         :raises:
-            Exception, when a required key is None.
+            Exception, when a required key is not set or is None.
         """
         if key in self.loaded:
             return self[key]
@@ -1130,19 +1135,19 @@ class WSGIApplication(object):
                     response = e
                 except Exception, e:
                     # Error wasn't handled so we have nothing else to do.
-                    return self._internal_error(e, environ, start_response)
+                    response = self._internal_error(e)
 
             try:
                 return response(environ, start_response)
             except Exception, e:
-                return self._internal_error(e, environ, start_response)
+                return self._internal_error(e)(environ, start_response)
 
-    def _internal_error(self, exception, environ, start_response):
+    def _internal_error(self, exception):
         logging.exception(exception)
         if self.debug:
             raise
 
-        return exc.HTTPInternalServerError()(environ, start_response)
+        return exc.HTTPInternalServerError()
 
     def handle_exception(self, request, response, e):
         """Handles a uncaught exception occurred in :meth:`__call__`.
