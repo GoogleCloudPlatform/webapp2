@@ -239,51 +239,23 @@ class RequestHandler(object):
         """
         abort(code, *args, **kwargs)
 
-    def redirect(self, uri, permanent=False, abort=False, code=None):
+    def redirect(self, uri, permanent=False, abort=False, code=None,
+                 body=None):
         """Issues an HTTP redirect to the given relative URI.
 
-        This won't stop code execution unless **abort** is True. A common
-        practice is to return when calling this method::
+        The arguments are described in :func:`redirect`.
 
-            return self.redirect('/some-path')
-
-        :param uri:
-            A relative or absolute URI (e.g., ``'../flowers.html'``).
-        :param permanent:
-            If True, uses a 301 redirect instead of a 302 redirect.
-        :param abort:
-            If True, raises an exception to perform the redirect.
-        :param code:
-            The redirect status code. Supported codes are 301, 302, 303, 305,
-            and 307.  300 is not supported because it's not a real redirect
-            and 304 because it's the answer for a request with defined
-            ``If-Modified-Since`` headers.
         :returns:
             A :class:`Response` instance.
 
-        .. seealso:: :meth:`redirect_to`.
+        .. seealso:: :func:`redirect` and :meth:`redirect_to`.
         """
-        if uri.startswith(('.', '/')):
-            uri = str(urlparse.urljoin(self.request.url, uri))
-
-        if code is None:
-            if permanent:
-                code = 301
-            else:
-                code = 302
-
-        assert code in (301, 302, 303, 305, 307), \
-            'Invalid redirect status code.'
-
-        if abort:
-            self.abort(code, headers=[('Location', uri)])
-
-        self.response.headers['Location'] = uri
-        self.response.set_status(code)
-        self.response.clear()
+        return redirect(uri, permanent=permanent, _abort=abort, code=code,
+                        body=body, request=self.request,
+                        response=self.response)
 
     def redirect_to(self, _name, _permanent=False, _abort=False, _code=None,
-                    *args, **kwargs):
+                    _body=None, *args, **kwargs):
         """Convenience method mixing :meth:`redirect` and :meth:`uri_for`.
 
         Issues an HTTP redirect to a named URI built using :meth:`uri_for`.
@@ -297,11 +269,11 @@ class RequestHandler(object):
         :returns:
             A :class:`Response` instance.
 
-        The other arguments are described in :meth:`redirect`.
+        The other arguments are described in :func:`redirect`.
         """
-        url = self.uri_for(_name, *args, **kwargs)
-        return self.redirect(url, permanent=_permanent, abort=_abort,
-                             code=_code)
+        uri = self.uri_for(_name, *args, **kwargs)
+        return self.redirect(uri, permanent=_permanent, abort=_abort,
+                             code=_code, body=_body)
 
     def uri_for(self, _name, *args, **kwargs):
         """Returns a URI for a named :class:`Route`.
@@ -1265,6 +1237,65 @@ def uri_for(_name, *args, **kwargs):
     """
     request = get_request()
     return request.app.router.build(request, _name, args, kwargs)
+
+
+def redirect(uri, permanent=False, _abort=False, code=None, body=None,
+             request=None, response=None):
+    """Issues an HTTP redirect to the given relative URI.
+
+    This won't stop code execution unless **abort** is True. A common
+    practice is to return when calling this method::
+
+        return redirect('/some-path')
+
+    :param uri:
+        A relative or absolute URI (e.g., ``'../flowers.html'``).
+    :param permanent:
+        If True, uses a 301 redirect instead of a 302 redirect.
+    :param _abort:
+        If True, raises an exception to perform the redirect.
+    :param code:
+        The redirect status code. Supported codes are 301, 302, 303, 305,
+        and 307.  300 is not supported because it's not a real redirect
+        and 304 because it's the answer for a request with defined
+        ``If-Modified-Since`` headers.
+    :param body:
+        Response body, if any.
+    :param request:
+        Optional request object. If not set, uses :func:`get_request`.
+    :param response:
+        Optional response object. If not set, a new response is created.
+    :returns:
+        A :class:`Response` instance.
+    """
+    if response is None:
+        request = request or get_request()
+        response = request.app.response_class()
+    else:
+        response.clear()
+
+    if uri.startswith(('.', '/')):
+        request = request or get_request()
+        uri = str(urlparse.urljoin(request.url, uri))
+
+    if code is None:
+        if permanent:
+            code = 301
+        else:
+            code = 302
+
+    assert code in (301, 302, 303, 305, 307), \
+        'Invalid redirect status code.'
+
+    if _abort:
+        abort(code, headers=[('Location', uri)])
+
+    response.headers['Location'] = uri
+    response.set_status(code)
+    if body is not None:
+        response.write(body)
+
+    return response
 
 
 def abort(code, *args, **kwargs):

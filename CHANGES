@@ -1,3 +1,10 @@
+Development version
+-------------------
+- Added standalone redirect() function.
+
+- RequestHandler.redirect and redirect_to now return a response object.
+
+
 Version 1.7 - June 4, 2011
 ==========================
 - Added a simple configuration object for WSGIapplication, available in the

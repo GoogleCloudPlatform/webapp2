@@ -39,8 +39,8 @@ class MethodsHandler(HomeHandler):
 
 class RedirectToHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
-        self.redirect_to('route-test', _anchor='my-anchor', year='2010',
-            month='07', name='test', foo='bar')
+        return self.redirect_to('route-test', _anchor='my-anchor', year='2010',
+                                month='07', name='test', foo='bar')
 
 
 class RedirectAbortHandler(webapp2.RequestHandler):
