@@ -250,7 +250,7 @@ class RequestHandler(object):
 
         .. seealso:: :func:`redirect` and :meth:`redirect_to`.
         """
-        return redirect(uri, permanent=permanent, _abort=abort, code=code,
+        return redirect(uri, permanent=permanent, abort=abort, code=code,
                         body=body, request=self.request,
                         response=self.response)
 
