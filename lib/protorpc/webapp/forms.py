@@ -36,7 +36,7 @@ __all__ = ['FormsHandler',
            'DEFAULT_REGISTRY_PATH',
           ]
 
-_TEMPLATES_DIR = os.path.join(os.path.dirname(__file__),
+_TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)),
                               'static')
 
 _FORMS_TEMPLATE = os.path.join(_TEMPLATES_DIR, 'forms.html')
@@ -70,7 +70,7 @@ class ResourceHandler(webapp.RequestHandler):
       self.response.out.write('Resource not found.')
       return
 
-    path = os.path.join(os.path.dirname(__file__), 'static', relative)
+    path = os.path.join(_TEMPLATES_DIR, relative)
     self.response.headers['Content-Type'] = content_type
     static_file = open(path)
     try:

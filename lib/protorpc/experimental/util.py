@@ -114,7 +114,7 @@ class ProtocolConfig(object):
 
   @property
   def content_types(self):
-    return self.__content_types
+    return self.__content_types      
 
 
 class Protocols(object):

@@ -26,13 +26,15 @@ __author__ = 'rafek@google.com (Rafe Kaplan)'
 import cStringIO
 import threading
 import unittest
+import urllib2
 from wsgiref import simple_server
 from wsgiref import validate
 
+from protorpc import protojson
+from protorpc import remote
 from protorpc import test_util
 from protorpc import transport
-from protorpc import remote
-from protorpc import service_handlers
+from protorpc.webapp import service_handlers
 
 from google.appengine.ext import webapp
 
@@ -177,7 +179,7 @@ class RequestHandlerTestBase(test_util.TestCase):
     """
     environment = self.GetEnvironment()
     environment.update(change_environ or {})
-    
+
     self.request = webapp.Request(environment)
     self.response = webapp.Response()
     self.handler = self.CreateRequestHandler()
@@ -289,47 +291,136 @@ class ServerTransportWrapper(transport.Transport):
     """
     self.server_thread = server_thread
     self.transport = transport
+    self.original_transport_rpc = self.transport._transport_rpc
+    self.transport._transport_rpc = self.transport_rpc
+    self.send_rpc = self.transport.send_rpc
 
-  def send_rpc(self, *args, **kwargs):
-    """Send an RPC via wrapped transport, notifying server."""
+  def transport_rpc(self, *args, **kwargs):
     self.server_thread.handle_request()
-    return self.transport.send_rpc(*args, **kwargs)
+    return self.original_transport_rpc(*args, **kwargs)
 
 
 class TestService(remote.Service):
   """Service used to do end to end tests with."""
 
-  @remote.method(test_util.OptionalMessage,
-                 test_util.OptionalMessage)
+  def __init__(self, message='uninitialized'):
+    self.__message = message
+
+  @remote.method(test_util.OptionalMessage, test_util.OptionalMessage)
   def optional_message(self, request):
     if request.string_value:
       request.string_value = '+%s' % request.string_value
     return request
+
+  @remote.method(response_type=test_util.OptionalMessage)
+  def init_parameter(self, request):
+    return test_util.OptionalMessage(string_value=self.__message)
+
+  @remote.method(test_util.NestedMessage, test_util.NestedMessage)
+  def nested_message(self, request):
+    request.string_value = '+%s' % requset.string_value
+    return request
+
+  @remote.method()
+  def raise_application_error(self, request):
+    raise remote.ApplicationError('This is an application error', 'ERROR_NAME')
+
+  @remote.method()
+  def raise_unexpected_error(self, request):
+    raise TypeError('Unexpected error')
+
+  @remote.method()
+  def raise_rpc_error(self, request):
+    raise remote.NetworkError('Uncaught network error')
+
+  @remote.method(response_type=test_util.NestedMessage)
+  def return_bad_message(self, request):
+    return test_util.NestedMessage()
+
+
+class AlternateService(remote.Service):
+  """Service used to requesting non-existant methods."""
+
+  @remote.method()
+  def does_not_exist(self, request):
+    raise NotImplementedError('Not implemented')
 
 
 class EndToEndTestBase(test_util.TestCase):
 
   # Sub-classes my override to create alternate configurations.
   DEFAULT_MAPPING = service_handlers.service_mapping(
-    [('/my/service', TestService)])
+    [('/my/service', TestService),
+     ('/my/other_service', TestService.new_factory('initialized')),
+    ])
 
   def setUp(self):
     self.port = test_util.pick_unused_port()
     self.server, self.application = self.StartWebServer(self.port)
+
     self.connection = ServerTransportWrapper(
       self.server,
-      transport.HttpTransport('http://localhost:%d/my/service' % self.port))
+      self.CreateTransport(self.service_url))
     self.stub = TestService.Stub(self.connection)
+
+    self.other_connection = ServerTransportWrapper(
+      self.server,
+      self.CreateTransport(self.other_service_url))
+    self.other_stub = TestService.Stub(self.other_connection)
+
+    self.mismatched_stub = AlternateService.Stub(self.connection)
 
   def tearDown(self):
     self.server.shutdown()
 
+  @property
+  def service_url(self):
+    return 'http://localhost:%d/my/service' % self.port
+
+  @property
+  def other_service_url(self):
+    return 'http://localhost:%d/my/other_service' % self.port
+
+  def CreateWSGIApplication(self):
+    """Create WSGI application used on the server side for testing."""
+    return webapp.WSGIApplication(self.DEFAULT_MAPPING, True)
+
+  def CreateTransport(self, service_url):
+    """Create a new transportation object."""
+    return transport.HttpTransport(service_url, protocol=protojson)
+
   def StartWebServer(self, port):
     """Start web server."""
-    application = webapp.WSGIApplication(self.DEFAULT_MAPPING, True)
+    application = self.CreateWSGIApplication()
     validated_application = validate.validator(application)
     server = simple_server.make_server('localhost', port, validated_application)
     server = ServerThread(server)
     server.start()
     server.wait_until_running()
     return server, application
+
+  def DoRawRequest(self,
+                   method,
+                   content='',
+                   content_type='application/json',
+                   headers=None):
+    headers = headers or {}
+    headers.update({'content-length': len(content or ''),
+                    'content-type': content_type,
+                   })
+    request = urllib2.Request('%s.%s' % (self.service_url, method),
+                              content,
+                              headers)
+    self.server.handle_request()
+    return urllib2.urlopen(request)
+
+  def RawRequestError(self,
+                      method,
+                      content='',
+                      content_type='application/json',
+                      headers=None):
+    try:
+      self.DoRawRequest(method, content, content_type, headers)
+      self.fail('Expected HTTP error')
+    except urllib2.HTTPError, err:
+      return err.code, err.read(), err.headers

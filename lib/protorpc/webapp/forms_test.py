@@ -25,9 +25,9 @@ import unittest
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
-from protorpc import forms
 from protorpc import test_util
 from protorpc import webapp_test_util
+from protorpc.webapp import forms
 
 
 class ModuleInterfaceTest(test_util.ModuleInterfaceTest,
@@ -46,7 +46,7 @@ def RenderTemplate(name, **params):
   Returns:
     Contents of static file.
   """
-  path = os.path.join(os.path.dirname(__file__), 'static', name)
+  path = os.path.join(forms._TEMPLATES_DIR, name)
   return template.render(path, params)
 
 

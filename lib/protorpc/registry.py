@@ -35,7 +35,6 @@ import sys
 import weakref
 
 from protorpc import descriptor
-from protorpc import message_types
 from protorpc import messages
 from protorpc import remote
 from protorpc import util
@@ -148,7 +147,7 @@ class RegistryService(remote.Service):
       message_type: Message type to find all referring modules for.
 
     Returns:
-      Set of modules referred to by message_types by traversing all its
+      Set of modules referred to by message_type by traversing all its
       message and enum fields.
     """
     # TODO(rafek): Maybe this should be a method on Message and Service?
@@ -221,7 +220,7 @@ class RegistryService(remote.Service):
     """Get service registry associated with this service instance."""
     return self.__registry
 
-  @remote.method(message_types.VoidMessage, ServicesResponse)
+  @remote.method(response_type=ServicesResponse)
   def services(self, request):
     """Get all registered services."""
     response = ServicesResponse()

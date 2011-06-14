@@ -186,10 +186,10 @@ class HttpTransport(Transport):
   def __http_error_to_exception(self, http_error):
     error_code = http_error.code
     content_type = http_error.hdrs.get('content-type')
-    if error_code == 500 and content_type == self.protocol.CONTENT_TYPE:
+    if content_type == self.protocol.CONTENT_TYPE:
       try:
         rpc_status = self.protocol.decode_message(remote.RpcStatus,
-                                                  http_error.msg)
+                                                  http_error.read())
       except Exception, decode_err:
         logging.warning(
           'An error occurred trying to parse status: %s\n%s',

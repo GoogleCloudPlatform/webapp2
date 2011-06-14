@@ -27,6 +27,7 @@ from wsgiref import headers
 from protorpc import descriptor
 from protorpc import message_types
 from protorpc import messages
+from protorpc import protojson
 from protorpc import remote
 from protorpc import test_util
 from protorpc import transport
@@ -722,6 +723,146 @@ class CheckRpcStatusTest(test_util.TestCase):
     except remote.ApplicationError, err:
       self.assertEquals('an application error', str(err))
       self.assertEquals('blam', err.error_name)
+
+
+class ProtocolConfigTest(test_util.TestCase):
+
+  def testConstructor(self):
+    config = remote.ProtocolConfig(
+      protojson,
+      'proto1',
+      'application/X-Json',
+      iter(['text/Json', 'text/JavaScript']))
+    self.assertEquals(protojson, config.protocol)
+    self.assertEquals('proto1', config.name)
+    self.assertEquals('application/x-json', config.default_content_type)
+    self.assertEquals(('text/json', 'text/javascript'),
+                      config.alternate_content_types)
+    self.assertEquals(('application/x-json', 'text/json', 'text/javascript'),
+                      config.content_types)
+
+  def testConstructorDefaults(self):
+    config = remote.ProtocolConfig(protojson, 'proto2')
+    self.assertEquals(protojson, config.protocol)
+    self.assertEquals('proto2', config.name)
+    self.assertEquals('application/json', config.default_content_type)
+    self.assertEquals(('application/x-javascript',
+                       'text/javascript',
+                       'text/x-javascript',
+                       'text/x-json',
+                       'text/json'),
+                      config.alternate_content_types)
+    self.assertEquals(('application/json',
+                       'application/x-javascript',
+                       'text/javascript',
+                       'text/x-javascript',
+                       'text/x-json',
+                       'text/json'), config.content_types)
+
+  def testEmptyAlternativeTypes(self):
+    config = remote.ProtocolConfig(protojson, 'proto2',
+                                   alternative_content_types=())
+    self.assertEquals(protojson, config.protocol)
+    self.assertEquals('proto2', config.name)
+    self.assertEquals('application/json', config.default_content_type)
+    self.assertEquals((), config.alternate_content_types)
+    self.assertEquals(('application/json',), config.content_types)
+
+  def testDuplicateContentTypes(self):
+    self.assertRaises(remote.ServiceConfigurationError,
+                      remote.ProtocolConfig,
+                      protojson,
+                      'json',
+                      'text/plain',
+                      ('text/plain',))
+
+    self.assertRaises(remote.ServiceConfigurationError,
+                      remote.ProtocolConfig,
+                      protojson,
+                      'json',
+                      'text/plain',
+                      ('text/html', 'text/html'))
+
+  def testEncodeMessage(self):
+    config = remote.ProtocolConfig(protojson, 'proto2')
+    self.assertEquals('{"state": "SERVER_ERROR", "error_message": "bad error"}',
+                      config.encode_message(
+                        remote.RpcStatus(state=remote.RpcState.SERVER_ERROR,
+                                         error_message="bad error")))
+
+  def testDecodeMessage(self):
+    config = remote.ProtocolConfig(protojson, 'proto2')
+    self.assertEquals(
+      remote.RpcStatus(state=remote.RpcState.SERVER_ERROR,
+                       error_message="bad error"),
+      config.decode_message(
+        remote.RpcStatus,
+        '{"state": "SERVER_ERROR", "error_message": "bad error"}'))
+
+
+class ProtocolsTest(test_util.TestCase):
+
+  def setUp(self):
+    self.protocols = remote.Protocols()
+
+  def testEmpty(self):
+    self.assertEquals((), self.protocols.names)
+    self.assertEquals((), self.protocols.content_types)
+
+  def testAddProtocolAllDefaults(self):
+    self.protocols.add_protocol(protojson, 'json')
+    self.assertEquals(('json',), self.protocols.names)
+    self.assertEquals(('application/json',
+                       'application/x-javascript',
+                       'text/javascript',
+                       'text/json',
+                       'text/x-javascript',
+                       'text/x-json'),
+                      self.protocols.content_types)
+
+  def testAddProtocolNoDefaultAlternatives(self):
+    class Protocol(object):
+      CONTENT_TYPE = 'text/plain'
+
+    self.protocols.add_protocol(Protocol, 'text')
+    self.assertEquals(('text',), self.protocols.names)
+    self.assertEquals(('text/plain',), self.protocols.content_types)
+
+  def testAddProtocolOverrideDefaults(self):
+    self.protocols.add_protocol(protojson, 'json',
+                                default_content_type='text/blar',
+                                alternative_content_types=('text/blam',
+                                                           'text/blim'))
+    self.assertEquals(('json',), self.protocols.names)
+    self.assertEquals(('text/blam', 'text/blar', 'text/blim'),
+                      self.protocols.content_types)
+
+  def testLookupByName(self):
+    self.protocols.add_protocol(protojson, 'json')
+    self.protocols.add_protocol(protojson, 'json2',
+                                default_content_type='text/plain',
+                                alternative_content_types=())
+
+    self.assertEquals('json', self.protocols.lookup_by_name('JsOn').name)
+    self.assertEquals('json2', self.protocols.lookup_by_name('Json2').name)
+
+  def testLookupByContentType(self):
+    self.protocols.add_protocol(protojson, 'json')
+    self.protocols.add_protocol(protojson, 'json2',
+                                default_content_type='text/plain',
+                                alternative_content_types=())
+
+    self.assertEquals(
+      'json',
+      self.protocols.lookup_by_content_type('AppliCation/Json').name)
+
+    self.assertEquals(
+      'json',
+      self.protocols.lookup_by_content_type('text/x-Json').name)
+
+    self.assertEquals(
+      'json2',
+      self.protocols.lookup_by_content_type('text/Plain').name)
 
 
 def main():

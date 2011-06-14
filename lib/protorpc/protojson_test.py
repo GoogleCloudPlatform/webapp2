@@ -27,7 +27,7 @@ from protorpc import messages
 from protorpc import protojson
 from protorpc import test_util
 
-from django.utils import simplejson
+import simplejson
 
 
 class MyMessage(messages.Message):
@@ -215,7 +215,6 @@ class TestJsonDependencyLoading(test_util.TestCase):
 
   def setUp(self):
     """Save original import function."""
-    self.django_simplejson = sys.modules.pop('django.utils.simplejson', None)
     self.simplejson = sys.modules.pop('simplejson', None)
     self.json = sys.modules.pop('json', None)
     self.original_import = __builtins__.__import__
@@ -239,7 +238,6 @@ class TestJsonDependencyLoading(test_util.TestCase):
         sys.modules[name] = module
       else:
         sys.modules.pop(name, None)
-    reset_module('django.utils.simplejson', self.django_simplejson)
     reset_module('simplejson', self.simplejson)
     reset_module('json', self.json)
     reload(protojson)

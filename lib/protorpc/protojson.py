@@ -41,6 +41,14 @@ __all__ = [
 
 CONTENT_TYPE = 'application/json'
 
+ALTERNATIVE_CONTENT_TYPES = [
+  'application/x-javascript',
+  'text/javascript',
+  'text/x-javascript',
+  'text/x-json',
+  'text/json',
+]
+
 
 def _load_json_module():
   """Try to load a valid json module.
@@ -59,8 +67,7 @@ def _load_json_module():
   """
   first_import_error = None
   for module_name in ['json',
-                      'simplejson',
-                      'django.utils.simplejson']:
+                      'simplejson']:
     try:
       module = __import__(module_name, {}, {}, 'json')
       if not hasattr(module, 'JSONEncoder'):
@@ -74,8 +81,7 @@ def _load_json_module():
       if not first_import_error:
         first_import_error = err
 
-  logging.error('Must use valid json library (Python 2.6 json, simplejson or '
-                'django.utils.simplejson)')
+  logging.error('Must use valid json library (Python 2.6 json or simplejson)')
   raise first_import_error
 json = _load_json_module()
 

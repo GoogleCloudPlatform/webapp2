@@ -16,11 +16,11 @@
 
 {% extends 'base.html' %}
 
-{% block title %}Form for {{service_path}}.{{method_name}}{% endblock %}
+{% block title %}Form for {{service_path|escape}}.{{method_name|escape}}{% endblock %}
 
 {% block top %}
 <a href="form">&lt;&lt; Back to method selection</a>
-<h3>Form for {{service_path}}.{{method_name}}</h3>
+<h3>Form for {{service_path|escape}}.{{method_name|escape}}</h3>
 {% endblock %}
 
 {% block body %}

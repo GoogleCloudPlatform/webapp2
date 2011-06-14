@@ -208,11 +208,11 @@ class HttpTransportTest(test_util.TestCase):
 
     # Second call raises a normal HTTP error.
     urllib2.urlopen(mox.Func(verify_request)).AndRaise(
-        urllib2.HTTPError('http://whatever',
-                          500,
-                          'a server error',
-                          {},
-                          StringIO.StringIO('')))
+      urllib2.HTTPError('http://whatever',
+                        500,
+                        'a server error',
+                        {},
+                        StringIO.StringIO('does not matter')))
 
     # Third call raises a 500 error with message.
     status = remote.RpcStatus(state=remote.RpcState.REQUEST_ERROR,
@@ -220,9 +220,9 @@ class HttpTransportTest(test_util.TestCase):
     urllib2.urlopen(mox.Func(verify_request)).AndRaise(
         urllib2.HTTPError('http://whatever',
                           500,
-                          protocol.encode_message(status),
+                          'An error occured',
                           {'content-type': protocol.CONTENT_TYPE},
-                          StringIO.StringIO('')))
+                          StringIO.StringIO(protocol.encode_message(status))))
 
     # Fourth call is not parsable.
     status = remote.RpcStatus(state=remote.RpcState.REQUEST_ERROR,
@@ -230,9 +230,9 @@ class HttpTransportTest(test_util.TestCase):
     urllib2.urlopen(mox.Func(verify_request)).AndRaise(
         urllib2.HTTPError('http://whatever',
                           500,
-                          'a text message is here anyway',
+                          'An error occured',
                           {'content-type': protocol.CONTENT_TYPE},
-                          StringIO.StringIO('')))
+                          StringIO.StringIO('a text message is here anyway')))
 
     self.mox.ReplayAll()
 
@@ -258,7 +258,7 @@ class HttpTransportTest(test_util.TestCase):
     try:
       trans.send_rpc(self.my_method.remote, request)
     except remote.ServerError, err:
-      self.assertEquals('HTTP Error 500: a text message is here anyway',
+      self.assertEquals('HTTP Error 500: An error occured',
                         str(err))
       self.assertTrue(isinstance(err.cause, urllib2.HTTPError))
     else:

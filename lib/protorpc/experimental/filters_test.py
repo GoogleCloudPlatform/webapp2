@@ -60,7 +60,8 @@ class FiltersTestBase(test_util.TestCase):
                     expected_content_type=None):
     expected_headers = expected_headers or {}
     expected_headers['content-length'] = str(len(expected_content))
-    expected_headers['content-type'] = expected_content_type or 'text/html'
+    expected_headers['content-type'] = (
+      expected_content_type or 'text/html; charset=utf-8')
     self.assertEquals(code, response.code)
     self.assertEquals(expected_content, response.read())
     response_headers = dict(response.info().items())
@@ -75,7 +76,8 @@ class FiltersTestBase(test_util.TestCase):
     except urllib2.HTTPError, err:
       self.assertEquals(expected_code, err.code)
       expected_headers = expected_headers or {}
-      expected_headers['content-type'] = expected_content_type or 'text/html'
+      expected_headers['content-type'] = (
+        expected_content_type or 'text/html; charset=utf-8')
       expected_headers['content-length'] = str(len(expected_content))
       self.CheckHeaders(expected_headers,
                         dict(err.hdrs.items()))
@@ -259,16 +261,28 @@ class SetHeaderTest(FiltersTestBase):
     self.CheckResponse(response, expected_content='blar')
 
 
-class UseProtocolsTest(FiltersTestBase):
+class EnvironEqualsTest(FiltersTestBase):
 
-  def testUseProtocols(self):
-    protocols = object()
-    def has_protocols(environ, start_response):
-      content = str(environ[filters.PROTOCOLS_ENVIRON] is protocols)
-      return filters.static_page(content)(environ, start_response)
-    self.StartWebServer(filters.use_protocols(protocols, app=has_protocols))
-    response = self.SendRequest('/')
-    self.CheckResponse(response, expected_content='True')
+  def testEnvironEquals(self):
+    self.StartWebServer(filters.environ_equals('HTTP_X', 'a thing'))
+    response = self.SendRequest('/', headers={'x': 'a thing'})
+    self.CheckResponse(response, expected_content='')
+
+  def testEnvironEqualsError(self):
+    self.StartWebServer(filters.environ_equals('HTTP_X', 'blar'))
+    self.CheckError('/', headers={'x': 'a thing'})
+
+
+class ExpectEnvironTest(FiltersTestBase):
+
+  def testExpectEnviron(self):
+    self.StartWebServer(filters.expect_environ('HTTP_X'))
+    response = self.SendRequest('/', headers={'x': 'a thing'})
+    self.CheckResponse(response, expected_content='')
+
+  def testExpectEnvironError(self):
+    self.StartWebServer(filters.expect_environ('HTTP_X'))
+    self.CheckError('/')
 
 
 class MatchEnvironTest(FiltersTestBase):

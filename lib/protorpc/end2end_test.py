@@ -24,6 +24,8 @@ import unittest
 
 from google.appengine.ext import webapp
 
+from protorpc import protojson
+from protorpc import remote
 from protorpc import test_util
 from protorpc import webapp_test_util
 
@@ -35,6 +37,100 @@ class EndToEndTest(webapp_test_util.EndToEndTestBase):
   def testSimpleRequest(self):
     self.assertEquals(test_util.OptionalMessage(string_value='+blar'),
                       self.stub.optional_message(string_value='blar'))
+
+  def testSimpleRequestComplexContentType(self):
+    response = self.DoRawRequest(
+      'optional_message',
+      content='{"string_value": "blar"}',
+      content_type='application/json; charset=utf-8')
+    headers = response.headers
+    self.assertEquals(200, response.code)
+    self.assertEquals('{"string_value": "+blar"}', response.read())
+    self.assertEquals('application/json', headers['content-type'])
+
+  def testInitParameter(self):
+    self.assertEquals(test_util.OptionalMessage(string_value='uninitialized'),
+                      self.stub.init_parameter())
+    self.assertEquals(test_util.OptionalMessage(string_value='initialized'),
+                      self.other_stub.init_parameter())
+
+  def testMissingContentType(self):
+    code, content, headers = self.RawRequestError(
+      'optional_message',
+      content='{"string_value": "blar"}',
+      content_type='')
+    self.assertEquals(400, code)
+    self.assertEquals('', content)
+    self.assertEquals('text/html; charset=utf-8', headers['content-type'])
+
+  def testUnsupportedContentType(self):
+    code, content, headers = self.RawRequestError(
+      'optional_message',
+      content='{"string_value": "blar"}',
+      content_type='image/png')
+    self.assertEquals(415, code)
+    self.assertEquals('', content)
+    self.assertEquals(headers['content-type'], 'text/html; charset=utf-8')
+
+  def testUnsupportedHttpMethod(self):
+    code, content, headers = self.RawRequestError('optional_message',
+                                                  content=None)
+    self.assertEquals(405, code)
+    self.assertTrue(
+        '/my/service.optional_message is a ProtoRPC method' in content)
+    self.assertEquals(headers['content-type'], 'text/plain; charset=utf-8')
+
+  def testMethodNotFound(self):
+    self.assertRaisesWithRegexpMatch(remote.MethodNotFoundError,
+                                     'Unrecognized RPC method: does_not_exist',
+                                     self.mismatched_stub.does_not_exist)
+
+  def testBadMessageError(self):
+    code, content, headers = self.RawRequestError('nested_message',
+                                                  content='{}')
+    self.assertEquals(400, code)
+    self.assertEquals(
+      protojson.encode_message(remote.RpcStatus(
+        state=remote.RpcState.REQUEST_ERROR,
+        error_message=('Error parsing ProtoRPC request '
+                       '(Unable to parse request content: '
+                       'Message NestedMessage is missing '
+                       'required field a_value)'))),
+      content)
+    self.assertEquals(headers['content-type'], 'application/json')
+
+  def testApplicationError(self):
+    try:
+      self.stub.raise_application_error()
+    except remote.ApplicationError, err:
+      self.assertEquals('This is an application error', err.message)
+      self.assertEquals('ERROR_NAME', err.error_name)
+    else:
+      self.fail('Expected application error')
+
+  def testRpcError(self):
+    try:
+      self.stub.raise_rpc_error()
+    except remote.ServerError, err:
+      self.assertEquals('Internal Server Error', err.message)
+    else:
+      self.fail('Expected server error')
+
+  def testUnexpectedError(self):
+    try:
+      self.stub.raise_unexpected_error()
+    except remote.ServerError, err:
+      self.assertEquals('Internal Server Error', err.message)
+    else:
+      self.fail('Expected server error')
+
+  def testBadResponse(self):
+    try:
+      self.stub.return_bad_message()
+    except remote.ServerError, err:
+      self.assertEquals('Internal Server Error', err.message)
+    else:
+      self.fail('Expected server error')
 
 
 def main():

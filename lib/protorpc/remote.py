@@ -116,14 +116,18 @@ from protorpc import util
 
 __all__ = [
     'ApplicationError',
+    'MethodNotFoundError',
     'NetworkError',
     'RequestError',
     'RpcError',
     'ServerError',
     'ServerError',
+    'ServiceConfigurationError',
     'ServiceDefinitionError',
 
     'HttpRequestState',
+    'ProtocolConfig',
+    'Protocols',
     'RequestState',
     'RpcState',
     'RpcStatus',
@@ -139,6 +143,10 @@ __all__ = [
 
 class ServiceDefinitionError(messages.Error):
   """Raised when a service is improperly defined."""
+
+
+class ServiceConfigurationError(messages.Error):
+  """Raised when a service is incorrectly configured."""
 
 
 # TODO: Use error_name to map to specific exception message types.
@@ -172,6 +180,7 @@ class RpcStatus(messages.Message):
     SERVER_ERROR = 3
     NETWORK_ERROR = 4
     APPLICATION_ERROR = 5
+    METHOD_NOT_FOUND_ERROR = 6
 
   state = messages.EnumField(State, 1, required=True)
   error_message = messages.StringField(2)
@@ -212,6 +221,12 @@ class RequestError(RpcError):
   STATE = RpcState.REQUEST_ERROR
 
 
+class MethodNotFoundError(RequestError):
+  """Raised when unknown method requested by RPC."""
+
+  STATE = RpcState.METHOD_NOT_FOUND_ERROR
+
+
 class NetworkError(RpcError):
   """Raised when network error occurs during RPC."""
 
@@ -242,10 +257,7 @@ class ApplicationError(RpcError):
       or unicode string.
     """
     super(ApplicationError, self).__init__(message)
-    if error_name is None:
-      self.error_name = None
-    else:
-      self.error_name = error_name
+    self.error_name = error_name
 
   def __str__(self):
     return self.args[0]
@@ -263,6 +275,7 @@ _RPC_STATE_TO_ERROR = {
   RpcState.NETWORK_ERROR: NetworkError,
   RpcState.SERVER_ERROR: ServerError,
   RpcState.APPLICATION_ERROR: ApplicationError,
+  RpcState.METHOD_NOT_FOUND_ERROR: MethodNotFoundError,
 }
 
 class _RemoteMethodInfo(object):
@@ -317,7 +330,8 @@ class _RemoteMethodInfo(object):
     return self.__response_type
 
 
-def method(request_type, response_type):
+def method(request_type=message_types.VoidMessage,
+           response_type=message_types.VoidMessage):
   """Method decorator for creating remote methods.
 
   Args:
@@ -456,9 +470,13 @@ class StubBase(object):
       phone = messages.StringField(2)
       email = messages.StringField(3)
 
+    class NewContactResponse(message.Message):
+
+      contact_id = messages.StringField(1)
+
     class AccountService(remote.Service):
 
-      @remote.method(NewContact, message_types.VoidMessage):
+      @remote.method(NewContactRequest, NewContactResponse):
       def new_contact(self, request):
         ... implementation ...
 
@@ -469,7 +487,7 @@ class StubBase(object):
     request.name = 'Bob Somebody'
     request.phone = '+1 415 555 1234'
     
-    account_service_stub.new_contact(request)
+    response = account_service_stub.new_contact(request)
 
   The second way is to pass in keyword parameters that correspond with the root
   request message type:
@@ -984,3 +1002,196 @@ def check_rpc_status(status):
       raise error_class(status.error_message, status.error_name)
     else:
       raise error_class(status.error_message)
+
+
+class ProtocolConfig(object):
+  """Configuration for single protocol mapping.
+
+  A read-only protocol configuration provides a given protocol implementation
+  with a name and a set of content-types that it recognizes.
+
+  Properties:
+    protocol: The protocol implementation for configuration (usually a module,
+      for example, protojson, protobuf, etc.).  This is an object that has the
+      following attributes:
+        CONTENT_TYPE: Used as the default content-type if default_content_type
+          is not set.
+        ALTERNATIVE_CONTENT_TYPES (optional): A list of alternative
+          content-types to the default that indicate the same protocol.
+        encode_message: Function that matches the signature of
+          ProtocolConfig.encode_message.  Used for encoding a ProtoRPC message.
+        decode_message: Function that matches the signature of
+          ProtocolConfig.decode_message.  Used for decoding a ProtoRPC message.
+    name: Name of protocol configuration.
+    default_content_type: The default content type for the protocol.  Overrides
+      CONTENT_TYPE defined on protocol.
+    alternative_content_types: A list of alternative content-types supported
+      by the protocol.  Must not contain the default content-type, nor
+      duplicates.  Overrides ALTERNATIVE_CONTENT_TYPE defined on protocol.
+    content_types: A list of all content-types supported by configuration.
+      Combination of default content-type and alternatives.
+  """
+
+  def __init__(self,
+               protocol,
+               name,
+               default_content_type=None,
+               alternative_content_types=None):
+    """Constructor.
+
+    Args:
+      protocol: The protocol implementation for configuration.
+      name: The name of the protocol configuration.
+      default_content_type: The default content-type for protocol.  If none
+        provided it will check protocol.CONTENT_TYPE.
+      alternative_content_types:  A list of content-types.  If none provided,
+        it will check protocol.ALTERNATIVE_CONTENT_TYPES.  If that attribute
+        does not exist, will be an empty tuple.
+
+    Raises:
+      ServiceConfigurationError if there are any duplicate content-types.
+    """
+    self.__protocol = protocol
+    self.__name = name
+    self.__default_content_type = (default_content_type or
+                                   protocol.CONTENT_TYPE).lower()
+    if alternative_content_types is None:
+      alternative_content_types = getattr(protocol,
+                                          'ALTERNATIVE_CONTENT_TYPES',
+                                          ())
+    self.__alternative_content_types = tuple(
+      content_type.lower() for content_type in alternative_content_types)
+    self.__content_types = (
+      (self.__default_content_type,) + self.__alternative_content_types)
+
+    # Detect duplicate content types in definition.
+    previous_type = None
+    for content_type in sorted(self.content_types):
+      if content_type == previous_type:
+        raise ServiceConfigurationError(
+          'Duplicate content-type %s' % content_type)
+      previous_type = content_type
+
+  @property
+  def protocol(self):
+    return self.__protocol
+
+  @property
+  def name(self):
+    return self.__name
+
+  @property
+  def default_content_type(self):
+    return self.__default_content_type
+
+  @property
+  def alternate_content_types(self):
+    return self.__alternative_content_types
+
+  @property
+  def content_types(self):
+    return self.__content_types      
+
+  def encode_message(self, message):
+    """Encode message.
+
+    Args:
+      message: Message instance to encode.
+
+    Returns:
+      String encoding of Message instance encoded in protocol's format.
+    """
+    return self.__protocol.encode_message(message)
+
+  def decode_message(self, message_type, encoded_message):
+    """Decode buffer to Message instance.
+
+    Args:
+      message_type: Message type to decode data to.
+      encoded_message: Encoded version of message as string.
+
+    Returns:
+      Decoded instance of message_type.
+    """
+    return self.__protocol.decode_message(message_type, encoded_message)
+
+
+class Protocols(object):
+  """Collection of protocol configurations.
+
+  Used to describe a complete set of content-type mappings for multiple
+  protocol configurations.
+
+  Properties:
+    names: Sorted list of the names of registered protocols.
+    content_types: Sorted list of supported content-types.
+  """
+
+  def __init__(self):
+    """Constructor."""
+    self.__by_name = {}
+    self.__by_content_type = {}
+
+  def add_protocol_config(self, config):
+    """Add a protocol configuration to protocol mapping.
+
+    Args:
+      config: A ProtocolConfig.
+
+    Raises:
+      ServiceConfigurationError if protocol.name is already registered
+        or any of it's content-types are already registered.
+    """
+    if config.name in self.__by_name:
+      raise ServiceConfigurationError(
+        'Protocol name %r is already in use' % config.name)
+    for content_type in config.content_types:
+      if content_type in self.__by_content_type:
+        raise ServiceConfigurationError(
+          'Content type %r is already in use' % content_type)
+
+    self.__by_name[config.name] = config
+    self.__by_content_type.update((t, config) for t in config.content_types)
+
+  def add_protocol(self, *args, **kwargs):
+    """Add a protocol configuration from basic parameters.
+
+    Simple helper method that creates and registeres a ProtocolConfig instance.
+    """
+    self.add_protocol_config(ProtocolConfig(*args, **kwargs))
+
+  @property
+  def names(self):
+    return tuple(sorted(self.__by_name))
+
+  @property
+  def content_types(self):
+    return tuple(sorted(self.__by_content_type))
+
+  def lookup_by_name(self, name):
+    """Look up a ProtocolConfig by name.
+
+    Args:
+      name: Name of protocol to look for.
+
+    Returns:
+      ProtocolConfig associated with name.
+
+    Raises:
+      KeyError if there is no protocol for name.
+    """
+    return self.__by_name[name.lower()]
+
+  def lookup_by_content_type(self, content_type):
+    """Look up a ProtocolConfig by content-type.
+
+    Args:
+      content_type: Content-type to find protocol configuration for.
+
+    Returns:
+      ProtocolConfig associated with content-type.
+
+    Raises:
+      KeyError if there is no protocol for content-type.
+    """
+    return self.__by_content_type[content_type.lower()]
