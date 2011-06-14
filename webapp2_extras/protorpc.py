@@ -20,10 +20,10 @@ from __future__ import absolute_import
 
 import logging
 
-from protorpc import forms
 from protorpc import registry
 from protorpc import remote
-from protorpc import service_handlers
+from protorpc.webapp import forms
+from protorpc.webapp import service_handlers
 
 import webapp2
 
