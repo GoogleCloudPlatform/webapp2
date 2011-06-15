@@ -42,7 +42,7 @@ __version__ = '.'.join(__version_info__)
 #: Base HTTP exception, set here as public interface.
 HTTPException = exc.HTTPException
 
-#: Regex for URI definitions.
+#: Regex for route definitions.
 _ROUTE_REGEX = re.compile(r"""
     \<               # The exact character "<"
     (\w+)?           # The optional variable name ([a-zA-Z0-9_]+)
@@ -403,6 +403,8 @@ class BaseRoute(object):
     handler = None
     #: The custom handler method, if handler is a class.
     handler_method = None
+    #: Sequence of allowed HTTP methods. If not set, all methods are allowed.
+    methods = None
 
     def match(self, request):
         """Matches all routes against a request object.
@@ -515,8 +517,6 @@ class Route(BaseRoute):
     handler_method = None
     #: Default parameters values.
     defaults = None
-    #: Sequence of allowed HTTP methods. If not set, all methods are allowed.
-    methods = None
     # Lazy properties extracted from the route template.
     regex = None
     reverse_template = None
@@ -645,8 +645,8 @@ class Route(BaseRoute):
             return None
 
         if self.methods and request.method not in self.methods:
-            # Is this a good idea? What if other route is set for this path
-            # but different HTTP method?
+            # This will be caught by the router, so routes with different
+            # methods can be tried.
             raise exc.HTTPMethodNotAllowed()
 
         kwargs = self.defaults.copy()
@@ -790,12 +790,20 @@ class Router(object):
         :returns:
             A tuple ``(route, args, kwargs)`` if a route matched, or None.
         :raises:
-            ``exc.HTTPNotFound`` if no route matched.
+            ``exc.HTTPNotFound`` if no route matched or
+            ``exc.HTTPMethodNotAllowed`` if one of the routes raised it.
         """
+        method_not_allowed = False
         for route in self.match_routes:
-            match = route.match(request)
-            if match:
-                return match
+            try:
+                match = route.match(request)
+                if match:
+                    return match
+            except exc.HTTPMethodNotAllowed:
+                method_not_allowed = True
+
+        if method_not_allowed:
+            raise exc.HTTPMethodNotAllowed()
 
         raise exc.HTTPNotFound()
 
