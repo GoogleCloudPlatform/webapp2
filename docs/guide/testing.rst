@@ -105,6 +105,6 @@ Testing App Engine services
 If you're using App Engine and need to test an application that uses Datastore,
 Memcache or other App Engine services, read
 `Local Unit Testing for Python <http://code.google.com/appengine/docs/python/tools/localunittesting.html>`_
-in the official documentation. The App Engine SDK provides a module,
+in the official documentation. The App Engine SDK provides the module
 ``google.appengine.ext.testbed`` that can be used to setup all the necessary
 service stubs for testing.
