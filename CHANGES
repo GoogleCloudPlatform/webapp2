@@ -1,8 +1,13 @@
-Development version
--------------------
+Version 1.7.1 - June 14, 2011
+=============================
 - Added standalone redirect() function.
 
 - RequestHandler.redirect and redirect_to now return a response object.
+
+- Fixed: multiple routes that define methods are tried before MethodNotAllowed
+  is raised.
+
+- Updated webapp2_extras.protorpc to work with latest ProtoRPC.
 
 
 Version 1.7 - June 4, 2011

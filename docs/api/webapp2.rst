@@ -35,6 +35,7 @@ webapp2
   - :class:`cached_property`
   - :func:`get_app`
   - :func:`get_request`
+  - :func:`redirect`
   - :func:`uri_for`
   - :func:`abort`
   - :func:`import_string`
