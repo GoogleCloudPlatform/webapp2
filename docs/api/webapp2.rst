@@ -110,6 +110,8 @@ general use.
 
 .. autofunction:: get_request
 
+.. autofunction:: redirect
+
 .. autofunction:: uri_for
 
 .. autofunction:: abort
