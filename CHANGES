@@ -14,6 +14,9 @@ Development version
   - 504: 'Gateway Time-out'
   - 505: 'HTTP Version not supported'
 
+- Copied Request from webapp, so that when using webapp2 outside of the SDK
+  they are the same.
+
 
 Version 1.7.1 - June 14, 2011
 =============================

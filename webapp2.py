@@ -33,7 +33,6 @@ except ImportError:
     from wsgiref import handlers
 
     class webapp(object):
-        Request = webob.Request
         RequestHandler = type('RequestHandler', (object,), {})
 
     class util(object):
@@ -57,6 +56,8 @@ _ROUTE_REGEX = re.compile(r"""
     \>               # The exact character ">"
     """, re.VERBOSE)
 
+_CHARSET_REGEX = re.compile(r';\s*charset=([^;\s]*)', re.I)
+
 # Set same default messages from webapp plus missing ones.
 webapp_status_reasons = {
     203: 'Non-Authoritative Information',
@@ -74,7 +75,7 @@ for code, message in webapp_status_reasons.iteritems():
         cls.title = message
 
 
-class Request(webapp.Request):
+class Request(webob.Request):
     """Abstraction for an HTTP request."""
 
     #: A reference to the active :class:`WSGIApplication` instance.
@@ -89,10 +90,134 @@ class Request(webapp.Request):
     route_kwargs = None
     #: A dictionary to register objects used during the request lifetime.
     registry = None
+    # Attributes from webapp.
+    request_body_tempfile_limit = 0
+    uri = property(lambda self: self.url)
+    query = property(lambda self: self.query_string)
 
-    def __init__(self, *args, **kwargs):
-        super(Request, self).__init__(*args, **kwargs)
+    def __init__(self, environ, *args, **kwargs):
+        """Constructs a Request object from a WSGI environment.
+
+        If the charset isn't specified in the Content-Type header, defaults
+        to UTF-8.
+
+        :param environ:
+            A WSGI-compliant environment dictionary.
+        """
+        match = _CHARSET_REGEX.search(environ.get('CONTENT_TYPE', ''))
+        if match:
+            charset = match.group(1).lower()
+        else:
+            charset = 'utf-8'
+
+        super(Request, self).__init__(environ, charset=charset,
+                                      unicode_errors='ignore',
+                                      decode_param_names=True, *args, **kwargs)
         self.registry = {}
+
+    def get(self, argument_name, default_value='', allow_multiple=False):
+        """Returns the query or POST argument with the given name.
+
+        We parse the query string and POST payload lazily, so this will be a
+        slower operation on the first call.
+
+        :param argument_name:
+            The name of the query or POST argument.
+        :param default_value:
+            The value to return if the given argument is not present.
+        :param allow_multiple:
+            Return a list of values with the given name (deprecated).
+        :returns:
+            If allow_multiple is False (which it is by default), we return
+            the first value with the given name given in the request. If it
+            is True, we always return a list.
+        """
+        param_value = self.get_all(argument_name)
+        if allow_multiple:
+            logging.warning('allow_multiple is a deprecated param. '
+                'Please use the Request.get_all() method instead.')
+
+        if len(param_value) > 0:
+            if allow_multiple:
+                return param_value
+
+            return param_value[0]
+        else:
+            if allow_multiple and not default_value:
+                return []
+
+            return default_value
+
+    def get_all(self, argument_name, default_value=None):
+        """Returns a list of query or POST arguments with the given name.
+
+        We parse the query string and POST payload lazily, so this will be a
+        slower operation on the first call.
+
+
+        :param argument_name:
+            The name of the query or POST argument.
+        :param default_value:
+            The value to return if the given argument is not present,
+            None may not be used as a default, if it is then an empty
+            list will be returned instead.
+        :returns:
+            A (possibly empty) list of values.
+        """
+        if self.charset:
+            argument_name = argument_name.encode(self.charset)
+
+        if default_value is None:
+            default_value = []
+
+        param_value = self.params.getall(argument_name)
+
+        if param_value is None or len(param_value) == 0:
+            return default_value
+
+        for i in xrange(len(param_value)):
+            if isinstance(param_value[i], cgi.FieldStorage):
+                param_value[i] = param_value[i].value
+
+        return param_value
+
+    def arguments(self):
+        """Returns a list of the arguments provided in the query and/or POST.
+
+        The return value is a list of strings.
+        """
+        return list(set(self.params.keys()))
+
+    def get_range(self, name, min_value=None, max_value=None, default=0):
+        """Parses the given int argument, limiting it to the given range.
+
+        :param name:
+            The name of the argument.
+        :param min_value:
+            The minimum int value of the argument (if any).
+        :param max_value:
+            The maximum int value of the argument (if any).
+        :param default:
+            The default value of the argument if it is not given.
+        :returns:
+            An int within the given range for the argument.
+        """
+        value = self.get(name, default)
+        if value is None:
+            return value
+
+        try:
+            value = int(value)
+        except ValueError:
+            value = default
+            if value is not None:
+                if max_value is not None:
+                    value = min(value, max_value)
+
+                if min_value is not None:
+                    value = max(value, min_value)
+
+        return value
 
 
 class Response(webob.Response):
@@ -116,6 +241,7 @@ class Response(webob.Response):
     out = None
 
     def __init__(self, *args, **kwargs):
+        """Constructs a response with the default settings."""
         super(Response, self).__init__(*args, **kwargs)
         self.out = self
         self.headers['Cache-Control'] = 'no-cache'
