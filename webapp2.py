@@ -19,6 +19,13 @@ import webob
 from webob import exc
 
 try:
+    # WebOb < 1.0 (App Engine SDK).
+    from webob.statusreasons import status_reasons
+except ImportError:
+    # WebOb >= 1.0.
+    from webob.util import status_reasons
+
+try:
     from google.appengine.ext import webapp
     from google.appengine.ext.webapp import util
 except ImportError:
@@ -50,6 +57,22 @@ _ROUTE_REGEX = re.compile(r"""
     \>               # The exact character ">"
     """, re.VERBOSE)
 
+# Set same default messages from webapp plus missing ones.
+webapp_status_reasons = {
+    203: 'Non-Authoritative Information',
+    302: 'Moved Temporarily',
+    306: 'Unused',
+    408: 'Request Time-out',
+    414: 'Request-URI Too Large',
+    504: 'Gateway Time-out',
+    505: 'HTTP Version not supported',
+}
+status_reasons.update(webapp_status_reasons)
+for code, message in webapp_status_reasons.iteritems():
+    cls = exc.status_map.get(code)
+    if cls:
+        cls.title = message
+
 
 class Request(webapp.Request):
     """Abstraction for an HTTP request."""
@@ -75,18 +98,27 @@ class Request(webapp.Request):
 class Response(webob.Response):
     """Abstraction for an HTTP response.
 
-    Implements most of ``webapp.Response`` interface, except ``wsgi_write()``
-    as the response itself is returned by the WSGI application.
+    Differences from webapp.Response:
+
+    - ``out`` is not a ``StringIO.StringIO`` instance. Instead it is the
+      response itself, as it has the method ``write()``.
+    - As in WebOb, ``status`` is the code plus message, e.g., '200 OK', while
+      in webapp it is the integer code. The status code as an integer is
+      available in ``status_int``, and the status message is available in
+      ``status_message``.
     """
 
-    default_content_type = 'text/html'
+    #: Default charset as in webapp.
     default_charset = 'utf-8'
+    #: A reference to the Response instance itself, for compatibility with
+    #: webapp only: webapp uses `Response.out.write()`, so we point `out` to
+    #: `self` and it will use `Response.write()`.
+    out = None
 
     def __init__(self, *args, **kwargs):
         super(Response, self).__init__(*args, **kwargs)
-        # webapp uses response.out.write(), so we point `.out` to `self`
-        # and it will use `Response.write()`.
         self.out = self
+        self.headers['Cache-Control'] = 'no-cache'
 
     def write(self, text):
         """Appends a text to the response body."""
@@ -99,6 +131,35 @@ class Response(webob.Response):
             self.charset = self.default_charset
 
         super(Response, self).write(text)
+
+    def _set_status(self, value):
+        """The status string, including code and message."""
+        message = None
+        # Accept long because urlfetch in App Engine returns codes as longs.
+        if isinstance(value, (int, long)):
+            code = int(value)
+        else:
+            if isinstance(value, unicode):
+                # Status messages have to be ASCII safe, so this is OK.
+                value = str(value)
+
+            if not isinstance(value, str):
+                raise TypeError(
+                    'You must set status to a string or integer (not %s)' %
+                    type(value))
+
+            parts = value.split(' ', 1)
+            code = int(parts[0])
+            if len(parts) == 2:
+                message = parts[1]
+
+        message = message or Response.http_status_message(code)
+        self._status = '%d %s' % (code, message)
+
+    def _get_status(self):
+        return self._status
+
+    status = property(_get_status, _set_status, doc=_set_status.__doc__)
 
     def set_status(self, code, message=None):
         """Sets the HTTP status code of this response.
@@ -114,9 +175,46 @@ class Response(webob.Response):
         else:
             self.status = code
 
+    def _get_status_message(self):
+        """The response status message, as a string."""
+        return self.status.split()[1]
+
+    def _set_status_message(self, message):
+        self.status = '%d %s' % (self.status_int, message)
+
+    status_message = property(_get_status_message, _set_status_message,
+                              doc=_get_status_message.__doc__)
+
+    def has_error(self):
+        """Indicates whether the response was an error response."""
+        return self.status_int >= 400
+
     def clear(self):
         """Clears all data written to the output stream so that it is empty."""
         self.body = ''
+
+    def wsgi_write(self, start_response):
+        """Writes this response using using the given WSGI function.
+
+        :param start_response:
+            The WSGI-compatible start_response function.
+        """
+        body = self.body
+        if isinstance(body, unicode):
+            body = body.encode('utf-8')
+        elif self.charset == 'utf-8':
+            try:
+                body.decode('utf-8')
+            except UnicodeError, e:
+                logging.warning('Response written is not UTF-8: %s', e)
+
+        if (self.headers.get('Cache-Control') == 'no-cache' and
+            not self.headers.get('Expires')):
+            self.headers['Expires'] = 'Fri, 01 Jan 1990 00:00:00 GMT'
+            self.headers['Content-Length'] = str(len(body))
+
+        write = start_response(self.status, self.headerlist)
+        write(body)
 
     @staticmethod
     def http_status_message(code):
@@ -125,7 +223,7 @@ class Response(webob.Response):
         :param code:
             The HTTP code for which we want a message.
         """
-        message = webob.statusreasons.status_reasons.get(code)
+        message = status_reasons.get(code)
         if not message:
             raise KeyError('Invalid HTTP status code: %d' % code)
 

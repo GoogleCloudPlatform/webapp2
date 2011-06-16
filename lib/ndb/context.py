@@ -118,6 +118,9 @@ class Context(object):
       # TODO: What if async_get() created a non-trivial MultiRpc?
       results = yield self._conn.async_get(None, keys)
       for ent, (fut, _) in zip(results, todo):
+        # 1.5.1 returns entity as tuple
+        if isinstance(ent, tuple):
+          ent = ent[0]
         fut.set_result(ent)
 
   @tasklets.tasklet
@@ -130,6 +133,9 @@ class Context(object):
     ents = [ent for (_, ent) in todo]
     results = yield self._conn.async_put(None, ents)
     for key, (fut, ent) in zip(results, todo):
+      # 1.5.1 returns entity as tuple
+      if isinstance(key, tuple):
+        key = key[0]
       if key != ent._key:
         if ent._has_complete_key():
           raise datastore_errors.BadKeyError(

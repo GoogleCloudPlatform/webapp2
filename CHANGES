@@ -1,3 +1,20 @@
+Development version
+===================
+- Response is now compatible with latest WebOb.
+
+- Increased Response compatibility with webapp, implementing wsgi_write() and
+  has_error().
+
+- Changed some status messages to be the same as webapp:
+  - 203: 'Non-Authoritative Information'
+  - 302: 'Moved Temporarily'
+  - 306: 'Unused'
+  - 408: 'Request Time-out'
+  - 414: 'Request-URI Too Large'
+  - 504: 'Gateway Time-out'
+  - 505: 'HTTP Version not supported'
+
+
 Version 1.7.1 - June 14, 2011
 =============================
 - Added standalone redirect() function.

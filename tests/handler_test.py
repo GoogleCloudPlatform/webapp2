@@ -152,34 +152,35 @@ The resource could not be found.
 class TestHandler(test_base.BaseTestCase):
     def tearDown(self):
         super(TestHandler, self).tearDown()
+        app.set_globals(app=None, request=None)
         app.error_handlers = {}
 
     def test_200(self):
         rsp = app.get_response('/')
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'home sweet home')
 
     def test_404(self):
         req = webapp2.Request.blank('/nowhere')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '404 Not Found')
+        self.assertEqual(rsp.status_int, 404)
 
     def test_405(self):
         req = webapp2.Request.blank('/')
         req.method = 'PUT'
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '405 Method Not Allowed')
+        self.assertEqual(rsp.status_int, 405)
         self.assertEqual(rsp.headers.get('Allow'), 'GET, POST')
 
     def test_500(self):
         req = webapp2.Request.blank('/broken')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '500 Internal Server Error')
+        self.assertEqual(rsp.status_int, 500)
 
     def test_500_but_fixed(self):
         req = webapp2.Request.blank('/broken-but-fixed')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'that was close!')
 
     def test_501(self):
@@ -187,18 +188,18 @@ class TestHandler(test_base.BaseTestCase):
         req = webapp2.Request.blank('/methods')
         req.method = 'FOOBAR'
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '501 Not Implemented')
+        self.assertEqual(rsp.status_int, 501)
 
     def test_lazy_handler(self):
         req = webapp2.Request.blank('/lazy')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'I am a laaazy view.')
 
     def test_handler_with_error(self):
         req = webapp2.Request.blank('/error')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '403 Forbidden')
+        self.assertEqual(rsp.status_int, 403)
         self.assertEqual(rsp.body, '')
 
     def test_debug_mode(self):
@@ -217,7 +218,7 @@ class TestHandler(test_base.BaseTestCase):
         }
         req = webapp2.Request.blank('/nowhere')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '404 Not Found')
+        self.assertEqual(rsp.status_int, 404)
         self.assertEqual(rsp.body, '404 custom handler')
 
         req = webapp2.Request.blank('/')
@@ -229,104 +230,104 @@ class TestHandler(test_base.BaseTestCase):
 
         req = webapp2.Request.blank('/broken')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '500 Internal Server Error')
+        self.assertEqual(rsp.status_int, 500)
         self.assertEqual(rsp.body, '500 custom handler')
 
     def test_methods(self):
         app.debug = True
         req = webapp2.Request.blank('/methods')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'home sweet home')
 
         req = webapp2.Request.blank('/methods')
         req.method = 'POST'
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'home sweet home - POST')
 
         req = webapp2.Request.blank('/methods')
         req.method = 'PUT'
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'home sweet home - PUT')
 
         req = webapp2.Request.blank('/methods')
         req.method = 'DELETE'
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'home sweet home - DELETE')
 
         req = webapp2.Request.blank('/methods')
         req.method = 'HEAD'
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, '')
 
         req = webapp2.Request.blank('/methods')
         req.method = 'OPTIONS'
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'home sweet home - OPTIONS')
 
         req = webapp2.Request.blank('/methods')
         req.method = 'TRACE'
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'home sweet home - TRACE')
         app.debug = False
 
     def test_positional(self):
         req = webapp2.Request.blank('/07/31/test')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, '07:31:test')
 
         req = webapp2.Request.blank('/10/18/wooohooo')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, '10:18:wooohooo')
 
     def test_redirect(self):
         req = webapp2.Request.blank('/redirect-me')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '301 Moved Permanently')
+        self.assertEqual(rsp.status_int, 301)
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/broken')
 
     def test_redirect_with_callable(self):
         req = webapp2.Request.blank('/redirect-me2')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '301 Moved Permanently')
+        self.assertEqual(rsp.status_int, 301)
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/methods')
 
     def test_redirect_not_permanent(self):
         req = webapp2.Request.blank('/redirect-me3')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '302 Found')
+        self.assertEqual(rsp.status_int, 302)
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/broken')
 
     def test_redirect_with_callable_not_permanent(self):
         req = webapp2.Request.blank('/redirect-me4')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '302 Found')
+        self.assertEqual(rsp.status_int, 302)
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/methods')
 
     def test_redirect_to(self):
         req = webapp2.Request.blank('/redirect-me5')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '302 Found')
+        self.assertEqual(rsp.status_int, 302)
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/2010/07/test?foo=bar#my-anchor')
 
     def test_redirect_abort(self):
         req = webapp2.Request.blank('/redirect-me6')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '302 Found')
-        self.assertEqual(rsp.body, """302 Found
+        self.assertEqual(rsp.status_int, 302)
+        self.assertEqual(rsp.body, """302 Moved Temporarily
 
 The resource was found at http://localhost/somewhere; you should be redirected automatically.  """)
         self.assertEqual(rsp.headers['Location'], 'http://localhost/somewhere')
@@ -347,6 +348,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         debug = app.debug
         app.debug = True
         os.environ['REQUEST_METHOD'] = 'GET'
+        os.environ['PATH_INFO'] = '/'
 
         res = app.run(bare=True)
         #self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
@@ -430,7 +432,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             req = webapp2.Request.blank('/webdav')
             req.method = method
             rsp = req.get_response(app)
-            self.assertEqual(rsp.status, '501 Not Implemented')
+            self.assertEqual(rsp.status_int, 501)
 
         # Let's extend ALLOWED_METHODS with some WebDav methods.
         app.allowed_methods = tuple(app.allowed_methods) + webdav_methods
@@ -442,7 +444,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             req = webapp2.Request.blank('/webdav')
             req.method = method
             rsp = req.get_response(app)
-            self.assertEqual(rsp.status, '200 OK')
+            self.assertEqual(rsp.status_int, 200)
             self.assertEqual(rsp.body, 'Method: %s' % method)
 
         # Restore initial values.
@@ -450,30 +452,33 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         self.assertEqual(len(app.allowed_methods), 7)
 
     def test_escaping(self):
-        request = webapp2.Request.blank('http://localhost:80/')
-        request.app = app
-        app.request = request
-        handler = webapp2.RequestHandler(request, None)
-        handler.app = app
+        def get_req(uri):
+            req = webapp2.Request.blank(uri)
+            app.set_globals(app=app, request=req)
+            handler = webapp2.RequestHandler(req, None)
+            handler.app = req.app = app
+            return req, handler
 
-        for func in (handler.uri_for,):
-            url = func('escape', name='with space')
-            req = webapp2.Request.blank(url)
-            rsp = req.get_response(app)
-            self.assertEqual(rsp.status, '200 OK')
-            self.assertEqual(rsp.body, 'with space')
+        req, handler = get_req('http://localhost:80/')
+        uri = webapp2.uri_for('escape', name='with space')
+        req, handler = get_req(uri)
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'with space')
 
-            url = func('escape', name='with+plus')
-            req = webapp2.Request.blank(url)
-            rsp = req.get_response(app)
-            self.assertEqual(rsp.status, '200 OK')
-            self.assertEqual(rsp.body, 'with+plus')
+        req, handler = get_req('http://localhost:80/')
+        uri = webapp2.uri_for('escape', name='with+plus')
+        req, handler = get_req(uri)
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'with plus')
 
-            url = func('escape', name='with/slash')
-            req = webapp2.Request.blank(url)
-            rsp = req.get_response(app)
-            self.assertEqual(rsp.status, '200 OK')
-            self.assertEqual(rsp.body, 'with/slash')
+        req, handler = get_req('http://localhost:80/')
+        uri = webapp2.uri_for('escape', name='with/slash')
+        req, handler = get_req(uri)
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'with/slash')
 
     def test_handle_exception_with_error(self):
         class HomeHandler(webapp2.RequestHandler):
@@ -490,7 +495,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '500 Internal Server Error')
+        self.assertEqual(rsp.status_int, 500)
 
     def test_handle_exception_with_error_debug(self):
         class HomeHandler(webapp2.RequestHandler):
@@ -522,24 +527,24 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'Hello, function world!')
 
         # Twice to test factory.
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'Hello, function world!')
 
         req = webapp2.Request.blank('/other')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'Hello again, function world!')
 
         # Twice to test factory.
         req = webapp2.Request.blank('/other')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'Hello again, function world!')
 
     def test_custom_method(self):
@@ -557,12 +562,12 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'Hello, custom method world!')
 
         req = webapp2.Request.blank('/other')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'Hello again, custom method world!')
 
     def test_custom_method_with_string(self):
@@ -572,7 +577,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'I am a custom method.')
 
         self.assertRaises(ValueError, webapp2.Route, '/', handler='resources.handlers.CustomMethodHandler:custom_method', handler_method='custom_method')

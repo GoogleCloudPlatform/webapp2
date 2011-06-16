@@ -15,7 +15,7 @@ class TestReturnResponse(test_base.BaseTestCase):
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'Hello, custom response world!')
 
     def test_function_that_returns_string(self):
@@ -34,7 +34,7 @@ class TestReturnResponse(test_base.BaseTestCase):
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'Hello, custom response world!')
 
     def test_function_that_returns_tuple(self):
@@ -53,7 +53,7 @@ class TestReturnResponse(test_base.BaseTestCase):
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '404 Not Found')
+        self.assertEqual(rsp.status_int, 404)
         self.assertEqual(rsp.body, 'Hello, custom response world!')
 
 

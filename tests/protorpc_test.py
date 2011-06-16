@@ -60,7 +60,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.body = '{"my_name": "bob"}'
 
         resp = req.get_response(app)
-        self.assertEqual(resp.status, '200 OK')
+        self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.body, '{"hello": "Hello, bob!"}')
 
     def test_ahoy(self):
@@ -70,7 +70,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.body = '{"my_name": "bob"}'
 
         resp = req.get_response(app)
-        self.assertEqual(resp.status, '200 OK')
+        self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.body, '{"hello": "Ahoy, bob!"}')
 
     def test_hola(self):
@@ -80,7 +80,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.body = '{"my_name": "bob"}'
 
         resp = req.get_response(app2)
-        self.assertEqual(resp.status, '200 OK')
+        self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.body, '{"hello": "Hola, bob!"}')
 
     def test_unrecognized_rpc_format(self):
@@ -90,7 +90,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.body = '{"my_name": "bob"}'
 
         resp = req.get_response(app)
-        self.assertEqual(resp.status, '400 Bad Request')
+        self.assertEqual(resp.status_int, 400)
 
         # Invalid content type
         req = webapp2.Request.blank('/hello.hello')
@@ -99,7 +99,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.body = '{"my_name": "bob"}'
 
         resp = req.get_response(app)
-        self.assertEqual(resp.status, '400 Bad Request')
+        self.assertEqual(resp.status_int, 400)
 
         # Bad request method
         req = webapp2.Request.blank('/hello.hello')
@@ -108,7 +108,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.body = '{"my_name": "bob"}'
 
         resp = req.get_response(app)
-        self.assertEqual(resp.status, '400 Bad Request')
+        self.assertEqual(resp.status_int, 400)
 
     def test_invalid_method(self):
         # Bad request method
@@ -118,7 +118,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.body = '{"my_name": "bob"}'
 
         resp = req.get_response(app)
-        self.assertEqual(resp.status, '400 Bad Request')
+        self.assertEqual(resp.status_int, 400)
 
     def test_invalid_json(self):
         # Bad request method
@@ -128,7 +128,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.body = '"my_name": "bob"'
 
         resp = req.get_response(app)
-        self.assertEqual(resp.status, '400 Bad Request')
+        self.assertEqual(resp.status_int, 400)
 
     def test_response_error(self):
         # Bad request method
@@ -138,7 +138,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.body = '{"my_name": "bob"}'
 
         resp = req.get_response(app)
-        self.assertEqual(resp.status, '500 Internal Server Error')
+        self.assertEqual(resp.status_int, 500)
 
     def test_invalid_paths(self):
         # Not starting with slash.
@@ -171,7 +171,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.body = '{"my_name": "bob"}'
 
         resp = req.get_response(app)
-        self.assertEqual(resp.status, '200 OK')
+        self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.body, '{"hello": "Bonjour, bob!"}')
 
         # Ciao
@@ -181,7 +181,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.body = '{"my_name": "bob"}'
 
         resp = req.get_response(app)
-        self.assertEqual(resp.status, '200 OK')
+        self.assertEqual(resp.status_int, 200)
         self.assertEqual(resp.body, '{"hello": "Ciao, bob!"}')
 
 

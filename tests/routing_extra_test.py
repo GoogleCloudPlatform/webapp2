@@ -36,51 +36,51 @@ class TestRedirectRoute(test_base.BaseTestCase):
     def test_easy_redirect_to(self):
         req = webapp2.Request.blank('/redirect-me-easily')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '301 Moved Permanently')
+        self.assertEqual(rsp.status_int, 301)
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/i-was-redirected-easily')
 
         req = webapp2.Request.blank('/redirect-me-easily2')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '302 Found')
+        self.assertEqual(rsp.status_int, 302)
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/i-was-redirected-easily')
 
         req = webapp2.Request.blank('/redirect-me-easily3')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '302 Found')
+        self.assertEqual(rsp.status_int, 302)
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/i-was-redirected-easily')
 
     def test_redirect_to_name(self):
         req = webapp2.Request.blank('/redirect-to-name')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '301 Moved Permanently')
+        self.assertEqual(rsp.status_int, 301)
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/redirect-to-name-destination')
 
     def test_strict_slash(self):
         req = webapp2.Request.blank('/strict-foo')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'home sweet home')
 
         req = webapp2.Request.blank('/strict-bar/')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '200 OK')
+        self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'home sweet home')
 
         # Now the non-strict...
 
         req = webapp2.Request.blank('/strict-foo/')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '301 Moved Permanently')
+        self.assertEqual(rsp.status_int, 301)
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/strict-foo')
 
         req = webapp2.Request.blank('/strict-bar')
         rsp = req.get_response(app)
-        self.assertEqual(rsp.status, '301 Moved Permanently')
+        self.assertEqual(rsp.status_int, 301)
         self.assertEqual(rsp.body, '')
         self.assertEqual(rsp.headers['Location'], 'http://localhost/strict-bar/')
 
