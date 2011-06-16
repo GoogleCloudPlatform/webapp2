@@ -17,6 +17,9 @@ Development version
 - Copied Request from webapp, so that when using webapp2 outside of the SDK
   they are the same.
 
+- Routes now match the Request path unquoted. See App Engine issues #2636
+  for an explanation.
+
 
 Version 1.7.1 - June 14, 2011
 =============================

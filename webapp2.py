@@ -722,7 +722,7 @@ class SimpleRoute(BaseRoute):
 
         .. seealso:: :meth:`BaseRoute.match`.
         """
-        match = self.regex.match(request.path)
+        match = self.regex.match(urllib.unquote(request.path))
         if match:
             return self, match.groups(), {}
 
@@ -864,7 +864,7 @@ class Route(BaseRoute):
 
         .. seealso:: :meth:`BaseRoute.match`.
         """
-        match = self.regex.match(request.path)
+        match = self.regex.match(urllib.unquote(request.path))
         if not match:
             return None
 
