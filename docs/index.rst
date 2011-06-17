@@ -37,6 +37,7 @@ Tutorials
    :maxdepth: 1
 
    tutorials/quickstart.rst
+   tutorials/quickstart.nogae.rst
    tutorials/gettingstarted/index.rst
 
 

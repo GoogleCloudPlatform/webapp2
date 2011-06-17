@@ -35,7 +35,7 @@ Create an ``app.yaml`` file in your app directory with the following contents:
    - url: /.*
      script: main.py
 
-The create a file ``main.py`` and define a handler to display a
+Then create a file ``main.py`` and define a handler to display a
 'Hello, webapp2!' message::
 
     import webapp2
@@ -74,4 +74,4 @@ following command, giving it the path to the ``hellowebapp2`` directory:
 The web server is now running, listening for requests on port 8080. You can
 test the application by visiting the following URL in your web browser:
 
-    `http://localhost:8080/ <http://localhost:8080/>`_
+    http://localhost:8080/

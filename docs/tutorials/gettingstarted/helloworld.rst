@@ -92,7 +92,7 @@ following command, giving it the path to the ``helloworld`` directory:
 The web server is now running, listening for requests on port 8080. You can
 test the application by visiting the following URL in your web browser:
 
-    `http://localhost:8080/ <http://localhost:8080/>`_
+    http://localhost:8080/
 
 For more information about running the development web server, including how
 to change which port it uses, see `the Dev Web Server reference <http://code.google.com/appengine/docs/python/tools/devserver.html>`_,

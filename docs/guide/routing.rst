@@ -172,6 +172,8 @@ separated by a colon. This is equivalent to the previous example::
 
     webapp2.Route(r'/products', handler='handlers.ProductsHandler:list_products', name='products-list')
 
+.. _guide.routing.restricting-http-methods:
+
 Restricting HTTP methods
 ~~~~~~~~~~~~~~~~~~~~~~~~
 If needed, the route can define a sequence of allowed HTTP methods. Only if the
@@ -185,6 +187,20 @@ This is useful when using functions as handlers, or alternative handlers that
 don't translate the HTTP method to the handler method like the default
 :class:`webapp2.RequestHandler` does.
 
+.. _guide.routing.restricting-uri-schemes:
+
+Restricting URI schemes
+~~~~~~~~~~~~~~~~~~~~~~~
+You can specify the URI schemes allowed for a route, if needed. This is useful
+if some URIs must be accessed using 'http' or 'https' only. For this, set the
+`schemes` parameter when defining a route::
+
+    webapp2.Route(r'/products', handler='handlers.ProductsHandler', name='products-list', schemes=['https'])
+
+The above route will only match if the URI scheme is 'https'.
+
+
+.. _guide.routing.domain-and-subdomain-routing:
 
 Domain and subdomain routing
 ----------------------------

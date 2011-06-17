@@ -184,7 +184,7 @@ URI matching, dispatching or building without subclassing.
 
 Domain and subdomain routing
 ----------------------------
-webapp2 supports `domain and subdomain routing <http://webapp-improved.appspot.com/guide/routing.html#domain-and-subdomain-routing>`_
+webapp2 supports :ref:`domain and subdomain routing <guide.routing.domain-and-subdomain-routing>`
 to restrict URI matches based on the server name::
 
     routes.DomainRoute('www.mydomain.com', [
@@ -194,9 +194,10 @@ to restrict URI matches based on the server name::
 
 Match HTTP methods or URI schemes
 ---------------------------------
-webapp2 routing system allows routes to match against the HTTP method or
-a specific URI scheme. You can set URIs that will only match for 'https',
-for example.
+webapp2 routing system allows routes to be restricted to the
+:ref:`HTTP method <guide.routing.restricting-http-methods>` or a specific
+:ref:`URI scheme <guide.routing.restricting-uri-schemes>`. You can set routes
+that will only match requests using 'https', for example.
 
 
 URI builder
@@ -232,6 +233,13 @@ Single file, well-tested and documented
 webapp2 is an extensively documented `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_
 and has almost 100% test coverage. The source code is explicit, magic-free
 and made to be extended. We like less.
+
+
+Independent of the App Engine SDK
+---------------------------------
+webapp2 doesn't depend on the App Engine SDK. If the SDK is not found, it has
+fallbacks to be used as a general purpose web framework outside of GAE too.
+It supports threaded environments and the latest ``WebOb`` version.
 
 
 Same performance

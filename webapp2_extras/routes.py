@@ -164,7 +164,8 @@ class RedirectRoute(webapp2.Route):
 
     def __init__(self, template, handler=None, name=None, defaults=None,
                  build_only=False, handler_method=None, methods=None,
-                 redirect_to=None, redirect_to_name=None, strict_slash=False):
+                 schemes=None, redirect_to=None, redirect_to_name=None,
+                 strict_slash=False):
         """Initializes a URL route. Extra arguments compared to
         :meth:`webapp2.Route.__init__`:
 
@@ -204,7 +205,7 @@ class RedirectRoute(webapp2.Route):
         super(RedirectRoute, self).__init__(
             template, handler=handler, name=name, defaults=defaults,
             build_only=build_only, handler_method=handler_method,
-            methods=methods)
+            methods=methods, schemes=schemes)
 
         if strict_slash and not name:
             raise ValueError('Routes with strict_slash must have a name.')

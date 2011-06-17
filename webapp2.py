@@ -42,7 +42,7 @@ except ImportError:
         run_bare_wsgi_app = classmethod(_run)
         run_wsgi_app = classmethod(_run)
 
-__version_info__ = ('1', '7', '2')
+__version_info__ = ('1', '7', '3')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.

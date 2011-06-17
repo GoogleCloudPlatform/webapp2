@@ -1,6 +1,8 @@
-Development version
-===================
+Version 1.7.3 - June 17, 2011
+=============================
 - Routes can now only match specific schemes, e.g., 'http' or 'https'.
+
+- Added a tutorial to use webapp2 outside of App Engine.
 
 
 Version 1.7.2 - June 16, 2011
