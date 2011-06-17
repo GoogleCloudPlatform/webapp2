@@ -328,7 +328,7 @@ class Response(webob.Response):
         body = self.body
         if isinstance(body, unicode):
             body = body.encode('utf-8')
-        elif self.charset == 'utf-8':
+        elif self.charset and self.charset.lower() == 'utf-8':
             try:
                 body.decode('utf-8')
             except UnicodeError, e:
