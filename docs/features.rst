@@ -36,16 +36,6 @@ are compatible with the webapp API. Migrating from webapp is intended to
 be a breeze.
 
 
-Full-featured response object
------------------------------
-webapp2 uses a full-featured response object from ``WebOb``. If offers several
-conveniences to set headers, like easy cookies and other goodies::
-
-    class MyHandler(webapp2.RequestHandler):
-        def get(self):
-            self.response.set_cookie('key', 'value', max_age=360, path='/')
-
-
 Compatible with latest WebOb
 ----------------------------
 The ``WebOb`` version included in the SDK was released in 2008. Since then
@@ -56,6 +46,16 @@ those that prefer the latest version can be used as well. This avoids the bugs
 `#719 <http://code.google.com/p/googleappengine/issues/detail?id=719>`_ and
 `#2788 <http://code.google.com/p/googleappengine/issues/detail?id=2788>`_,
 at least.
+
+
+Full-featured response object
+-----------------------------
+webapp2 uses a full-featured response object from ``WebOb``. If offers several
+conveniences to set headers, like easy cookies and other goodies::
+
+    class MyHandler(webapp2.RequestHandler):
+        def get(self):
+            self.response.set_cookie('key', 'value', max_age=360, path='/')
 
 
 Status code exceptions
