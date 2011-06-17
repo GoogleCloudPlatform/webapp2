@@ -56,6 +56,7 @@ _ROUTE_REGEX = re.compile(r"""
     \>               # The exact character ">"
     """, re.VERBOSE)
 
+#: Regex to extract charset from environ.
 _CHARSET_REGEX = re.compile(r';\s*charset=([^;\s]*)', re.I)
 
 # Set same default messages from webapp plus missing ones.
@@ -627,8 +628,6 @@ class BaseRoute(object):
     handler = None
     #: The custom handler method, if handler is a class.
     handler_method = None
-    #: Sequence of allowed HTTP methods. If not set, all methods are allowed.
-    methods = None
 
     def match(self, request):
         """Matches all routes against a request object.
@@ -741,6 +740,10 @@ class Route(BaseRoute):
     handler_method = None
     #: Default parameters values.
     defaults = None
+    #: Sequence of allowed HTTP methods. If not set, all methods are allowed.
+    methods = None
+    #: Sequence of allowed URI schemes. If not set, all schemes are allowed.
+    schemes = None
     # Lazy properties extracted from the route template.
     regex = None
     reverse_template = None
@@ -749,7 +752,8 @@ class Route(BaseRoute):
     kwargs_count = 0
 
     def __init__(self, template, handler=None, name=None, defaults=None,
-                 build_only=False, handler_method=None, methods=None):
+                 build_only=False, handler_method=None, methods=None,
+                 schemes=None):
         """Initializes this route.
 
         :param template:
@@ -809,6 +813,9 @@ class Route(BaseRoute):
         :param methods:
             A sequence of HTTP methods. If set, the route will only match if
             the request method is allowed.
+        :param schemes:
+            A sequence of URI schemes, e.g., ``['http']`` or ``['https']``.
+            If set, the route will only match requests with these schemes.
         """
         self.template = template
         self.handler = handler
@@ -816,6 +823,7 @@ class Route(BaseRoute):
         self.defaults = defaults or {}
         self.build_only = build_only
         self.methods = methods
+        self.schemes = schemes
         # If a handler string has a colon, we take it as the method from a
         # handler class, e.g., 'my_module.MyClass:my_method', and store it
         # in the route as 'handler_method'. Not every route mapping to a class
@@ -865,7 +873,7 @@ class Route(BaseRoute):
         .. seealso:: :meth:`BaseRoute.match`.
         """
         match = self.regex.match(urllib.unquote(request.path))
-        if not match:
+        if not match or self.schemes and request.scheme not in self.schemes:
             return None
 
         if self.methods and request.method not in self.methods:

@@ -8,6 +8,7 @@ Here's an overview of the main improvements of webapp2 compared to webapp.
    :depth: 3
    :backlinks: none
 
+
 Compatible with webapp
 ----------------------
 webapp2 is designed to work with existing webapp apps without any changes.
@@ -67,6 +68,7 @@ Status code exceptions
     # Raise a 'Forbidden' exception and let the 403 error handler do its job.
     self.abort(403)
 
+
 Improved exception handling
 ---------------------------
 HTTP exceptions can be handled by the WSGI application::
@@ -80,6 +82,7 @@ HTTP exceptions can be handled by the WSGI application::
     ])
     app.error_handlers[404] = handle_404
 
+
 Lazy handlers
 -------------
 Lazy handlers can be defined as a string to be imported only when needed::
@@ -87,6 +90,7 @@ Lazy handlers can be defined as a string to be imported only when needed::
     app = webapp2.WSGIApplication([
         ('/', 'my.module.MyHandler'),
     ])
+
 
 Keyword arguments from URI
 --------------------------
@@ -103,6 +107,7 @@ URIs (and you can also create custom route classes, examples
         webapp2.Route('/<year:\d{4}>/<month:\d{2}>', handler=BlogArchiveHandler, name='blog-archive'),
     ])
 
+
 Positional arguments from URI
 -----------------------------
 Positional arguments are also supported, as URI routing is fully compatible
@@ -115,6 +120,7 @@ with webapp::
     app = webapp2.WSGIApplication([
         ('/(\d{4})/(\d{2})', BlogArchiveHandler),
     ])
+
 
 Returned responses
 ------------------
@@ -130,6 +136,7 @@ and it will be used instead of the one created by the application::
     app = webapp2.WSGIApplication([
         webapp2.Route('/', handler=HomeHandler, name='home'),
     ])
+
 
 Custom handler methods
 ----------------------
@@ -148,6 +155,7 @@ For example, handlers can also use custom methods::
         webapp2.Route('/other', handler=MyHandler, name='custom-2', handler_method='my_other_method'),
     ])
 
+
 View functions
 --------------
 In webapp2 handlers don't need necessarily to be classes. For those that
@@ -159,6 +167,7 @@ prefer, functions can be used as well::
     app = webapp2.WSGIApplication([
         webapp2.Route('/', handler=my_sweet_function, name='home'),
     ])
+
 
 More flexible dispatching mechanism
 -----------------------------------
@@ -172,6 +181,7 @@ webapp2 is thought to be lightweight but flexible. It basically provides an
 easy to extend URI routing and dispatching mechanisms: you can even extend
 URI matching, dispatching or building without subclassing.
 
+
 Domain and subdomain routing
 ----------------------------
 webapp2 supports `domain and subdomain routing <http://webapp-improved.appspot.com/guide/routing.html#domain-and-subdomain-routing>`_
@@ -180,6 +190,14 @@ to restrict URI matches based on the server name::
     routes.DomainRoute('www.mydomain.com', [
         webapp2.Route('/', handler=HomeHandler, name='home'),
     ])
+
+
+Match HTTP methods or URI schemes
+---------------------------------
+webapp2 routing system allows routes to match against the HTTP method or
+a specific URI scheme. You can set URIs that will only match for 'https',
+for example.
+
 
 URI builder
 -----------
@@ -194,6 +212,7 @@ redirect_to = redirect + uri_for::
 
     self.redirect_to('blog-archive', year='2010', month='07')
 
+
 Redirection for legacy URIs
 ---------------------------
 Old URIs can be conveniently redirected using a simple route::
@@ -207,14 +226,16 @@ Old URIs can be conveniently redirected using a simple route::
         webapp2.Route('/old-view/<item>', RedirectHandler, defaults={'url': get_redirect_url}),
     ])
 
+
 Single file, well-tested and documented
 ---------------------------------------
 webapp2 is an extensively documented `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_
 and has almost 100% test coverage. The source code is explicit, magic-free
 and made to be extended. We like less.
 
-Performance
------------
+
+Same performance
+----------------
 Best of all is that with all these features, there is no loss of performance:
 cold start times are the same as webapp. Here are some logs of a 'Hello World'
 cold start:
@@ -226,6 +247,7 @@ cold start:
    155ms 77cpu_ms
    197ms 96cpu_ms
    106ms 77cpu_ms
+
 
 Extras
 ------

@@ -254,6 +254,19 @@ class TestRoute(test_base.BaseTestCase):
         req.method = 'PUT'
         self.assertRaises(webapp2.exc.HTTPMethodNotAllowed, route.match, req)
 
+    def test_schemes(self):
+        route = Route(r'/', schemes=['http'])
+        req = Request.blank('http://mydomain.com/')
+        self.assertTrue(route.match(req) is not None)
+        req = Request.blank('https://mydomain.com/')
+        self.assertTrue(route.match(req) is None)
+
+        route = Route(r'/', schemes=['https'])
+        req = Request.blank('https://mydomain.com/')
+        self.assertTrue(route.match(req) is not None)
+        req = Request.blank('http://mydomain.com/')
+        self.assertTrue(route.match(req) is None)
+
 
 if __name__ == '__main__':
     test_base.main()

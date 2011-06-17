@@ -1,3 +1,8 @@
+Development version
+===================
+- Routes can now only match specific schemes, e.g., 'http' or 'https'.
+
+
 Version 1.7.2 - June 16, 2011
 =============================
 - Response is now compatible with latest WebOb.
