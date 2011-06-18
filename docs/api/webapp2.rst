@@ -44,6 +44,9 @@ webapp2
 
 WSGI app
 --------
+.. seealso::
+   :ref:`guide.app`
+
 .. autoclass:: WSGIApplication
    :members: request_class, response_class, request_context_class,
              router_class, config_class,
@@ -58,19 +61,29 @@ WSGI app
 
 Configuration
 -------------
+.. seealso::
+   :ref:`guide.app.config`
+
 .. autoclass:: Config
    :members: __init__, load_config
 
 
 Request and Response
 --------------------
+.. seealso::
+   :ref:`guide.request` and :ref:`guide.response`
+
 .. autoclass:: Request
 
 .. autoclass:: Response
 
 
+
 Request handlers
 ----------------
+.. seealso::
+   :ref:`guide.handlers`
+
 .. autoclass:: RequestHandler
    :members: app, request, response, __init__, initialize, dispatch, error,
              abort, redirect, redirect_to, uri_for, handle_exception,
@@ -83,6 +96,9 @@ Request handlers
 
 URI routing
 -----------
+.. seealso::
+   :ref:`guide.app.router` and :ref:`guide.routing`
+
 .. autoclass:: Router
    :members: route_class, __init__, add, set_matcher, set_dispatcher,
              set_builder, default_matcher, default_dispatcher, default_builder,

@@ -38,10 +38,11 @@ be a breeze.
 
 Compatible with latest WebOb
 ----------------------------
-The ``WebOb`` version included in the SDK was released in 2008. Since then
-many bugs were fixed and the source code became cleaner and better documented.
-webapp2 is compatible with the ``WebOb`` version included in the SDK, but for
-those that prefer the latest version can be used as well. This avoids the bugs
+The ``WebOb`` version included in the App Engine SDK was released in 2008.
+Since then many bugs were fixed and the source code became cleaner and better
+documented. webapp2 is compatible with the ``WebOb`` version included in the
+SDK, but for those that prefer the latest version can be used as well.
+This avoids the bugs
 `#170 <http://code.google.com/p/googleappengine/issues/detail?id=170>`_,
 `#719 <http://code.google.com/p/googleappengine/issues/detail?id=719>`_ and
 `#2788 <http://code.google.com/p/googleappengine/issues/detail?id=2788>`_,
@@ -71,7 +72,7 @@ Status code exceptions
 
 Improved exception handling
 ---------------------------
-HTTP exceptions can be handled by the WSGI application::
+HTTP exceptions can also be handled by the WSGI application::
 
     def handle_404(request, response):
         response.write('Oops! I could swear this page was here!')

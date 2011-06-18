@@ -157,7 +157,7 @@ file::
         main()
 
 Notice that we use ``local_app.WSGIApplication``. This is a special version
-of the WSGI application that is thread safe.
+of the WSGI application that is thread-safe.
 
 
 Test your app

@@ -16,8 +16,8 @@ Create an application
 Create a directory ``hellowebapp2`` for your new app.
 `Download webapp2 <http://code.google.com/p/webapp-improved/downloads/list>`_,
 unpack it and add ``webapp2.py`` to that directory. If you want to use extra
-features such as sessions, extra routes, internationalization and more, also
-add the ``webapp2_extras`` directory to your app.
+features such as sessions, extra routes, localization, internationalization
+and more, also add the ``webapp2_extras`` directory to your app.
 
 
 Hello, webapp2!
