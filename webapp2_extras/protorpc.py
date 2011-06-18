@@ -34,16 +34,17 @@ class ServiceHandler(webapp2.RequestHandler, service_handlers.ServiceHandler):
         self._ServiceHandler__service = service
 
         request = self.request
-        method = getattr(self, request.method.lower(), None)
+        request_method = request.method
+        method = getattr(self, request_method.lower(), None)
         service_path, remote_method = request.route_args
         if method:
-            self.handle(request.method, service_path, remote_method)
+            self.handle(request_method, service_path, remote_method)
         else:
-            message = 'Unsupported HTTP method: %s' % request.method
+            message = 'Unsupported HTTP method: %s' % request_method
             logging.error(message)
             self.response.set_status(405, message)
 
-        if request.method == 'GET':
+        if request_method == 'GET':
             status = self.response.status_int
             if status in (405, 415) or not request.content_type:
                 # Again, now a protected method.
@@ -79,6 +80,78 @@ def _normalize_services(mixed_services):
 
 
 def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
+    """Create a services mapping for use with webapp2.
+
+    Creates basic default configuration and registration for ProtoRPC services.
+    Each service listed in the service mapping has a standard service handler
+    factory created for it.
+
+    The list of mappings can either be an explicit path to service mapping or
+    just services.  If mappings are just services, they will automatically
+    be mapped to their default name.  For example::
+
+        from protorpc import messages
+        from protorpc import remote
+
+        import webapp2
+        from webapp2_extras import protorpc
+
+        class HelloRequest(messages.Message):
+            my_name = messages.StringField(1, required=True)
+
+        class HelloResponse(messages.Message):
+            hello = messages.StringField(1, required=True)
+
+        class HelloService(remote.Service):
+            @remote.method(HelloRequest, HelloResponse)
+            def hello(self, request):
+                return HelloResponse(hello='Hello there, %s!' %
+                                     request.my_name)
+
+        service_mappings = protorpc.service_mapping([
+            ('/hello', HelloService),
+        ])
+
+        app = webapp2.WSGIApplication(routes=service_mappings)
+
+        def main():
+            app.run()
+
+        if __name__ == '__main__':
+            main()
+
+    Specifying a service mapping:
+
+    Normally services are mapped to URL paths by specifying a tuple
+    (path, service):
+
+    - path: The path the service resides on.
+    - service: The service class or service factory for creating new instances
+      of the service.  For more information about service factories, please
+      see remote.Service.new_factory.
+
+    If no tuple is provided, and therefore no path specified, a default path
+    is calculated by using the fully qualified service name using a URL path
+    separator for each of its components instead of a '.'.
+
+    :param services:
+        Can be service type, service factory or string definition name of
+        service being mapped or list of tuples (path, service):
+
+        - path: Path on server to map service to.
+        - service: Service type, service factory or string definition name of
+          service being mapped.
+
+      Can also be a dict.  If so, the keys are treated as the path and values as
+      the service.
+    :param registry_path:
+        Path to give to registry service. Use None to disable registry service.
+    :returns:
+        List of tuples defining a mapping of request handlers compatible with a
+        webapp2 application.
+    :raises:
+        ServiceConfigurationError when duplicate paths are provided.
+    """
     # TODO: clean the convoluted API? Accept services as tuples only, or
     # make different functions to accept different things.
     # For now we are just following the same API from protorpc.
@@ -116,12 +189,27 @@ def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
     return mapping
 
 
-def run_services(services, registry_path=forms.DEFAULT_REGISTRY_PATH,
-                 debug=False):
-    """Handle CGI request using service mapping.
+def get_app(services, registry_path=forms.DEFAULT_REGISTRY_PATH,
+            debug=False, config=None):
+    """Returns a WSGI application configured for the given services.
 
-    Parameters are the same as :func:`service_mapping`.
+    Parameters are the same as :func:`service_mapping`, plus:
+
+    :param debug:
+        WSGI application debug flag: True to enable debug mode.
+    :param config:
+        WSGI application configuration dictionary.
     """
     mappings = service_mapping(services, registry_path=registry_path)
-    app = webapp2.WSGIApplication(routes=mappings, debug=debug)
+    return webapp2.WSGIApplication(routes=mappings, debug=debug, config=config)
+
+
+def run_services(services, registry_path=forms.DEFAULT_REGISTRY_PATH,
+                 debug=False, config=None):
+    """Handle CGI request using service mapping.
+
+    Parameters are the same as :func:`get_app`.
+    """
+    app = get_app(services, registry_path=registry_path, debug=debug,
+                  config=config)
     app.run()
