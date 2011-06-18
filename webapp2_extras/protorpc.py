@@ -46,6 +46,7 @@ class ServiceHandler(webapp2.RequestHandler, service_handlers.ServiceHandler):
         if request.method == 'GET':
             status = self.response.status_int
             if status in (405, 415) or not request.content_type:
+                # Again, now a protected method.
                 self._ServiceHandler__show_info(service_path, remote_method)
 
 
@@ -82,7 +83,6 @@ def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
     # make different functions to accept different things.
     # For now we are just following the same API from protorpc.
     services = _normalize_services(services)
-
     mapping = []
     registry_map = {}
 
@@ -106,7 +106,7 @@ def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
         else:
             paths.add(path)
 
-        # Create service mapping for webapp.
+        # Create service mapping for webapp2.
         new_mapping = ServiceHandlerFactory.default(service).mapping(path)
         mapping.append(new_mapping)
 

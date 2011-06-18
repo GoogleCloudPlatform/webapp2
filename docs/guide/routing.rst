@@ -295,19 +295,19 @@ For example, if you have these routes defined for the application::
 Here are some examples of how to generate URIs inside a handler::
 
     # /
-    url = uri_for('home')
+    uri = uri_for('home')
     # http://localhost:8080/
-    url = uri_for('home', _full=True)
+    uri = uri_for('home', _full=True)
     # /wiki
-    url = uri_for('wiki')
+    uri = uri_for('wiki')
     # http://localhost:8080/wiki
-    url = uri_for('wiki', _full=True)
+    uri = uri_for('wiki', _full=True)
     # http://localhost:8080/wiki#my-heading
-    url = uri_for('wiki', _full=True, _fragment='my-heading')
+    uri = uri_for('wiki', _full=True, _fragment='my-heading')
     # /wiki/my-first-page
-    url = uri_for('wiki-page', page='my-first-page')
+    uri = uri_for('wiki-page', page='my-first-page')
     # /wiki/my-first-page?format=atom
-    url = uri_for('wiki-page', page='my-first-page', format='atom')
+    uri = uri_for('wiki-page', page='my-first-page', format='atom')
 
 Check :meth:`webapp2.Router.build` in the API reference for a complete
 explanation of the parameters used to build URIs.

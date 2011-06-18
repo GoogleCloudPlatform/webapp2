@@ -207,7 +207,7 @@ URIs defined in the aplication can be built. This is more maintanable than
 hardcoding them in the code or templates. Simply use the ``uri_for()``
 function::
 
-    url = uri_for('blog-archive', year='2010', month='07')
+    uri = uri_for('blog-archive', year='2010', month='07')
 
 And a handler helper for redirects builds the URI to redirect to.
 redirect_to = redirect + uri_for::
@@ -219,13 +219,13 @@ Redirection for legacy URIs
 ---------------------------
 Old URIs can be conveniently redirected using a simple route::
 
-    def get_redirect_url(handler, *args, **kwargs):
+    def get_redirect_uri(handler, *args, **kwargs):
         return handler.uri_for('view', item=kwargs.get('item'))
 
     app = webapp2.WSGIApplication([
         webapp2.Route('/view/<item>', ViewHandler, 'view'),
-        webapp2.Route('/old-page', RedirectHandler, defaults={'url': '/view/i-came-from-a-redirect'}),
-        webapp2.Route('/old-view/<item>', RedirectHandler, defaults={'url': get_redirect_url}),
+        webapp2.Route('/old-page', RedirectHandler, defaults={'uri': '/view/i-came-from-a-redirect'}),
+        webapp2.Route('/old-view/<item>', RedirectHandler, defaults={'uri': get_redirect_uri}),
     ])
 
 

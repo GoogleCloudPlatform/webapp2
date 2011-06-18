@@ -26,6 +26,12 @@ is ``text/html; charset=utf-8``, including the encoding behavior. If the
 ``Content-Type`` is changed to have a different charset, webapp2 assumes the
 output is a byte string to be sent verbatim.
 
+.. warning:
+   The ``status`` attribute from a response is the status code plus message,
+   e.g., '200 OK'. This is different from webapp, which has the status code
+   (an integer) stored in ``status``. In webapp2, the status code is stored
+   in the ``status_int`` attribute, as in WebOb.
+
 
 Setting cookies
 ---------------
