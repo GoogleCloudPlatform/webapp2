@@ -21,138 +21,39 @@ from __future__ import absolute_import
 import logging
 
 from protorpc import registry
-from protorpc import remote
-from protorpc.webapp import forms
 from protorpc.webapp import service_handlers
+from protorpc.webapp import forms
 
 import webapp2
 
-# The whole method pattern is an optional regex.  It contains a single
-# group used for mapping to the query parameter.  This is passed to the
-# parameters of 'get' and 'post' on the ServiceHandler.
-_METHOD_PATTERN = r'(?:\.([^?]*))?'
 
+class ServiceHandler(webapp2.RequestHandler, service_handlers.ServiceHandler):
+    def dispatch(self, factory, service):
+        # Unfortunately we need to access the protected attributes.
+        self._ServiceHandler__factory = factory
+        self._ServiceHandler__service = service
 
-class ServiceHandler(webapp2.RequestHandler):
-    def __init__(self, request, response):
-        self.initialize(request, response)
-
-    def dispatch_service(self, factory, service):
-        self.factory = factory
-        self.service = service
-        # TODO: support mapping with named args?
-        # self.request.route_kwargs['service_path']
-        # self.request.route_kwargs['remote_method']
-        self.handle(self.request.method,
-                    self.request.route_args[0],
-                    self.request.route_args[1])
-
-    def handle(self, http_method, service_path, remote_method):
-        factory = self.factory
-        service = self.service
-        # Provide server state to the service, uf the service object has an
-        # "initialize_request_state" method.
-        state_initializer = getattr(service, 'initialize_request_state', None)
-        if state_initializer:
-            request = self.request
-            environ = request.environ
-            request_state = remote.HttpRequestState(
-                remote_host=environ.get('REMOTE_HOST', None),
-                remote_address=environ.get('REMOTE_ADDR', None),
-                server_host=environ.get('SERVER_HOST', None),
-                server_port=int(environ.get('SERVER_PORT', None)),
-                http_method=http_method,
-                service_path=service_path,
-                headers=[(k, request.headers[k]) for k in request.headers]
-            )
-            state_initializer(request_state)
-
-        # Search for mapper to mediate request.
-        for mapper in factory.all_request_mappers():
-            if self.match_request(mapper, http_method, remote_method):
-                break
+        request = self.request
+        method = getattr(self, request.method.lower(), None)
+        service_path, remote_method = request.route_args
+        if method:
+            self.handle(request.method, service_path, remote_method)
         else:
-            message = 'Unrecognized RPC format.'
+            message = 'Unsupported HTTP method: %s' % request.method
             logging.error(message)
-            self.abort(400, detail=message)
+            self.response.set_status(405, message)
 
-        method = getattr(service, remote_method, None)
-        if not method:
-            message = 'Unrecognized RPC method: %s' % remote_method
-            logging.error(message)
-            self.abort(400, detail=message)
-
-        method_info = method.remote
-        try:
-            request = mapper.build_request(self, method_info.request_type)
-        except Exception, e:
-            # We catch everything here (e.g., JSON decode errors),
-            # differently from protorpc.service_handlers
-            logging.error('Error building request: %s', e)
-            self.abort(400, detail='Invalid RPC request.')
-
-        try:
-            response = method(request)
-            mapper.build_response(self, response)
-        except Exception, e:
-            # We catch everything here (e.g., errors in the service method),
-            # differently from protorpc.service_handlers
-            logging.error('Error building response: %s', e)
-            self.abort(500, detail='Invalid RPC response.')
-
-    def match_request(self, mapper, http_method, remote_method):
-        content_type = self.request.content_type
-        if not content_type:
-            return False
-
-        return bool(
-            # Must have remote method name.
-            remote_method and
-            # Must have allowed HTTP method.
-            http_method in mapper.http_methods and
-            # Must have correct content type.
-            content_type.lower() in mapper.content_types)
+        if request.method == 'GET':
+            status = self.response.status_int
+            if status in (405, 415) or not request.content_type:
+                self._ServiceHandler__show_info(service_path, remote_method)
 
 
-class ServiceHandlerFactory(object):
-    def __init__(self, service_factory):
-        self.service_factory = service_factory
-        self.request_mappers = []
-
-    def all_request_mappers(self):
-        return iter(self.request_mappers)
-
-    def add_request_mapper(self, mapper):
-        self.request_mappers.append(mapper)
-
+class ServiceHandlerFactory(service_handlers.ServiceHandlerFactory):
     def __call__(self, request, response):
+        """Construct a new service handler instance."""
         handler = ServiceHandler(request, response)
-        handler.dispatch_service(self, self.service_factory())
-
-    def mapping(self, path):
-        if not path.startswith('/') or path.endswith('/'):
-            raise ValueError('Path must start with a slash and must not end '
-                             'with a slash, got %r.' % path)
-
-        service_url_pattern = r'(%s)%s' % (path, _METHOD_PATTERN)
-        return service_url_pattern, self
-
-    @classmethod
-    def default(cls, service_factory, parameter_prefix=''):
-        factory = cls(service_factory)
-        factory.add_request_mapper(
-            service_handlers.URLEncodedRPCMapper(parameter_prefix))
-        factory.add_request_mapper(service_handlers.ProtobufRPCMapper())
-        factory.add_request_mapper(service_handlers.JSONRPCMapper())
-        return factory
-
-
-def _forms_handler_factory(registry_path=forms.DEFAULT_REGISTRY_PATH):
-    class FormsHandler(forms.FormsHandler):
-        def __init__(self, registry_path=registry_path):
-            forms.FormsHandler.__init__(self, registry_path=registry_path)
-
-    return FormsHandler
+        handler.dispatch(self, self.service_factory())
 
 
 def _normalize_services(mixed_services):
@@ -177,38 +78,6 @@ def _normalize_services(mixed_services):
 
 
 def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
-    """
-    Full example of a HelloService::
-
-        import webapp2
-        from webapp2_extras import protorpc
-
-        from protorpc import messages
-        from protorpc import remote
-
-        class HelloRequest(messages.Message):
-            my_name = messages.StringField(1, required=True)
-
-        class HelloResponse(messages.Message):
-            hello = messages.StringField(1, required=True)
-
-        class HelloService(remote.Service):
-            @remote.method(HelloRequest, HelloResponse)
-            def hello(self, request):
-                return HelloResponse(hello='Hello, %s!' %
-                                     request.my_name)
-
-        mappings = protorpc.service_mapping([
-            ('/hello', HelloService),
-        ])
-        app = webapp2.WSGIApplication(routes=mappings)
-
-        def main():
-            app.run()
-
-        if __name__ == '__main__':
-            main()
-    """
     # TODO: clean the convoluted API? Accept services as tuples only, or
     # make different functions to accept different things.
     # For now we are just following the same API from protorpc.
@@ -220,7 +89,7 @@ def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
     if registry_path is not None:
         registry_service = registry.RegistryService.new_factory(registry_map)
         services = list(services) + [(registry_path, registry_service)]
-        forms_handler = _forms_handler_factory(registry_path=registry_path)
+        forms_handler = forms.FormsHandler(registry_path=registry_path)
         mapping.append((registry_path + r'/form(?:/)?', forms_handler))
         mapping.append((registry_path + r'/form/(.+)', forms.ResourceHandler))
 
@@ -245,3 +114,14 @@ def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
         registry_map[path] = service_class
 
     return mapping
+
+
+def run_services(services, registry_path=forms.DEFAULT_REGISTRY_PATH,
+                 debug=False):
+    """Handle CGI request using service mapping.
+
+    Parameters are the same as :func:`service_mapping`.
+    """
+    mappings = service_mapping(services, registry_path=registry_path)
+    app = webapp2.WSGIApplication(routes=mappings, debug=debug)
+    app.run()

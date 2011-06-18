@@ -14,6 +14,7 @@ sys.path[0:0] = [
     os.path.join(gae_path, 'lib', 'django_0_96'),
     os.path.join(gae_path, 'lib', 'webob'),
     os.path.join(gae_path, 'lib', 'yaml', 'lib'),
+    os.path.join(gae_path, 'lib', 'protorpc'),
 ]
 
 all_tests = [f[:-8] for f in os.listdir(tests_path) if f.endswith('_test.py')]
