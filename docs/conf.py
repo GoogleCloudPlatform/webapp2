@@ -28,6 +28,7 @@ sys.path[0:0] = [
     os.path.join(gae_path, 'lib', 'django_0_96'),
     os.path.join(gae_path, 'lib', 'webob'),
     os.path.join(gae_path, 'lib', 'yaml', 'lib'),
+    os.path.join(gae_path, 'lib', 'protorpc'),
     os.path.join(path, 'lib'),
     path,
 ]
