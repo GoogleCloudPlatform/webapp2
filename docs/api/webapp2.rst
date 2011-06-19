@@ -1,3 +1,9 @@
+.. _Another Do-It-Yourself Framework: http://pythonpaste.org/webob/do-it-yourself.html
+.. _Flask: http://flask.pocoo.org/
+.. _Tornado: http://www.tornadoweb.org/
+.. _WebOb: http://pythonpaste.org/webob/
+.. _Werkzeug: http://werkzeug.pocoo.org/
+
 .. _contents:
 
 webapp2
@@ -74,9 +80,13 @@ Request and Response
    :ref:`guide.request` and :ref:`guide.response`
 
 .. autoclass:: Request
+   :members: app, response, route, route_args, route_kwargs, registry
+             __init__, get, get_all, arguments, get_range,
+
 
 .. autoclass:: Response
-
+   :members: __init__, status, status_message, has_error, clear, wsgi_write,
+             http_status_message
 
 
 Request handlers
@@ -135,9 +145,3 @@ general use.
 .. autofunction:: import_string
 
 .. autofunction:: urlunsplit
-
-
-.. _Another Do-It-Yourself Framework: http://pythonpaste.org/webob/do-it-yourself.html
-.. _Flask: http://flask.pocoo.org/
-.. _Tornado: http://www.tornadoweb.org/
-.. _Werkzeug: http://werkzeug.pocoo.org/

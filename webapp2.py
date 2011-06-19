@@ -42,7 +42,7 @@ except ImportError:
         run_bare_wsgi_app = classmethod(_run)
         run_wsgi_app = classmethod(_run)
 
-__version_info__ = ('1', '7', '3')
+__version_info__ = ('1', '7', '4')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
@@ -77,7 +77,11 @@ for code, message in webapp_status_reasons.iteritems():
 
 
 class Request(webob.Request):
-    """Abstraction for an HTTP request."""
+    """Abstraction for an HTTP request.
+
+    Most extra methods and attributes are ported from webapp. Check the
+    `WebOb documentation <WebOb>`_ for the ones not listed here.
+    """
 
     #: A reference to the active :class:`WSGIApplication` instance.
     app = None
@@ -105,15 +109,20 @@ class Request(webob.Request):
         :param environ:
             A WSGI-compliant environment dictionary.
         """
-        match = _CHARSET_REGEX.search(environ.get('CONTENT_TYPE', ''))
-        if match:
-            charset = match.group(1).lower()
-        else:
-            charset = 'utf-8'
+        charset = kwargs.pop('charset', None)
+        if not charset:
+            match = _CHARSET_REGEX.search(environ.get('CONTENT_TYPE', ''))
+            if match:
+                charset = match.group(1).lower()
+            else:
+                charset = 'utf-8'
 
+        unicode_errors = kwargs.pop('unicode_errors', 'ignore')
+        decode_param_names = kwargs.pop('decode_param_names', True)
         super(Request, self).__init__(environ, charset=charset,
-                                      unicode_errors='ignore',
-                                      decode_param_names=True, *args, **kwargs)
+                                      unicode_errors=unicode_errors,
+                                      decode_param_names=decode_param_names,
+                                      *args, **kwargs)
         self.registry = {}
 
     def get(self, argument_name, default_value='', allow_multiple=False):
@@ -154,7 +163,6 @@ class Request(webob.Request):
 
         We parse the query string and POST payload lazily, so this will be a
         slower operation on the first call.
-
 
         :param argument_name:
             The name of the query or POST argument.
@@ -223,6 +231,9 @@ class Request(webob.Request):
 
 class Response(webob.Response):
     """Abstraction for an HTTP response.
+
+    Most extra methods and attributes are ported from webapp. Check the
+    `WebOb documentation <WebOb>`_ for the ones not listed here.
 
     Differences from webapp.Response:
 
@@ -304,7 +315,7 @@ class Response(webob.Response):
 
     def _get_status_message(self):
         """The response status message, as a string."""
-        return self.status.split()[1]
+        return self.status.split(' ', 1)[1]
 
     def _set_status_message(self, message):
         self.status = '%d %s' % (self.status_int, message)

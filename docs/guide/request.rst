@@ -44,6 +44,16 @@ the body of an HTTP PUT request, the request object provides the attributes
     uploaded_file = self.request.body
 
 
+Getting the current request
+---------------------------
+The active ``Request`` instance can be accessed at any place of your app
+using the function :func:`webapp2.get_request`. It is stored as a class
+attribute, which is fine on App Engine because there are no concurrent
+requests for the same Python interpreter instance. For threaded environments,
+an application that supports threads must be used as described in the
+:ref:`tutorials.quickstart.nogae` tutorial.
+
+
 .GET
 ----
 Query string variables are available in ``request.GET`` or ``request.str_GET``.

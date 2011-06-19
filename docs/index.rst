@@ -100,8 +100,8 @@ Attribution 3.0 License.
 
 webapp2 uses code ported from `Werkzeug <http://werkzeug.pocoo.org/>`_.
 
-webapp2_extras uses code ported from `Werkzeug <http://werkzeug.pocoo.org/>`_
-and `Tornado Web Server <http://www.tornadoweb.org/>`_.
+webapp2_extras uses code ported from Werkzeug and
+`Tornado Web Server <http://www.tornadoweb.org/>`_.
 
 The `Sphinx <http://sphinx.pocoo.org/>`_ theme mimics the
 `App Engine official documentation <http://code.google.com/appengine/docs/>`_.

@@ -41,8 +41,8 @@ Everything is pretty straighforward::
 
 Getting the current app
 -----------------------
-The ``WSGIApplication`` instance can be accessed at any place of your app
-using the function :func:`webapp2.get_app`. This is useful, for example, to
+The active ``WSGIApplication`` instance can be accessed at any place of your
+app using the function :func:`webapp2.get_app`. This is useful, for example, to
 access the app registry or configuration values::
 
     import webapp2
@@ -52,8 +52,8 @@ access the app registry or configuration values::
 
 The application instance is stored as a class attribute, which is fine on App
 Engine because there are no concurrent requests for the same Python interpreter
-instance. For threaded environments, there's an alternative described in the
-:ref:`tutorials.quickstart.nogae` tutorial.
+instance. For threaded environments, an application that supports threads must
+be used as described in the :ref:`tutorials.quickstart.nogae` tutorial.
 
 
 .. _guide.app.router:

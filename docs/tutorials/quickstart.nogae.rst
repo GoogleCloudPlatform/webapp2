@@ -17,6 +17,9 @@ framework, as it offers these features:
 It won't support App Engine services, but if you like webapp, why not use it
 as a WSGI framework ouside of GAE as well? Here we'll describe how to do this.
 
+Here we will describe how to use webapp2 outside of App Engine. If you want to
+use on App Engine, you should read the :ref:`tutorials.quickstart` tutorial.
+
 
 Install a distutils library
 ---------------------------

@@ -191,9 +191,9 @@ don't translate the HTTP method to the handler method like the default
 
 Restricting URI schemes
 ~~~~~~~~~~~~~~~~~~~~~~~
-You can specify the URI schemes allowed for a route, if needed. This is useful
-if some URIs must be accessed using 'http' or 'https' only. For this, set the
-`schemes` parameter when defining a route::
+Like with HTTP methods, you can specify the URI schemes allowed for a route,
+if needed. This is useful if some URIs must be accessed using 'http' or 'https'
+only. For this, set the ``schemes`` parameter when defining a route::
 
     webapp2.Route(r'/products', handler='handlers.ProductsHandler', name='products-list', schemes=['https'])
 
