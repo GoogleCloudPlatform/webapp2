@@ -15,8 +15,27 @@ app = webapp2.WSGIApplication(config={
 class TestSecureCookieSession(test_base.BaseTestCase):
     factory = sessions.SecureCookieSessionFactory
 
-    def test_get_save_session(self):
+    def test_config(self):
+        app = webapp2.WSGIApplication()
+        req = webapp2.Request.blank('/')
+        req.app = app
+        self.assertRaises(Exception, sessions.SessionStore, req)
 
+        # Just to set a special config.
+        app = webapp2.WSGIApplication()
+        req = webapp2.Request.blank('/')
+        req.app = app
+        store = sessions.SessionStore(req, config={
+            'secret_key': 'my-super-secret',
+            'cookie_name': 'foo'
+        })
+        session = store.get_session(factory=self.factory)
+        session['bar'] = 'bar'
+        rsp = webapp2.Response()
+        store.save_sessions(rsp)
+        self.assertTrue(rsp.headers['Set-Cookie'].startswith('foo='))
+
+    def test_get_save_session(self):
         # Round 1 -------------------------------------------------------------
 
         req = webapp2.Request.blank('/')
@@ -64,6 +83,8 @@ class TestSecureCookieSession(test_base.BaseTestCase):
         self.assertEqual(session['c'], 'd')
         self.assertEqual(session['e'], 'f')
         self.assertEqual(session['g'], 'h')
+
+        self.assertRaises(KeyError, session.pop, 'foo')
 
     def test_flashes(self):
 

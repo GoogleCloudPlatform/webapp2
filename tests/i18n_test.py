@@ -388,6 +388,13 @@ class I18nTestCase(test_base.BaseTestCase):
         self.assertEqual(len(req.registry), 1)
         self.assertTrue(isinstance(i, i18n.I18n))
 
+    def test_set_locale_selector(self):
+        i18n.get_store().set_locale_selector(
+            'resources.i18n.locale_selector')
+
+    def test_set_timezone_selector(self):
+        i18n.get_store().set_timezone_selector(
+            'resources.i18n.timezone_selector')
 
 if __name__ == '__main__':
     test_base.main()

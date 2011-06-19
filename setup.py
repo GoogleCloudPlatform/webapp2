@@ -24,7 +24,7 @@ For a complete description of how webapp2 improves webapp, see
 Quick links
 -----------
 
-- `User Manual <http://webapp-improved.appspot.com/>`_
+- `User Guide <http://webapp-improved.appspot.com/>`_
 - `Official Repository <http://code.google.com/p/webapp-improved/>`_
 
 **Featured link:** Nick Johnson's `Using BlobReader, wildcard subdomains and webapp2 <http://blog.notdot.net/2010/08/Using-BlobReader-wildcard-subdomains-and-webapp2>`_

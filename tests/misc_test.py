@@ -63,15 +63,15 @@ class TestMiscellaneous(test_base.BaseTestCase):
         self.assertRaises(ImportError, webapp2.import_string, 'dfasfasdfdsfsd')
         self.assertRaises(AttributeError, webapp2.import_string, 'webob.dfasfasdfdsfsd')
 
-    '''
-    # These were removed to simplify the codebase.
     def test_to_utf8(self):
-        res = webapp2.to_utf8('ábcdéf'.decode('utf-8'))
+        res = webapp2._to_utf8('ábcdéf'.decode('utf-8'))
         self.assertEqual(isinstance(res, str), True)
 
-        res = webapp2.to_utf8('abcdef')
+        res = webapp2._to_utf8('abcdef')
         self.assertEqual(isinstance(res, str), True)
 
+    '''
+    # removed to simplify the codebase.
     def test_to_unicode(self):
         res = webapp2.to_unicode(unicode('foo'))
         self.assertEqual(isinstance(res, unicode), True)
@@ -101,8 +101,15 @@ class TestMiscellaneous(test_base.BaseTestCase):
         self.assertEqual(foo.bar, 1)
         self.assertEqual(foo.bar, 1)
 
-
-
+    def test_redirect(self):
+        app = webapp2.WSGIApplication()
+        req = webapp2.Request.blank('/')
+        req.app = app
+        app.set_globals(app=app, request=req)
+        rsp = webapp2.redirect('http://www.google.com/', code=301, body='Weee')
+        self.assertEqual(rsp.status_int, 301)
+        self.assertEqual(rsp.body, 'Weee')
+        self.assertEqual(rsp.headers.get('Location'), 'http://www.google.com/')
 
 
 if __name__ == '__main__':

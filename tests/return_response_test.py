@@ -56,6 +56,34 @@ class TestReturnResponse(test_base.BaseTestCase):
         self.assertEqual(rsp.status_int, 404)
         self.assertEqual(rsp.body, 'Hello, custom response world!')
 
+    def test_handle_exception_that_returns_response(self):
+        class HomeHandler(webapp2.RequestHandler):
+            def get(self, **kwargs):
+                raise TypeError()
+
+        app = webapp2.WSGIApplication([
+            webapp2.Route('/', HomeHandler, name='home'),
+        ], debug=True)
+        app.error_handlers[500] = 'resources.handlers.handle_exception'
+
+        req = webapp2.Request.blank('/')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'Hello, custom response world!')
+
+    def test_return_is_not_wsgi_app(self):
+        class HomeHandler(webapp2.RequestHandler):
+            def get(self, **kwargs):
+                return ''
+
+        app = webapp2.WSGIApplication([
+            webapp2.Route('/', HomeHandler, name='home'),
+        ], debug=False)
+
+        req = webapp2.Request.blank('/')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 500)
+
 
 if __name__ == '__main__':
     test_base.main()

@@ -12,6 +12,15 @@ import webapp2
 import test_base
 
 
+class BareHandler(object):
+    def __init__(self, request, response):
+        self.response = response
+        response.write('I am not a RequestHandler but I work.')
+
+    def __call__(self, environ, start_response):
+        return self.response(environ, start_response)
+
+
 class HomeHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
         self.response.out.write('home sweet home')
@@ -119,6 +128,7 @@ def get_redirect_url(handler, **kwargs):
 
 
 app = webapp2.WSGIApplication([
+    ('/bare', BareHandler),
     webapp2.Route('/', HomeHandler, name='home'),
     webapp2.Route('/methods', MethodsHandler, name='methods'),
     webapp2.Route('/broken', BrokenHandler),
@@ -154,6 +164,13 @@ class TestHandler(test_base.BaseTestCase):
         super(TestHandler, self).tearDown()
         app.set_globals(app=None, request=None)
         app.error_handlers = {}
+
+    def test_bare_handler(self):
+        app.debug=True
+        rsp = app.get_response('/bare')
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'I am not a RequestHandler but I work.')
+        app.debug=False
 
     def test_200(self):
         rsp = app.get_response('/')
@@ -485,7 +502,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             def get(self, **kwargs):
                 raise TypeError()
 
-        def handle_exception(request, response):
+        def handle_exception(request, response, exception):
             raise ValueError()
 
         app = webapp2.WSGIApplication([

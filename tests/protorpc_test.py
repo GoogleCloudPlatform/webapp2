@@ -5,8 +5,9 @@ import test_base
 
 from protorpc import messages
 from protorpc import remote
+from protorpc.webapp import service_handlers
 
-from webapp2_extras import protorpc as service_handlers
+from webapp2_extras import protorpc
 
 # Hello service ---------------------------------------------------------------
 
@@ -38,13 +39,13 @@ class HolaService(remote.Service):
         return HelloResponse(hello='Hola, %s!' %
                              request.my_name)
 
-service_mappings = service_handlers.service_mapping([
+service_mappings = protorpc.service_mapping([
     ('/hello', HelloService),
     AhoyService,
 ])
 app = webapp2.WSGIApplication(service_mappings, debug=True)
 
-service_mappings2 = service_handlers.service_mapping({
+service_mappings2 = protorpc.service_mapping({
     '/hola': HolaService,
 })
 app2 = webapp2.WSGIApplication(service_mappings2, debug=True)
@@ -59,9 +60,15 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.headers['Content-Type'] = 'application/json'
         req.body = '{"my_name": "bob"}'
 
-        resp = req.get_response(app)
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual(resp.body, '{"hello": "Hello, bob!"}')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, '{"hello": "Hello, bob!"}')
+
+    def test_run_services(self):
+        import os
+        os.environ['REQUEST_METHOD'] = 'POST'
+        os.environ['PATH_INFO'] = '/hello.hello'
+        protorpc.run_services([('/hello', HelloService)], debug=True)
 
     def test_ahoy(self):
         req = webapp2.Request.blank('/protorpc_test/AhoyService.ahoy')
@@ -69,9 +76,9 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.headers['Content-Type'] = 'application/json'
         req.body = '{"my_name": "bob"}'
 
-        resp = req.get_response(app)
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual(resp.body, '{"hello": "Ahoy, bob!"}')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, '{"hello": "Ahoy, bob!"}')
 
     def test_hola(self):
         req = webapp2.Request.blank('/hola.hola')
@@ -79,9 +86,9 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.headers['Content-Type'] = 'application/json'
         req.body = '{"my_name": "bob"}'
 
-        resp = req.get_response(app2)
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual(resp.body, '{"hello": "Hola, bob!"}')
+        rsp = req.get_response(app2)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, '{"hello": "Hola, bob!"}')
 
     def test_unrecognized_rpc_format(self):
         # No content type
@@ -89,8 +96,8 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.method = 'POST'
         req.body = '{"my_name": "bob"}'
 
-        resp = req.get_response(app)
-        self.assertEqual(resp.status_int, 400)
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 400)
 
         # Invalid content type
         req = webapp2.Request.blank('/hello.hello')
@@ -98,8 +105,8 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.headers['Content-Type'] = 'text/xml'
         req.body = '{"my_name": "bob"}'
 
-        resp = req.get_response(app)
-        self.assertEqual(resp.status_int, 415)
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 415)
 
         # Bad request method
         req = webapp2.Request.blank('/hello.hello')
@@ -107,8 +114,8 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.headers['Content-Type'] = 'application/json'
         req.body = '{"my_name": "bob"}'
 
-        resp = req.get_response(app)
-        self.assertEqual(resp.status_int, 405)
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 405)
 
     def test_invalid_method(self):
         # Bad request method
@@ -117,8 +124,8 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.headers['Content-Type'] = 'application/json'
         req.body = '{"my_name": "bob"}'
 
-        resp = req.get_response(app)
-        self.assertEqual(resp.status_int, 400)
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 400)
 
     def test_invalid_json(self):
         # Bad request method
@@ -127,8 +134,8 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.headers['Content-Type'] = 'application/json'
         req.body = '"my_name": "bob"'
 
-        resp = req.get_response(app)
-        self.assertEqual(resp.status_int, 500)
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 500)
 
     def test_response_error(self):
         # Bad request method
@@ -137,28 +144,28 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.headers['Content-Type'] = 'application/json'
         req.body = '{"my_name": "bob"}'
 
-        resp = req.get_response(app)
-        self.assertEqual(resp.status_int, 500)
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 500)
 
     def test_invalid_paths(self):
         # Not starting with slash.
-        #self.assertRaises(ValueError, service_handlers.service_mapping, [
+        #self.assertRaises(ValueError, protorpc.service_mapping, [
         #    ('hello', HelloService),
         #])
         # Trailing slash.
-        self.assertRaises(ValueError, service_handlers.service_mapping, [
+        self.assertRaises(ValueError, protorpc.service_mapping, [
             ('/hello/', HelloService),
         ])
         # Double paths.
-        self.assertRaises(service_handlers.service_handlers.ServiceConfigurationError,
-            service_handlers.service_mapping, [
+        self.assertRaises(protorpc.service_handlers.ServiceConfigurationError,
+            protorpc.service_mapping, [
                 ('/hello', HelloService),
                 ('/hello', HelloService),
             ]
         )
 
     def test_lazy_services(self):
-        service_mappings = service_handlers.service_mapping([
+        service_mappings = protorpc.service_mapping([
             ('/bonjour', 'resources.protorpc_services.BonjourService'),
             'resources.protorpc_services.CiaoService',
         ])
@@ -170,9 +177,9 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.headers['Content-Type'] = 'application/json'
         req.body = '{"my_name": "bob"}'
 
-        resp = req.get_response(app)
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual(resp.body, '{"hello": "Bonjour, bob!"}')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, '{"hello": "Bonjour, bob!"}')
 
         # Ciao
         req = webapp2.Request.blank('/resources/protorpc_services/CiaoService.ciao')
@@ -180,9 +187,9 @@ class TestProtoRPC(test_base.BaseTestCase):
         req.headers['Content-Type'] = 'application/json'
         req.body = '{"my_name": "bob"}'
 
-        resp = req.get_response(app)
-        self.assertEqual(resp.status_int, 200)
-        self.assertEqual(resp.body, '{"hello": "Ciao, bob!"}')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, '{"hello": "Ciao, bob!"}')
 
 
 if __name__ == '__main__':

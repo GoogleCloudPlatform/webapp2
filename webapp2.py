@@ -10,6 +10,7 @@
 """
 from __future__ import with_statement
 
+import cgi
 import logging
 import re
 import urllib
@@ -334,25 +335,18 @@ class Response(webob.Response):
     def wsgi_write(self, start_response):
         """Writes this response using using the given WSGI function.
 
+        This is only here for compatibility with ``webapp.WSGIApplication``.
+
         :param start_response:
             The WSGI-compatible start_response function.
         """
-        body = self.body
-        if isinstance(body, unicode):
-            body = body.encode('utf-8')
-        elif self.charset and self.charset.lower() == 'utf-8':
-            try:
-                body.decode('utf-8')
-            except UnicodeError, e:
-                logging.warning('Response written is not UTF-8: %s', e)
-
         if (self.headers.get('Cache-Control') == 'no-cache' and
             not self.headers.get('Expires')):
             self.headers['Expires'] = 'Fri, 01 Jan 1990 00:00:00 GMT'
-            self.headers['Content-Length'] = str(len(body))
+            self.headers['Content-Length'] = str(len(self.body))
 
         write = start_response(self.status, self.headerlist)
-        write(body)
+        write(self.body)
 
     @staticmethod
     def http_status_message(code):

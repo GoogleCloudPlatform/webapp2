@@ -20,6 +20,10 @@ class OldStyleHandler(webapp.RequestHandler):
     def get(self, text):
         self.response.out.write(text)
 
+class OldStyleHandler2(webapp.RequestHandler):
+    def get(self, text=None):
+        self.response.out.write(text)
+
 class OldStyleHandlerWithError(webapp.RequestHandler):
     def get(self, text):
         raise ValueError()
@@ -31,10 +35,11 @@ class OldStyleHandlerWithError(webapp.RequestHandler):
 app2 = webapp2.WSGIApplication([
     (r'/test/error', OldStyleHandlerWithError),
     (r'/test/(.*)', OldStyleHandler),
+    webapp2.Route(r'/test2/<text>', OldStyleHandler2),
 ], debug=True)
 
 
-class TestWSGIApplication(test_base.BaseTestCase):
+class TestWebapp1(test_base.BaseTestCase):
     def test_old_app_new_handler(self):
         req = webapp2.Request.blank('/test/foo')
         rsp = req.get_response(app)
@@ -48,8 +53,6 @@ class TestWSGIApplication(test_base.BaseTestCase):
 
         self.assertTrue(issubclass(OldStyleHandler, webapp.RequestHandler))
 
-
-class TestRequestHandler(test_base.BaseTestCase):
     def test_new_app_old_handler(self):
         req = webapp2.Request.blank('/test/foo')
         rsp = req.get_response(app2)
@@ -69,6 +72,13 @@ class TestRequestHandler(test_base.BaseTestCase):
         self.assertEqual(rsp.headers.get('Allow'), None)
 
     def test_new_app_old_handler_501(self):
+        app2.allowed_methods = list(app2.allowed_methods) + ['NEW_METHOD']
+        req = webapp2.Request.blank('/test/foo')
+        req.method = 'NEW_METHOD'
+        rsp = req.get_response(app2)
+        self.assertEqual(rsp.status_int, 501)
+
+    def test_new_app_old_handler_501_2(self):
         req = webapp2.Request.blank('/test/foo')
         req.method = 'WHATMETHODISTHIS'
         rsp = req.get_response(app2)
@@ -79,6 +89,12 @@ class TestRequestHandler(test_base.BaseTestCase):
         rsp = req.get_response(app2)
         self.assertEqual(rsp.status_int, 500)
         self.assertEqual(rsp.body, 'ValueError!')
+
+    def test_new_app_old_kwargs(self):
+        req = webapp2.Request.blank('/test2/foo')
+        rsp = req.get_response(app2)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'foo')
 
 
 if __name__ == '__main__':

@@ -1,3 +1,8 @@
+Version 1.7.4 - June 19, 2011
+=============================
+- Fixed bug in response.status_message
+
+
 Version 1.7.3 - June 17, 2011
 =============================
 - Routes can now only match specific schemes, e.g., 'http' or 'https'.
