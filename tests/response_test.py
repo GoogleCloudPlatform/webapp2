@@ -127,6 +127,13 @@ class TestResponse(test_base.BaseTestCase):
 
         rsp = webapp2.Response(body='Page not found!', status=404)
         rsp.wsgi_write(start_response)
+
+        rsp = webapp2.Response(status=res[0], body=res[2], headers=res[1])
+        self.assertEqual(rsp.status, '404 Not Found')
+        self.assertEqual(rsp.body, 'Page not found!')
+
+        '''
+        # webob >= 1.0
         self.assertEqual(res, [
             '404 Not Found',
             [
@@ -137,6 +144,7 @@ class TestResponse(test_base.BaseTestCase):
             ],
             'Page not found!'
         ])
+        '''
 
 
 if __name__ == '__main__':
