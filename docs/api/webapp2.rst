@@ -80,8 +80,8 @@ Request and Response
    :ref:`guide.request` and :ref:`guide.response`
 
 .. autoclass:: Request
-   :members: app, response, route, route_args, route_kwargs, registry
-             __init__, get, get_all, arguments, get_range,
+   :members: app, response, route, route_args, route_kwargs, registry,
+             __init__, get, get_all, arguments, get_range
 
 
 .. autoclass:: Response
