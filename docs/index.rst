@@ -48,8 +48,8 @@ Guide
    :maxdepth: 3
 
    guide/app.rst
-   guide/handlers.rst
    guide/routing.rst
+   guide/handlers.rst
    guide/request.rst
    guide/response.rst
    guide/exceptions.rst
