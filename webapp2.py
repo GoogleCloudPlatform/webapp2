@@ -808,8 +808,6 @@ class Route(BaseRoute):
     Ian Bicking.
     """
 
-    #: Name of the method to be used, if handler is a class.
-    handler_method = None
     #: Default parameters values.
     defaults = None
     #: Sequence of allowed HTTP methods. If not set, all methods are allowed.
@@ -1080,7 +1078,7 @@ class Router(object):
 
         :param func:
             A function that receives ``(router, request)`` and returns
-            a tuple ``(route, args, kwargs)``  if any route matches.
+            a tuple ``(route, args, kwargs)`` if any route matches.
         """
         # Functions are descriptors, so bind it to this instance with __get__.
         self.match = func.__get__(self, self.__class__)
@@ -1113,7 +1111,7 @@ class Router(object):
         raise exc.HTTPNotFound()
 
     def set_dispatcher(self, func):
-        """Sets the function called for dispatch the handler.
+        """Sets the function called to dispatch the handler.
 
         :param func:
             A function that receives ``(router, request, response)``
@@ -1164,7 +1162,7 @@ class Router(object):
         return factory(request, response)
 
     def set_builder(self, func):
-        """Sets the function called for building URIs.
+        """Sets the function called to build URIs.
 
         :param func:
             A function that receives ``(router, request, name, args, kwargs)``
