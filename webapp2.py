@@ -1082,7 +1082,8 @@ class Router(object):
             A function that receives ``(router, request)`` and returns
             a tuple ``(route, args, kwargs)``  if any route matches.
         """
-        self.match = lambda *args, **kwargs: func(self, *args, **kwargs)
+        # Functions are descriptors, so bind it to this instance with __get__.
+        self.match = func.__get__(self, self.__class__)
 
     def default_matcher(self, request):
         """Matches all routes against a request object.
@@ -1118,7 +1119,7 @@ class Router(object):
             A function that receives ``(router, request, response)``
             and returns the value returned by the dispatched handler.
         """
-        self.dispatch = lambda *args, **kwargs: func(self, *args, **kwargs)
+        self.dispatch = func.__get__(self, self.__class__)
 
     def default_dispatcher(self, request, response):
         """Dispatches a handler.
@@ -1169,7 +1170,7 @@ class Router(object):
             A function that receives ``(router, request, name, args, kwargs)``
             and returns a URI.
         """
-        self.build = lambda *args, **kwargs: func(self, *args, **kwargs)
+        self.build = func.__get__(self, self.__class__)
 
     def default_builder(self, request, name, args, kwargs):
         """Returns a URI for a named :class:`Route`.
