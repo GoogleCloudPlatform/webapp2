@@ -45,7 +45,7 @@ except ImportError:
         run_bare_wsgi_app = classmethod(_run)
         run_wsgi_app = classmethod(_run)
 
-__version_info__ = ('1', '7', '4')
+__version_info__ = ('1', '7', '5')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
@@ -236,7 +236,7 @@ class ResponseHeaders(BaseResponseHeaders):
     """Implements methods from ``wsgiref.headers.Headers``, used by webapp."""
     _SPECIAL_CHARS_REGEX = re.compile(r'[ \(\)<>@,;:\\"/\[\]\?=]')
 
-    def _formatparam(self, param, value=None, quote=1):
+    def _formatparam(self, param, value=None, quote=True):
         """Convenience function to format and return a key=value pair.
 
         This will quote the value if needed or if quote is true.
@@ -260,9 +260,9 @@ class ResponseHeaders(BaseResponseHeaders):
         to dashes.  Normally the parameter will be added as key="value" unless
         value is None, in which case only the key will be added.
 
-        Example:
+        Example::
 
-        h.add_header('content-disposition', 'attachment', filename='bud.gif')
+            h.add_header('content-disposition', 'attachment', filename='bud.gif')
 
         Note that unlike the corresponding 'email.message' method, this does
         *not* handle '(charset, language, value)' tuples: all values must be

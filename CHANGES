@@ -1,6 +1,12 @@
+Version 1.7.5 - June 20, 2011
+=============================
+- Implemented methods from ``wsgiref.headers.Headers``, used by
+  webapp.Response.headers.
+
+
 Version 1.7.4 - June 19, 2011
 =============================
-- Fixed bug in response.status_message
+- Fixed bug in response.status_message.
 
 
 Version 1.7.3 - June 17, 2011
