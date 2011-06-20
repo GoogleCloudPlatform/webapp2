@@ -146,6 +146,27 @@ class TestResponse(test_base.BaseTestCase):
         ])
         '''
 
+    def test_get_all(self):
+        rsp = webapp2.Response()
+        rsp.headers.add('Set-Cookie', 'foo=bar;')
+        rsp.headers.add('Set-Cookie', 'baz=ding;')
+
+        self.assertEqual(rsp.headers.get_all('set-cookie'),
+            ['foo=bar;', 'baz=ding;'])
+
+    def test_add_header(self):
+        rsp = webapp2.Response()
+        rsp.headers.add_header('Content-Disposition', 'attachment',
+            filename='bud.gif')
+        self.assertEqual(rsp.headers.get('content-disposition'),
+            'attachment; filename="bud.gif"')
+
+        rsp = webapp2.Response()
+        rsp.headers.add_header('Content-Disposition', 'attachment',
+            filename=None)
+        self.assertEqual(rsp.headers.get('content-disposition'),
+            'attachment; filename')
+
 
 if __name__ == '__main__':
     test_base.main()

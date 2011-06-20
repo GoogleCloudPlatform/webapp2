@@ -22,9 +22,11 @@ from webob import exc
 try:
     # WebOb < 1.0 (App Engine SDK).
     from webob.statusreasons import status_reasons
+    from webob.headerdict import HeaderDict as BaseResponseHeaders
 except ImportError:
     # WebOb >= 1.0.
     from webob.util import status_reasons
+    from webob.headers import ResponseHeaders as BaseResponseHeaders
 
 try:
     from google.appengine.ext import webapp
@@ -230,6 +232,55 @@ class Request(webob.Request):
         return value
 
 
+class ResponseHeaders(BaseResponseHeaders):
+    """Implements methods from ``wsgiref.headers.Headers``, used by webapp."""
+    _SPECIAL_CHARS_REGEX = re.compile(r'[ \(\)<>@,;:\\"/\[\]\?=]')
+
+    def _formatparam(self, param, value=None, quote=1):
+        """Convenience function to format and return a key=value pair.
+
+        This will quote the value if needed or if quote is true.
+        """
+        if value is not None and len(value) > 0:
+            if quote or self._SPECIAL_CHARS_REGEX.search(value):
+                value = value.replace('\\', '\\\\').replace('"', r'\"')
+                return '%s="%s"' % (param, value)
+            else:
+                return '%s=%s' % (param, value)
+        else:
+            return param
+
+    get_all = BaseResponseHeaders.getall
+
+    def add_header(self, _name, _value, **_params):
+        """Extended header setting.
+
+        _name is the header field to add.  keyword arguments can be used to set
+        additional parameters for the header field, with underscores converted
+        to dashes.  Normally the parameter will be added as key="value" unless
+        value is None, in which case only the key will be added.
+
+        Example:
+
+        h.add_header('content-disposition', 'attachment', filename='bud.gif')
+
+        Note that unlike the corresponding 'email.message' method, this does
+        *not* handle '(charset, language, value)' tuples: all values must be
+        strings or None.
+        """
+        parts = []
+        if _value is not None:
+            parts.append(_value)
+
+        for k, v in _params.items():
+            if v is None:
+                parts.append(k.replace('_', '-'))
+            else:
+                parts.append(self._formatparam(k.replace('_', '-'), v))
+
+        self.add(_name, '; '.join(parts))
+
+
 class Response(webob.Response):
     """Abstraction for an HTTP response.
 
@@ -323,6 +374,22 @@ class Response(webob.Response):
 
     status_message = property(_get_status_message, _set_status_message,
                               doc=_get_status_message.__doc__)
+
+    def _get_headers(self):
+        """The headers as a dictionary-like object."""
+        if self._headers is None:
+            self._headers = ResponseHeaders.view_list(self.headerlist)
+
+        return self._headers
+
+    def _set_headers(self, value):
+        if hasattr(value, 'items'):
+            value = value.items()
+
+        self.headerlist = value
+        self._headers = None
+
+    headers = property(_get_headers, _set_headers, doc=_get_headers.__doc__)
 
     def has_error(self):
         """Indicates whether the response was an error response."""
