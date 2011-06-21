@@ -167,6 +167,72 @@ class TestResponse(test_base.BaseTestCase):
         self.assertEqual(rsp.headers.get('content-disposition'),
             'attachment; filename')
 
+    # Tests from Python source: wsgiref.headers.Headers
+    def test_headers_MappingInterface(self):
+        rsp = webapp2.Response()
+        test = [('x','y')]
+        self.assertEqual(len(rsp.headers), 3)
+        rsp.headers = test[:]
+        self.assertEqual(len(rsp.headers), 1)
+        self.assertEqual(rsp.headers.keys(), ['x'])
+        self.assertEqual(rsp.headers.values(), ['y'])
+        self.assertEqual(rsp.headers.items(), test)
+        rsp.headers = test
+        self.assertFalse(rsp.headers.items() is test)  # must be copy!
+
+        rsp = webapp2.Response()
+        h = rsp.headers
+        # this doesn't raise an error in wsgiref.headers.Headers
+        # del h['foo']
+
+        h['Foo'] = 'bar'
+        for m in h.has_key, h.__contains__, h.get, h.get_all, h.__getitem__:
+            self.assertTrue(m('foo'))
+            self.assertTrue(m('Foo'))
+            self.assertTrue(m('FOO'))
+            # this doesn't raise an error in wsgiref.headers.Headers
+            # self.assertFalse(m('bar'))
+
+        self.assertEqual(h['foo'],'bar')
+        h['foo'] = 'baz'
+        self.assertEqual(h['FOO'],'baz')
+        self.assertEqual(h.get_all('foo'),['baz'])
+
+        self.assertEqual(h.get("foo","whee"), "baz")
+        self.assertEqual(h.get("zoo","whee"), "whee")
+        self.assertEqual(h.setdefault("foo","whee"), "baz")
+        self.assertEqual(h.setdefault("zoo","whee"), "whee")
+        self.assertEqual(h["foo"],"baz")
+        self.assertEqual(h["zoo"],"whee")
+
+    def test_headers_RequireList(self):
+        def set_headers():
+            rsp = webapp2.Response()
+            rsp.headers = 'foo'
+            return rsp.headers
+
+        self.assertRaises(TypeError, set_headers)
+
+    def test_headers_Extras(self):
+        rsp = webapp2.Response()
+        rsp.headers = []
+        h = rsp.headers
+        self.assertEqual(str(h),'\r\n')
+
+        h.add_header('foo','bar',baz="spam")
+        self.assertEqual(h['foo'], 'bar; baz="spam"')
+        self.assertEqual(str(h),'foo: bar; baz="spam"\r\n\r\n')
+
+        h.add_header('Foo','bar',cheese=None)
+        self.assertEqual(h.get_all('foo'),
+            ['bar; baz="spam"', 'bar; cheese'])
+
+        self.assertEqual(str(h),
+            'foo: bar; baz="spam"\r\n'
+            'Foo: bar; cheese\r\n'
+            '\r\n'
+        )
+
 
 if __name__ == '__main__':
     test_base.main()

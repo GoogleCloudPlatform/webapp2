@@ -11,7 +11,21 @@
 import base64
 import urllib
 
-from django.utils import simplejson as json
+try:
+    # Preference for installed library with updated fixes.
+    import simplejson as json
+except ImportError:
+    try:
+        # Standard library module in Python >= 2.6.
+        import json
+    except ImportError:
+        try:
+            # Google App Engine.
+            from django.utils import simplejson as json
+        except ImportError:
+            raise RuntimeError(
+                'A JSON parser is required, e.g., simplejson at '
+                'http://pypi.python.org/pypi/simplejson/')
 
 
 def encode(value, *args, **kwargs):

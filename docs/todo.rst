@@ -48,6 +48,6 @@ Create a ``main.py`` for the app bootstrap::
 
 And start it using the virtualenv's python:
 
-.. code-block:: bash
+.. code-block:: text
 
    python main.py

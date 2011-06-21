@@ -280,6 +280,10 @@ class ResponseHeaders(BaseResponseHeaders):
 
         self.add(_name, '; '.join(parts))
 
+    def __str__(self):
+        """Returns the formatted headers ready for HTTP transmission."""
+        return '\r\n'.join(['%s: %s' % kv for kv in self.items()] + ['', ''])
+
 
 class Response(webob.Response):
     """Abstraction for an HTTP response.
@@ -385,6 +389,8 @@ class Response(webob.Response):
     def _set_headers(self, value):
         if hasattr(value, 'items'):
             value = value.items()
+        elif not isinstance(value, list):
+            raise TypeError('Response headers must be a list or dictionary.')
 
         self.headerlist = value
         self._headers = None

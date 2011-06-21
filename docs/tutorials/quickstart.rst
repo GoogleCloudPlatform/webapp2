@@ -71,7 +71,7 @@ it. Clicking Browse simply loads (or reloads)
 If you're not using Google App Engine Launcher, start the web server with the
 following command, giving it the path to the ``hellowebapp2`` directory:
 
-.. code-block:: bash
+.. code-block:: text
 
    google_appengine/dev_appserver.py helloworld/
 

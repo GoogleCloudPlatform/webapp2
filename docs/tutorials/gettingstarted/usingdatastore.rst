@@ -320,7 +320,7 @@ you ask it to do so.
 If you want the development server to erase its datastore prior to starting up,
 use the ``--clear_datastore`` option when starting the server:
 
-.. code-block:: bash
+.. code-block:: text
 
    dev_appserver.py --clear_datastore helloworld/
 
