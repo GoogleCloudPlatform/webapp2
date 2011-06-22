@@ -42,7 +42,7 @@ on it::
            response = request.get_response(main.app)
 
            # Let's check if the response is correct.
-           self.assertEqual(response.status, '200 OK')
+           self.assertEqual(response.status_int, 200)
            self.assertEqual(response.body, 'Hello, world!')
 
 To test different HTTP methods, just change the request object::
@@ -53,7 +53,7 @@ To test different HTTP methods, just change the request object::
 
     # Our handler doesn't implement post(), so this response will have a
     # status code 405.
-    self.assertEqual(response.status, '405 Method Not Allowed')
+    self.assertEqual(response.status_int, 405)
 
 
 Request.blank()
@@ -92,7 +92,7 @@ application, returning the resulting response::
 
     # Test the app, passing parameters to build a request.
     response = app.get_response('/')
-    assert response.status == '200 OK'
+    assert response.status_int == 200
     assert response.body == 'Hello, world!'
 
 Testing handlers could not be easier. Check the

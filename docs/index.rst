@@ -29,7 +29,6 @@ Quick links
 -----------
 - `Download <http://code.google.com/p/webapp-improved/downloads/list>`_
 - `Google Code repository <http://code.google.com/p/webapp-improved/>`_
-- `Upvote webapp2 on reddit <http://www.reddit.com/r/AppEngine/comments/hmt4p/new_webapp2_documentation_feature_list/>`_
 
 
 Tutorials
@@ -60,14 +59,14 @@ Guide
 API Reference - webapp2
 -----------------------
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    api/webapp2.rst
 
 API Reference - webapp2_extras
 ------------------------------
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
    api/extras.i18n.rst
    api/extras.jinja2.rst

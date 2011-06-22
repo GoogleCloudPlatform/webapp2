@@ -45,7 +45,7 @@ except ImportError:
         run_bare_wsgi_app = classmethod(_run)
         run_wsgi_app = classmethod(_run)
 
-__version_info__ = ('1', '7', '5')
+__version_info__ = ('1', '7', '6')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
@@ -234,6 +234,7 @@ class Request(webob.Request):
 
 class ResponseHeaders(BaseResponseHeaders):
     """Implements methods from ``wsgiref.headers.Headers``, used by webapp."""
+
     _SPECIAL_CHARS_REGEX = re.compile(r'[ \(\)<>@,;:\\"/\[\]\?=]')
 
     def _formatparam(self, param, value=None, quote=True):
@@ -280,6 +281,10 @@ class ResponseHeaders(BaseResponseHeaders):
 
         self.add(_name, '; '.join(parts))
 
+    def __str__(self):
+        """Returns the formatted headers ready for HTTP transmission."""
+        return '\r\n'.join(['%s: %s' % kv for kv in self.items()] + ['', ''])
+
 
 class Response(webob.Response):
     """Abstraction for an HTTP response.
@@ -295,6 +300,8 @@ class Response(webob.Response):
       in webapp it is the integer code. The status code as an integer is
       available in ``status_int``, and the status message is available in
       ``status_message``.
+    - ``response.headers`` raises an error when a key that doesn't
+      exist is accessed, differently from ``wsgiref.headers.Headers``.
     """
 
     #: Default charset as in webapp.
@@ -385,6 +392,8 @@ class Response(webob.Response):
     def _set_headers(self, value):
         if hasattr(value, 'items'):
             value = value.items()
+        elif not isinstance(value, list):
+            raise TypeError('Response headers must be a list or dictionary.')
 
         self.headerlist = value
         self._headers = None
@@ -888,18 +897,11 @@ class Route(BaseRoute):
             If set, the route will only match requests with these schemes.
         """
         self.template = template
-        self.handler = handler
         self.name = name
         self.defaults = defaults or {}
         self.build_only = build_only
         self.methods = methods
         self.schemes = schemes
-        # If a handler string has a colon, we take it as the method from a
-        # handler class, e.g., 'my_module.MyClass:my_method', and store it
-        # in the route as 'handler_method'. Not every route mapping to a class
-        # must define a method (the request method is used by default), and for
-        # functions 'handler_method' is of course always None.
-        self.handler_method = handler_method
         if isinstance(handler, basestring) and handler.rfind(':') != -1:
             if handler_method:
                 raise ValueError(
@@ -907,6 +909,9 @@ class Route(BaseRoute):
                     "can't have a colon (got %r)." % handler)
             else:
                 self.handler, self.handler_method = handler.rsplit(':', 1)
+        else:
+            self.handler = handler
+            self.handler_method = handler_method
 
     @cached_property
     def regex(self):

@@ -72,8 +72,8 @@ application after initialization using the ``add()`` method::
     app = webapp2.WSGIApplication()
     app.router.add((r'/', 'handlers.HelloWorldHandler'))
 
-The router also has several methods that allows you to override how URIs are
-matched, dispatched or built without even requiring subclassing. Check the
+The router also has several methods to override how URIs are matched,
+dispatched or built without even requiring subclassing. Check the
 :class:`Router API documentation <webapp2.Router>` for a description of the
 methods :meth:`webapp2.Router.set_matcher`,
 :meth:`webapp2.Router.set_dispatcher` and :meth:`webapp2.Router.set_builder`.
@@ -242,5 +242,5 @@ the application, returning the resulting response from a handler::
 
     # Test the app, passing parameters to build a request.
     response = app.get_response('/')
-    assert response.status == '200 OK'
+    assert response.status_int == 200
     assert response.body == 'Hello, world!'
