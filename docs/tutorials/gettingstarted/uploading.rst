@@ -44,7 +44,7 @@ Uploading the Application
 To upload your finished application to Google App Engine, run the following
 command::
 
-.. code-block:: bash
+.. code-block:: text
 
    appcfg.py update helloworld/
 
@@ -56,7 +56,7 @@ You can now see your application running on App Engine. If you set up a free
 appspot.com domain name, the URL for your website begins with your application
 ID::
 
-.. code-block:: bash
+.. code-block:: text
 
    http://application-id.appspot.com
 
