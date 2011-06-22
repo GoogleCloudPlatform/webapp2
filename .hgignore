@@ -4,5 +4,4 @@
 \.egg-info
 dist
 docs/_build
-docs/project
-tests/project
+\.egg-info$
