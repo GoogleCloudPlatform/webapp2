@@ -1,0 +1,18 @@
+application: webapp2
+version: webapp2
+runtime: python
+api_version: 1
+
+derived_file_type:
+- python_precompiled
+
+handlers:
+- url: /(robots\.txt|favicon\.ico)
+  static_files: static/\1
+  upload: static/.*
+
+- url: /test.*
+  script: test.py
+
+- url: /.*
+  script: main.py

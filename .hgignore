@@ -1,0 +1,8 @@
+\.py[co]$
+\.DS_Store$
+\.coverage
+\.egg-info
+dist
+docs/_build
+docs/project
+tests/project

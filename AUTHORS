@@ -1,0 +1,10 @@
+webapp2 is an experiment by Rodrigo Moraes <rodrigo.moraes@gmail.com>.
+
+Based on `webapp`_ with some functions and ideas borrowed from `WebOb`_,
+`Tornado`_, `Werkzeug`_ and `Flask`_.
+
+.. _webapp: http://code.google.com/appengine/docs/python/tools/webapp/
+.. _WebOb: http://pythonpaste.org/webob/
+.. _Tornado: http://www.tornadoweb.org/
+.. _Werkzeug: http://werkzeug.pocoo.org/
+.. _Flask: http://flask.pocoo.org/
