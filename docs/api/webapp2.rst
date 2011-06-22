@@ -15,6 +15,13 @@ webapp2
   - :class:`WSGIApplication`
   - :class:`RequestContext`
 
+- URI routing
+
+  - :class:`Router`
+  - :class:`BaseRoute`
+  - :class:`SimpleRoute`
+  - :class:`Route`
+
 - Configuration
 
   - :class:`Config`
@@ -28,13 +35,6 @@ webapp2
 
   - :class:`RequestHandler`
   - :class:`RedirectHandler`
-
-- URI routing
-
-  - :class:`Router`
-  - :class:`BaseRoute`
-  - :class:`SimpleRoute`
-  - :class:`Route`
 
 - Utilities
 
@@ -63,6 +63,27 @@ WSGI app
 
 .. autoclass:: RequestContext
    :members: __init__, __enter__, __exit__
+
+
+URI routing
+-----------
+.. seealso::
+   :ref:`guide.app.router` and :ref:`guide.routing`
+
+.. autoclass:: Router
+   :members: route_class, __init__, add, set_matcher, set_dispatcher,
+             set_builder, default_matcher, default_dispatcher, default_builder,
+             build, match, dispatch
+
+.. autoclass:: BaseRoute
+   :members: name, build_only, match, build, get_routes, get_match_routes,
+             get_build_routes
+
+.. autoclass:: SimpleRoute
+   :members: __init__, match
+
+.. autoclass:: Route
+   :members: __init__, match, build
 
 
 Configuration
@@ -102,27 +123,6 @@ Request handlers
 
 .. autoclass:: RedirectHandler
    :members: get
-
-
-URI routing
------------
-.. seealso::
-   :ref:`guide.app.router` and :ref:`guide.routing`
-
-.. autoclass:: Router
-   :members: route_class, __init__, add, set_matcher, set_dispatcher,
-             set_builder, default_matcher, default_dispatcher, default_builder,
-             build, match, dispatch
-
-.. autoclass:: BaseRoute
-   :members: name, build_only, match, build, get_routes, get_match_routes,
-             get_build_routes
-
-.. autoclass:: SimpleRoute
-   :members: __init__, match
-
-.. autoclass:: Route
-   :members: __init__, match, build
 
 
 Utilities

@@ -29,7 +29,6 @@ Quick links
 -----------
 - `Download <http://code.google.com/p/webapp-improved/downloads/list>`_
 - `Google Code repository <http://code.google.com/p/webapp-improved/>`_
-- `Upvote webapp2 on reddit <http://www.reddit.com/r/AppEngine/comments/hmt4p/new_webapp2_documentation_feature_list/>`_
 
 
 Tutorials
