@@ -231,25 +231,36 @@ class Request(webob.Request):
 
         return value
 
+    @classmethod
+    def blank(cls, path, environ=None, base_url=None,
+              headers=None, POST=None, **kwargs):
+        """Adds parameters compatible with WebOb >= 1.0: POST and **kwargs."""
+        if POST is not None:
+            from cStringIO import StringIO
+            data = POST
+            environ = environ or {}
+            environ['REQUEST_METHOD'] = 'POST'
+            if hasattr(data, 'items'):
+                data = data.items()
+            if not isinstance(data, str):
+                data = urllib.urlencode(data)
+            environ['wsgi.input'] = StringIO(data)
+            environ['webob.is_body_seekable'] = True
+            environ['CONTENT_LENGTH'] = str(len(data))
+            environ['CONTENT_TYPE'] = 'application/x-www-form-urlencoded'
+
+        base = super(Request, cls).blank(path, environ=environ,
+                                         base_url=base_url, headers=headers)
+        if kwargs:
+            obj = cls(base.environ, **kwargs)
+            obj.headers.update(base.headers)
+            return obj
+        else:
+            return base
+
 
 class ResponseHeaders(BaseResponseHeaders):
     """Implements methods from ``wsgiref.headers.Headers``, used by webapp."""
-
-    _SPECIAL_CHARS_REGEX = re.compile(r'[ \(\)<>@,;:\\"/\[\]\?=]')
-
-    def _formatparam(self, param, value=None, quote=True):
-        """Convenience function to format and return a key=value pair.
-
-        This will quote the value if needed or if quote is true.
-        """
-        if value is not None and len(value) > 0:
-            if quote or self._SPECIAL_CHARS_REGEX.search(value):
-                value = value.replace('\\', '\\\\').replace('"', r'\"')
-                return '%s="%s"' % (param, value)
-            else:
-                return '%s=%s' % (param, value)
-        else:
-            return param
 
     get_all = BaseResponseHeaders.getall
 
@@ -274,10 +285,12 @@ class ResponseHeaders(BaseResponseHeaders):
             parts.append(_value)
 
         for k, v in _params.items():
-            if v is None:
-                parts.append(k.replace('_', '-'))
+            k = k.replace('_', '-')
+            if v is not None and len(v) > 0:
+                v = v.replace('\\', '\\\\').replace('"', r'\"')
+                parts.append('%s="%s"' % (k, v))
             else:
-                parts.append(self._formatparam(k.replace('_', '-'), v))
+                parts.append(k)
 
         self.add(_name, '; '.join(parts))
 
@@ -300,8 +313,8 @@ class Response(webob.Response):
       in webapp it is the integer code. The status code as an integer is
       available in ``status_int``, and the status message is available in
       ``status_message``.
-    - ``response.headers`` raises an error when a key that doesn't
-      exist is accessed, differently from ``wsgiref.headers.Headers``.
+    - ``response.headers`` raises an exception when a key that doesn't exist
+      is accessed or deleted, differently from ``wsgiref.headers.Headers``.
     """
 
     #: Default charset as in webapp.
@@ -550,11 +563,6 @@ class RequestHandler(object):
         """Issues an HTTP redirect to the given relative URI.
 
         The arguments are described in :func:`redirect`.
-
-        :returns:
-            A :class:`Response` instance.
-
-        .. seealso:: :func:`redirect` and :meth:`redirect_to`.
         """
         return redirect(uri, permanent=permanent, abort=abort, code=code,
                         body=body, request=self.request,
@@ -564,18 +572,7 @@ class RequestHandler(object):
                     _body=None, *args, **kwargs):
         """Convenience method mixing :meth:`redirect` and :meth:`uri_for`.
 
-        Issues an HTTP redirect to a named URI built using :meth:`uri_for`.
-
-        :param _name:
-            The route name to redirect to.
-        :param args:
-            Positional arguments to build the URI.
-        :param kwargs:
-            Keyword arguments to build the URI.
-        :returns:
-            A :class:`Response` instance.
-
-        The other arguments are described in :func:`redirect`.
+        The arguments are described in :func:`redirect` and :func:`uri_for`.
         """
         uri = self.uri_for(_name, *args, **kwargs)
         return self.redirect(uri, permanent=_permanent, abort=_abort,
@@ -1546,12 +1543,12 @@ def get_request():
     return request
 
 
-def uri_for(_name, *args, **kwargs):
+def uri_for(_name, _request=None, *args, **kwargs):
     """A standalone uri_for version that can be passed to templates.
 
     .. seealso:: :meth:`Router.build`.
     """
-    request = get_request()
+    request = _request or get_request()
     return request.app.router.build(request, _name, args, kwargs)
 
 
@@ -1612,6 +1609,28 @@ def redirect(uri, permanent=False, abort=False, code=None, body=None,
         response.write(body)
 
     return response
+
+
+def redirect_to(_name, _permanent=False, _abort=False, _code=None,
+                _body=None, _request=None, _response=None, *args, **kwargs):
+    """Convenience function mixing :func:`redirect` and :func:`uri_for`.
+
+    Issues an HTTP redirect to a named URI built using :func:`uri_for`.
+
+    :param _name:
+        The route name to redirect to.
+    :param args:
+        Positional arguments to build the URI.
+    :param kwargs:
+        Keyword arguments to build the URI.
+    :returns:
+        A :class:`Response` instance.
+
+    The other arguments are described in :func:`redirect`.
+    """
+    uri = uri_for(_name, _request=_request, *args, **kwargs)
+    return redirect(uri, permanent=_permanent, abort=_abort, code=_code,
+                    body=_body, request=_request, response=_response)
 
 
 def abort(code, *args, **kwargs):

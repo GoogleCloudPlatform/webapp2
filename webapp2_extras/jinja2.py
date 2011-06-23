@@ -93,8 +93,8 @@ class Jinja2(object):
             A dictionary of configuration values to be overridden. See
             the available keys in :data:`default_config`.
         """
-        config = app.config.load_config(
-            self.config_key, default_values=default_config, user_values=config,
+        config = app.config.load_config(self.config_key,
+            default_values=default_config, user_values=config,
             required_keys=None)
         kwargs = config['environment_args'].copy()
         enable_i18n = 'jinja2.ext.i18n' in kwargs.get('extensions', [])

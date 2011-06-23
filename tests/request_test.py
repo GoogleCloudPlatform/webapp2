@@ -20,10 +20,29 @@ def add_POST(req, data):
     env['CONTENT_TYPE'] = 'application/x-www-form-urlencoded'
 
 
-class TestResponse(test_base.BaseTestCase):
+class TestRequest(test_base.BaseTestCase):
     def test_get(self):
         req = webapp2.Request.blank('/?1=2&1=3&3=4')
         add_POST(req, '5=6&7=8')
+
+        res = req.get('1')
+        self.assertEqual(res, '2')
+
+        res = req.get('1', allow_multiple=True)
+        self.assertEqual(res, ['2', '3'])
+
+        res = req.get('8')
+        self.assertEqual(res, '')
+
+        res = req.get('8', allow_multiple=True)
+        self.assertEqual(res, [])
+
+        res = req.get('8', default_value='9')
+        self.assertEqual(res, '9')
+
+    def test_get_with_POST(self):
+        req = webapp2.Request.blank('/?1=2&1=3&3=4', POST={5: 6, 7: 8},
+                                    unicode_errors='ignore')
 
         res = req.get('1')
         self.assertEqual(res, '2')

@@ -12,34 +12,6 @@ documentation.
 
 Thanks!
 
-Request.blank()
----------------
-WebOb >= 1.0 supports extra parameters in Request.blank() that makes it easier
-to test POST data. We could support it with this::
-
-    @classmethod
-    def blank(cls, path, environ=None, base_url=None,
-              headers=None, POST=None, **kw):
-        # Extra parameters compatible with WebOb >= 1.0: POST and **kw.
-        if POST is not None:
-            data = POST
-            from cStringIO import StringIO
-            environ = environ or {}
-            environ['REQUEST_METHOD'] = 'POST'
-            if hasattr(data, 'items'):
-                data = data.items()
-            if not isinstance(data, str):
-                data = urllib.urlencode(data)
-            environ['wsgi.input'] = StringIO(data)
-            environ['webob.is_body_seekable'] = True
-            environ['CONTENT_LENGTH'] = str(len(data))
-            environ['CONTENT_TYPE'] = 'application/x-www-form-urlencoded'
-
-        base = webob.Request.blank(path, environ=environ,
-                                   base_url=base_url, headers=headers)
-        obj = cls(base.environ, **kw)
-        obj.headers.update(base.headers)
-        return obj
 
 webapp
 ------

@@ -111,6 +111,18 @@ class TestMiscellaneous(test_base.BaseTestCase):
         self.assertEqual(rsp.body, 'Weee')
         self.assertEqual(rsp.headers.get('Location'), 'http://www.google.com/')
 
+    def test_redirect_to(self):
+        app = webapp2.WSGIApplication([
+            webapp2.Route('/home', handler='', name='home'),
+        ])
+        req = webapp2.Request.blank('/')
+        req.app = app
+        app.set_globals(app=app, request=req)
+        rsp = webapp2.redirect_to('home', _code=301, _body='Weee')
+        self.assertEqual(rsp.status_int, 301)
+        self.assertEqual(rsp.body, 'Weee')
+        self.assertEqual(rsp.headers.get('Location'), 'http://localhost/home')
+
 
 if __name__ == '__main__':
     test_base.main()
