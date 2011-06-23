@@ -58,9 +58,9 @@ To test different HTTP methods, just change the request object::
 
 Request.blank()
 ---------------
-``Request.blank(path, environ=None, base_url=None, headers=None)`` is a class
-method that creates a new request object for testing purposes. It receives the
-following parameters:
+``Request.blank(path, environ=None, base_url=None, headers=None, POST=None, **kwargs)``
+is a class method that creates a new request object for testing purposes. It
+receives the following parameters:
 
 path
   A URI path, urlencoded. The path will become path_info, with any query
@@ -72,6 +72,12 @@ base_url
   from this value.
 headers
   A list of ``(header_name, value)`` tuples for the request headers.
+POST
+  A dictionary of POST data to be encoded, or a urlencoded string. This is a
+  shortcut to set POST data in the environ. When set, the HTTP method is set
+  to 'POST' and the CONTENT_TYPE is set to 'application/x-www-form-urlencoded'.
+**kwargs
+  Extra keyword arguments to be passed to ``Request.__init__()``.
 
 All necessary keys will be added to the environ, but the values you pass in
 will take precedence.

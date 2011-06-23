@@ -154,6 +154,10 @@ class TestResponse(test_base.BaseTestCase):
         self.assertEqual(rsp.headers.get_all('set-cookie'),
             ['foo=bar;', 'baz=ding;'])
 
+        rsp = webapp2.Response()
+        rsp.headers = {'Set-Cookie': 'foo=bar;'}
+        self.assertEqual(rsp.headers.get_all('set-cookie'), ['foo=bar;'])
+
     def test_add_header(self):
         rsp = webapp2.Response()
         rsp.headers.add_header('Content-Disposition', 'attachment',
@@ -166,6 +170,14 @@ class TestResponse(test_base.BaseTestCase):
             filename=None)
         self.assertEqual(rsp.headers.get('content-disposition'),
             'attachment; filename')
+
+        rsp = webapp2.Response()
+        rsp.headers.add_header('Set-Cookie', '', foo='')
+        self.assertEqual(rsp.headers.get_all('set-cookie'), ['; foo'])
+
+        rsp = webapp2.Response()
+        rsp.headers.add_header('Set-Cookie', '', foo=';')
+        self.assertEqual(rsp.headers.get_all('set-cookie'), ['; foo=";"'])
 
     # Tests from Python source: wsgiref.headers.Headers
     def test_headers_MappingInterface(self):

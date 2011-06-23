@@ -122,6 +122,12 @@ reasons: they are also available when the HTTP method is PUT, and not only
 POST.
 
 
+Files
+-----
+Uploaded files are available as ``cgi.FieldStorage`` instances directly in
+``request.POST``.
+
+
 .params
 -------
 ``request.params`` combines the variables from ``GET`` and ``POST``. It can be

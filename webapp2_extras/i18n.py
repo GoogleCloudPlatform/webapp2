@@ -121,8 +121,8 @@ class I18nStore(object):
             A dictionary of configuration values to be overridden. See
             the available keys in :data:`default_config`.
         """
-        config = app.config.load_config(
-            self.config_key, default_values=default_config, user_values=config,
+        config = app.config.load_config(self.config_key,
+            default_values=default_config, user_values=config,
             required_keys=None)
         self.translations = {}
         self.translations_path = config['translations_path']
@@ -137,34 +137,38 @@ class I18nStore(object):
         """Sets the function that defines the locale for a request.
 
         :param func:
-            A callable that receives (request, store) and returns the locale
+            A callable that receives (store, request) and returns the locale
             for a request.
         """
         if func is None:
-            func = self._locale_selector
-        elif isinstance(func, basestring):
-            func = webapp2.import_string(func)
+            self.locale_selector = self.default_locale_selector
+        else:
+            if isinstance(func, basestring):
+                func = webapp2.import_string(func)
 
-        self.locale_selector = func
+            # Functions are descriptors, so bind it to this instance with
+            # __get__.
+            self.locale_selector = func.__get__(self, self.__class__)
 
     def set_timezone_selector(self, func):
         """Sets the function that defines the timezone for a request.
 
         :param func:
-            A callable that receives (request, store) and returns the timezone
+            A callable that receives (store, request) and returns the timezone
             for a request.
         """
         if func is None:
-            func = self._timezone_selector
-        elif isinstance(func, basestring):
-            func = webapp2.import_string(func)
+            self.timezone_selector = self.default_timezone_selector
+        else:
+            if isinstance(func, basestring):
+                func = webapp2.import_string(func)
 
-        self.timezone_selector = func
+            self.timezone_selector = func.__get__(self, self.__class__)
 
-    def _locale_selector(self, request, store):
+    def default_locale_selector(self, request):
         return self.default_locale
 
-    def _timezone_selector(self, request, store):
+    def default_timezone_selector(self, request):
         return self.default_timezone
 
     def get_translations(self, locale):
@@ -234,8 +238,8 @@ class I18n(object):
             A :class:`webapp2.Request` instance.
         """
         self.store = store = get_store(app=request.app)
-        self.set_locale(store.locale_selector(request, store))
-        self.set_timezone(store.timezone_selector(request, store))
+        self.set_locale(store.locale_selector(request))
+        self.set_timezone(store.timezone_selector(request))
 
     def set_locale(self, locale):
         """Sets the locale code for this request.
