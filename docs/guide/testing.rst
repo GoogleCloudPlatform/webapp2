@@ -76,7 +76,7 @@ POST
   A dictionary of POST data to be encoded, or a urlencoded string. This is a
   shortcut to set POST data in the environ. When set, the HTTP method is set
   to 'POST' and the CONTENT_TYPE is set to 'application/x-www-form-urlencoded'.
-**kwargs
+kwargs
   Extra keyword arguments to be passed to ``Request.__init__()``.
 
 All necessary keys will be added to the environ, but the values you pass in
