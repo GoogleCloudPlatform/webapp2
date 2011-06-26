@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import webapp2
-from webapp2_extras import config as webapp2_config
 from webapp2_extras import sessions
 
 import test_base

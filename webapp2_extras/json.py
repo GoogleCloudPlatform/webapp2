@@ -14,7 +14,7 @@ import urllib
 try:
     # Preference for installed library with updated fixes.
     import simplejson as json
-except ImportError:
+except ImportError: # pragma: no cover
     try:
         # Standard library module in Python >= 2.6.
         import json
@@ -73,45 +73,33 @@ def decode(value, *args, **kwargs):
     return json.loads(value, *args, **kwargs)
 
 
-def b64encode(value):
+def b64encode(value, *args, **kwargs):
     """Serializes a value to JSON and encodes it using base64.
 
-    :param value:
-        A value to be encoded.
-    :returns:
-        The encoded value.
+    Parameters and return value are the same from :func:`encode`.
     """
-    return base64.b64encode(encode(value))
+    return base64.b64encode(encode(value, *args, **kwargs))
 
 
-def b64decode(value):
+def b64decode(value, *args, **kwargs):
     """Decodes a value using base64 and deserializes it from JSON.
 
-    :param value:
-        A value to be decoded.
-    :returns:
-        The decoded value.
+    Parameters and return value are the same from :func:`decode`.
     """
-    return decode(base64.b64decode(value))
+    return decode(base64.b64decode(value), *args, **kwargs)
 
 
-def quote(value):
+def quote(value, *args, **kwargs):
     """Serializes a value to JSON and encodes it using urllib.quote.
 
-    :param value:
-        A value to be encoded.
-    :returns:
-        The encoded value.
+    Parameters and return value are the same from :func:`encode`.
     """
-    return urllib.quote(encode(value))
+    return urllib.quote(encode(value, *args, **kwargs))
 
 
-def unquote(value):
+def unquote(value, *args, **kwargs):
     """Decodes a value using urllib.unquote and deserializes it from JSON.
 
-    :param value:
-        A value to be decoded.
-    :returns:
-        The decoded value.
+    Parameters and return value are the same from :func:`decode`.
     """
-    return decode(urllib.unquote(value))
+    return decode(urllib.unquote(value), *args, **kwargs)

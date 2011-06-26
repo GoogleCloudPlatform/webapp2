@@ -42,7 +42,7 @@ class ServiceHandler(webapp2.RequestHandler, service_handlers.ServiceHandler):
         else:
             message = 'Unsupported HTTP method: %s' % request_method
             logging.error(message)
-            self.response.set_status(405, message)
+            self.response.status = '405 %s' % message
 
         if request_method == 'GET':
             status = self.response.status_int

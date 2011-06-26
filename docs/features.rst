@@ -31,9 +31,9 @@ See how this looks familiar::
     if __name__ == '__main__':
         main()
 
-``RequestHandler``, ``Request``, ``Response`` and ``WSGIApplicationm`` classes
-are compatible with the webapp API. Migrating from webapp is intended to
-be a breeze.
+The ``RequestHandler``, ``Request``, ``Response`` and ``WSGIApplication``
+classes are compatible with the webapp API. Migrating from webapp is intended
+to be a breeze.
 
 
 Compatible with latest WebOb
@@ -266,6 +266,6 @@ package provides common utilities that integrate well with webapp2:
 - Localization and internationalization support
 - Sessions using secure cookies, memcache or datastore
 - Extra route classes -- to match subdomains and other conveniences
-- Support for third party libraries: Jinja2 and Google's ProtoRPC
+- Support for third party libraries: Jinja2, Mako and Google's ProtoRPC
 - Support for threaded environments, so that you can use webapp2 outside of
   App Engine

@@ -73,6 +73,7 @@ API Reference - webapp2_extras
    api/extras.json.rst
    api/extras.local.rst
    api/extras.local_app.rst
+   api/extras.mako.rst
    api/extras.protorpc.rst
    api/extras.routes.rst
    api/extras.securecookie.rst

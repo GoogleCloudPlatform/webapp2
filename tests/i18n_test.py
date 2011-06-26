@@ -9,7 +9,6 @@ from pytz.gae import pytz
 
 import webapp2
 from webapp2_extras import i18n
-from webapp2_extras import config
 
 import test_base
 
