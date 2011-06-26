@@ -6,14 +6,14 @@ webapp2. It includes:
 - Localization and internationalization support
 - Sessions using secure cookies, memcache or datastore
 - Extra route classes -- to match subdomains and other conveniences
-- Support for third party libraries: Jinja2 and Google's ProtoRPC
+- Support for third party libraries: Jinja2, Mako and Google's ProtoRPC
 - Support for threaded environments, so that you can use webapp2 outside of
   App Engine
 
-Some of these modules (:ref:`api.extras.i18n`, :ref:`api.extras.jinja2` and
-:ref:`api.extras.sessions`) use configuration values that can be set in the
-WSGI application. When a config key is not set, the modules will use the
-default values they defined.
+Some of these modules (:ref:`api.extras.i18n`, :ref:`api.extras.jinja2`,
+:ref:`api.extras.mako` and :ref:`api.extras.sessions`) use configuration
+values that can be set in the WSGI application. When a config key is not set,
+the modules will use the default values they define.
 
 All configuration keys are optional, except ``secret_key`` that must be set
 for :ref:`api.extras.sessions`. Here is an example that sets the ``secret_key``

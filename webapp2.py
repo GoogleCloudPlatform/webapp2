@@ -19,11 +19,11 @@ import urlparse
 import webob
 from webob import exc
 
-try:
+try: # pragma: no cover
     # WebOb < 1.0 (App Engine SDK).
     from webob.statusreasons import status_reasons
     from webob.headerdict import HeaderDict as BaseResponseHeaders
-except ImportError:
+except ImportError: # pragma: no cover
     # WebOb >= 1.0.
     from webob.util import status_reasons
     from webob.headers import ResponseHeaders as BaseResponseHeaders
@@ -31,7 +31,7 @@ except ImportError:
 try:
     from google.appengine.ext import webapp
     from google.appengine.ext.webapp import util
-except ImportError:
+except ImportError: # pragma: no cover
     # Allow running webapp2 outside of GAE.
     from wsgiref import handlers
 
@@ -45,7 +45,7 @@ except ImportError:
         run_bare_wsgi_app = classmethod(_run)
         run_wsgi_app = classmethod(_run)
 
-__version_info__ = ('1', '7', '6')
+__version_info__ = ('1', '8')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
@@ -540,7 +540,7 @@ class RequestHandler(object):
         :param code:
             HTTP status error code (e.g., 501).
         """
-        self.response.set_status(code)
+        self.response.status = code
         self.response.clear()
 
     def abort(self, code, *args, **kwargs):
@@ -1581,12 +1581,6 @@ def redirect(uri, permanent=False, abort=False, code=None, body=None,
     :returns:
         A :class:`Response` instance.
     """
-    if response is None:
-        request = request or get_request()
-        response = request.app.response_class()
-    else:
-        response.clear()
-
     if uri.startswith(('.', '/')):
         request = request or get_request()
         uri = str(urlparse.urljoin(request.url, uri))
@@ -1603,8 +1597,14 @@ def redirect(uri, permanent=False, abort=False, code=None, body=None,
     if abort:
         _abort(code, headers=[('Location', uri)])
 
+    if response is None:
+        request = request or get_request()
+        response = request.app.response_class()
+    else:
+        response.clear()
+
     response.headers['Location'] = uri
-    response.set_status(code)
+    response.status = code
     if body is not None:
         response.write(body)
 

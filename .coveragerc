@@ -8,6 +8,5 @@ source =
 
 omit =
     /*/webapp2_extras/local.py
-    /*/webapp2_extras/local_app.py
 
 [report]

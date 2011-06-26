@@ -87,9 +87,9 @@ class Local(object):
 
 
 class LocalProxy(object):
-    """Acts as a proxy for a local.  Forwards all operations to
-    a proxied object.  The only operations not supported for forwarding
-    are right handed operands and any kind of assignment.
+    """Acts as a proxy for a local.  Forwards all operations to a proxied
+    object. The only operations not supported for forwarding are right handed
+    operands and any kind of assignment.
 
     Example usage::
 
@@ -101,14 +101,14 @@ class LocalProxy(object):
         user = l('user')
 
     Whenever something is bound to l.user or l.request the proxy objects
-    will forward all operations.  If no object is bound a :exc:`RuntimeError`
+    will forward all operations. If no object is bound a :exc:`RuntimeError`
     will be raised.
 
     To create proxies to :class:`Local` object, call the object as shown above.
     If you want to have a proxy to an object looked up by a function, you can
-    pass  a function to the :class:`LocalProxy` constructor::
+    pass a function to the :class:`LocalProxy` constructor::
 
-        session = LocalProxy(lambda: get_current_request().session)
+        route_kwargs = LocalProxy(lambda: webapp2.get_request().route_kwargs)
     """
 
     __slots__ = ('__local', '__dict__', '__name__')

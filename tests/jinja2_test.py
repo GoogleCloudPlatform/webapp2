@@ -2,14 +2,14 @@
 import os
 
 import webapp2
-from webapp2_extras import config
 from webapp2_extras import jinja2
 
 import test_base
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
-template_path = os.path.join(current_dir, 'resources', 'templates')
-compiled_path = os.path.join(current_dir, 'resources', 'templates_compiled')
+template_path = os.path.join(current_dir, 'resources', 'jinja2_templates')
+compiled_path = os.path.join(current_dir, 'resources',
+                             'jinja2_templates_compiled')
 
 class TestJinja2(test_base.BaseTestCase):
     def test_render_template_with_i18n(self):

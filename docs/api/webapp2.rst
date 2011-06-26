@@ -42,6 +42,7 @@ webapp2
   - :func:`get_app`
   - :func:`get_request`
   - :func:`redirect`
+  - :func:`redirect_to`
   - :func:`uri_for`
   - :func:`abort`
   - :func:`import_string`

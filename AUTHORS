@@ -1,4 +1,4 @@
-webapp2 is an experiment by Rodrigo Moraes <rodrigo.moraes@gmail.com>.
+webapp2 is maintained by Rodrigo Moraes <rodrigo.moraes@gmail.com>.
 
 Based on `webapp`_ with some functions and ideas borrowed from `WebOb`_,
 `Tornado`_, `Werkzeug`_ and `Flask`_.

@@ -21,38 +21,6 @@ To create Jinja2 with custom filters and global variables::
     j = jinja2.get_jinja2(factory=jinja2_factory)
 
 
-Using webapp2 outside of App Engine
------------------------------------
-For dev: install virtualenv, then install packages webapp2, webob and paste
-inside a new environment.
-
-Create a ``main.py`` for the app bootstrap::
-
-    import webapp2
-    from webapp2_extras import local_app
-
-    class MainHandler(webapp2.RequestHandler):
-        def get(self):
-            self.response.out.write('Hello, thread-safe world!')
-
-    app = local_app.WSGIApplication([
-        ('/.*', MainHandler),
-    ], debug=True)
-
-    def main():
-        from paste import httpserver
-        httpserver.serve(app, host='127.0.0.1', port='8080')
-
-    if __name__ == '__main__':
-        main()
-
-And start it using the virtualenv's python:
-
-.. code-block:: text
-
-   python main.py
-
-
 i18n with babel
 ---------------
 1) use _() (or gettext()) in your code and templates. Translated strings set in the module globals or class definitions should use some form of lazy gettext(), because i18n won't be available when the modules are imported.

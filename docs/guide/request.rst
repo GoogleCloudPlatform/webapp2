@@ -124,8 +124,8 @@ POST.
 
 Files
 -----
-Uploaded files are available as ``cgi.FieldStorage`` instances directly in
-``request.POST``.
+Uploaded files are available as ``cgi.FieldStorage`` (see the :py:mod:`cgi`
+module) instances directly in ``request.POST``.
 
 
 .params
