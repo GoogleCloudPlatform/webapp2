@@ -79,21 +79,25 @@ class TestRequest(test_base.BaseTestCase):
         # Also test parity between as_string and from_string / from_file.
         import cgi
         req = webapp2.Request.from_string(_test_req)
-        self.assert_(isinstance(req, webapp2.Request))
-        self.assert_(not repr(req).endswith('(invalid WSGI environ)>'))
-        self.assert_('\n' not in req.http_version or '\r' in req.http_version)
-        self.assert_(',' not in req.host)
-        self.assert_(req.content_length is not None)
+        self.assertTrue(isinstance(req, webapp2.Request))
+        self.assertTrue(not repr(req).endswith('(invalid WSGI environ)>'))
+        self.assertTrue('\n' not in req.http_version or '\r' in req.http_version)
+        self.assertTrue(',' not in req.host)
+        self.assertTrue(req.content_length is not None)
         self.assertEqual(req.content_length, 337)
-        self.assert_('foo' in req.body)
+        self.assertTrue('foo' in req.body)
         bar_contents = "these are the contents of the file 'bar.txt'\r\n"
-        self.assert_(bar_contents in req.body)
+        self.assertTrue(bar_contents in req.body)
         self.assertEqual(req.params['foo'], 'foo')
         bar = req.params['bar']
-        self.assert_(isinstance(bar, cgi.FieldStorage))
+        self.assertTrue(isinstance(bar, cgi.FieldStorage))
         self.assertEqual(bar.type, 'application/octet-stream')
         bar.file.seek(0)
         self.assertEqual(bar.file.read(), bar_contents)
+
+        bar = req.get_all('bar')
+        self.assertEqual(bar[0], bar_contents)
+
         # out should equal contents, except for the Content-Length header,
         # so insert that.
         _test_req_copy = _test_req.replace('Content-Type',
@@ -101,7 +105,7 @@ class TestRequest(test_base.BaseTestCase):
         self.assertEqual(str(req), _test_req_copy)
 
         req2 = webapp2.Request.from_string(_test_req2)
-        self.assert_('host' not in req2.headers)
+        self.assertTrue('host' not in req2.headers)
         self.assertEqual(str(req2), _test_req2.rstrip())
         self.assertRaises(ValueError,
                           webapp2.Request.from_string, _test_req2 + 'xx')

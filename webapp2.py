@@ -59,9 +59,6 @@ _ROUTE_REGEX = re.compile(r"""
     \>               # The exact character ">"
     """, re.VERBOSE)
 
-#: Regex to extract charset from environ.
-_CHARSET_REGEX = re.compile(r';\s*charset=([^;\s]*)', re.I)
-
 # Set same default messages from webapp plus missing ones.
 webapp_status_reasons = {
     203: 'Non-Authoritative Information',
@@ -106,24 +103,12 @@ class Request(webob.Request):
     def __init__(self, environ, *args, **kwargs):
         """Constructs a Request object from a WSGI environment.
 
-        If the charset isn't specified in the Content-Type header, defaults
-        to UTF-8.
-
         :param environ:
             A WSGI-compliant environment dictionary.
         """
-        charset = kwargs.pop('charset', None)
-        if not charset:
-            match = _CHARSET_REGEX.search(environ.get('CONTENT_TYPE', ''))
-            if match:
-                charset = match.group(1).lower()
-            else:
-                charset = 'utf-8'
-
         unicode_errors = kwargs.pop('unicode_errors', 'ignore')
         decode_param_names = kwargs.pop('decode_param_names', True)
-        super(Request, self).__init__(environ, charset=charset,
-                                      unicode_errors=unicode_errors,
+        super(Request, self).__init__(environ, unicode_errors=unicode_errors,
                                       decode_param_names=decode_param_names,
                                       *args, **kwargs)
         self.registry = {}
