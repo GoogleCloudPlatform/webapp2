@@ -7,6 +7,19 @@ def main():
     unittest.main()
 
 
+def check_webob_version(minimum_version):
+    try:
+        # WebOb < 1.0 (App Engine SDK).
+        from webob.statusreasons import status_reasons
+        from webob.headerdict import HeaderDict
+        return 0.96 >= minimum_version
+    except ImportError:
+        # WebOb >= 1.0.
+        from webob.util import status_reasons
+        from webob.headers import ResponseHeaders
+        return 1.0 <= minimum_version
+
+
 class BaseTestCase(unittest.TestCase):
     DEFAULT_APP_ID = testbed.DEFAULT_APP_ID
     DEFAULT_AUTH_DOMAIN = testbed.DEFAULT_AUTH_DOMAIN

@@ -28,7 +28,7 @@ except ImportError: # pragma: no cover
     from webob.util import status_reasons
     from webob.headers import ResponseHeaders as BaseResponseHeaders
 
-try:
+try: # pragma: no cover
     from google.appengine.ext import webapp
     from google.appengine.ext.webapp import util
 except ImportError: # pragma: no cover
@@ -42,8 +42,7 @@ except ImportError: # pragma: no cover
         def _run(self, app):
             handlers.CGIHandler().run(app)
 
-        run_bare_wsgi_app = classmethod(_run)
-        run_wsgi_app = classmethod(_run)
+        run_wsgi_app = run_bare_wsgi_app = classmethod(_run)
 
 __version_info__ = ('1', '8')
 __version__ = '.'.join(__version_info__)
@@ -436,6 +435,12 @@ class Response(webob.Response):
         return message
 
 
+def _request_handler_factory(cls, request, response):
+    """Constructs an instance and dispatches a :class:`RequestHandler`."""
+    handler = cls(request, response)
+    return handler.dispatch()
+
+
 class RequestHandler(object):
     """Base HTTP request handler.
 
@@ -585,11 +590,7 @@ class RequestHandler(object):
         """
         raise
 
-    @classmethod
-    def factory(cls, request, response):
-        """Constructs an instance and dispatches this handler."""
-        handler = cls(request, response)
-        return handler.dispatch()
+    factory = classmethod(_request_handler_factory)
 
 
 class RedirectHandler(RequestHandler):
@@ -884,7 +885,7 @@ class Route(BaseRoute):
         self.build_only = build_only
         self.methods = methods
         self.schemes = schemes
-        if isinstance(handler, basestring) and handler.rfind(':') != -1:
+        if isinstance(handler, basestring) and ':' in handler:
             if handler_method:
                 raise ValueError(
                     "If handler_method is defined in a Route, handler "
@@ -1138,8 +1139,7 @@ class Router(object):
                         _webapp_request_handler_factory)
                 else:
                     # Compatible with webapp2.RequestHandler.
-                    handler.factory = classmethod(
-                        lambda cls, req, rsp: cls(req, rsp))
+                    handler.factory = classmethod(_request_handler_factory)
 
                 factory = handler.factory
             except TypeError:

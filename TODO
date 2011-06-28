@@ -37,6 +37,23 @@ future SDK releases, to make webapp more close to webapp2:
   #2398 (routing based on the URL scheme), #2636 and #5128 (unquote URL paths
   before matching them)
 
+Other issues:
+
+- Webob module bundled in App Engine SDK ignores charset and transfer
+  encoding setting specified in a header part of each multipart field.
+  Issues: #2749
+
+- Sending cookies using webapp.
+  Issues: #5030
+
+- When the content-type is 'application/x-www-form-urlencoded' and POST data
+  is empty the content-type is dropped by Google appengine.
+  Issues: #3426; **works in webapp/webapp2**
+
+- Unable to read POST variables ONCE self.request.body is read
+  Issues: #5118 **can't reproduce in webapp, works in webapp2**
+
+
 More issues
 -----------
 http://code.google.com/p/googleappengine/issues/list?can=2&q=webob

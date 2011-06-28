@@ -7,6 +7,7 @@ import test_base
 
 def _norm_req(s):
     return '\r\n'.join(s.strip().replace('\r','').split('\n'))
+
 _test_req = """
 POST /webob/ HTTP/1.0
 Accept: */*
@@ -74,6 +75,8 @@ class TestRequest(test_base.BaseTestCase):
         self.assertEqual(res, '9')
 
     def test_get_with_FieldStorage(self):
+        if not test_base.check_webob_version(1.0):
+            return
         # A valid request without a Content-Length header should still read
         # the full body.
         # Also test parity between as_string and from_string / from_file.
@@ -148,6 +151,36 @@ class TestRequest(test_base.BaseTestCase):
         req = webapp2.Request.blank('/?1=foo')
         res = req.get_range('1', min_value=1, max_value=99, default=100)
         self.assertEqual(res, 99)
+
+    def test_issue_3426(self):
+        """When the content-type is 'application/x-www-form-urlencoded' and
+        POST data is empty the content-type is dropped by Google appengine.
+        """
+        req = webapp2.Request.blank('/', environ={
+            'REQUEST_METHOD': 'GET',
+            'CONTENT_TYPE': 'application/x-www-form-urlencoded',
+        })
+        self.assertEqual(req.method, 'GET')
+        self.assertEqual(req.content_type, 'application/x-www-form-urlencoded')
+
+    def test_issue_5118(self):
+        """Unable to read POST variables ONCE self.request.body is read."""
+        if not test_base.check_webob_version(1.0):
+            return
+        import cgi
+        req = webapp2.Request.from_string(_test_req)
+        fieldStorage = req.POST.get('bar')
+        self.assertTrue(isinstance(fieldStorage, cgi.FieldStorage))
+        self.assertEqual(fieldStorage.type, 'application/octet-stream')
+        # Double read.
+        fieldStorage = req.POST.get('bar')
+        self.assertTrue(isinstance(fieldStorage, cgi.FieldStorage))
+        self.assertEqual(fieldStorage.type, 'application/octet-stream')
+        # Now read the body.
+        x = req.body
+        fieldStorage = req.POST.get('bar')
+        self.assertTrue(isinstance(fieldStorage, cgi.FieldStorage))
+        self.assertEqual(fieldStorage.type, 'application/octet-stream')
 
 
 if __name__ == '__main__':

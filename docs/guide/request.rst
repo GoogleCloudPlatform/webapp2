@@ -44,18 +44,8 @@ the body of an HTTP PUT request, the request object provides the attributes
     uploaded_file = self.request.body
 
 
-Getting the current request
----------------------------
-The active ``Request`` instance can be accessed at any place of your app
-using the function :func:`webapp2.get_request`. It is stored as a class
-attribute, which is fine on App Engine because there are no concurrent
-requests for the same Python interpreter instance. For threaded environments,
-an application that supports threads must be used as described in the
-:ref:`tutorials.quickstart.nogae` tutorial.
-
-
-.GET
-----
+GET data
+--------
 Query string variables are available in ``request.GET`` or ``request.str_GET``.
 Both carry the same values, but in the first they are converted to unicode,
 and in the latter they are strings.
@@ -88,8 +78,8 @@ available for any request with query strings in the URI, for any HTTP method:
 GET, POST, PUT etc.
 
 
-.POST
------
+POST data
+---------
 Variables url encoded in the body of a request (generally a POST form submitted
 using the ``application/x-www-form-urlencoded`` media type) are available in
 ``request.POST`` or ``request.str_POST`` (the first as unicode and the latter
@@ -122,16 +112,16 @@ reasons: they are also available when the HTTP method is PUT, and not only
 POST.
 
 
+GET + POST data
+---------------
+``request.params`` combines the variables from ``GET`` and ``POST``. It can be
+used when you don't care where the variable comes from.
+
+
 Files
 -----
 Uploaded files are available as ``cgi.FieldStorage`` (see the :py:mod:`cgi`
 module) instances directly in ``request.POST``.
-
-
-.params
--------
-``request.params`` combines the variables from ``GET`` and ``POST``. It can be
-used when you don't care where the variable comes from.
 
 
 Cookies
@@ -194,6 +184,16 @@ route object is available as ``request.route``.
 
 A reference to the active WSGI application is also set as an attribute of the
 request. You can access it in ``request.app``.
+
+
+Getting the current request
+---------------------------
+The active ``Request`` instance can be accessed during a request using the
+function :func:`webapp2.get_request`. It is stored as a class attribute,
+which is fine on App Engine because there are no concurrent requests for
+the same Python interpreter instance. For threaded environments,
+an application that supports threads must be used as described in the
+:ref:`tutorials.quickstart.nogae` tutorial.
 
 
 Learn more about WebOb

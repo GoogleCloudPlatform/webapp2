@@ -220,7 +220,7 @@ dl.function {
   padding-top: 0.8em;
   border-top: 1px dotted #B3B3B3;
 }
-dl.class {
+dl.class, dl.data {
   margin-top: 2em;
   padding-top: 1.8em;
   border-top: 1px solid #999;

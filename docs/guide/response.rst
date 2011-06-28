@@ -84,9 +84,13 @@ comment
 Common Response attributes
 --------------------------
 status
-  Status message, e.g., '404 Not Found'.
+  Status code plus message, e.g., '404 Not Found'. The status can be set
+  passing an ``int``, e.g., ``request.status = 404``, or including the message,
+  e.g., ``request.status = '404 Not Found'``.
 status_int
   Status code as an ``int``, e.g., 404.
+status_message
+  Status message, e.g., 'Not Found'.
 body
   The contents of the response, as a string.
 unicode_body
@@ -110,6 +114,9 @@ etag
   'ETag' header variable. You can automatically generate an etag based on the
   response body calling ``response.md5_etag()``.
 
+
+Learn more about WebOb
+----------------------
 WebOb is an open source third-party library. See the
 `WebOb <http://pythonpaste.org/webob/>`_ documentation for a detailed API
 reference and examples.

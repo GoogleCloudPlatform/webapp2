@@ -9,6 +9,13 @@ between requests. The WSGI app is also responsible for handling uncaught
 exceptions, avoiding that stack traces "leak" to the client when in production.
 Let's take a look at it more deeply now.
 
+If you're new to Python or don't understand what the "WSGI" word means, read
+the `Another Do-It-Yourself Framework <http://pythonpaste.org/webob/do-it-yourself.html>`_
+tutorial by Ian Bicking. It is a very recommended introduction to WSGI and
+you should at least take a quick look at the concepts, but following the whole
+tutorial is really worth. A more advanced reading is the WSGI specification
+described in the `PEP 333 <http://www.python.org/dev/peps/pep-0333/>`_.
+
 
 Initialization
 --------------
@@ -39,30 +46,25 @@ Everything is pretty straighforward::
     app = webapp2.WSGIApplication(routes=routes, debug=True, config=config)
 
 
-Getting the current app
------------------------
-The active ``WSGIApplication`` instance can be accessed at any place of your
-app using the function :func:`webapp2.get_app`. This is useful, for example, to
-access the app registry or configuration values::
-
-    import webapp2
-
-    app = webapp2.get_app()
-    config_value = app.config.get('my-config-key')
-
-The application instance is stored as a class attribute, which is fine on App
-Engine because there are no concurrent requests for the same Python interpreter
-instance. For threaded environments, an application that supports threads must
-be used as described in the :ref:`tutorials.quickstart.nogae` tutorial.
-
-
 .. _guide.app.router:
 
 Router
 ------
 :ref:`guide.routing` is a central piece in webapp2, and its main component is
-the :class:`webapp2.Router` class, available in the application as the
+the :class:`webapp2.Router` object, available in the application as the
 :attr:`webapp2.WSGIApplication.router` attribute.
+
+The router object is responsible for everything related to mapping URIs to
+handlers. The router:
+
+- Stores registered "routes", which map URIs to the application handlers
+  that will handle those requests.
+- Matches the current request against the registered routes and returns the
+  handler to be used for that request (or raises a ``HTTPNotFound`` exception
+  if not handler was found).
+- Dispatches the matched handler, i.e., calling it and returning a response
+  to the ``WSGIApplication``.
+- Builds URIs for the registered routes.
 
 Using the ``router`` attribute you can, for example, add new routes to the
 application after initialization using the ``add()`` method::
@@ -72,8 +74,8 @@ application after initialization using the ``add()`` method::
     app = webapp2.WSGIApplication()
     app.router.add((r'/', 'handlers.HelloWorldHandler'))
 
-The router also has several methods to override how URIs are matched,
-dispatched or built without even requiring subclassing. Check the
+The router has several methods to override how URIs are matched, dispatched or
+built without even requiring subclassing. Check the
 :class:`Router API documentation <webapp2.Router>` for a description of the
 methods :meth:`webapp2.Router.set_matcher`,
 :meth:`webapp2.Router.set_dispatcher` and :meth:`webapp2.Router.set_builder`.
@@ -244,3 +246,20 @@ the application, returning the resulting response from a handler::
     response = app.get_response('/')
     assert response.status_int == 200
     assert response.body == 'Hello, world!'
+
+
+Getting the current app
+-----------------------
+The active ``WSGIApplication`` instance can be accessed at any place of your
+app using the function :func:`webapp2.get_app`. This is useful, for example, to
+access the app registry or configuration values::
+
+    import webapp2
+
+    app = webapp2.get_app()
+    config_value = app.config.get('my-config-key')
+
+The application instance is stored as a class attribute, which is fine on App
+Engine because there are no concurrent requests for the same Python interpreter
+instance. For threaded environments, an application that supports threads must
+be used as described in the :ref:`tutorials.quickstart.nogae` tutorial.

@@ -5,7 +5,7 @@
 
     Jinja2 template support for webapp2.
 
-    Learn more about Jinja2: http://jinja.pocoo.org/2/
+    Learn more about Jinja2: http://jinja.pocoo.org/
 
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.

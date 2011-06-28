@@ -139,6 +139,8 @@ general use.
 
 .. autofunction:: redirect
 
+.. autofunction:: redirect_to
+
 .. autofunction:: uri_for
 
 .. autofunction:: abort
