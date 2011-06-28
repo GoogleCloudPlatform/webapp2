@@ -244,6 +244,20 @@ class TestRoute(test_base.BaseTestCase):
         res = router.build(req, '', (), {})
         self.assertEqual(res, 'http://www.google.com')
 
+    def test_set_wrapper(self):
+        def custom_wrapper(router, handler):
+            return router.default_wrapper(handler)
+
+        def myhandler(request, response):
+            response.write('hello')
+
+        app = webapp2.WSGIApplication([('/', myhandler)])
+        app.router.set_wrapper(custom_wrapper)
+
+        rsp = app.get_response('/')
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'hello')
+
     def test_methods(self):
         route = Route(r'/', methods=['GET', 'POST'])
         router = Router([route])
