@@ -17,8 +17,8 @@ class BareHandler(object):
         self.response = response
         response.write('I am not a RequestHandler but I work.')
 
-    def __call__(self, environ, start_response):
-        return self.response(environ, start_response)
+    def dispatch(self):
+        return self.response
 
 
 class HomeHandler(webapp2.RequestHandler):
@@ -164,13 +164,6 @@ class TestHandler(test_base.BaseTestCase):
         super(TestHandler, self).tearDown()
         app.set_globals(app=None, request=None)
         app.error_handlers = {}
-
-    def test_bare_handler(self):
-        app.debug=True
-        rsp = app.get_response('/bare')
-        self.assertEqual(rsp.status_int, 200)
-        self.assertEqual(rsp.body, 'I am not a RequestHandler but I work.')
-        app.debug=False
 
     def test_200(self):
         rsp = app.get_response('/')
@@ -598,6 +591,47 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         self.assertEqual(rsp.body, 'I am a custom method.')
 
         self.assertRaises(ValueError, webapp2.Route, '/', handler='resources.handlers.CustomMethodHandler:custom_method', handler_method='custom_method')
+
+    def test_factory_1(self):
+        app.debug = True
+        rsp = app.get_response('/bare')
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'I am not a RequestHandler but I work.')
+        app.debug = False
+
+    def test_factory_2(self):
+        """Very crazy stuff. Please ignore it."""
+        class MyHandler(object):
+            def __init__(self, request, response):
+                self.request = request
+                self.response = response
+
+            def __new__(cls, *args, **kwargs):
+                return cls.create_instance(*args, **kwargs)()
+
+            @classmethod
+            def create_instance(cls, *args, **kwargs):
+                obj = object.__new__(cls)
+                if isinstance(obj, cls):
+                    obj.__init__(*args, **kwargs)
+
+                return obj
+
+            def __call__(self):
+                return self
+
+            def dispatch(self):
+                self.response.write('hello')
+
+        app = webapp2.WSGIApplication([
+            webapp2.Route('/', handler=MyHandler),
+        ], debug=True)
+
+        req = webapp2.Request.blank('/')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'hello')
+
 
 if __name__ == '__main__':
     test_base.main()

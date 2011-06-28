@@ -238,9 +238,11 @@ and made to be extended. We like less.
 
 Independent of the App Engine SDK
 ---------------------------------
-webapp2 doesn't depend on the App Engine SDK. If the SDK is not found, it has
-fallbacks to be used as a general purpose web framework outside of GAE too.
-It supports threaded environments and the latest ``WebOb`` version.
+webapp2 doesn't depend on the Google App Engine SDK and
+:ref:`can even be used outside of App Engine <tutorials.quickstart.nogae>`.
+If the SDK is not found, it has fallbacks to be used as a general purpose
+web framework in any server. It supports threaded environments and the latest
+``WebOb`` version.
 
 
 Same performance
