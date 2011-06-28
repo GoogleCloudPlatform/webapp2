@@ -682,6 +682,8 @@ class BaseRoute(object):
     build_only = False
     #: The handler or string or in dotted notation to be lazily imported.
     handler = None
+    #: The handler ready for dispatching.
+    loaded_handler = None
     #: The custom handler method, if handler is a class.
     handler_method = None
 
@@ -1000,6 +1002,11 @@ class Route(BaseRoute):
 
 
 class BaseHandlerFactory(object):
+    """A factory to dispatch a handler.
+
+    This is the most basic one, used when the handler is a simple function:
+    it just calls the handler and returns its result.
+    """
     def __init__(self, handler):
         self.handler = handler
 
@@ -1008,6 +1015,11 @@ class BaseHandlerFactory(object):
 
 
 class WebappHandlerFactory(BaseHandlerFactory):
+    """A factory to dispatch a ``webapp.RequestHandler``.
+
+    Like in webapp, the handler is constructed, then ``initialize()`` is
+    called, then the method corresponding to the HTTP request method is called.
+    """
     def __call__(self, request, response):
         handler = self.handler()
         handler.initialize(request, response)
@@ -1028,6 +1040,10 @@ class WebappHandlerFactory(BaseHandlerFactory):
 
 
 class Webapp2HandlerFactory(BaseHandlerFactory):
+    """A factory to dispatch a ``webapp2.RequestHandler``.
+
+    The handler is constructed then ``dispatch()`` is called.
+    """
     def __call__(self, request, response):
         handler = self.handler(request, response)
         return handler.dispatch()
@@ -1050,7 +1066,7 @@ class Router(object):
     app = None
     match_routes = None
     build_routes = None
-    _handlers = None
+    handlers = None
 
     def __init__(self, routes=None):
         """Initializes the router.
@@ -1065,7 +1081,7 @@ class Router(object):
         self.wrap = self.default_wrapper
         self.build = self.default_builder
         # Handler classes imported lazily.
-        self._handlers = {}
+        self.handlers = {}
         # All routes that can be matched.
         self.match_routes = []
         # All routes that can be built.
@@ -1100,6 +1116,33 @@ class Router(object):
         # Functions are descriptors, so bind it to this instance with __get__.
         self.match = func.__get__(self, self.__class__)
 
+    def set_dispatcher(self, func):
+        """Sets the function called to dispatch the handler.
+
+        :param func:
+            A function that receives ``(router, request, response)``
+            and returns the value returned by the dispatched handler.
+        """
+        self.dispatch = func.__get__(self, self.__class__)
+
+    def set_wrapper(self, func):
+        """Sets the function to prepare loaded handlers for dispatch.
+
+        :param func:
+            A function that receives ``(router, handler)`` and returns a
+            handler callable.
+        """
+        self.wrap = func.__get__(self, self.__class__)
+
+    def set_builder(self, func):
+        """Sets the function called to build URIs.
+
+        :param func:
+            A function that receives ``(router, request, name, args, kwargs)``
+            and returns a URI.
+        """
+        self.build = func.__get__(self, self.__class__)
+
     def default_matcher(self, request):
         """Matches all routes against a request object.
 
@@ -1127,15 +1170,6 @@ class Router(object):
 
         raise exc.HTTPNotFound()
 
-    def set_dispatcher(self, func):
-        """Sets the function called to dispatch the handler.
-
-        :param func:
-            A function that receives ``(router, request, response)``
-            and returns the value returned by the dispatched handler.
-        """
-        self.dispatch = func.__get__(self, self.__class__)
-
     def default_dispatcher(self, request, response):
         """Dispatches a handler.
 
@@ -1148,28 +1182,20 @@ class Router(object):
         :returns:
             The returned value from the handler.
         """
-        request.route, request.route_args, request.route_kwargs = \
-            self.match(request)
-        handler = request.route.handler
-        if isinstance(handler, basestring):
-            if handler not in self._handlers:
-                self._handlers[handler] = import_string(handler)
+        route, args, kwargs = rv = self.match(request)
+        request.route, request.route_args, request.route_kwargs = rv
 
-            request.route.handler = handler = self._handlers[handler]
+        if not route.loaded_handler:
+            handler = route.handler
+            if isinstance(handler, basestring):
+                if handler not in self.handlers:
+                    self.handlers[handler] = handler = import_string(handler)
+                else:
+                    handler = self.handlers[handler]
 
-        if not isinstance(handler, BaseHandlerFactory):
-            request.route.handler = handler = self.wrap(handler)
+            route.loaded_handler = self.wrap(handler)
 
-        return handler(request, response)
-
-    def set_wrapper(self, func):
-        """Sets the function to wrap loaded handlers for dispatch.
-
-        :param func:
-            A function that receives ``(handler,)`` and returns a
-            :class:`BaseHandlerFactory` instance with the wrapped handler.
-        """
-        self.wrap = func.__get__(self, self.__class__)
+        return route.loaded_handler(request, response)
 
     def default_wrapper(self, handler):
         """Wraps a handler for dispatching.
@@ -1177,7 +1203,7 @@ class Router(object):
         :param handler:
             A handler callable.
         :returns:
-            A :class:`BaseHandlerFactory` instance with the wrapped handler.
+            A handler callable.
         """
         try:
             if issubclass(handler, webapp.RequestHandler):
@@ -1191,15 +1217,6 @@ class Router(object):
             wrapper = BaseHandlerFactory
 
         return wrapper(handler)
-
-    def set_builder(self, func):
-        """Sets the function called to build URIs.
-
-        :param func:
-            A function that receives ``(router, request, name, args, kwargs)``
-            and returns a URI.
-        """
-        self.build = func.__get__(self, self.__class__)
 
     def default_builder(self, request, name, args, kwargs):
         """Returns a URI for a named :class:`Route`.

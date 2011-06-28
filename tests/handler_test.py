@@ -583,9 +583,15 @@ The resource was found at http://localhost/somewhere; you should be redirected a
     def test_custom_method_with_string(self):
         app = webapp2.WSGIApplication([
             webapp2.Route('/', handler='resources.handlers.CustomMethodHandler:custom_method'),
+            webapp2.Route('/bleh', handler='resources.handlers.CustomMethodHandler:custom_method'),
         ], debug=True)
 
         req = webapp2.Request.blank('/')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'I am a custom method.')
+
+        req = webapp2.Request.blank('/bleh')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'I am a custom method.')
