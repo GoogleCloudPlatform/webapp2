@@ -219,6 +219,14 @@ class Request(webob.Request):
     def blank(cls, path, environ=None, base_url=None,
               headers=None, POST=None, **kwargs):
         """Adds parameters compatible with WebOb >= 1.0: POST and **kwargs."""
+        try:
+            return super(Request, cls).blank(path, environ=environ,
+                                             base_url=base_url,
+                                             headers=headers, POST=POST,
+                                             **kwargs)
+        except TypeError:
+            pass
+
         if POST is not None:
             from cStringIO import StringIO
             data = POST
