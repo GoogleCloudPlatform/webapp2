@@ -72,9 +72,11 @@ URI routing
    :ref:`guide.app.router` and :ref:`guide.routing`
 
 .. autoclass:: Router
-   :members: route_class, __init__, add, set_matcher, set_dispatcher,
-             set_builder, default_matcher, default_dispatcher, default_builder,
-             build, match, dispatch
+   :members: build, match, dispatch, adapt, route_class, __init__, add,
+             set_matcher, set_dispatcher, set_adapter, set_builder,
+             default_matcher, default_dispatcher, default_adapter,
+             default_builder
+
 
 .. autoclass:: BaseRoute
    :members: name, build_only, match, build, get_routes, get_match_routes,

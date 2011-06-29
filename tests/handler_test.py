@@ -524,11 +524,11 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         self.assertRaises(ValueError, req.get_response, app)
 
     def test_function_handler(self):
-        def my_view(request, response):
-            response.out.write('Hello, function world!')
+        def my_view(request, *args, **kwargs):
+            return webapp2.Response('Hello, function world!')
 
-        def other_view(request, response):
-            response.out.write('Hello again, function world!')
+        def other_view(request, *args, **kwargs):
+            return webapp2.Response('Hello again, function world!')
 
         app = webapp2.WSGIApplication([
             webapp2.Route('/', my_view),

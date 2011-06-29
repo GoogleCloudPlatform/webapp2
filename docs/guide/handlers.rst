@@ -92,9 +92,8 @@ means that, differently from webapp, ordinary functions can also be used to
 handle requests in webapp2, and not only classes. The following example
 demonstrates it::
 
-    def display_product(request, response):
-        product_id = request.route_args[0]
-        response.write('You requested product %r.' % product_id)
+    def display_product(request, *args, **kwargs):
+        return webapp2.Response('You requested product %r.' % args[0])
 
     app = webapp2.WSGIApplication([
         (r'/products/(\d+)', display_product),
