@@ -246,7 +246,11 @@ class TestRoute(test_base.BaseTestCase):
 
     def test_set_adapter(self):
         def custom_adapter(router, handler):
-            return router.default_adapter(handler)
+            class MyAdapter(webapp2.BaseHandlerAdapter):
+                def __call__(self, request, response):
+                    response.write('hello my adapter')
+
+            return MyAdapter(handler)
 
         def myhandler(request, *args, **kwargs):
             return webapp2.Response('hello')
@@ -256,7 +260,7 @@ class TestRoute(test_base.BaseTestCase):
 
         rsp = app.get_response('/')
         self.assertEqual(rsp.status_int, 200)
-        self.assertEqual(rsp.body, 'hello')
+        self.assertEqual(rsp.body, 'hello my adapter')
 
     def test_methods(self):
         route = Route(r'/', methods=['GET', 'POST'])
