@@ -1004,9 +1004,13 @@ class Route(BaseRoute):
 class BaseHandlerAdapter(object):
     """A basic adapter to dispatch a handler.
 
-    This is the most basic one, used when the handler is a simple function:
-    it just calls the handler and returns its result.
+    This is used when the handler is a simple function: it just calls the
+    handler and returns the resulted response.
     """
+
+    #: The handler to be dispatched.
+    handler = None
+
     def __init__(self, handler):
         self.handler = handler
 
@@ -1032,6 +1036,7 @@ class WebappHandlerAdapter(BaseHandlerAdapter):
     Like in webapp, the handler is constructed, then ``initialize()`` is
     called, then the method corresponding to the HTTP request method is called.
     """
+
     def __call__(self, request, response):
         handler = self.handler()
         handler.initialize(request, response)
@@ -1056,6 +1061,7 @@ class Webapp2HandlerAdapter(BaseHandlerAdapter):
 
     The handler is constructed then ``dispatch()`` is called.
     """
+
     def __call__(self, request, response):
         handler = self.handler(request, response)
         return handler.dispatch()
