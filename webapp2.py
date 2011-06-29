@@ -682,10 +682,10 @@ class BaseRoute(object):
     build_only = False
     #: The handler or string or in dotted notation to be lazily imported.
     handler = None
-    #: The handler wrapped for dispatching.
-    handler_adapter = None
     #: The custom handler method, if handler is a class.
     handler_method = None
+    #: The handler, imported and ready for dispatching.
+    handler_adapter = None
 
     def match(self, request):
         """Matches all routes against a request object.
