@@ -72,11 +72,13 @@ URI routing
    :ref:`guide.app.router` and :ref:`guide.routing`
 
 .. autoclass:: Router
-   :members: build, match, dispatch, adapt, route_class, __init__, add,
-             set_matcher, set_dispatcher, set_adapter, set_builder,
-             default_matcher, default_dispatcher, default_adapter,
-             default_builder
-
+   :members: route_class, __init__, add,
+             match, build,
+             dispatch, adapt,
+             default_matcher, default_builder,
+             default_dispatcher, default_adapter,
+             set_matcher, set_builder,
+             set_dispatcher, set_adapter,
 
 .. autoclass:: BaseRoute
    :members: template, name, handler, handler_method, handler_adapter,
@@ -121,8 +123,7 @@ Request handlers
 
 .. autoclass:: RequestHandler
    :members: app, request, response, __init__, initialize, dispatch, error,
-             abort, redirect, redirect_to, uri_for, handle_exception,
-             factory
+             abort, redirect, redirect_to, uri_for, handle_exception
 
 
 .. autoclass:: RedirectHandler

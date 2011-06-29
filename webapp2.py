@@ -44,7 +44,7 @@ except ImportError: # pragma: no cover
 
         run_wsgi_app = run_bare_wsgi_app = classmethod(_run)
 
-__version_info__ = ('1', '8')
+__version_info__ = ('1', '8', '1')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
@@ -217,7 +217,7 @@ class Request(webob.Request):
 
     @classmethod
     def blank(cls, path, environ=None, base_url=None,
-              headers=None, POST=None, **kwargs):
+              headers=None, POST=None, **kwargs): # pragma: no cover
         """Adds parameters compatible with WebOb >= 1.0: POST and **kwargs."""
         try:
             return super(Request, cls).blank(path, environ=environ,
@@ -1080,14 +1080,6 @@ class Router(object):
 
     #: Class used when the route is a tuple, for compatibility with webapp.
     route_class = SimpleRoute
-    #: Function to match a request. Default is :meth:`default_matcher`.
-    match = None
-    #: Function to dispatch a request. Default is :meth:`default_dispatcher`.
-    dispatch = None
-    #: Function to wrap a handler. Default is :meth:`default_adapter`.
-    adapt = None
-    #: Function to build a URI. Default is :meth:`default_builder`.
-    build = None
     #: Several internal attributes.
     app = None
     match_routes = None
@@ -1101,11 +1093,6 @@ class Router(object):
             A list of :class:`Route` instances. For compatibility with webapp,
             the list items can also be a tuple ``(regex, handler_class)``.
         """
-        # Default dispatcher, matcher and builder.
-        self.match = self.default_matcher
-        self.dispatch = self.default_dispatcher
-        self.adapt = self.default_adapter
-        self.build = self.default_builder
         # Handler classes imported lazily.
         self.handlers = {}
         # All routes that can be matched.
@@ -1142,6 +1129,15 @@ class Router(object):
         # Functions are descriptors, so bind it to this instance with __get__.
         self.match = func.__get__(self, self.__class__)
 
+    def set_builder(self, func):
+        """Sets the function called to build URIs.
+
+        :param func:
+            A function that receives ``(router, request, name, args, kwargs)``
+            and returns a URI.
+        """
+        self.build = func.__get__(self, self.__class__)
+
     def set_dispatcher(self, func):
         """Sets the function called to dispatch the handler.
 
@@ -1159,15 +1155,6 @@ class Router(object):
             handler callable.
         """
         self.adapt = func.__get__(self, self.__class__)
-
-    def set_builder(self, func):
-        """Sets the function called to build URIs.
-
-        :param func:
-            A function that receives ``(router, request, name, args, kwargs)``
-            and returns a URI.
-        """
-        self.build = func.__get__(self, self.__class__)
 
     def default_matcher(self, request):
         """Matches all routes against a request object.
@@ -1195,6 +1182,41 @@ class Router(object):
             raise exc.HTTPMethodNotAllowed()
 
         raise exc.HTTPNotFound()
+
+    def default_builder(self, request, name, args, kwargs):
+        """Returns a URI for a named :class:`Route`.
+
+        :param request:
+            The current :class:`Request` object.
+        :param name:
+            The route name.
+        :param args:
+            Tuple of positional arguments to build the URI. All positional
+            variables defined in the route must be passed and must conform
+            to the format set in the route. Extra arguments are ignored.
+        :param kwargs:
+            Dictionary of keyword arguments to build the URI. All variables
+            not set in the route default values must be passed and must
+            conform to the format set in the route. Extra keywords are
+            appended as a query string.
+
+            A few keywords have special meaning:
+
+            - **_full**: If True, builds an absolute URI.
+            - **_scheme**: URI scheme, e.g., `http` or `https`. If defined,
+              an absolute URI is always returned.
+            - **_netloc**: Network location, e.g., `www.google.com`. If
+              defined, an absolute URI is always returned.
+            - **_fragment**: If set, appends a fragment (or "anchor") to the
+              generated URI.
+        :returns:
+            An absolute or relative URI.
+        """
+        route = self.build_routes.get(name)
+        if not route:
+            raise KeyError('Route "%s" is not defined.' % name)
+
+        return route.build(request, args, kwargs)
 
     def default_dispatcher(self, request, response):
         """Dispatches a handler.
@@ -1244,46 +1266,17 @@ class Router(object):
 
         return adapter(handler)
 
-    def default_builder(self, request, name, args, kwargs):
-        """Returns a URI for a named :class:`Route`.
-
-        :param request:
-            The current :class:`Request` object.
-        :param name:
-            The route name.
-        :param args:
-            Tuple of positional arguments to build the URI. All positional
-            variables defined in the route must be passed and must conform
-            to the format set in the route. Extra arguments are ignored.
-        :param kwargs:
-            Dictionary of keyword arguments to build the URI. All variables
-            not set in the route default values must be passed and must
-            conform to the format set in the route. Extra keywords are
-            appended as a query string.
-
-            A few keywords have special meaning:
-
-            - **_full**: If True, builds an absolute URI.
-            - **_scheme**: URI scheme, e.g., `http` or `https`. If defined,
-              an absolute URI is always returned.
-            - **_netloc**: Network location, e.g., `www.google.com`. If
-              defined, an absolute URI is always returned.
-            - **_fragment**: If set, appends a fragment (or "anchor") to the
-              generated URI.
-        :returns:
-            An absolute or relative URI.
-        """
-        route = self.build_routes.get(name)
-        if not route:
-            raise KeyError('Route "%s" is not defined.' % name)
-
-        return route.build(request, args, kwargs)
-
     def __repr__(self):
         routes = self.match_routes + [v for k, v in \
             self.build_routes.iteritems() if v not in self.match_routes]
 
         return '<Router(%r)>' % routes
+
+    # Default matcher, builder, dispatcher and adapter.
+    match = default_matcher
+    build = default_builder
+    dispatch = default_dispatcher
+    adapt = default_adapter
 
 
 class Config(dict):
