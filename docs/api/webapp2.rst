@@ -79,7 +79,8 @@ URI routing
 
 
 .. autoclass:: BaseRoute
-   :members: name, build_only, match, build, get_routes, get_match_routes,
+   :members: template, name, handler, handler_method, handler_adapter,
+             build_only, match, build, get_routes, get_match_routes,
              get_build_routes
 
 .. autoclass:: SimpleRoute
