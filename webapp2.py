@@ -1144,7 +1144,7 @@ class Router(object):
             A function that receives ``(router, handler)`` and returns a
             handler callable.
         """
-        self.adapter = func.__get__(self, self.__class__)
+        self.adapt = func.__get__(self, self.__class__)
 
     def set_builder(self, func):
         """Sets the function called to build URIs.
