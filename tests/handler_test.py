@@ -530,9 +530,15 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         def other_view(request, *args, **kwargs):
             return webapp2.Response('Hello again, function world!')
 
+        def one_more_view(request, response):
+            self.assertEqual(request.route_args, ())
+            self.assertEqual(request.route_kwargs, {'foo': 'bar'})
+            response.write('Hello you too, deprecated arguments world!')
+
         app = webapp2.WSGIApplication([
             webapp2.Route('/', my_view),
             webapp2.Route('/other', other_view),
+            webapp2.Route('/one-more/<foo>', one_more_view),
         ], debug=True)
 
         req = webapp2.Request.blank('/')
@@ -556,6 +562,11 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'Hello again, function world!')
+
+        req = webapp2.Request.blank('/one-more/bar')
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'Hello you too, deprecated arguments world!')
 
     def test_custom_method(self):
         class MyHandler(webapp2.RequestHandler):

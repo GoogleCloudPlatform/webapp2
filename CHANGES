@@ -1,3 +1,22 @@
+Development version
+===================
+- Implemented an adapter mechanism to dispatch different kind of handlers:
+  webapp.RequestHandler, webapp2.RequestHandler and "view functions".
+  Instead of monkeypatching handlers (adding a 'factory' attribute),
+  handlers are wrapped by adapters that do the appropriate dispatch.
+  How handlers are adapted can be overridden using the convenience method
+  ``set_adapter()`` from the Router class, but the common cases are covered.
+
+- Function views now conveniently receive (request, *args, **kwargs), like
+  in Django. The previous arguments will work, but they are now deprecated
+  and will not be supported in the future. This is a major incompatibility
+  with previous versions but it feels a lot better than the previous
+  (request, response) behavior, as adapters make it easy to have custom
+  dispatch arguments using a unified API.
+  The webapp2.RequestHandler class remain unchanged and is instantiated with
+  (request, response).
+
+
 Version 1.8 - June 26, 2011
 ===========================
 - webap2_extras.i18n: the functions passed to I18nStore.set_locale_selector()
