@@ -183,8 +183,9 @@ dispatch themselves, making it easy to implement before and after dispatch
 hooks.
 
 webapp2 is thought to be lightweight but flexible. It basically provides an
-easy to extend URI routing and dispatching mechanisms: you can even extend
-URI matching, dispatching or building without subclassing.
+easy to customize URI routing and dispatching mechanisms: you can even extend
+how URIs are matched or built or how handlers are adapted or dispatched
+without subclassing.
 
 
 Domain and subdomain routing

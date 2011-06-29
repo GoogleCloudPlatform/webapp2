@@ -292,7 +292,7 @@ For example, if you have these routes defined for the application::
         webapp2.Route('/wiki/<page>', handler=WikiHandler, name='wiki-page'),
     ])
 
-Here are some examples of how to generate URIs inside a handler::
+Here are some examples of how to generate URIs for them::
 
     # /
     uri = uri_for('home')
@@ -308,6 +308,20 @@ Here are some examples of how to generate URIs inside a handler::
     uri = uri_for('wiki-page', page='my-first-page')
     # /wiki/my-first-page?format=atom
     uri = uri_for('wiki-page', page='my-first-page', format='atom')
+
+Variables are passed as keyword arguments and are required if the route defines
+them. Also, when calling ``uri_for()``, a few keywords have special meaning:
+
+_full
+  If True, builds an absolute URI.
+_scheme
+  URI scheme, e.g., `http` or `https`. If defined, an absolute URI is always
+  returned.
+_netloc
+  Network location, e.g., `www.google.com`. If defined, an absolute URI is
+  always returned.
+_fragment
+  If set, appends a fragment (or "anchor") to the generated URI.
 
 Check :meth:`webapp2.Router.build` in the API reference for a complete
 explanation of the parameters used to build URIs.

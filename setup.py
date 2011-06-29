@@ -26,6 +26,7 @@ Quick links
 
 - `User Guide <http://webapp-improved.appspot.com/>`_
 - `Official Repository <http://code.google.com/p/webapp-improved/>`_
+- `Discussion Group <http://groups.google.com/group/tipfy>`_
 
 **Featured link:** Nick Johnson's `Using BlobReader, wildcard subdomains and webapp2 <http://blog.notdot.net/2010/08/Using-BlobReader-wildcard-subdomains-and-webapp2>`_
 """
@@ -33,7 +34,7 @@ from setuptools import setup
 
 setup(
     name = 'webapp2',
-    version = '1.8',
+    version = '1.8.1',
     license = 'Apache Software License',
     url = 'http://www.tipfy.org/',
     description = "Taking Google App Engine's webapp to the next level!",
