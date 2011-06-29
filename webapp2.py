@@ -1016,9 +1016,14 @@ class BaseHandlerAdapter(object):
         if kwargs:
             args = ()
 
-        # This was the previous behavior for functions.
-        # return self.handler(request, response)
-        return self.handler(request, *args, **kwargs)
+        try:
+            return self.handler(request, *args, **kwargs)
+        except TypeError:
+            from warnings import warn
+            warn(DeprecationWarning('Functions now must receive '
+                '(request, *args, **kwargs)'), stacklevel=1)
+            # This was the previous behavior for functions.
+            return self.handler(request, response)
 
 
 class WebappHandlerAdapter(BaseHandlerAdapter):
