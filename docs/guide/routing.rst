@@ -317,15 +317,6 @@ Routing attributes in the request object
 ----------------------------------------
 The parameters from the matched route are set as attributes of the request
 object when a route matches. They are ``request.route_args``, for positional
-arguments, and ``request.route_kwargs``, for keyword arguments. That's how
-a handler function can access those parameters::
-
-    def article_handler(request, response):
-        article_id = request.route_kwargs['article_id']
-        response.write('You requested article %r.' % article_id)
-
-    app = webapp2.WSGIApplication(
-        webapp2.Route('/<article_id:\d+>', handler=article_handler, name='article')
-    )
+arguments, and ``request.route_kwargs``, for keyword arguments.
 
 The matched route object is also available as ``request.route``.

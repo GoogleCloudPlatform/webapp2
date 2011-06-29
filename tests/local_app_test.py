@@ -7,8 +7,8 @@ import test_base
 
 class TestLocalApp(test_base.BaseTestCase):
     def test_dispatch(self):
-        def hello_handler(request, response):
-            response.write('Hello, World!')
+        def hello_handler(request, *args, **kwargs):
+            return webapp2.Response('Hello, World!')
 
         app = local_app.WSGIApplication([('/', hello_handler)], debug=True)
         rsp = app.get_response('/')

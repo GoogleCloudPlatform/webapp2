@@ -52,9 +52,9 @@ class ServiceHandler(webapp2.RequestHandler, service_handlers.ServiceHandler):
 
 
 class ServiceHandlerFactory(service_handlers.ServiceHandlerFactory):
-    def __call__(self, request, response):
+    def __call__(self, request, *args, **kwargs):
         """Construct a new service handler instance."""
-        handler = ServiceHandler(request, response)
+        handler = ServiceHandler(request, request.response)
         handler.dispatch(self, self.service_factory())
 
 

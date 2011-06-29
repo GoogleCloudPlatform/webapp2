@@ -74,7 +74,11 @@ Improved exception handling
 ---------------------------
 HTTP exceptions can also be handled by the WSGI application::
 
-    def handle_404(request, response):
+    # ...
+    import logging
+
+    def handle_404(request, response, exception):
+        logging.exception(exception)
         response.write('Oops! I could swear this page was here!')
         response.set_status(404)
 
@@ -162,8 +166,8 @@ View functions
 In webapp2 handlers don't need necessarily to be classes. For those that
 prefer, functions can be used as well::
 
-    def my_sweet_function(request, response):
-        response.write('Hello, function world!')
+    def my_sweet_function(request, *args, **kwargs):
+        return webapp2.Response('Hello, function world!')
 
     app = webapp2.WSGIApplication([
         webapp2.Route('/', handler=my_sweet_function, name='home'),

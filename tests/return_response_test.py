@@ -6,7 +6,7 @@ import test_base
 
 class TestReturnResponse(test_base.BaseTestCase):
     def test_function_that_returns_response(self):
-        def myfunction(request, response):
+        def myfunction(request, *args, **kwargs):
             return webapp2.Response('Hello, custom response world!')
 
         app = webapp2.WSGIApplication([
@@ -19,7 +19,7 @@ class TestReturnResponse(test_base.BaseTestCase):
         self.assertEqual(rsp.body, 'Hello, custom response world!')
 
     def test_function_that_returns_string(self):
-        def myfunction(request, response):
+        def myfunction(request, *args, **kwargs):
             return 'Hello, custom response world!'
 
         app = webapp2.WSGIApplication([
@@ -38,7 +38,7 @@ class TestReturnResponse(test_base.BaseTestCase):
         self.assertEqual(rsp.body, 'Hello, custom response world!')
 
     def test_function_that_returns_tuple(self):
-        def myfunction(request, response):
+        def myfunction(request, *args, **kwargs):
             return 'Hello, custom response world!', 404
 
         app = webapp2.WSGIApplication([

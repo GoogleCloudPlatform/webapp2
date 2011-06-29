@@ -682,8 +682,8 @@ class BaseRoute(object):
     build_only = False
     #: The handler or string or in dotted notation to be lazily imported.
     handler = None
-    #: The handler ready for dispatching.
-    loaded_handler = None
+    #: The handler wrapped for dispatching.
+    handler_adapter = None
     #: The custom handler method, if handler is a class.
     handler_method = None
 
@@ -1001,8 +1001,8 @@ class Route(BaseRoute):
             self.build_only)
 
 
-class BaseHandlerFactory(object):
-    """A factory to dispatch a handler.
+class BaseHandlerAdapter(object):
+    """A basic adapter to dispatch a handler.
 
     This is the most basic one, used when the handler is a simple function:
     it just calls the handler and returns its result.
@@ -1011,11 +1011,18 @@ class BaseHandlerFactory(object):
         self.handler = handler
 
     def __call__(self, request, response):
-        return self.handler(request, response)
+        # The handler only receives *args if no named variables are set.
+        args, kwargs = request.route_args, request.route_kwargs
+        if kwargs:
+            args = ()
+
+        # This was the previous behavior for functions.
+        # return self.handler(request, response)
+        return self.handler(request, *args, **kwargs)
 
 
-class WebappHandlerFactory(BaseHandlerFactory):
-    """A factory to dispatch a ``webapp.RequestHandler``.
+class WebappHandlerAdapter(BaseHandlerAdapter):
+    """An adapter to dispatch a ``webapp.RequestHandler``.
 
     Like in webapp, the handler is constructed, then ``initialize()`` is
     called, then the method corresponding to the HTTP request method is called.
@@ -1039,8 +1046,8 @@ class WebappHandlerFactory(BaseHandlerFactory):
             handler.handle_exception(e, request.app.debug)
 
 
-class Webapp2HandlerFactory(BaseHandlerFactory):
-    """A factory to dispatch a ``webapp2.RequestHandler``.
+class Webapp2HandlerAdapter(BaseHandlerAdapter):
+    """An adapter to dispatch a ``webapp2.RequestHandler``.
 
     The handler is constructed then ``dispatch()`` is called.
     """
@@ -1058,8 +1065,8 @@ class Router(object):
     match = None
     #: Function to dispatch a request. Default is :meth:`default_dispatcher`.
     dispatch = None
-    #: Function to wrap a handler. Default is :meth:`default_wrapper`.
-    wrap = None
+    #: Function to wrap a handler. Default is :meth:`default_adapter`.
+    adapt = None
     #: Function to build a URI. Default is :meth:`default_builder`.
     build = None
     #: Several internal attributes.
@@ -1078,7 +1085,7 @@ class Router(object):
         # Default dispatcher, matcher and builder.
         self.match = self.default_matcher
         self.dispatch = self.default_dispatcher
-        self.wrap = self.default_wrapper
+        self.adapt = self.default_adapter
         self.build = self.default_builder
         # Handler classes imported lazily.
         self.handlers = {}
@@ -1125,14 +1132,14 @@ class Router(object):
         """
         self.dispatch = func.__get__(self, self.__class__)
 
-    def set_wrapper(self, func):
-        """Sets the function to prepare loaded handlers for dispatch.
+    def set_adapter(self, func):
+        """Sets the function that adapts loaded handlers for dispatching.
 
         :param func:
             A function that receives ``(router, handler)`` and returns a
             handler callable.
         """
-        self.wrap = func.__get__(self, self.__class__)
+        self.adapter = func.__get__(self, self.__class__)
 
     def set_builder(self, func):
         """Sets the function called to build URIs.
@@ -1185,7 +1192,7 @@ class Router(object):
         route, args, kwargs = rv = self.match(request)
         request.route, request.route_args, request.route_kwargs = rv
 
-        if not route.loaded_handler:
+        if route.handler_adapter is None:
             handler = route.handler
             if isinstance(handler, basestring):
                 if handler not in self.handlers:
@@ -1193,12 +1200,12 @@ class Router(object):
                 else:
                     handler = self.handlers[handler]
 
-            route.loaded_handler = self.wrap(handler)
+            route.handler_adapter = self.adapt(handler)
 
-        return route.loaded_handler(request, response)
+        return route.handler_adapter(request, response)
 
-    def default_wrapper(self, handler):
-        """Wraps a handler for dispatching.
+    def default_adapter(self, handler):
+        """Adapts a handler for dispatching.
 
         :param handler:
             A handler callable.
@@ -1208,15 +1215,15 @@ class Router(object):
         try:
             if issubclass(handler, webapp.RequestHandler):
                 # Compatible with webapp.RequestHandler.
-                wrapper = WebappHandlerFactory
+                adapter = WebappHandlerAdapter
             else:
-                # Compatible with webapp2.RequestHandler.
-                wrapper = Webapp2HandlerFactory
+                # Default, compatible with webapp2.RequestHandler.
+                adapter = Webapp2HandlerAdapter
         except TypeError:
             # A "view" function.
-            wrapper = BaseHandlerFactory
+            adapter = BaseHandlerAdapter
 
-        return wrapper(handler)
+        return adapter(handler)
 
     def default_builder(self, request, name, args, kwargs):
         """Returns a URI for a named :class:`Route`.

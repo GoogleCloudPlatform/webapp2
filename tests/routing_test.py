@@ -244,15 +244,15 @@ class TestRoute(test_base.BaseTestCase):
         res = router.build(req, '', (), {})
         self.assertEqual(res, 'http://www.google.com')
 
-    def test_set_wrapper(self):
-        def custom_wrapper(router, handler):
-            return router.default_wrapper(handler)
+    def test_set_adapter(self):
+        def custom_adapter(router, handler):
+            return router.default_adapter(handler)
 
-        def myhandler(request, response):
-            response.write('hello')
+        def myhandler(request, *args, **kwargs):
+            return webapp2.Response('hello')
 
-        app = webapp2.WSGIApplication([('/', myhandler)])
-        app.router.set_wrapper(custom_wrapper)
+        app = webapp2.WSGIApplication([('/', myhandler)], debug=True)
+        app.router.set_adapter(custom_adapter)
 
         rsp = app.get_response('/')
         self.assertEqual(rsp.status_int, 200)
