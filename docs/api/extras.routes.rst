@@ -4,6 +4,10 @@ Extra routes
 ============
 .. module:: webapp2_extras.routes
 
+This module provides several extra route classes for convenience:
+domain and subdomain routing, prefixed routes or routes for automatic
+redirection.
+
 .. autoclass:: DomainRoute
    :members: __init__
 

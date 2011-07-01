@@ -31,6 +31,10 @@ Quick links
 - `Google Code Repository <http://code.google.com/p/webapp-improved/>`_
 - `Discussion Group <http://groups.google.com/group/tipfy>`_
 
+.. `Samples for Google App Engine <http://code.google.com/p/google-app-engine-samples/>`_:
+   several mini-apps for webapp that serve as examples (they should work with
+   webapp2 too).
+
 
 Tutorials
 ---------

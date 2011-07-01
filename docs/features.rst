@@ -35,6 +35,11 @@ The ``RequestHandler``, ``Request``, ``Response`` and ``WSGIApplication``
 classes are compatible with the webapp API. Migrating from webapp is intended
 to be a breeze.
 
+This means that all the documentation and examples for webapp you find on the
+web or in the App Engine documentation will work for webapp2. Also, the built
+in SDK libraries that use webapp can be used with webapp2 as they are or with
+minimal adaptations.
+
 
 Compatible with latest WebOb
 ----------------------------
