@@ -16,14 +16,14 @@ Simple routes
 -------------
 The simplest form of URI route in webapp2 is a tuple ``(regex, handler)``,
 where `regex` is a regular expression to match the requested URI path and
-`handler` is a :class:`webapp2.RequestHandler` to handle the request.
-This routing mechanism is fully compatible with App Engine's webapp framework.
+`handler` is a callable to handle the request. This routing mechanism is
+fully compatible with App Engine's webapp framework.
 
-This is how it works: a list of routes is registered in the WSGI application.
-When the application receives a request, it tries to match each one in order
-until one matches, and then call the corresponding handler. Here, for example,
-we define three handlers and register three routes that point to those
-handlers::
+This is how it works: a list of routes is registered in the
+:ref:`WSGI application <guide.app>`. When the application receives a request,
+it tries to match each one in order until one matches, and then call the
+corresponding handler. Here, for example, we define three handlers and
+register three routes that point to those handlers::
 
     class HomeHandler(webapp2.RequestHandler):
         def get(self):
@@ -57,7 +57,7 @@ route matches (one or more digits in this case).
 
 The `handler` part is a callable as explained in :ref:`guide.handlers`, and
 can also be a string in dotted notation to be lazily imported when needed
-(see explanation below in **Lazy Handlers**).
+(see explanation below in :ref:`Lazy Handlers <guide.routing.lazy-handlers>`).
 
 Simple routes are easy to use and enough for a lot of cases but don't support
 keyword arguments, URI building, domain and subdomain matching, automatic
@@ -94,14 +94,17 @@ tuple ``(regex, handler)``, we define each route using the class
         webapp2.Route(r'/products/<product_id:\d+>', handler=ProductHandler, name='product'),
     ])
 
-The first argument in the routes above is a regex template, the second
-argument is the request handler to be used, and the third is a name used to
-build a URI for that route. We already know about :ref:`guide.handlers`, so
-let's explain the other two.
+The first argument in the routes above is a
+:ref:`regex template <guide.routing.the-regex-template>`, the `handler`
+argument is the :ref:`request handler <guide.handlers>` to be used, and the
+`name` argument third is a name used to
+:ref:`build a URI <guide.routing.building-uris>` for that route.
 
 Check :meth:`webapp2.Route.__init__` in the API reference for the parameters
 accepted by the ``Route`` constructor. We will explain some of them in details
 below.
+
+.. _guide.routing.the-regex-template:
 
 The regex template
 ~~~~~~~~~~~~~~~~~~
@@ -134,6 +137,8 @@ routes are equivalent::
    just mix named and unnamed variables and the handler will
    only receive the named ones.
 
+.. _guide.routing.lazy-handlers:
+
 Lazy handlers
 ~~~~~~~~~~~~~
 One additional feature compared to webapp is that the handler can also be
@@ -157,6 +162,8 @@ strings instead of handler classes and splitting our handlers in two files,
 
 In the first time that one of these routes matches, the handlers will be
 automatically imported by the routing system.
+
+.. _guide.routing.custom-methods:
 
 Custom methods
 ~~~~~~~~~~~~~~
@@ -206,9 +213,9 @@ Domain and subdomain routing
 ----------------------------
 The routing system can also handle domain and subdomain matching. This is done
 using a special route class provided in the ``webapp2_extras.routes`` module:
-the :class:`webapp2_extras.routes.DomainRoute`. This is a class that is
-initialized with a pattern to match the current server name and a list of
-nested :class:`webapp2.Route` that will only be tested if the domain or
+the :class:`webapp2_extras.routes.DomainRoute`. It is initialized with a
+pattern to match the current server name and a list of nested
+:class:`webapp2.Route` instances that will only be tested if the domain or
 subdomain matches.
 
 For example, to restrict routes to a subdomain of the appspot domain::
@@ -239,7 +246,7 @@ but if the regex didn't define any named groups, nothing would be added.
 
 Matching only www, or anything except www
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A common need it to set some routes for the main subdomain (``www``) and
+A common need is to set some routes for the main subdomain (``www``) and
 different routes for other submains. The webapp2 routing system can handle
 this easily.
 
@@ -274,6 +281,8 @@ And then have a route that matches subdomains of the main ``appspot`` domain
         webapp2.Route('/', handler=HomeHandler, name='home'),
     ])
 
+
+.. _guide.routing.building-uris:
 
 Building URIs
 -------------

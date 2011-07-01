@@ -1107,7 +1107,8 @@ class Router(object):
         """Adds a route to this router.
 
         :param route:
-            A :class:`Route` instance.
+            A :class:`Route` instance or, for compatibility with webapp, a
+            tuple ``(regex, handler_class)``.
         """
         if isinstance(route, tuple):
             # Exceptional compatibility case: route compatible with webapp.
@@ -1124,7 +1125,10 @@ class Router(object):
 
         :param func:
             A function that receives ``(router, request)`` and returns
-            a tuple ``(route, args, kwargs)`` if any route matches.
+            a tuple ``(route, args, kwargs)`` if any route matches, or
+            raise ``exc.HTTPNotFound`` if no route matched or
+            ``exc.HTTPMethodNotAllowed`` if a route matched but the HTTP
+            method was not allowed.
         """
         # Functions are descriptors, so bind it to this instance with __get__.
         self.match = func.__get__(self, self.__class__)
@@ -1167,7 +1171,8 @@ class Router(object):
             A tuple ``(route, args, kwargs)`` if a route matched, or None.
         :raises:
             ``exc.HTTPNotFound`` if no route matched or
-            ``exc.HTTPMethodNotAllowed`` if one of the routes raised it.
+            ``exc.HTTPMethodNotAllowed`` if a route matched but the HTTP
+            method was not allowed.
         """
         method_not_allowed = False
         for route in self.match_routes:
@@ -1226,7 +1231,9 @@ class Router(object):
         :param response:
             A :class:`Response` instance.
         :raises:
-            ``exc.HTTPNotFound`` if no route matched.
+            ``exc.HTTPNotFound`` if no route matched or
+            ``exc.HTTPMethodNotAllowed`` if a route matched but the HTTP
+            method was not allowed.
         :returns:
             The returned value from the handler.
         """
@@ -1248,10 +1255,17 @@ class Router(object):
     def default_adapter(self, handler):
         """Adapts a handler for dispatching.
 
+        Because handlers use or implement different dispatching mechanisms,
+        they can be wrapped to use the unified API for routing or dispatching.
+        This way webapp2 can support, for example, a :class:`RequestHandler`
+        class and function views or, for compatibility purposes, a
+        ``webapp.RequestHandler`` class. They are dispatched differently by the
+        adapters but use the same router API.
+
         :param handler:
             A handler callable.
         :returns:
-            A handler callable.
+            A wrapped handler callable.
         """
         try:
             if issubclass(handler, webapp.RequestHandler):

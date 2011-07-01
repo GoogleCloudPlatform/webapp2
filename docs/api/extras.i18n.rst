@@ -4,6 +4,11 @@ i18n
 ====
 .. module:: webapp2_extras.i18n
 
+This module provides internationalization and localization support for webapp2.
+It requires the libraries `Babel <http://babel.edgewall.org/>`_ and
+`pytz <http://pypi.python.org/pypi/pytz>`_ (or
+`gaepytz <http://pypi.python.org/pypi/gaepytz>`_ for App Engine).
+
 .. autodata:: default_config
 
 .. autoclass:: I18nStore
