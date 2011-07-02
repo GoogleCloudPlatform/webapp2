@@ -9,6 +9,7 @@
     :license: Apache Sotware License, see LICENSE for details.
 """
 import re
+import urllib
 
 import webapp2
 
@@ -74,48 +75,38 @@ class DomainRoute(MultiRoute):
         yield self
 
     def match(self, request):
-        # Use SERVER_NAME to ignore port number that comes with request.host.
-        # host_match = self.regex.match(request.host)
+        # Use SERVER_NAME to ignore port number that comes with request.host?
+        # host_match = self.regex.match(request.host.split(':', 1)[0])
         host_match = self.regex.match(request.environ['SERVER_NAME'])
         if host_match:
             for route in self.match_routes:
                 match = route.match(request)
                 if match:
-                    match[2].update(host_match.groupdict())
+                    args, kwargs = webapp2._get_route_variables(host_match)
+                    match[2].update(kwargs)
                     return match
 
     @webapp2.cached_property
     def regex(self):
-        pattern = ''
-        last = 0
-        template = self.template
-        for match in webapp2._ROUTE_REGEX.finditer(template):
-            part = template[last:match.start()]
-            name = match.group(1)
-            expr = match.group(2) or '[^\.]+'
-            last = match.end()
-
-            if name:
-                pattern += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
-            else:
-                pattern += '%s%s' % (re.escape(part), expr)
-
-        return re.compile('^%s%s$' % (pattern, re.escape(template[last:])))
+        regex, reverse_template, args_count, kwargs_count, variables = \
+            webapp2._parse_route_template(self.template,
+                                          default_sufix='[^\.]+')
+        return regex
 
 
-class PathPrefixRoute(MultiRoute):
-    """The idea of this route is to set a base path for other routes::
+class NamePrefixRoute(MultiRoute):
+    """The idea of this route is to set a base name for other routes::
 
         app = WSGIApplication([
-            PathPrefixRoute('/users/<user:\w+>', [
-                Route('/', UserOverviewHandler, 'user-overview'),
-                Route('/profile', UserProfileHandler, 'user-profile'),
-                Route('/projects', UserProjectsHandler, 'user-projects'),
+            NamePrefixRoute('user-', [
+                Route('/users/<user:\w+>/', UserOverviewHandler, 'overview'),
+                Route('/users/<user:\w+>/profile', UserProfileHandler, 'profile'),
+                Route('/users/<user:\w+>/projects', UserProjectsHandler, 'projects'),
             ]),
         ])
 
     The example above is the same as setting the following routes, just more
-    convenient as you can reuse the path prefix::
+    convenient as you can reuse the name prefix::
 
         app = WSGIApplication([
             Route('/users/<user:\w+>/', UserOverviewHandler, 'user-overview'),
@@ -124,7 +115,7 @@ class PathPrefixRoute(MultiRoute):
         ])
     """
 
-    _attr = 'template'
+    _attr = 'name'
 
     def __init__(self, prefix, routes):
         """Initializes a URL route.
@@ -143,16 +134,71 @@ class PathPrefixRoute(MultiRoute):
                 self.routes.append(r)
 
 
-class NamePrefixRoute(PathPrefixRoute):
-    """Same as :class:`PathPrefixRoute`, but prefixes the route name."""
-
-    _attr = 'name'
-
-
-class HandlerPrefixRoute(PathPrefixRoute):
-    """Same as :class:`PathPrefixRoute`, but prefixes the route handler."""
+class HandlerPrefixRoute(NamePrefixRoute):
+    """Same as :class:`NamePrefixRoute`, but prefixes the route handler."""
 
     _attr = 'handler'
+
+
+class PathPrefixRoute(NamePrefixRoute):
+    """Same as :class:`NamePrefixRoute`, but prefixes the route path.
+
+    For example, imagine we have these routes::
+
+        app = WSGIApplication([
+            Route('/users/<user:\w+>/', UserOverviewHandler, 'user-overview'),
+            Route('/users/<user:\w+>/profile', UserProfileHandler, 'user-profile'),
+            Route('/users/<user:\w+>/projects', UserProjectsHandler, 'user-projects'),
+        ])
+
+    We could refactor them to reuse the common path prefix::
+
+        app = WSGIApplication([
+            PathPrefixRoute('/users/<user:\w+>', [
+                Route('/', UserOverviewHandler, 'user-overview'),
+                Route('/profile', UserProfileHandler, 'user-profile'),
+                Route('/projects', UserProjectsHandler, 'user-projects'),
+            ]),
+        ])
+
+    This is not only convenient, but also performs better: the nested rules
+    will only be tested if the path prefix matches.
+    """
+
+    _attr = 'template'
+
+    def __init__(self, prefix, routes):
+        """Initializes a URL route.
+
+        :param prefix:
+            The prefix to be prepended. It must start with a slash but not
+            end with a slash.
+        :param routes:
+            A list of :class:`webapp2.Route` instances.
+        """
+        assert prefix.startswith('/') and not prefix.endswith('/'), \
+            'Path prefixes must start with a slash but not end with a slash.'
+        super(PathPrefixRoute, self).__init__(prefix, routes)
+        self.match_routes = [r for r in self.routes if not r.build_only]
+
+    def get_match_routes(self):
+        # This route will do pre-matching before matching the nested routes!
+        yield self
+
+    def match(self, request):
+        if not self.regex.match(urllib.unquote(request.path)):
+            return None
+
+        for route in self.match_routes:
+            match = route.match(request)
+            if match:
+                return match
+
+    @webapp2.cached_property
+    def regex(self):
+        regex, reverse_template, args_count, kwargs_count, variables = \
+            webapp2._parse_route_template(self.prefix + '<:/.*>')
+        return regex
 
 
 class RedirectRoute(webapp2.Route):
@@ -257,8 +303,8 @@ class RedirectRoute(webapp2.Route):
         return new_route
 
     def _redirect(self, handler, *args, **kwargs):
-        # Get from request because args is empty if named routes are set.
-        args, kwargs = handler.request.route_args, handler.request.route_kwargs
+        # Get from request because args is empty if named routes are set?
+        # args, kwargs = handler.request.route_args, handler.request.route_kwargs
         kwargs.pop('_uri', None)
         kwargs.pop('_code', None)
         return handler.uri_for(kwargs.pop('_name'), *args, **kwargs)

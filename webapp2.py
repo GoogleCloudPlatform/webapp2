@@ -900,28 +900,11 @@ class Route(BaseRoute):
 
     @cached_property
     def regex(self):
-        """Lazy regex template parser."""
-        self.variables = {}
-        self.reverse_template = pattern = ''
-        self.args_count = last = 0
-        for match in _ROUTE_REGEX.finditer(self.template):
-            part = self.template[last:match.start()]
-            name = match.group(1)
-            expr = match.group(2) or '[^/]+'
-            last = match.end()
-
-            if not name:
-                name = '__%d__' % self.args_count
-                self.args_count += 1
-
-            pattern += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
-            self.reverse_template += '%s%%(%s)s' % (part, name)
-            self.variables[name] = re.compile('^%s$' % expr)
-
-        part = self.template[last:]
-        self.kwargs_count = len(self.variables) - self.args_count
-        self.reverse_template += part
-        return re.compile('^%s%s$' % (pattern, re.escape(part)))
+        """Lazy route template parser."""
+        regex, self.reverse_template, self.args_count, self.kwargs_count, \
+            self.variables = _parse_route_template(self.template,
+                                                   default_sufix='[^/]+')
+        return regex
 
     def match(self, request):
         """Matches this route against the current request.
@@ -941,15 +924,7 @@ class Route(BaseRoute):
             # methods can be tried.
             raise exc.HTTPMethodNotAllowed()
 
-        kwargs = self.defaults.copy()
-        kwargs.update(match.groupdict())
-        if kwargs and self.args_count:
-            args = tuple(value[1] for value in sorted(
-                (int(key[2:-2]), kwargs.pop(key)) for key in kwargs.keys() \
-                if key.startswith('__') and key.endswith('__')))
-        else:
-            args = ()
-
+        args, kwargs = _get_route_variables(match, self.defaults.copy())
         return self, args, kwargs
 
     def build(self, request, args, kwargs):
@@ -967,7 +942,7 @@ class Route(BaseRoute):
             scheme = scheme or request.scheme
 
         path, query = self._build(args, kwargs)
-        return urlunsplit(scheme, netloc, path, query, anchor)
+        return _urlunsplit(scheme, netloc, path, query, anchor)
 
     def _build(self, args, kwargs):
         """Returns the URI path for this route.
@@ -1754,9 +1729,10 @@ def import_string(import_name, silent=False):
             raise
 
 
-def urlunsplit(scheme=None, netloc=None, path=None, query=None, fragment=None):
-    """Similar to ``urlparse.urlunsplit``, but will escape values and
-    urlencode and sort query arguments.
+def _urlunsplit(scheme=None, netloc=None, path=None, query=None,
+                fragment=None):
+    """Like ``urlparse.urlunsplit``, but will escape values and urlencode and
+    sort query arguments.
 
     :param scheme:
         URI scheme, e.g., `http` or `https`.
@@ -1819,6 +1795,46 @@ def _to_utf8(value):
         return value
 
     return value.encode('utf-8')
+
+
+def _parse_route_template(template, default_sufix=''):
+    """Lazy route template parser."""
+    variables = {}
+    reverse_template = pattern = ''
+    args_count = last = 0
+    for match in _ROUTE_REGEX.finditer(template):
+        part = template[last:match.start()]
+        name = match.group(1)
+        expr = match.group(2) or default_sufix
+        last = match.end()
+
+        if not name:
+            name = '__%d__' % args_count
+            args_count += 1
+
+        pattern += '%s(?P<%s>%s)' % (re.escape(part), name, expr)
+        reverse_template += '%s%%(%s)s' % (part, name)
+        variables[name] = re.compile('^%s$' % expr)
+
+    part = template[last:]
+    kwargs_count = len(variables) - args_count
+    reverse_template += part
+    regex = re.compile('^%s%s$' % (pattern, re.escape(part)))
+    return regex, reverse_template, args_count, kwargs_count, variables
+
+
+def _get_route_variables(match, default_kwargs=None):
+    """Returns (args, kwargs) for a route match."""
+    kwargs = default_kwargs or {}
+    kwargs.update(match.groupdict())
+    if kwargs:
+        args = tuple(value[1] for value in sorted(
+            (int(key[2:-2]), kwargs.pop(key)) for key in kwargs.keys() \
+            if key.startswith('__') and key.endswith('__')))
+    else:
+        args = ()
+
+    return args, kwargs
 
 
 Request.ResponseClass = Response

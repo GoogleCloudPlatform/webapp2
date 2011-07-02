@@ -1,3 +1,11 @@
+Development version
+===================
+- PathPrefixRoute now only tests the nested routes if the prefix matches.
+  So now it is not only convenient but matches smartly and faster. ;)
+
+- webapp2.urlunsplit() was removed from the public API.
+
+
 Version 1.8.1 - June 29, 2011
 =============================
 - Implemented an adapter mechanism to dispatch different kind of handlers:
