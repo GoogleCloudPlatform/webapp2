@@ -150,5 +150,3 @@ general use.
 .. autofunction:: abort
 
 .. autofunction:: import_string
-
-.. autofunction:: urlunsplit

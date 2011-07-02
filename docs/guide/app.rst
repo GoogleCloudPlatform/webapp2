@@ -9,12 +9,14 @@ between requests. The WSGI app is also responsible for handling uncaught
 exceptions, avoiding that stack traces "leak" to the client when in production.
 Let's take a look at it more deeply now.
 
-If you're new to Python or don't understand what the "WSGI" word means, read
-the `Another Do-It-Yourself Framework <http://pythonpaste.org/webob/do-it-yourself.html>`_
-tutorial by Ian Bicking. It is a very recommended introduction to WSGI and
-you should at least take a quick look at the concepts, but following the whole
-tutorial is really worth. A more advanced reading is the WSGI specification
-described in the `PEP 333 <http://www.python.org/dev/peps/pep-0333/>`_.
+.. note::
+   If the WSGI word looks totally unfamiliar to you, read the
+   `Another Do-It-Yourself Framework <http://pythonpaste.org/webob/do-it-yourself.html>`_
+   tutorial by Ian Bicking. It is a very recommended introduction to WSGI and
+   you should at least take a quick look at the concepts, but following the
+   whole tutorial is really worth. A more advanced reading is the WSGI
+   specification described in the
+   `PEP 333 <http://www.python.org/dev/peps/pep-0333/>`_.
 
 
 Initialization

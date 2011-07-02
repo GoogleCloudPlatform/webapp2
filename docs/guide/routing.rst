@@ -212,9 +212,9 @@ The above route will only match if the URI scheme is 'https'.
 Domain and subdomain routing
 ----------------------------
 The routing system can also handle domain and subdomain matching. This is done
-using a special route class provided in the ``webapp2_extras.routes`` module:
-the :class:`webapp2_extras.routes.DomainRoute`. It is initialized with a
-pattern to match the current server name and a list of nested
+using a special route class provided in the :mod:`webapp2_extras.routes`
+module: the :class:`webapp2_extras.routes.DomainRoute`. It is initialized with
+a pattern to match the current server name and a list of nested
 :class:`webapp2.Route` instances that will only be tested if the domain or
 subdomain matches.
 
@@ -280,6 +280,46 @@ And then have a route that matches subdomains of the main ``appspot`` domain
     routes.DomainRoute(r'<subdomain:(?!www)[^.]+>.<:(app-id\.appspot\.com|mydomain\.com)>', [
         webapp2.Route('/', handler=HomeHandler, name='home'),
     ])
+
+
+.. _guide.routing.prefix-routes:
+
+Prefix routes
+-------------
+For convenience, the :mod:`webapp2_extras.routes` provides three other classes
+that accept nested routes. The intention is to avoid repetition when defining
+routes:
+
+- :mod:`webapp2_extras.routes.PathPrefixRoute`: receives a path prefix and
+  a list of routes that start with that path.
+- :mod:`webapp2_extras.routes.HandlerPrefixRoute`: receives a handler module
+  prefix in dotted notation and a list of routes that use that module.
+- :mod:`webapp2_extras.routes.NamePrefixRoute`: receives a handler name
+  prefix and a list of routes that start with that name.
+
+For example, imagine we have these routes::
+
+    app = WSGIApplication([
+        Route('/users/<user:\w+>/', UserOverviewHandler, 'user-overview'),
+        Route('/users/<user:\w+>/profile', UserProfileHandler, 'user-profile'),
+        Route('/users/<user:\w+>/projects', UserProjectsHandler, 'user-projects'),
+    ])
+
+We could refactor them to reuse the common path prefix::
+
+    import webapp2
+    from webapp2_extras import routes
+
+    app = WSGIApplication([
+        routes.PathPrefixRoute('/users/<user:\w+>', [
+            webapp2.Route('/', UserOverviewHandler, 'user-overview'),
+            webapp2.Route('/profile', UserProfileHandler, 'user-profile'),
+            webapp2.Route('/projects', UserProjectsHandler, 'user-projects'),
+        ]),
+    ])
+
+This is not only convenient, but also performs better: the nested rules
+will only be tested if the path prefix matches.
 
 
 .. _guide.routing.building-uris:
