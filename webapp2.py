@@ -695,6 +695,28 @@ class BaseRoute(object):
     #: The handler, imported and ready for dispatching.
     handler_adapter = None
 
+    def __init__(self, template, handler, name=None, build_only=False):
+        """Initializes this route.
+
+        :param template:
+            A regex to be matched.
+        :param handler:
+            A callable or string in dotted notation to be lazily imported,
+            e.g., ``'my.module.MyHandler'`` or ``'my.module.my_function'``.
+        :param name:
+            The name of this route, used to build URIs based on it.
+        :param build_only:
+            If True, this route never matches and is used only to build URIs.
+        """
+        if build_only and name is None:
+            raise ValueError(
+                "Route %r is build_only but doesn't have a name." % self)
+
+        self.template = template
+        self.handler = handler
+        self.name = name
+        self.build_only = build_only
+
     def match(self, request):
         """Matches all routes against a request object.
 
@@ -737,9 +759,6 @@ class BaseRoute(object):
         """
         if not self.build_only:
             yield self
-        elif not self.name:
-            raise ValueError(
-                "Route %r is build_only but doesn't have a name." % self)
 
     def get_build_routes(self):
         """Generator to get all routes that can be built from a route.
@@ -748,7 +767,7 @@ class BaseRoute(object):
             This route or all nested routes that can be built.
         """
         if self.name is not None:
-            yield self
+            yield self.name, self
 
 
 class SimpleRoute(BaseRoute):
@@ -757,19 +776,6 @@ class SimpleRoute(BaseRoute):
     URI building is not implemented as webapp has rudimentar support for it,
     and this is the most unknown webapp feature anyway.
     """
-
-    def __init__(self, template, handler):
-        """Initializes this route.
-
-        :param template:
-            A regex to be matched.
-        :param handler:
-            A callable or string in dotted notation to be lazily imported,
-            e.g., ``'my.module.MyHandler'`` or ``'my.module.my_function'``.
-            The callable is called passing (request, response) as arguments.
-        """
-        self.template = template
-        self.handler = handler
 
     @cached_property
     def regex(self):
@@ -856,7 +862,6 @@ class Route(BaseRoute):
         :param handler:
             A callable or string in dotted notation to be lazily imported,
             e.g., ``'my.module.MyHandler'`` or ``'my.module.my_function'``.
-            The callable is called passing (request, response) as arguments.
             It is possible to define a method if the callable is a class,
             separating it by a colon: ``'my.module.MyHandler:my_method'``.
             This is a shortcut and has the same effect as defining the
@@ -881,10 +886,9 @@ class Route(BaseRoute):
             A sequence of URI schemes, e.g., ``['http']`` or ``['https']``.
             If set, the route will only match requests with these schemes.
         """
-        self.template = template
-        self.name = name
+        super(Route, self).__init__(template, handler, name=name,
+                                    build_only=build_only)
         self.defaults = defaults or {}
-        self.build_only = build_only
         self.methods = methods
         self.schemes = schemes
         if isinstance(handler, basestring) and ':' in handler:
@@ -1092,8 +1096,8 @@ class Router(object):
         for r in route.get_match_routes():
             self.match_routes.append(r)
 
-        for r in route.get_build_routes():
-            self.build_routes[r.name] = r
+        for name, r in route.get_build_routes():
+            self.build_routes[name] = r
 
     def set_matcher(self, func):
         """Sets the function called to match URIs.
@@ -1193,8 +1197,8 @@ class Router(object):
             An absolute or relative URI.
         """
         route = self.build_routes.get(name)
-        if not route:
-            raise KeyError('Route "%s" is not defined.' % name)
+        if route is None:
+            raise KeyError('Route named %r is not defined.' % name)
 
         return route.build(request, args, kwargs)
 
