@@ -17,26 +17,47 @@ import webapp2
 class MultiRoute(object):
     """Base class for routes with nested routes."""
 
+    routes = None
+    children = None
+    match_children = None
+    build_children = None
+
     def __init__(self, routes):
-        self.routes = []
-        # Extract all nested routes.
-        for route in routes:
-            for r in route.get_routes():
-                self.routes.append(r)
+        self.routes = routes
 
-    def get_routes(self):
-        for route in self.routes:
-            yield route
+    def get_children(self):
+        if self.children is None:
+            self.children = []
+            for route in self.routes:
+                for r in route.get_routes():
+                    self.children.append(r)
 
-    def get_match_routes(self):
-        for route in self.routes:
-            if not route.build_only:
-                yield route
+        for rv in self.children:
+            yield rv
 
-    def get_build_routes(self):
-        for route in self.routes:
-            if route.name is not None:
-                yield route.name, route
+    def get_match_children(self):
+        if self.match_children is None:
+            self.match_children = []
+            for route in self.get_children():
+                for r in route.get_match_routes():
+                    self.match_children.append(r)
+
+        for rv in self.match_children:
+            yield rv
+
+    def get_build_children(self):
+        if self.build_children is None:
+            self.build_children = {}
+            for route in self.get_children():
+                for n, r in route.get_build_routes():
+                    self.build_children[n] = r
+
+        for rv in self.build_children.iteritems():
+            yield rv
+
+    get_routes = get_children
+    get_match_routes = get_match_children
+    get_build_routes = get_build_children
 
 
 class DomainRoute(MultiRoute):
@@ -68,7 +89,6 @@ class DomainRoute(MultiRoute):
         """
         super(DomainRoute, self).__init__(routes)
         self.template = template
-        self.match_routes = [r for r in self.routes if not r.build_only]
 
     def get_match_routes(self):
         # This route will do pre-matching before matching the nested routes!
@@ -80,7 +100,7 @@ class DomainRoute(MultiRoute):
         host_match = self.regex.match(request.environ['SERVER_NAME'])
         if host_match:
             method_not_allowed = False
-            for route in self.match_routes:
+            for route in self.get_match_children():
                 try:
                     match = route.match(request)
                     if match:
@@ -132,13 +152,11 @@ class NamePrefixRoute(MultiRoute):
         :param routes:
             A list of :class:`webapp2.Route` instances.
         """
+        super(NamePrefixRoute, self).__init__(routes)
         self.prefix = prefix
-        self.routes = []
-        # Extract all nested routes, prepending a prefix to a route attribute.
-        for route in routes:
-            for r in route.get_routes():
-                setattr(r, self._attr, prefix + getattr(r, self._attr))
-                self.routes.append(r)
+        # Prepend a prefix to a route attribute.
+        for route in self.get_routes():
+            setattr(route, self._attr, prefix + getattr(route, self._attr))
 
 
 class HandlerPrefixRoute(NamePrefixRoute):
@@ -186,7 +204,6 @@ class PathPrefixRoute(NamePrefixRoute):
         assert prefix.startswith('/') and not prefix.endswith('/'), \
             'Path prefixes must start with a slash but not end with a slash.'
         super(PathPrefixRoute, self).__init__(prefix, routes)
-        self.match_routes = [r for r in self.routes if not r.build_only]
 
     def get_match_routes(self):
         # This route will do pre-matching before matching the nested routes!
@@ -197,7 +214,7 @@ class PathPrefixRoute(NamePrefixRoute):
             return None
 
         method_not_allowed = False
-        for route in self.match_routes:
+        for route in self.get_match_children():
             try:
                 match = route.match(request)
                 if match:

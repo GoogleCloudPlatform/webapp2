@@ -695,7 +695,7 @@ class BaseRoute(object):
     #: The handler, imported and ready for dispatching.
     handler_adapter = None
 
-    def __init__(self, template, handler, name=None, build_only=False):
+    def __init__(self, template, handler=None, name=None, build_only=False):
         """Initializes this route.
 
         :param template:
@@ -754,6 +754,8 @@ class BaseRoute(object):
     def get_match_routes(self):
         """Generator to get all routes that can be matched from a route.
 
+        Match routes must implement :meth:`match`.
+
         :yields:
             This route or all nested routes that can be matched.
         """
@@ -762,6 +764,8 @@ class BaseRoute(object):
 
     def get_build_routes(self):
         """Generator to get all routes that can be built from a route.
+
+        Build routes must implement :meth:`build`.
 
         :yields:
             This route or all nested routes that can be built.
@@ -886,7 +890,7 @@ class Route(BaseRoute):
             A sequence of URI schemes, e.g., ``['http']`` or ``['https']``.
             If set, the route will only match requests with these schemes.
         """
-        super(Route, self).__init__(template, handler, name=name,
+        super(Route, self).__init__(template, handler=handler, name=name,
                                     build_only=build_only)
         self.defaults = defaults or {}
         self.methods = methods
