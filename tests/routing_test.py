@@ -199,8 +199,7 @@ class TestRoute(test_base.BaseTestCase):
         self.assertEqual(url_res, url)
 
     def test_build_only_without_name(self):
-        router = Router(None)
-        self.assertRaises(ValueError, router.add, Route(r'/<foo>', None, build_only=True))
+        self.assertRaises(ValueError, Route, r'/<foo>', None, build_only=True)
 
     def test_route_repr(self):
         self.assertEqual(Route(r'/<foo>', None).__repr__(),
@@ -221,7 +220,7 @@ class TestRoute(test_base.BaseTestCase):
         self.assertEqual(router.__repr__(), "<Router([<Route('/world', None, name=None, defaults={}, build_only=False)>, <Route('/hello', None, name='hello', defaults={}, build_only=True)>])>")
 
     def test_base_route(self):
-        route = BaseRoute()
+        route = BaseRoute('foo', 'bar')
         self.assertRaises(NotImplementedError, route.match, None)
 
     def test_set_matcher(self):

@@ -36,7 +36,7 @@ class MultiRoute(object):
     def get_build_routes(self):
         for route in self.routes:
             if route.name is not None:
-                yield route
+                yield route.name, route
 
 
 class DomainRoute(MultiRoute):
@@ -79,12 +79,19 @@ class DomainRoute(MultiRoute):
         # host_match = self.regex.match(request.host.split(':', 1)[0])
         host_match = self.regex.match(request.environ['SERVER_NAME'])
         if host_match:
+            method_not_allowed = False
             for route in self.match_routes:
-                match = route.match(request)
-                if match:
-                    args, kwargs = webapp2._get_route_variables(host_match)
-                    match[2].update(kwargs)
-                    return match
+                try:
+                    match = route.match(request)
+                    if match:
+                        args, kwargs = webapp2._get_route_variables(host_match)
+                        match[2].update(kwargs)
+                        return match
+                except exc.HTTPMethodNotAllowed:
+                    method_not_allowed = True
+
+            if method_not_allowed:
+                raise exc.HTTPMethodNotAllowed()
 
     @webapp2.cached_property
     def regex(self):
@@ -189,10 +196,17 @@ class PathPrefixRoute(NamePrefixRoute):
         if not self.regex.match(urllib.unquote(request.path)):
             return None
 
+        method_not_allowed = False
         for route in self.match_routes:
-            match = route.match(request)
-            if match:
-                return match
+            try:
+                match = route.match(request)
+                if match:
+                    return match
+            except exc.HTTPMethodNotAllowed:
+                method_not_allowed = True
+
+        if method_not_allowed:
+            raise exc.HTTPMethodNotAllowed()
 
     @webapp2.cached_property
     def regex(self):
@@ -286,9 +300,6 @@ class RedirectRoute(webapp2.Route):
                 yield self._get_redirect_route(template=template)
             else:
                 yield main_route
-        elif not self.name:
-            raise ValueError("Route %r is build_only but doesn't have a "
-                "name" % self)
 
     def _get_redirect_route(self, template=None, name=None):
         template = template or self.template

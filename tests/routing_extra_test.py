@@ -89,8 +89,7 @@ class TestRedirectRoute(test_base.BaseTestCase):
         self.assertRaises(ValueError, RedirectRoute, '/strict-bar/', handler=HomeHandler, strict_slash=True)
 
     def test_build_only(self):
-        r = RedirectRoute('/', handler=HomeHandler, build_only=True)
-        self.assertRaises(ValueError, webapp2.Router, [r])
+        self.assertRaises(ValueError, RedirectRoute, '/', handler=HomeHandler, build_only=True)
 
 
 class TestPrefixRoutes(test_base.BaseTestCase):
