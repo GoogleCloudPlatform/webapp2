@@ -768,7 +768,7 @@ class BaseRoute(object):
         Build routes must implement :meth:`build`.
 
         :yields:
-            This route or all nested routes that can be built.
+            A tuple ``(name, route)`` for all nested routes that can be built.
         """
         if self.name is not None:
             yield self.name, self
@@ -903,7 +903,6 @@ class Route(BaseRoute):
             else:
                 self.handler, self.handler_method = handler.rsplit(':', 1)
         else:
-            self.handler = handler
             self.handler_method = handler_method
 
     @cached_property

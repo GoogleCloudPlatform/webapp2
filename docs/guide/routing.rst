@@ -282,20 +282,13 @@ And then have a route that matches subdomains of the main ``appspot`` domain
     ])
 
 
-.. _guide.routing.prefix-routes:
+.. _guide.routing.path-prefix-routes:
 
-Prefix routes
--------------
-For convenience, the :mod:`webapp2_extras.routes` provides three other classes
-that accept nested routes. The intention is to avoid repetition when defining
-routes:
-
-- :mod:`webapp2_extras.routes.PathPrefixRoute`: receives a path prefix and
-  a list of routes that start with that path.
-- :mod:`webapp2_extras.routes.HandlerPrefixRoute`: receives a handler module
-  prefix in dotted notation and a list of routes that use that module.
-- :mod:`webapp2_extras.routes.NamePrefixRoute`: receives a handler name
-  prefix and a list of routes that start with that name.
+Path prefix routes
+------------------
+The :mod:`webapp2_extras.routes` provides a class to wrap routes that start
+with a common path: the :mod:`webapp2_extras.routes.PathPrefixRoute`.
+The intention is to avoid repetition when defining routes.
 
 For example, imagine we have these routes::
 
@@ -320,6 +313,19 @@ We could refactor them to reuse the common path prefix::
 
 This is not only convenient, but also performs better: the nested rules
 will only be tested if the path prefix matches.
+
+
+.. _guide.routing.other-prefix-routes:
+
+Other prefix routes
+-------------------
+The :mod:`webapp2_extras.routes` has other convenience classes that accept
+nested routes with a common attribute prefix:
+
+- :mod:`webapp2_extras.routes.HandlerPrefixRoute`: receives a handler module
+  prefix in dotted notation and a list of routes that use that module.
+- :mod:`webapp2_extras.routes.NamePrefixRoute`: receives a handler name
+  prefix and a list of routes that start with that name.
 
 
 .. _guide.routing.building-uris:

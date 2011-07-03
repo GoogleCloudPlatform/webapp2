@@ -11,6 +11,8 @@
 import re
 import urllib
 
+from webob import exc
+
 import webapp2
 
 
@@ -98,20 +100,11 @@ class DomainRoute(MultiRoute):
         # Use SERVER_NAME to ignore port number that comes with request.host?
         # host_match = self.regex.match(request.host.split(':', 1)[0])
         host_match = self.regex.match(request.environ['SERVER_NAME'])
-        if host_match:
-            method_not_allowed = False
-            for route in self.get_match_children():
-                try:
-                    match = route.match(request)
-                    if match:
-                        args, kwargs = webapp2._get_route_variables(host_match)
-                        match[2].update(kwargs)
-                        return match
-                except exc.HTTPMethodNotAllowed:
-                    method_not_allowed = True
 
-            if method_not_allowed:
-                raise exc.HTTPMethodNotAllowed()
+        if host_match:
+            args, kwargs = webapp2._get_route_variables(host_match)
+            return _match_routes(self.get_match_children, request, None,
+                                 kwargs)
 
     @webapp2.cached_property
     def regex(self):
@@ -213,17 +206,7 @@ class PathPrefixRoute(NamePrefixRoute):
         if not self.regex.match(urllib.unquote(request.path)):
             return None
 
-        method_not_allowed = False
-        for route in self.get_match_children():
-            try:
-                match = route.match(request)
-                if match:
-                    return match
-            except exc.HTTPMethodNotAllowed:
-                method_not_allowed = True
-
-        if method_not_allowed:
-            raise exc.HTTPMethodNotAllowed()
+        return _match_routes(self.get_match_children, request)
 
     @webapp2.cached_property
     def regex(self):
@@ -336,3 +319,25 @@ class RedirectRoute(webapp2.Route):
         kwargs.pop('_uri', None)
         kwargs.pop('_code', None)
         return handler.uri_for(kwargs.pop('_name'), *args, **kwargs)
+
+
+def _match_routes(iter_func, request, extra_args=None, extra_kwargs=None):
+    """Tries to match a route given an iterator."""
+    method_not_allowed = False
+    for route in iter_func():
+        try:
+            match = route.match(request)
+            if match:
+                route, args, kwargs = match
+                if extra_args:
+                    args += extra_args
+
+                if extra_kwargs:
+                    kwargs.update(extra_kwargs)
+
+                return route, args, kwargs
+        except exc.HTTPMethodNotAllowed:
+            method_not_allowed = True
+
+    if method_not_allowed:
+        raise exc.HTTPMethodNotAllowed()

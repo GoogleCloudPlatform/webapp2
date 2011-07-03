@@ -132,8 +132,7 @@ Request handlers
 
 Utilities
 ---------
-These are some other utilities used internally that are also available for
-general use.
+These are some other utilities also available for general use.
 
 .. autoclass:: cached_property
 
