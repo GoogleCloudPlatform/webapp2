@@ -226,6 +226,10 @@ class CustomBackendSessionFactory(BaseSessionFactory):
 class SessionStore(object):
     """A session provider for a single request.
 
+    The session store can provide multiple sessions using different keys,
+    even using different backends in the same request, through the method
+    :meth:`get_session`. By default it returns a session using the default key.
+
     To use, define a base handler that extends the dispatch() method to start
     the session store and save all sessions at the end of a request::
 
