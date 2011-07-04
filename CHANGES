@@ -4,6 +4,15 @@ Development version
   prefix matches. So now it is not only convenient but matches smartly and
   faster. ;)
 
+- Added webapp2_extras.security, with security related helpers such as secure
+  password hashing tools.
+
+- webapp2_extras.sessions now uses webapp2_extras.security.create_token() to
+  generate session IDs instead of uuid.
+
+- get_build_routes() now yields (name, route) instead of simply route. This
+  will allow routes with nested routes to act as a proxy to build URIs.
+
 - webapp2.urlunsplit() was removed from the public API.
 
 

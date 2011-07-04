@@ -33,6 +33,8 @@ output is a byte string to be sent verbatim.
    in the ``status_int`` attribute, as in WebOb.
 
 
+.. _guide.response.setting-cookies:
+
 Setting cookies
 ---------------
 Cookies are set in the response object. The methods to handle cookies are:
@@ -80,6 +82,8 @@ version
 comment
   Defines a cookie comment.
 
+.. seealso::
+   :ref:`How to read cookies from the request object <guide.request.cookies>`
 
 Common Response attributes
 --------------------------

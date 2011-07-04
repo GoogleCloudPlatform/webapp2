@@ -1,6 +1,6 @@
 from ndb import model
 
-from experimental import security
+from webapp2_extras import security
 from experimental import unique_model
 
 
@@ -69,7 +69,7 @@ class User(model.Model):
         if not user:
             return None, 'invalid-username'
 
-        if not security.check_password_hash(user.password, password):
+        if not security.check_password_hash(password, user.password):
             return None, 'invalid-password'
 
         return user, None
@@ -102,7 +102,7 @@ class User(model.Model):
         """Registers a new user."""
         if 'password_raw' in user_values:
             user_values['password'] = security.create_password_hash(
-                user_values.pop('password_raw'), salt_bytes=12)
+                user_values.pop('password_raw'), salt_length=12)
 
         user_values['username'] = username = user_values['name'].lower()
         user = User(key=cls.get_key(username), **user_values)

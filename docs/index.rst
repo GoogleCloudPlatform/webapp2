@@ -82,6 +82,7 @@ API Reference - webapp2_extras
    api/extras.protorpc.rst
    api/extras.routes.rst
    api/extras.securecookie.rst
+   api/extras.security.rst
    api/extras.sessions.rst
    api/extras.sessions_memcache.rst
    api/extras.sessions_ndb.rst

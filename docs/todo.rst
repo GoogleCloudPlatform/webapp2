@@ -1,6 +1,12 @@
 TODO: snippets to document
 ==========================
 
+Secret keys
+-----------
+Add a note about how to generate strong session secret keys::
+
+    $ openssl genrsa -out ${PWD}/private_rsa_key.pem 2048
+
 Jinja2 factory
 --------------
 To create Jinja2 with custom filters and global variables::

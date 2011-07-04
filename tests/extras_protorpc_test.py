@@ -71,7 +71,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         protorpc.run_services([('/hello', HelloService)], debug=True)
 
     def test_ahoy(self):
-        req = webapp2.Request.blank('/protorpc_test/AhoyService.ahoy')
+        req = webapp2.Request.blank('/extras_protorpc_test/AhoyService.ahoy')
         req.method = 'POST'
         req.headers['Content-Type'] = 'application/json'
         req.body = '{"my_name": "bob"}'

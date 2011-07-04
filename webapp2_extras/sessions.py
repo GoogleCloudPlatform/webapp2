@@ -8,12 +8,12 @@
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
-import uuid
 import re
 
 import webapp2
 
 from webapp2_extras import securecookie
+from webapp2_extras import security
 
 #: Default configuration values for this module. Keys are:
 #:
@@ -201,7 +201,7 @@ class CustomBackendSessionFactory(BaseSessionFactory):
     sid = None
 
     #: Used to validate session ids.
-    _sid_re = re.compile(r'^[a-f0-9]{32}$')
+    _sid_re = re.compile(r'^[a-f0-9]{128}$')
 
     def get_session(self, max_age=DEFAULT_VALUE):
         if self.session is None:
@@ -220,7 +220,7 @@ class CustomBackendSessionFactory(BaseSessionFactory):
         return sid and self._sid_re.match(sid) is not None
 
     def _get_new_sid(self):
-        return uuid.uuid4().hex
+        return security.create_token(128)
 
 
 class SessionStore(object):
