@@ -3,7 +3,8 @@
     webapp2_extras.security
     =======================
 
-    Security related helpers such as secure password hashing tools.
+    Security related helpers such as secure password hashing tools and a
+    random token generator.
 
     :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
@@ -14,29 +15,28 @@ import hmac
 import os
 
 
-def create_token(bytes=32):
-    """Generates a random string with specified number of bytes.
+def create_token(length=32):
+    """Generates a random string with the specified length.
 
     This uses ``os.urandom``, which is suitable for cryptographic use.
 
     See: http://security.stackexchange.com/questions/3936/is-a-rand-from-dev-urandom-secure-for-a-login-key/3939#3939
 
-    :param bytes:
-        Number of bytes used to create the token. The resulting string is
-        twice as long as this value, as the hexadecimal representation is
-        returned.
+    :param length:
+        Length of the string to be returned. **Must** be an even number.
     :returns:
         A random string, as an hexadecimal representation.
 
     This function was ported and adapted from `Werkzeug`_.
     """
-    if bytes <= 0:
-        raise ValueError('Requested salt with 0 bytes or less.')
+    if length % 2 or length <= 0:
+        raise ValueError(
+            'This function expects an even positive length, got %r.' % length)
 
-    return binascii.b2a_hex(os.urandom(bytes))
+    return binascii.b2a_hex(os.urandom(length / 2))
 
 
-def create_password_hash(password, method='sha1', salt_bytes=16):
+def create_password_hash(password, method='sha1', salt_length=32):
     """Hashes a password.
 
     The format of the string returned includes the method
@@ -50,8 +50,8 @@ def create_password_hash(password, method='sha1', salt_bytes=16):
         The password to hash.
     :param method:
         The hash method to use (``'md5'`` or ``'sha1'``).
-    :param salt_bytes:
-        Number of bytes used to create the salt.
+    :param salt_length:
+        Length of the salt to be created.
     :returns:
         A formatted hashed string that looks like this::
 
@@ -59,24 +59,24 @@ def create_password_hash(password, method='sha1', salt_bytes=16):
 
     This function was ported and adapted from `Werkzeug`_.
     """
-    salt = method != 'plain' and create_token(salt_bytes) or ''
+    salt = method != 'plain' and create_token(salt_length) or ''
     hashval = hash_password(password, method, salt)
     if hashval is None:
-        raise TypeError('Invalid method %r' % method)
+        raise TypeError('Invalid method %r.' % method)
 
     return '%s$%s$%s' % (hashval, method, salt)
 
 
-def check_password_hash(pwhash, password):
+def check_password_hash(password, pwhash):
     """Checks a password against a given salted and hashed password value.
 
     In order to support unsalted legacy passwords this method supports
     plain text passwords, md5 and sha1 hashes (both salted and unsalted).
 
-    :param pwhash:
-        A hashed string like returned by :func:`create_password_hash`.
     :param password:
         The plaintext password to compare against the hash.
+    :param pwhash:
+        A hashed string like returned by :func:`create_password_hash`.
     :returns:
         `True` if the password matched, `False` otherwise.
 

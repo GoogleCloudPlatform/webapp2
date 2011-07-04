@@ -124,6 +124,8 @@ Uploaded files are available as ``cgi.FieldStorage`` (see the :py:mod:`cgi`
 module) instances directly in ``request.POST``.
 
 
+.. _guide.request.cookies:
+
 Cookies
 -------
 Cookies can be accessed in ``request.cookies``. It is a simple dictionary::
@@ -133,6 +135,9 @@ Cookies can be accessed in ``request.cookies``. It is a simple dictionary::
 
     # A value: 'value'
     cookie_value = request.cookies.get('test')
+
+.. seealso::
+   :ref:`How to set cookies using the response object <guide.response.setting-cookies>`
 
 
 Common Request attributes
