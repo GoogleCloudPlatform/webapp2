@@ -9,10 +9,14 @@
     :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-import binascii
 import hashlib
 import hmac
 import os
+import random
+import string
+
+SALT_CHARS = string.letters + string.digits
+_SYS_RNG = random.SystemRandom()
 
 
 def create_token(length=32):
@@ -23,17 +27,17 @@ def create_token(length=32):
     See: http://security.stackexchange.com/questions/3936/is-a-rand-from-dev-urandom-secure-for-a-login-key/3939#3939
 
     :param length:
-        Length of the string to be returned. **Must** be an even number.
+        Length of the string to be returned.
     :returns:
-        A random string, as an hexadecimal representation.
+        A random string with the specified length.
 
     This function was ported and adapted from `Werkzeug`_.
     """
-    if length % 2 or length <= 0:
+    if length <= 0:
         raise ValueError(
-            'This function expects an even positive length, got %r.' % length)
+            'This function expects a positive length, got %r.' % length)
 
-    return binascii.b2a_hex(os.urandom(length / 2))
+    return ''.join(_SYS_RNG.choice(SALT_CHARS) for _ in xrange(length))
 
 
 def create_password_hash(password, method='sha1', salt_length=32):
