@@ -89,20 +89,20 @@ class User(model.Model):
 
     @classmethod
     def create_auth_token(self, username):
-        entity = UserToken.create(username, 'auth', token_size=128)
+        entity = UserToken.create(username, 'auth', token_size=64)
         return entity.token
 
     @classmethod
     def create_signup_token(self, username):
-        entity = UserToken.create(username, 'confirm-signup', token_size=64)
+        entity = UserToken.create(username, 'confirm-signup')
         return entity.token
 
     @classmethod
     def register(cls, **user_values):
         """Registers a new user."""
         if 'password_raw' in user_values:
-            user_values['password'] = security.generate_password_hash(
-                user_values.pop('password_raw'), salt_length=12)
+            user_values['password'] = security.create_password_hash(
+                user_values.pop('password_raw'), salt_bytes=12)
 
         user_values['username'] = username = user_values['name'].lower()
         user = User(key=cls.get_key(username), **user_values)
@@ -143,8 +143,8 @@ class UserToken(model.Model):
         return model.Key(cls, '%s.%s.%s' % (username, subject, token))
 
     @classmethod
-    def create(cls, username, subject, token=None, token_size=64):
-        token = token or security.generate_token(token_size)
+    def create(cls, username, subject, token=None, token_size=32):
+        token = token or security.create_token(token_size)
         key = cls.get_key(username, subject, token)
         entity = cls(key=key, username=username, subject=subject, token=token)
         entity.put()
