@@ -78,7 +78,7 @@ URI routing
              default_matcher, default_builder,
              default_dispatcher, default_adapter,
              set_matcher, set_builder,
-             set_dispatcher, set_adapter,
+             set_dispatcher, set_adapter
 
 .. autoclass:: BaseRoute
    :members: template, name, handler, handler_method, handler_adapter,

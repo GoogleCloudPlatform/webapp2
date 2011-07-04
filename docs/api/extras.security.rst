@@ -1,3 +1,5 @@
+.. _Werkzeug: http://werkzeug.pocoo.org/
+
 .. _api.extras.security:
 
 Security
