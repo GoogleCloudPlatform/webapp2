@@ -63,7 +63,7 @@ class User(model.Model):
 
     @classmethod
     def validate_username_and_password(cls, username, password):
-        """Returns user, valid_username, valid_password."""
+        """Returns (user, reason-if-not-valid)."""
         # TODO: check if user.status != 0 here?
         user = cls.get_by_username(username)
         if not user:
@@ -102,7 +102,7 @@ class User(model.Model):
         """Registers a new user."""
         if 'password_raw' in user_values:
             user_values['password'] = security.create_password_hash(
-                user_values.pop('password_raw'), salt_length=12)
+                user_values.pop('password_raw'), bit_strength=12)
 
         user_values['username'] = username = user_values['name'].lower()
         user = User(key=cls.get_key(username), **user_values)

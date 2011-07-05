@@ -201,7 +201,7 @@ class CustomBackendSessionFactory(BaseSessionFactory):
     sid = None
 
     #: Used to validate session ids.
-    _sid_re = re.compile(r'^[a-zA-Z0-9]{128}$')
+    _sid_re = re.compile(r'^[a-f0-9]{32}$')
 
     def get_session(self, max_age=DEFAULT_VALUE):
         if self.session is None:
