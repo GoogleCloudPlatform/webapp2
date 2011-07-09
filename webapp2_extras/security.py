@@ -133,3 +133,15 @@ def hash_password(password, method, salt=None, pepper=None):
         h = hmac.new(webapp2._to_utf8(pepper), h.hexdigest(), method)
 
     return h.hexdigest()
+
+
+def compare_hashes(a, b):
+    """Checks if two hash strings are identical."""
+    if len(a) != len(b):
+        return False
+
+    result = 0
+    for x, y in zip(a, b):
+        result |= ord(x) ^ ord(y)
+
+    return result == 0

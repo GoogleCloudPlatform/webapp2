@@ -14,6 +14,7 @@ import logging
 import time
 
 from webapp2_extras import json
+from webapp2_extras import security
 
 
 class SecureCookieSerializer(object):
@@ -68,7 +69,7 @@ class SecureCookieSerializer(object):
 
         signature = self._get_signature(name, parts[0], parts[1])
 
-        if not self._check_signature(parts[2], signature):
+        if not security.compare_hashes(parts[2], signature):
             logging.warning('Invalid cookie signature %r', value)
             return None
 
@@ -97,14 +98,3 @@ class SecureCookieSerializer(object):
         signature = hmac.new(self.secret_key, digestmod=hashlib.sha1)
         signature.update('|'.join(parts))
         return signature.hexdigest()
-
-    def _check_signature(self, a, b):
-        """Checks if an HMAC signature is valid."""
-        if len(a) != len(b):
-            return False
-
-        result = 0
-        for x, y in zip(a, b):
-            result |= ord(x) ^ ord(y)
-
-        return result == 0
