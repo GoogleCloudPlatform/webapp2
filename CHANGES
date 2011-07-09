@@ -7,8 +7,12 @@ Development version
 - Added webapp2_extras.security, with security related helpers such as secure
   password hashing tools.
 
-- webapp2_extras.sessions now uses webapp2_extras.security.create_token() to
-  generate session IDs instead of uuid.
+- webapp2_extras.sessions:
+  - Now uses webapp2_extras.security.create_token() to generate session IDs
+    instead of uuid.
+  - Added 'backends' configuration: get_session() can now be called passing
+    a more convenient 'backend' key. Default ones are 'securecookie',
+    'datastore' and 'memcache'.
 
 - get_build_routes() now yields (name, route) instead of simply route. This
   will allow routes with nested routes to act as a proxy to build URIs.

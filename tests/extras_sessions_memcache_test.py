@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import webapp2
 from webapp2_extras import sessions
-from webapp2_extras import sessions_memcache
+#from webapp2_extras import sessions_memcache
 
 import test_base
 
@@ -14,7 +14,7 @@ app = webapp2.WSGIApplication(config={
 
 
 class TestMemcacheSession(test_base.BaseTestCase):
-    factory = sessions_memcache.MemcacheSessionFactory
+    #factory = sessions_memcache.MemcacheSessionFactory
 
     def test_get_save_session(self):
 
@@ -24,7 +24,7 @@ class TestMemcacheSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='memcache')
 
         rsp = webapp2.Response()
         # Nothing changed, we want to test anyway.
@@ -43,7 +43,7 @@ class TestMemcacheSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='memcache')
         self.assertEqual(session['a'], 'b')
         self.assertEqual(session['c'], 'd')
         self.assertEqual(session['e'], 'f')
@@ -60,7 +60,7 @@ class TestMemcacheSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='memcache')
         self.assertEqual(session['a'], 'b')
         self.assertEqual(session['c'], 'd')
         self.assertEqual(session['e'], 'f')
@@ -74,7 +74,7 @@ class TestMemcacheSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='memcache')
         flashes = session.get_flashes()
         self.assertEqual(flashes, [])
         session.add_flash('foo')
@@ -89,7 +89,7 @@ class TestMemcacheSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='memcache')
 
         flashes = session.get_flashes()
         self.assertEqual(flashes, [(u'foo', None)])
@@ -110,7 +110,7 @@ class TestMemcacheSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='memcache')
 
         flashes = session.get_flashes()
         self.assertEqual(flashes, [(u'bar', None), (u'baz', 'important')])
@@ -128,7 +128,7 @@ class TestMemcacheSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='memcache')
         flashes = session.get_flashes()
         self.assertEqual(flashes, [])
 
