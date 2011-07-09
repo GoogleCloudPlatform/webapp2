@@ -50,6 +50,10 @@ from webapp2_extras import security
 #:     - secure: Make the cookie only available via HTTPS.
 #:
 #:     - httponly: Disallow JavaScript to access the cookie.
+#:
+#: backends
+#:     A dictionary of available session backend classes used by
+#:     :meth:`SessionStore.get_session`.
 default_config = {
     'secret_key':      None,
     'cookie_name':     'session',
@@ -60,7 +64,12 @@ default_config = {
         'path':        '/',
         'secure':      None,
         'httponly':    False,
-    }
+    },
+    'backends': {
+        'securecookie': 'webapp2_extras.sessions.SecureCookieSessionFactory',
+        'datastore': 'webapp2_extras.sessions_ndb.DatastoreSessionFactory',
+        'memcache': 'webapp2_extras.sessions_memcache.MemcacheSessionFactory',
+    },
 }
 
 DEFAULT_VALUE = object()
@@ -303,6 +312,21 @@ class SessionStore(object):
         # Serializer and deserializer for signed cookies.
         return securecookie.SecureCookieSerializer(self.config['secret_key'])
 
+    def get_backend(self, name):
+        """Returns a configured session backend, importing it if needed.
+
+        :param name:
+            The backend keyword.
+        :returns:
+            A :class:`BaseSessionFactory` subclass.
+        """
+        backends = self.config['backends']
+        backend = backends[name]
+        if isinstance(backend, basestring):
+            backend = backends[name] = webapp2.import_string(backend)
+
+        return backend
+
     # Backend based sessions --------------------------------------------------
 
     def _get_session_container(self, name, factory):
@@ -311,8 +335,8 @@ class SessionStore(object):
 
         return self.sessions[name]
 
-    def get_session(self, name=None, max_age=DEFAULT_VALUE,
-                    factory=SecureCookieSessionFactory):
+    def get_session(self, name=None, max_age=DEFAULT_VALUE, factory=None,
+                    backend='securecookie'):
         """Returns a session for a given name. If the session doesn't exist, a
         new session is returned.
 
@@ -325,13 +349,21 @@ class SessionStore(object):
             None, the timestamp won't be checked.
         :param factory:
             A session factory that creates the session using the preferred
-            backend. Default is :class:`SecureCookieSessionFactory`. Other
-            available factories are
-            :class:`webapp2_extras.sessions_ndb.DatastoreSessionFactory` and
-            :class:`webapp2_extras.sessions_memcache.MemcacheSessionFactory`.
+            backend. For convenience, use the `backend` argument instead,
+            which defines a backend keyword based on the configured ones.
+        :param backend:
+            A configured backend keyword. Available ones are:
+
+            - ``securecookie``: uses :class:`SecureCookieSessionFactory`.
+              This is the default backend.
+            - ``datastore``: uses
+              :class:`webapp2_extras.sessions_ndb.DatastoreSessionFactory`.
+            - ``memcache``: uses
+              :class:`webapp2_extras.sessions_memcache.MemcacheSessionFactory`.
         :returns:
             A dictionary-like session object.
         """
+        factory = factory or self.get_backend(backend)
         name = name or self.config['cookie_name']
 
         if max_age is DEFAULT_VALUE:
@@ -438,3 +470,7 @@ def set_store(store, key=_registry_key, request=None):
     """
     request = request or webapp2.get_request()
     request.registry[key] = store
+
+
+# Don't need to import it. :)
+default_config['backends']['securecookie'] = SecureCookieSessionFactory

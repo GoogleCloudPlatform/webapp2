@@ -17,7 +17,7 @@ app = webapp2.WSGIApplication(config={
 
 
 class TestNdbSession(test_base.BaseTestCase):
-    factory = sessions_ndb.DatastoreSessionFactory
+    #factory = sessions_ndb.DatastoreSessionFactory
 
     def test_get_save_session(self):
 
@@ -27,7 +27,7 @@ class TestNdbSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='datastore')
 
         rsp = webapp2.Response()
         # Nothing changed, we want to test anyway.
@@ -46,7 +46,7 @@ class TestNdbSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='datastore')
         self.assertEqual(session['a'], 'b')
         self.assertEqual(session['c'], 'd')
         self.assertEqual(session['e'], 'f')
@@ -63,7 +63,7 @@ class TestNdbSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='datastore')
         self.assertEqual(session['a'], 'b')
         self.assertEqual(session['c'], 'd')
         self.assertEqual(session['e'], 'f')
@@ -80,7 +80,7 @@ class TestNdbSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='datastore')
         self.assertEqual(session['a'], 'b')
         self.assertEqual(session['c'], 'd')
         self.assertEqual(session['e'], 'f')
@@ -94,7 +94,7 @@ class TestNdbSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='datastore')
         flashes = session.get_flashes()
         self.assertEqual(flashes, [])
         session.add_flash('foo')
@@ -109,7 +109,7 @@ class TestNdbSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='datastore')
 
         flashes = session.get_flashes()
         self.assertEqual(flashes, [(u'foo', None)])
@@ -130,7 +130,7 @@ class TestNdbSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='datastore')
 
         flashes = session.get_flashes()
         self.assertEqual(flashes, [(u'bar', None), (u'baz', 'important')])
@@ -148,7 +148,7 @@ class TestNdbSession(test_base.BaseTestCase):
         req.app = app
         store = sessions.SessionStore(req)
 
-        session = store.get_session(factory=self.factory)
+        session = store.get_session(backend='datastore')
         flashes = session.get_flashes()
         self.assertEqual(flashes, [])
 

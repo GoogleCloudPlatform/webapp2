@@ -17,7 +17,7 @@ default key from configuration.
 .. autodata:: default_config
 
 .. autoclass:: SessionStore
-   :members: __init__, get_session, get_secure_cookie,
+   :members: __init__, get_backend, get_session, get_secure_cookie,
              set_secure_cookie, save_sessions, save_secure_cookie
 
 .. autoclass:: SessionDict
