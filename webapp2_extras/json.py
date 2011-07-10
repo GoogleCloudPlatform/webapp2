@@ -8,6 +8,8 @@
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
+from __future__ import absolute_import
+
 import base64
 import urllib
 
@@ -26,6 +28,9 @@ except ImportError: # pragma: no cover
             raise RuntimeError(
                 'A JSON parser is required, e.g., simplejson at '
                 'http://pypi.python.org/pypi/simplejson/')
+
+assert hasattr(json, 'loads') and hasattr(json, 'dumps'), \
+    'Expected a JSON module with the functions loads() and dumps().'
 
 
 def encode(value, *args, **kwargs):
