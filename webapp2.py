@@ -688,7 +688,7 @@ class BaseRoute(object):
     name = None
     #: True if this route is only used for URI generation and never matches.
     build_only = False
-    #: The handler or string or in dotted notation to be lazily imported.
+    #: The handler or string in dotted notation to be lazily imported.
     handler = None
     #: The custom handler method, if handler is a class.
     handler_method = None
