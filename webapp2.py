@@ -12,6 +12,7 @@ from __future__ import with_statement
 
 import cgi
 import logging
+import os
 import re
 import urllib
 import urlparse
@@ -28,11 +29,20 @@ except ImportError: # pragma: no cover
     from webob.util import status_reasons
     from webob.headers import ResponseHeaders as BaseResponseHeaders
 
-try: # pragma: no cover
-    from google.appengine.ext import webapp
-    from google.appengine.ext.webapp import util
-except ImportError: # pragma: no cover
-    # Allow running webapp2 outside of GAE.
+if os.environ.get('APPENGINE_RUNTIME') == 'python27': # pragma: no cover
+    # google.appengine.ext.webapp imports webapp2 in the App Engine Python 2.7
+    # runtime.
+    webapp = None
+else: # pragma: no cover
+    try:
+        from google.appengine.ext import webapp
+        from google.appengine.ext.webapp import util
+    except ImportError:
+        # Running webapp2 outside of GAE.
+        webapp = None
+
+if webapp is None:
+    # google.appengine.ext.webapp isn't available.
     from wsgiref import handlers
 
     class webapp(object):
