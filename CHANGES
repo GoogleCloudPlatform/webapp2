@@ -1,5 +1,7 @@
 Development version
 ===================
+- Added support for the (not yet released) App Engine Python 2.7 SDK.
+
 - Like DomainRoute, PathPrefixRoute now only tests the nested routes if the
   prefix matches. So now it is not only convenient but matches smartly and
   faster. ;)
@@ -18,6 +20,9 @@ Development version
   will allow routes with nested routes to act as a proxy to build URIs.
 
 - webapp2.urlunsplit() was removed from the public API.
+
+- Variables names in routes must now look like python identifiers -
+  this means that they can no longer start with a number.
 
 
 Version 1.8.1 - June 29, 2011

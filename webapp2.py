@@ -63,7 +63,7 @@ HTTPException = exc.HTTPException
 #: Regex for route definitions.
 _ROUTE_REGEX = re.compile(r"""
     \<               # The exact character "<"
-    (\w+)?           # The optional variable name ([a-zA-Z0-9_]+)
+    ([a-zA-Z_]\w*)?  # The optional variable name
     (?::([^>]*))?    # The optional :regex part
     \>               # The exact character ">"
     """, re.VERBOSE)
