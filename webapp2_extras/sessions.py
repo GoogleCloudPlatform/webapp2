@@ -210,7 +210,7 @@ class CustomBackendSessionFactory(BaseSessionFactory):
     sid = None
 
     #: Used to validate session ids.
-    _sid_re = re.compile(r'^[a-f0-9]{32}$')
+    _sid_re = re.compile(r'^\w{22}$')
 
     def get_session(self, max_age=DEFAULT_VALUE):
         if self.session is None:
@@ -229,7 +229,7 @@ class CustomBackendSessionFactory(BaseSessionFactory):
         return sid and self._sid_re.match(sid) is not None
 
     def _get_new_sid(self):
-        return security.create_token(128)
+        return security.create_token(22)
 
 
 class SessionStore(object):
