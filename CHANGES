@@ -24,6 +24,11 @@ Development version
 - Variables names in routes must now look like python identifiers -
   this means that they can no longer start with a number.
 
+- Removed support for _anchor in uri_for() -- documented keyword is _fragment.
+
+- Removed support for handler functions receiving (request, response). The
+  correct arguments for function handlers are (request, *args, **kwargs).
+
 - webapp2_extras.json:
   - Fixed an issue with importing json on non-GAE environments (missing
     absolute import).
