@@ -9,38 +9,52 @@
     :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-import binascii
 import hashlib
 import hmac
-import os
+import random
+import string
 
 import webapp2
 
+_rng = random.SystemRandom()
+_chars = string.letters + string.digits
 
-def create_token(bit_strength=64, decimal=False):
-    """Generates a random string with the specified bit strength.
 
-    :param bit_strength:
-        Bit strength. Must be a multiple of 8.
-    :param decimal:
-        If True, a decimal representation is returned, otherwise an
-        hexadecimal representation is returned.
+def create_token(length=22):
+    """Generates a random string with the specified length.
+
+    :param length:
+        Length of the token to be created. Default is 22 (128 bits entropy).
+        The following table shows how to achieve different entropies:
+
+            =========  =========
+            Entropy    Length
+            =========  =========
+            32 bits	   6
+            40 bits	   7
+            64 bits	   11
+            80 bits	   14
+            96 bits    17
+            128 bits   22
+            160 bits   27
+            192 bits   33
+            224 bits   38
+            256 bits   43
+
     :returns:
-        A random string with the specified bit strength.
+        A random string using case sensitive alphanumeric characters and
+        the specified length.
+
+    This function was ported and adapted from `Werkzeug`_.
     """
-    if bit_strength % 8 or bit_strength <= 0:
+    if length <= 0:
         raise ValueError(
-            'This function expects a bit strength, got %r.' % bit_strength)
+            'Token length must be greater than 0, got %r.' % length)
 
-    value = binascii.b2a_hex(os.urandom(bit_strength / 8))
-    if decimal:
-        value = str(int(value, 16))
-
-    return value
+    return ''.join(_rng.choice(_chars) for _ in xrange(length))
 
 
-def create_password_hash(password, method='sha1', bit_strength=64,
-                         pepper=None):
+def create_password_hash(password, method='sha1', length=22, pepper=None):
     """Hashes a password.
 
     The format of the string returned includes the method that was used
@@ -54,8 +68,8 @@ def create_password_hash(password, method='sha1', bit_strength=64,
         The password to hash.
     :param method:
         The hash method to use (``'md5'`` or ``'sha1'``).
-    :param bit_strength:
-        Bit strength of the salt to be created. Must be a multiple of 8.
+    :param length:
+        Length of the salt to be created.
     :param pepper:
         A secret constant stored in the application code.
     :returns:
@@ -65,7 +79,7 @@ def create_password_hash(password, method='sha1', bit_strength=64,
 
     This function was ported and adapted from `Werkzeug`_.
     """
-    salt = method != 'plain' and create_token(bit_strength) or ''
+    salt = method != 'plain' and create_token(length) or ''
     hashval = hash_password(password, method, salt, pepper)
     if hashval is None:
         raise TypeError('Invalid method %r.' % method)
