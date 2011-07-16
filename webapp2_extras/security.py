@@ -150,7 +150,18 @@ def hash_password(password, method, salt=None, pepper=None):
 
 
 def compare_hashes(a, b):
-    """Checks if two hash strings are identical."""
+    """Checks if two hash strings are identical.
+
+    The intention is to make the running time be less dependant on the size of
+    the string.
+
+    :param a:
+        String 1.
+    :param b:
+        String 2.
+    :returns:
+        True if both strings are equal, False otherwise.
+    """
     if len(a) != len(b):
         return False
 
