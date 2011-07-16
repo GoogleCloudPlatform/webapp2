@@ -15,19 +15,16 @@ import urllib
 
 try:
     # Preference for installed library with updated fixes.
+    # Also available in Google App Engine SDK >= 1.4.2.
     import simplejson as json
 except ImportError: # pragma: no cover
     try:
         # Standard library module in Python >= 2.6.
         import json
     except ImportError:
-        try:
-            # Google App Engine.
-            from django.utils import simplejson as json
-        except ImportError:
-            raise RuntimeError(
-                'A JSON parser is required, e.g., simplejson at '
-                'http://pypi.python.org/pypi/simplejson/')
+        raise RuntimeError(
+            'A JSON parser is required, e.g., simplejson at '
+            'http://pypi.python.org/pypi/simplejson/')
 
 assert hasattr(json, 'loads') and hasattr(json, 'dumps'), \
     'Expected a JSON module with the functions loads() and dumps().'
