@@ -162,7 +162,7 @@ The resource could not be found.
 class TestHandler(test_base.BaseTestCase):
     def tearDown(self):
         super(TestHandler, self).tearDown()
-        app.set_globals(app=None, request=None)
+        app.clear_globals()
         app.error_handlers = {}
 
     def test_200(self):
@@ -538,8 +538,8 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         app = webapp2.WSGIApplication([
             webapp2.Route('/', my_view),
             webapp2.Route('/other', other_view),
-            webapp2.Route('/one-more/<foo>', one_more_view),
-        ], debug=True)
+            #webapp2.Route('/one-more/<foo>', one_more_view),
+        ])
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
@@ -563,10 +563,12 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'Hello again, function world!')
 
+        '''
         req = webapp2.Request.blank('/one-more/bar')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'Hello you too, deprecated arguments world!')
+        '''
 
     def test_custom_method(self):
         class MyHandler(webapp2.RequestHandler):
@@ -579,7 +581,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         app = webapp2.WSGIApplication([
             webapp2.Route('/', MyHandler, handler_method='my_method'),
             webapp2.Route('/other', MyHandler, handler_method='my_other_method'),
-        ], debug=True)
+        ])
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
@@ -595,7 +597,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         app = webapp2.WSGIApplication([
             webapp2.Route('/', handler='resources.handlers.CustomMethodHandler:custom_method'),
             webapp2.Route('/bleh', handler='resources.handlers.CustomMethodHandler:custom_method'),
-        ], debug=True)
+        ])
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
@@ -642,7 +644,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
         app = webapp2.WSGIApplication([
             webapp2.Route('/', handler=MyHandler),
-        ], debug=True)
+        ])
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)

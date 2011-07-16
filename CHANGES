@@ -35,6 +35,9 @@ Development version
   - Now imports simplejson directly instead of using Django, as it was
     included since SDK 1.4.2.
 
+- Added WSGIApplication.clear_globals(). Instead of
+  app.set_globals(app=None, request=None), use app.clear_globals().
+
 
 Version 1.8.1 - June 29, 2011
 =============================

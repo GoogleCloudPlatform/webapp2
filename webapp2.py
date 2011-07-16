@@ -1376,7 +1376,7 @@ class RequestContext(object):
         """
         if exc_type is None or not self.app.debug:
             # Unregister global variables.
-            self.app.set_globals(app=None, request=None)
+            self.app.clear_globals()
 
 
 class WSGIApplication(object):
@@ -1444,13 +1444,17 @@ class WSGIApplication(object):
         for an example.
 
         :param app:
-            A :class:`WSGIApplication` instance or None to remove it from
-            the globals.
+            A :class:`WSGIApplication` instance.
         :param request:
-            A :class:`Request` instance or None to remove it from the globals.
+            A :class:`Request` instance.
         """
         WSGIApplication.app = WSGIApplication.active_instance = app
         WSGIApplication.request = request
+
+    def clear_globals(self):
+        """Clears global variables. See :meth:`set_globals.`"""
+        WSGIApplication.app = WSGIApplication.active_instance = \
+            WSGIApplication.request = None
 
     def __call__(self, environ, start_response):
         """Called by WSGI when a request comes in.
@@ -1491,6 +1495,7 @@ class WSGIApplication(object):
                 return self._internal_error(e)(environ, start_response)
 
     def _internal_error(self, exception):
+        """Last resource error for :meth:`__call__`."""
         logging.exception(exception)
         if self.debug:
             raise

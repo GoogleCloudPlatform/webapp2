@@ -21,7 +21,7 @@ app = webapp2.WSGIApplication([
     RedirectRoute('/strict-bar/', HomeHandler, 'bar-strict', strict_slash=True),
     RedirectRoute('/redirect-to-name-destination', name='redirect-to-name-destination', handler=HomeHandler),
     RedirectRoute('/redirect-to-name', redirect_to_name='redirect-to-name-destination'),
-], debug=True)
+])
 
 
 class TestRedirectRoute(test_base.BaseTestCase):

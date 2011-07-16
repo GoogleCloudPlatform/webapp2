@@ -2,6 +2,8 @@ import unittest
 
 from google.appengine.ext import testbed
 
+import webapp2
+
 
 def main():
     unittest.main()
@@ -59,11 +61,15 @@ class BaseTestCase(unittest.TestCase):
         # Only when testing ndb.
         self.setup_context_cache()
 
+        #self._app = webapp2.WSGIApplication()
+
     def tearDown(self):
         # This restores the original stubs so that tests do not interfere
         # with each other.
         self.testbed.deactivate()
         self.testbed.setup_env = self._orig_setup_env
+
+        #self._app.clear_globals()
 
     def setup_env(self, **kwargs):
         kwargs.setdefault('app_id', self.DEFAULT_APP_ID)

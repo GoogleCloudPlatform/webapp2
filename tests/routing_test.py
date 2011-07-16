@@ -254,7 +254,7 @@ class TestRoute(test_base.BaseTestCase):
         def myhandler(request, *args, **kwargs):
             return webapp2.Response('hello')
 
-        app = webapp2.WSGIApplication([('/', myhandler)], debug=True)
+        app = webapp2.WSGIApplication([('/', myhandler)])
         app.router.set_adapter(custom_adapter)
 
         rsp = app.get_response('/')

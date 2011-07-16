@@ -28,8 +28,9 @@ class WSGIApplication(_app_class):
     def set_globals(self, app=None, request=None):
         """Registers the global variables for app and request.
 
-        For threaded environments, they are assigned to a proxy object that
-        returns app and request using thread-local.
+        This makes the WSGI application thread-safe: the variables are
+        assigned to a proxy object that returns app and request using
+        thread-local.
 
         :param app:
             A :class:`webapp2.WSGIApplication` instance or None to remove it
@@ -38,8 +39,9 @@ class WSGIApplication(_app_class):
             A :class:`webapp2.Request` instance or None to remove it from
             the globals.
         """
-        if app is None and request is None:
-            _local.__release_local__()
-        else:
-            _local.app = app
-            _local.request = request
+        _local.app = app
+        _local.request = request
+
+    def clear_globals(self):
+        """Clears global variables. See :meth:`set_globals.`"""
+        _local.__release_local__()

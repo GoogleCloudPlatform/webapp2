@@ -43,12 +43,12 @@ service_mappings = protorpc.service_mapping([
     ('/hello', HelloService),
     AhoyService,
 ])
-app = webapp2.WSGIApplication(service_mappings, debug=True)
+app = webapp2.WSGIApplication(service_mappings)
 
 service_mappings2 = protorpc.service_mapping({
     '/hola': HolaService,
 })
-app2 = webapp2.WSGIApplication(service_mappings2, debug=True)
+app2 = webapp2.WSGIApplication(service_mappings2)
 
 # Tests -----------------------------------------------------------------------
 
@@ -68,7 +68,7 @@ class TestProtoRPC(test_base.BaseTestCase):
         import os
         os.environ['REQUEST_METHOD'] = 'POST'
         os.environ['PATH_INFO'] = '/hello.hello'
-        protorpc.run_services([('/hello', HelloService)], debug=True)
+        protorpc.run_services([('/hello', HelloService)])
 
     def test_ahoy(self):
         req = webapp2.Request.blank('/extras_protorpc_test/AhoyService.ahoy')
@@ -169,7 +169,7 @@ class TestProtoRPC(test_base.BaseTestCase):
             ('/bonjour', 'resources.protorpc_services.BonjourService'),
             'resources.protorpc_services.CiaoService',
         ])
-        app = webapp2.WSGIApplication(service_mappings, debug=True)
+        app = webapp2.WSGIApplication(service_mappings)
 
         # Bonjour
         req = webapp2.Request.blank('/bonjour.bonjour')
