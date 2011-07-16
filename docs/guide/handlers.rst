@@ -86,11 +86,11 @@ In some Python frameworks, handlers are called `view functions` or simply
 handle a request. Our examples use mostly classes, but webapp2 handlers can
 also be normal functions equivalent to Django's `views`.
 
-To be precise, a webapp2 handler can be any callable that receives
-(:class:`webapp2.Request`, :class:`webapp2.Response`) as arguments. This
-means that, differently from webapp, ordinary functions can also be used to
-handle requests in webapp2, and not only classes. The following example
-demonstrates it::
+A webapp2 handler can, really, be **any** callable. The routing system has
+hooks to adapt how handlers are called, and two default adapters are used
+whether it is a function or a class. So, differently from webapp, ordinary
+functions can easily be used to handle requests in webapp2, and not only
+classes. The following example demonstrates it::
 
     def display_product(request, *args, **kwargs):
         return webapp2.Response('You requested product %r.' % args[0])
@@ -99,9 +99,9 @@ demonstrates it::
         (r'/products/(\d+)', display_product),
     ])
 
-Here, our handler is a simple function, and the positional route variables are
-available in the request attribute ``route_args``. Similarly, if the route
-defined named variables, they would be available in ``route_kwargs``.
+Here, our handler is a simple function that receives the request instance,
+positional route variables as ``*args`` and named variables as ``**kwargs``,
+if they are defined.
 
 Functions are an alternative for those that prefer their simplicity or think
 that handlers don't benefit that much from the power and flexibility provided
@@ -110,11 +110,12 @@ etc. An app can have mixed handler classes and functions.
 
 .. note::
    We avoid using the term `view` because it is often confused with the `View`
-   definition of the classic `MVC` pattern. Django prefers to call its `MVC`
+   definition from the classic `MVC` pattern. Django prefers to call its `MVC`
    implementation `MTV` (model-template-view), so `view` may make sense in
    their terminology. Still, we think that the term can cause unnecessary
-   confusion and prefer to use `handler` instead, as in webapp. In essence,
-   though, they are synonyms.
+   confusion and prefer to use `handler` instead, like in other Python
+   frameworks (webapp, web.py or Tornado, for instance). In essence, though,
+   they are synonyms.
 
 
 Overriding __init__()
