@@ -34,7 +34,7 @@ def create_token(bit_strength=64, decimal=False):
 
     value = binascii.b2a_hex(os.urandom(bit_strength / 8))
     if decimal:
-        value = bytes(int(value, 16))
+        value = str(int(value, 16))
 
     return value
 
