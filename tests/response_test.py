@@ -253,7 +253,7 @@ class TestReturnResponse(test_base.BaseTestCase):
 
         app = webapp2.WSGIApplication([
             ('/', myfunction),
-        ], debug=True)
+        ])
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
@@ -266,7 +266,7 @@ class TestReturnResponse(test_base.BaseTestCase):
 
         app = webapp2.WSGIApplication([
             ('/', myfunction),
-        ], debug=True)
+        ])
 
         def custom_dispatcher(router, request, response):
             response_str = router.default_dispatcher(request, response)
@@ -285,7 +285,7 @@ class TestReturnResponse(test_base.BaseTestCase):
 
         app = webapp2.WSGIApplication([
             ('/', myfunction),
-        ], debug=True)
+        ])
 
         def custom_dispatcher(router, request, response):
             response_tuple = router.default_dispatcher(request, response)
@@ -305,7 +305,7 @@ class TestReturnResponse(test_base.BaseTestCase):
 
         app = webapp2.WSGIApplication([
             webapp2.Route('/', HomeHandler, name='home'),
-        ], debug=True)
+        ])
         app.error_handlers[500] = 'resources.handlers.handle_exception'
 
         req = webapp2.Request.blank('/')

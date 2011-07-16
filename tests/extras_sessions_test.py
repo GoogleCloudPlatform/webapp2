@@ -174,7 +174,7 @@ class TestSecureCookieSession(test_base.BaseTestCase):
         self.assertEqual(res, {'bar': 'baz'})
 
     def test_set_session_store(self):
-        app = webapp2.WSGIApplication(debug=True, config={
+        app = webapp2.WSGIApplication(config={
             'webapp2_extras.sessions': {
                 'secret_key': 'my-super-secret',
             }
@@ -190,7 +190,7 @@ class TestSecureCookieSession(test_base.BaseTestCase):
         self.assertTrue(isinstance(s, sessions.SessionStore))
 
     def test_get_session_store(self):
-        app = webapp2.WSGIApplication(debug=True, config={
+        app = webapp2.WSGIApplication(config={
             'webapp2_extras.sessions': {
                 'secret_key': 'my-super-secret',
             }

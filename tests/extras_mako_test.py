@@ -12,7 +12,7 @@ template_path = os.path.join(current_dir, 'resources', 'mako_templates')
 
 class TestMako(test_base.BaseTestCase):
     def test_render_template(self):
-        app = webapp2.WSGIApplication(debug=True, config={
+        app = webapp2.WSGIApplication(config={
             'webapp2_extras.mako': {
                 'template_path': template_path,
             },
@@ -26,7 +26,7 @@ class TestMako(test_base.BaseTestCase):
         self.assertEqual(res, message + '\n')
 
     def test_set_mako(self):
-        app = webapp2.WSGIApplication(debug=True)
+        app = webapp2.WSGIApplication()
         self.assertEqual(len(app.registry), 0)
         mako.set_mako(mako.Mako(app), app=app)
         self.assertEqual(len(app.registry), 1)
@@ -34,7 +34,7 @@ class TestMako(test_base.BaseTestCase):
         self.assertTrue(isinstance(j, mako.Mako))
 
     def test_get_mako(self):
-        app = webapp2.WSGIApplication(debug=True)
+        app = webapp2.WSGIApplication()
         self.assertEqual(len(app.registry), 0)
         j = mako.get_mako(app=app)
         self.assertEqual(len(app.registry), 1)

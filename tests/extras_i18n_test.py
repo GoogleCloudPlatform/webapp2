@@ -32,7 +32,7 @@ class I18nTestCase(test_base.BaseTestCase):
 
     def test_translations_not_set(self):
         # We release it here because it is set on setUp()
-        self.app.set_globals(app=None, request=None)
+        self.app.clear_globals()
         self.assertRaises(AssertionError, i18n.gettext, 'foo')
 
     def test_gettext(self):
@@ -342,7 +342,7 @@ class I18nTestCase(test_base.BaseTestCase):
         self.assertRaises(NumberFormatError, i18n.parse_decimal, '2,109,998')
 
     def test_set_i18n_store(self):
-        app = webapp2.WSGIApplication(debug=True)
+        app = webapp2.WSGIApplication()
         req = webapp2.Request.blank('/')
         req.app = app
         store = i18n.I18nStore(app)
@@ -354,7 +354,7 @@ class I18nTestCase(test_base.BaseTestCase):
         self.assertTrue(isinstance(s, i18n.I18nStore))
 
     def test_get_i18n_store(self):
-        app = webapp2.WSGIApplication(debug=True)
+        app = webapp2.WSGIApplication()
         req = webapp2.Request.blank('/')
         req.app = app
         self.assertEqual(len(app.registry), 0)
@@ -363,7 +363,7 @@ class I18nTestCase(test_base.BaseTestCase):
         self.assertTrue(isinstance(s, i18n.I18nStore))
 
     def test_set_i18n(self):
-        app = webapp2.WSGIApplication(debug=True)
+        app = webapp2.WSGIApplication()
         req = webapp2.Request.blank('/')
         req.app = app
         store = i18n.I18n(req)
@@ -377,7 +377,7 @@ class I18nTestCase(test_base.BaseTestCase):
         self.assertTrue(isinstance(i, i18n.I18n))
 
     def test_get_i18n(self):
-        app = webapp2.WSGIApplication(debug=True)
+        app = webapp2.WSGIApplication()
         req = webapp2.Request.blank('/')
         req.app = app
         self.assertEqual(len(app.registry), 0)

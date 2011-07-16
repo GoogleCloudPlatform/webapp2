@@ -36,7 +36,7 @@ class AdminRequiredHandler(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/login_required', LoginRequiredHandler),
     ('/admin_required', AdminRequiredHandler),
-], debug=True)
+])
 
 
 class TestUsers(test_base.BaseTestCase):
