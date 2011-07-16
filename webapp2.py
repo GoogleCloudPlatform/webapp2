@@ -37,7 +37,7 @@ else: # pragma: no cover
     try:
         from google.appengine.ext import webapp
         from google.appengine.ext.webapp import util
-    except ImportError:
+    except ImportError: # pragma: no cover
         # Running webapp2 outside of GAE.
         webapp = None
 
@@ -952,7 +952,7 @@ class Route(BaseRoute):
         """
         scheme = kwargs.pop('_scheme', None)
         netloc = kwargs.pop('_netloc', None)
-        anchor = kwargs.pop('_fragment', kwargs.pop('_anchor', None))
+        anchor = kwargs.pop('_fragment', None)
         full = kwargs.pop('_full', False) and not scheme and not netloc
 
         if full or scheme or netloc:
