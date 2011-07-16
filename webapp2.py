@@ -21,7 +21,7 @@ import webob
 from webob import exc
 
 try: # pragma: no cover
-    # WebOb < 1.0 (App Engine SDK).
+    # WebOb < 1.0 (App Engine Python 2.5).
     from webob.statusreasons import status_reasons
     from webob.headerdict import HeaderDict as BaseResponseHeaders
 except ImportError: # pragma: no cover
@@ -49,10 +49,11 @@ if webapp is None: # pragma: no cover
         RequestHandler = type('RequestHandler', (object,), {})
 
     class util(object):
-        def _run(self, app):
+        @staticmethod
+        def _run(app):
             handlers.CGIHandler().run(app)
 
-        run_wsgi_app = run_bare_wsgi_app = classmethod(_run)
+        run_wsgi_app = run_bare_wsgi_app = _run
 
 __version_info__ = ('1', '8', '1')
 __version__ = '.'.join(__version_info__)
@@ -64,7 +65,7 @@ HTTPException = exc.HTTPException
 _ROUTE_REGEX = re.compile(r"""
     \<               # The exact character "<"
     ([a-zA-Z_]\w*)?  # The optional variable name
-    (?::([^>]*))?    # The optional :regex part
+    (?:\:([^\>]*))?  # The optional :regex part
     \>               # The exact character ">"
     """, re.VERBOSE)
 
@@ -227,19 +228,19 @@ class Request(webob.Request):
 
     @classmethod
     def blank(cls, path, environ=None, base_url=None,
-              headers=None, POST=None, **kwargs): # pragma: no cover
+              headers=None, **kwargs): # pragma: no cover
         """Adds parameters compatible with WebOb >= 1.0: POST and **kwargs."""
         try:
             return super(Request, cls).blank(path, environ=environ,
                                              base_url=base_url,
-                                             headers=headers, POST=POST,
-                                             **kwargs)
+                                             headers=headers, **kwargs)
         except TypeError:
-            pass
+            if not kwargs:
+                raise
 
-        if POST is not None:
+        data = kwargs.pop('POST', None)
+        if data is not None:
             from cStringIO import StringIO
-            data = POST
             environ = environ or {}
             environ['REQUEST_METHOD'] = 'POST'
             if hasattr(data, 'items'):
