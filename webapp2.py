@@ -1066,10 +1066,11 @@ class Router(object):
 
     #: Class used when the route is a tuple, for compatibility with webapp.
     route_class = SimpleRoute
-    #: Several internal attributes.
-    app = None
+    #: All routes that can be matched.
     match_routes = None
+    #: All routes that can be built.
     build_routes = None
+    #: Handler classes imported lazily.
     handlers = None
 
     def __init__(self, routes=None):
@@ -1079,11 +1080,8 @@ class Router(object):
             A list of :class:`Route` instances. For compatibility with webapp,
             the list items can also be a tuple ``(regex, handler_class)``.
         """
-        # Handler classes imported lazily.
         self.handlers = {}
-        # All routes that can be matched.
         self.match_routes = []
-        # All routes that can be built.
         self.build_routes = {}
         if routes:
             for route in routes:
