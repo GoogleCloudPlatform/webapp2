@@ -5,8 +5,8 @@ Exception handling
 A good app is prepared even when something goes wrong: a service is down,
 the application didn't expect a given input type or many other errors that
 can happen in a web application. To react to these cases, we need a good
-exception handling mechanism and prepare the app to catch exceptions for the
-unexpected scenarios.
+exception handling mechanism and prepare the app to handle the unexpected
+scenarios.
 
 
 HTTP exceptions
@@ -15,8 +15,8 @@ WebOb provides a collection of exceptions that correspond to HTTP status codes.
 They all extend a base class, ``webob.exc.HTTPException``, also available in
 webapp2 as ``webapp2.HTTPException``.
 
-An ``HTTPException`` is also a response object, meaning that it can be returned
-by the WSGI app to be used as response. If an ``HTTPException`` is not handled,
+An ``HTTPException`` is also a WSGI application, meaning that an instance of it
+can be returned to be used as response. If an ``HTTPException`` is not handled,
 it will be used as a standard response, setting the header status code and
 a default error message in the body.
 
@@ -134,5 +134,4 @@ Error"::
 
 The error handler can be a simple function that accepts
 ``(request, response, exception)`` as parameters, and is responsible for
-identifying the exception type, logging the exception and setting the
-response status code.
+setting the response status code and, if needed, logging the exception.
