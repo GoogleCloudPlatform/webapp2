@@ -48,7 +48,7 @@ class MethodsHandler(HomeHandler):
 
 class RedirectToHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
-        return self.redirect_to('route-test', _anchor='my-anchor', year='2010',
+        return self.redirect_to('route-test', _fragment='my-anchor', year='2010',
                                 month='07', name='test', foo='bar')
 
 
@@ -403,33 +403,33 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         for func in (handler.uri_for,):
             self.assertEqual(func('home'), '/')
             self.assertEqual(func('home', foo='bar'), '/?foo=bar')
-            self.assertEqual(func('home', _anchor='my-anchor', foo='bar'), '/?foo=bar#my-anchor')
-            self.assertEqual(func('home', _anchor='my-anchor'), '/#my-anchor')
+            self.assertEqual(func('home', _fragment='my-anchor', foo='bar'), '/?foo=bar#my-anchor')
+            self.assertEqual(func('home', _fragment='my-anchor'), '/#my-anchor')
             self.assertEqual(func('home', _full=True), 'http://localhost:80/')
-            self.assertEqual(func('home', _full=True, _anchor='my-anchor'), 'http://localhost:80/#my-anchor')
+            self.assertEqual(func('home', _full=True, _fragment='my-anchor'), 'http://localhost:80/#my-anchor')
             self.assertEqual(func('home', _scheme='https'), 'https://localhost:80/')
             self.assertEqual(func('home', _scheme='https', _full=False), 'https://localhost:80/')
-            self.assertEqual(func('home', _scheme='https', _anchor='my-anchor'), 'https://localhost:80/#my-anchor')
+            self.assertEqual(func('home', _scheme='https', _fragment='my-anchor'), 'https://localhost:80/#my-anchor')
 
             self.assertEqual(func('methods'), '/methods')
             self.assertEqual(func('methods', foo='bar'), '/methods?foo=bar')
-            self.assertEqual(func('methods', _anchor='my-anchor', foo='bar'), '/methods?foo=bar#my-anchor')
-            self.assertEqual(func('methods', _anchor='my-anchor'), '/methods#my-anchor')
+            self.assertEqual(func('methods', _fragment='my-anchor', foo='bar'), '/methods?foo=bar#my-anchor')
+            self.assertEqual(func('methods', _fragment='my-anchor'), '/methods#my-anchor')
             self.assertEqual(func('methods', _full=True), 'http://localhost:80/methods')
-            self.assertEqual(func('methods', _full=True, _anchor='my-anchor'), 'http://localhost:80/methods#my-anchor')
+            self.assertEqual(func('methods', _full=True, _fragment='my-anchor'), 'http://localhost:80/methods#my-anchor')
             self.assertEqual(func('methods', _scheme='https'), 'https://localhost:80/methods')
             self.assertEqual(func('methods', _scheme='https', _full=False), 'https://localhost:80/methods')
-            self.assertEqual(func('methods', _scheme='https', _anchor='my-anchor'), 'https://localhost:80/methods#my-anchor')
+            self.assertEqual(func('methods', _scheme='https', _fragment='my-anchor'), 'https://localhost:80/methods#my-anchor')
 
             self.assertEqual(func('route-test', year='2010', month='07', name='test'), '/2010/07/test')
             self.assertEqual(func('route-test', year='2010', month='07', name='test', foo='bar'), '/2010/07/test?foo=bar')
-            self.assertEqual(func('route-test', _anchor='my-anchor', year='2010', month='07', name='test', foo='bar'), '/2010/07/test?foo=bar#my-anchor')
-            self.assertEqual(func('route-test', _anchor='my-anchor', year='2010', month='07', name='test'), '/2010/07/test#my-anchor')
+            self.assertEqual(func('route-test', _fragment='my-anchor', year='2010', month='07', name='test', foo='bar'), '/2010/07/test?foo=bar#my-anchor')
+            self.assertEqual(func('route-test', _fragment='my-anchor', year='2010', month='07', name='test'), '/2010/07/test#my-anchor')
             self.assertEqual(func('route-test', _full=True, year='2010', month='07', name='test'), 'http://localhost:80/2010/07/test')
-            self.assertEqual(func('route-test', _full=True, _anchor='my-anchor', year='2010', month='07', name='test'), 'http://localhost:80/2010/07/test#my-anchor')
+            self.assertEqual(func('route-test', _full=True, _fragment='my-anchor', year='2010', month='07', name='test'), 'http://localhost:80/2010/07/test#my-anchor')
             self.assertEqual(func('route-test', _scheme='https', year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test')
             self.assertEqual(func('route-test', _scheme='https', _full=False, year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test')
-            self.assertEqual(func('route-test', _scheme='https', _anchor='my-anchor', year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test#my-anchor')
+            self.assertEqual(func('route-test', _scheme='https', _fragment='my-anchor', year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test#my-anchor')
 
         app.request = None
 
