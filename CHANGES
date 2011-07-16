@@ -24,6 +24,12 @@ Development version
 - Variables names in routes must now look like python identifiers -
   this means that they can no longer start with a number.
 
+- webapp2_extras.json:
+  - Fixed an issue with importing json on non-GAE environments (missing
+    absolute import).
+  - Now imports simplejson directly instead of using Django, as it was
+    included since SDK 1.4.2.
+
 
 Version 1.8.1 - June 29, 2011
 =============================
