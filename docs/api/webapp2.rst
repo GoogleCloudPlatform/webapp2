@@ -59,8 +59,8 @@ WSGI app
              router_class, config_class,
              debug, router, config, registry, error_handlers, app, request,
              active_instance, allowed_methods,
-             __init__, __call__, set_globals, handle_exception, run,
-             get_response
+             __init__, __call__, set_globals, clear_globals,
+             handle_exception, run, get_response
 
 .. autoclass:: RequestContext
    :members: __init__, __enter__, __exit__
