@@ -41,7 +41,7 @@ else: # pragma: no cover
         # Running webapp2 outside of GAE.
         webapp = None
 
-if webapp is None:
+if webapp is None: # pragma: no cover
     # google.appengine.ext.webapp isn't available.
     from wsgiref import handlers
 
