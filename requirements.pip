@@ -1,4 +1,4 @@
-webapp2==2.0
+webapp2==2.0.1
 google-appengine==1.5.1
 WebOb==1.0.8
 Jinja2==2.5.5

@@ -63,7 +63,7 @@ except ImportError: # pragma: no cover
                     "so webapp2 won't be thread-safe!")
     local = None
 
-__version_info__ = ('2', '0')
+__version_info__ = ('2', '0', '1')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
