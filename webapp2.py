@@ -1464,7 +1464,7 @@ class WSGIApplication(object):
             WSGIApplication.request = request
 
     def clear_globals(self):
-        """Clears global variables. See :meth:`set_globals.`"""
+        """Clears global variables. See :meth:`set_globals`."""
         if local is not None: # pragma: no cover
             _local.__release_local__()
         else: # pragma: no cover
