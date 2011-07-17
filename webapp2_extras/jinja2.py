@@ -73,12 +73,17 @@ class Jinja2(object):
                 # Returns a Jinja2 renderer cached in the app registry.
                 return jinja2.get_jinja2(app=self.app)
 
+            def render_response(self, _template, **context):
+                # Renders a template and writes the result to the response.
+                rv = self.jinja2.render_template(_template, **context)
+                self.response.write(rv)
+
     Then extended handlers can render templates directly::
 
         class MyHandler(BaseHandler):
             def get(self):
                 context = {'message': 'Hello, world!'}
-                return self.jinja2.render_template('my_template.html', **context)
+                self.render_response('my_template.html', **context)
     """
 
     #: Configuration key.
