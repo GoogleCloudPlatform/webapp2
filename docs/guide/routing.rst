@@ -364,8 +364,11 @@ Here are some examples of how to generate URIs for them::
     # /wiki/my-first-page?format=atom
     uri = uri_for('wiki-page', page='my-first-page', format='atom')
 
-Variables are passed as keyword arguments and are required if the route defines
-them. Also, when calling ``uri_for()``, a few keywords have special meaning:
+Variables are passed as positional or keyword arguments and are required if
+the route defines them. Keyword arguments that are not present in the route
+are added to the URI as a query string.
+
+Also, when calling ``uri_for()``, a few keywords have special meaning:
 
 _full
   If True, builds an absolute URI.
