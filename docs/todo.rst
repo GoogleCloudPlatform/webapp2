@@ -1,6 +1,13 @@
 TODO: snippets to document
 ==========================
 
+Common errors
+-------------
+- "TypeError: 'unicode' object is not callable": one possible reason is that
+  the ``RequestHandler`` returned a string. If the handler returns anything, it
+  **must** be a :class:`webapp2.Response` object. Or it must not return
+  anything and write to the response instead using ``self.response.write()``.
+
 Secret keys
 -----------
 Add a note about how to generate strong session secret keys::
