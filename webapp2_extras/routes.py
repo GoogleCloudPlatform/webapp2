@@ -179,7 +179,7 @@ class PathPrefixRoute(NamePrefixRoute):
             ]),
         ])
 
-    This is not only convenient, but also performs better: the nested rules
+    This is not only convenient, but also performs better: the nested routes
     will only be tested if the path prefix matches.
     """
 
@@ -249,8 +249,8 @@ class RedirectRoute(webapp2.Route):
 
         :param strict_slash:
             If True, redirects access to the same URL with different trailing
-            slash to the strict path defined in the rule. For example, take
-            these rules::
+            slash to the strict path defined in the route. For example, take
+            these routes::
 
                 route = Route('/foo', FooHandler, strict_slash=True)
                 route = Route('/bar/', BarHandler, strict_slash=True)
