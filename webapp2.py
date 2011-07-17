@@ -1864,6 +1864,8 @@ Response.RequestClass = Request
 _abort = abort
 # Thread-safety support.
 if local is not None: # pragma: no cover
+    # Thread-local variables container.
     _local = local.Local()
+    # Assign the class attributes to a proxy object that points to _local.
     WSGIApplication.app = WSGIApplication.active_instance = _local('app')
     WSGIApplication.request = _local('request')

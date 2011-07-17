@@ -5,7 +5,7 @@
 
     This module implements context-local objects.
 
-    The thread-local implementation comes from werkzeug.local.
+    This implementation comes from werkzeug.local.
 
     :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
