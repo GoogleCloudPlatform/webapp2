@@ -34,7 +34,7 @@ from setuptools import setup
 
 setup(
     name = 'webapp2',
-    version = '1.8.1',
+    version = '2.0',
     license = 'Apache Software License',
     url = 'http://www.tipfy.org/',
     description = "Taking Google App Engine's webapp to the next level!",

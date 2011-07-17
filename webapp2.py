@@ -49,13 +49,20 @@ if webapp is None: # pragma: no cover
         RequestHandler = type('RequestHandler', (object,), {})
 
     class util(object):
-        @staticmethod
         def _run(app):
             handlers.CGIHandler().run(app)
 
-        run_wsgi_app = run_bare_wsgi_app = _run
+        run_wsgi_app = run_bare_wsgi_app = staticmethod(_run)
 
-__version_info__ = ('1', '8', '1')
+try:
+    # Thread-safety support.
+    from webapp2_extras import local
+except ImportError: # pragma: no cover
+    logging.warning("webapp2_extras.local is not available "
+                    "so webapp2 won't be thread-safe!")
+    local = None
+
+__version_info__ = ('2', '0')
 __version__ = '.'.join(__version_info__)
 
 #: Base HTTP exception, set here as public interface.
@@ -1435,25 +1442,33 @@ class WSGIApplication(object):
     def set_globals(self, app=None, request=None):
         """Registers the global variables for app and request.
 
-        App Engine doesn't support threading, so we just assign them directly
-        as class attributes of the :class:`WSGIApplication`.
+        If :mod:`webapp2_extras.local` is available the app and request
+        class attributes are assigned to a proxy object that returns them
+        using thread-local, making the application thread-safe. This can also
+        be used in environments that don't support threading.
 
-        For threaded environments, direct assignment must be replaced by
-        assigning to a proxy object that returns app and request using
-        thread-local. Check :class:`webapp2_extras.local_app.WSGIApplication`
-        for an example.
+        If :mod:`webapp2_extras.local` is not available app and request will
+        be assigned directly as class attributes. This should only be used
+        in non-threaded environments (like App Engine Python 2.5).
 
         :param app:
             A :class:`WSGIApplication` instance.
         :param request:
             A :class:`Request` instance.
         """
-        WSGIApplication.app = WSGIApplication.active_instance = app
-        WSGIApplication.request = request
+        if local is not None: # pragma: no cover
+            _local.app = app
+            _local.request = request
+        else: # pragma: no cover
+            WSGIApplication.app = WSGIApplication.active_instance = app
+            WSGIApplication.request = request
 
     def clear_globals(self):
         """Clears global variables. See :meth:`set_globals.`"""
-        WSGIApplication.app = WSGIApplication.active_instance = \
+        if local is not None: # pragma: no cover
+            _local.__release_local__()
+        else: # pragma: no cover
+            WSGIApplication.app = WSGIApplication.active_instance = None
             WSGIApplication.request = None
 
     def __call__(self, environ, start_response):
@@ -1590,12 +1605,8 @@ def get_app():
 
     :returns:
         A :class:`WSGIApplication` instance.
-    :raises:
-        ``AssertionError`` if the app is not set.
     """
-    app = WSGIApplication.app
-    assert app is not None, 'WSGIApplication.app is not set.'
-    return app
+    return WSGIApplication.app
 
 
 def get_request():
@@ -1603,12 +1614,8 @@ def get_request():
 
     :returns:
         A :class:`Request` instance.
-    :raises:
-        ``AssertionError`` if the request is not set.
     """
-    request = WSGIApplication.request
-    assert request is not None, 'WSGIApplication.request is not set.'
-    return request
+    return WSGIApplication.request
 
 
 def uri_for(_name, _request=None, *args, **kwargs):
@@ -1855,3 +1862,8 @@ Request.ResponseClass = Response
 Response.RequestClass = Request
 # Alias.
 _abort = abort
+# Thread-safety support.
+if local is not None: # pragma: no cover
+    _local = local.Local()
+    WSGIApplication.app = WSGIApplication.active_instance = _local('app')
+    WSGIApplication.request = _local('request')

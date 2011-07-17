@@ -162,7 +162,6 @@ The resource could not be found.
 class TestHandler(test_base.BaseTestCase):
     def tearDown(self):
         super(TestHandler, self).tearDown()
-        app.clear_globals()
         app.error_handlers = {}
 
     def test_200(self):
@@ -391,13 +390,13 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             def get(self, *args, **kwargs):
                 pass
 
-        request = webapp2.Request.blank('http://localhost:80/')
-        request.route = webapp2.Route('')
-        request.route_args = tuple()
-        request.route_kwargs = {}
-        request.app = app
-        app.request = webapp2.WSGIApplication.request = request
-        handler = Handler(request, webapp2.Response())
+        req = webapp2.Request.blank('http://localhost:80/')
+        req.route = webapp2.Route('')
+        req.route_args = tuple()
+        req.route_kwargs = {}
+        req.app = app
+        app.set_globals(app=app, request=req)
+        handler = Handler(req, webapp2.Response())
         handler.app = app
 
         for func in (handler.uri_for,):
@@ -430,8 +429,6 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             self.assertEqual(func('route-test', _scheme='https', year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test')
             self.assertEqual(func('route-test', _scheme='https', _full=False, year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test')
             self.assertEqual(func('route-test', _scheme='https', _fragment='my-anchor', year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test#my-anchor')
-
-        app.request = None
 
     def test_extra_request_methods(self):
         allowed_methods_backup = app.allowed_methods

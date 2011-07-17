@@ -280,4 +280,4 @@ package provides common utilities that integrate well with webapp2:
 - Extra route classes -- to match subdomains and other conveniences
 - Support for third party libraries: Jinja2, Mako and Google's ProtoRPC
 - Support for threaded environments, so that you can use webapp2 outside of
-  App Engine
+  App Engine or in the upcoming App Engine Python 2.7 runtime

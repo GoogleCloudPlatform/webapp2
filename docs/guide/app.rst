@@ -200,11 +200,13 @@ or in production checking the 'SERVER_SOFTWARE' environ variable::
 
 Thread-safe application
 -----------------------
-:class:`webapp2_extras.local_app.WSGIApplication` is a special class to be used
-in threaded environments, e.g., outside App Engine. It uses thread-locals to
-store request and app references, instead of simple class attributes which are
-fine for App Engine. See in the :ref:`tutorials.quickstart.nogae` tutorial a
-complete explanation about how to use it.
+By default, webapp2 is thread-safe when the module
+:class:`webapp2_extras.local` is available. This means that it can be used
+outside of App Engine or in the upcoming App Engine Python 2.7 runtime.
+This also works in non-threaded environments such as App Engine Python 2.5.
+
+See in the :ref:`tutorials.quickstart.nogae` tutorial an explanation on how
+to use webapp2 outside of App Engine.
 
 
 Running the app
@@ -261,8 +263,3 @@ access the app registry or configuration values::
 
     app = webapp2.get_app()
     config_value = app.config.get('my-config-key')
-
-The application instance is stored as a class attribute, which is fine on App
-Engine because there are no concurrent requests for the same Python interpreter
-instance. For threaded environments, an application that supports threads must
-be used as described in the :ref:`tutorials.quickstart.nogae` tutorial.

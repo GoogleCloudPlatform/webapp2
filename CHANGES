@@ -1,6 +1,12 @@
-Development version
-===================
+Version 2.0 - July 17, 2011
+===========================
 - Added support for the (not yet released) App Engine Python 2.7 SDK.
+
+- Deprecated webapp2_extras.local_app. WSGIApplication is now thread-safe
+  by default when webapp2_extras.local is available.
+  webapp2_extras.local_app.WSGIApplication can still be imported, but it is
+  just an alias to webapp2.WSGIApplication (and a deprecation warning is
+  emitted when it is imported).
 
 - Like DomainRoute, PathPrefixRoute now only tests the nested routes if the
   prefix matches. So now it is not only convenient but matches smartly and
@@ -22,9 +28,10 @@ Development version
 - webapp2.urlunsplit() was removed from the public API.
 
 - Variables names in routes must now look like python identifiers -
-  this means that they can no longer start with a number.
+  this means that they can no longer start with a number, like before.
 
-- Removed support for _anchor in uri_for() -- documented keyword is _fragment.
+- Removed support for _anchor in uri_for() -- the documented keyword is
+  _fragment.
 
 - Removed support for handler functions receiving (request, response). The
   correct arguments for function handlers are (request, *args, **kwargs).
@@ -32,8 +39,8 @@ Development version
 - webapp2_extras.json:
   - Fixed an issue with importing json on non-GAE environments (missing
     absolute import).
-  - Now imports simplejson directly instead of using Django, as it was
-    included since SDK 1.4.2.
+  - Now imports simplejson directly instead of using the one from Django,
+    since it is now included in the App Engine SDK (since version 1.4.2).
 
 - Added WSGIApplication.clear_globals(). Instead of
   app.set_globals(app=None, request=None), use app.clear_globals().

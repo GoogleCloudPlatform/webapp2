@@ -7,8 +7,7 @@ framework, as it offers these features:
 
 - It is independent of the App Engine SDK. If the SDK is not found, it sets
   fallbacks to be used outside of GAE.
-- It supports threaded environments, using the :ref:`api.extras.local_app`
-  module.
+- It supports threaded environments, using the module :ref:`api.extras.local`.
 - All webapp2_extras modules are designed to be thread-safe.
 - It is compatible with ``WebOb`` 1.0 and superior, which fixes several bugs
   found in the version bundled with the SDK (which is of course supported as
@@ -142,13 +141,12 @@ a handler to display a 'Hello, webapp2!' message. This will be our bootstrap
 file::
 
     import webapp2
-    from webapp2_extras import local_app
 
     class HelloWebapp2(webapp2.RequestHandler):
         def get(self):
             self.response.write('Hello, webapp2!')
 
-    app = local_app.WSGIApplication([
+    app = webapp2.WSGIApplication([
         ('/', HelloWebapp2),
     ], debug=True)
 
@@ -158,9 +156,6 @@ file::
 
     if __name__ == '__main__':
         main()
-
-Notice that we use ``local_app.WSGIApplication``. This is a special version
-of the WSGI application that is thread-safe.
 
 
 Test your app
