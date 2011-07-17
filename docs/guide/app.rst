@@ -63,7 +63,7 @@ handlers. The router:
   that will handle those requests.
 - Matches the current request against the registered routes and returns the
   handler to be used for that request (or raises a ``HTTPNotFound`` exception
-  if not handler was found).
+  if no handler was found).
 - Dispatches the matched handler, i.e., calling it and returning a response
   to the ``WSGIApplication``.
 - Builds URIs for the registered routes.
