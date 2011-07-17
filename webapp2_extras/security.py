@@ -27,19 +27,20 @@ def create_token(length=22):
         Length of the token to be created. Default is 22 (128 bits entropy).
         The following table shows how to achieve different entropies:
 
-            =========  =========
-            Entropy    Length
-            =========  =========
-            32 bits	   6
-            40 bits	   7
-            64 bits	   11
-            80 bits	   14
-            96 bits    17
-            128 bits   22
-            160 bits   27
-            192 bits   33
-            224 bits   38
-            256 bits   43
+          =========  =========
+          Entropy    Length
+          =========  =========
+          32 bits	 6
+          40 bits	 7
+          64 bits	 11
+          80 bits	 14
+          96 bits    17
+          128 bits   22
+          160 bits   27
+          192 bits   33
+          224 bits   38
+          256 bits   43
+          =========  =========
 
     :returns:
         A random string using case sensitive alphanumeric characters and

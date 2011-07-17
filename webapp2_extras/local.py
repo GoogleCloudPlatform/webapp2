@@ -3,7 +3,7 @@
     webapp2_extras.local
     ~~~~~~~~~~~~~~~~~~~~
 
-    This module implements context-local objects.
+    This module implements thread-local utilities.
 
     This implementation comes from werkzeug.local.
 
@@ -36,6 +36,10 @@ else:
 
 
 class Local(object):
+    """A container for thread-local objects.
+
+    Attributes are assigned or retrieved using the current thread.
+    """
 
     __slots__ = ('__storage__', '__lock__')
 
@@ -47,7 +51,7 @@ class Local(object):
         return self.__storage__.iteritems()
 
     def __call__(self, proxy):
-        """Create a proxy for a name."""
+        """Creates a proxy for a name."""
         return LocalProxy(self, proxy)
 
     def __release_local__(self):
@@ -87,9 +91,11 @@ class Local(object):
 
 
 class LocalProxy(object):
-    """Acts as a proxy for a local.  Forwards all operations to a proxied
-    object. The only operations not supported for forwarding are right handed
-    operands and any kind of assignment.
+    """Acts as a proxy for a local object.
+
+    Forwards all operations to a proxied object. The only operations not
+    supported for forwarding are right handed operands and any kind of
+    assignment.
 
     Example usage::
 

@@ -6,13 +6,13 @@ If you already know `webapp <http://code.google.com/appengine/docs/python/tools/
 webapp2 is very easy to get started. You can use webapp2 exactly like webapp,
 and learn the new features as you go.
 
-Here we will describe how to use webapp2 on App Engine. If you want to use
-it in a different server, you should read the :ref:`tutorials.quickstart.nogae`
-tutorial.
-
 If you are new to App Engine, read :ref:`tutorials.gettingstarted.index` first.
 You will need the `App Engine SDK <http://code.google.com/appengine/docs/python/gettingstarted/devenvironment.html>`_
 installed for this quick start.
+
+.. note::
+   If you want to use webapp2 outside of App Engine,
+   read the :ref:`tutorials.quickstart.nogae` tutorial instead.
 
 
 Create an application

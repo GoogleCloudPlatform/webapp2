@@ -255,6 +255,12 @@ web framework in any server. It supports threaded environments and the latest
 ``WebOb`` version.
 
 
+Future proof
+------------
+Because it works on threaded environments, webapp2 is ready for when
+App Engine introduces threading support in the Python 2.7 runtime.
+
+
 Same performance
 ----------------
 Best of all is that with all these features, there is no loss of performance:
