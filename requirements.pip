@@ -1,0 +1,10 @@
+webapp2==2.0
+google-appengine==1.5.1
+WebOb==1.0.8
+Jinja2==2.5.5
+Mako==0.4.1
+simplejson==2.1.6
+Babel==0.9.6
+pytz==2011h
+-e git@github.com:moraes/appengine-ndb-experiment.git#egg=ndb
+-e git@github.com:moraes/google-protorpc.git#egg=protorpc
