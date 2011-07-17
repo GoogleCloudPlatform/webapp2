@@ -27,7 +27,7 @@ For a complete description of how webapp2 improves webapp, see :ref:`features`.
 
 Quick links
 -----------
-- `Download <http://code.google.com/p/webapp-improved/downloads/list>`_
+- `Downloads <http://code.google.com/p/webapp-improved/downloads/list>`_
 - `Google Code Repository <http://code.google.com/p/webapp-improved/>`_
 - `Discussion Group <http://groups.google.com/group/tipfy>`_
 

@@ -13,3 +13,4 @@ tools and a random token generator.
 .. autofunction:: create_password_hash
 .. autofunction:: check_password_hash
 .. autofunction:: hash_password
+.. autofunction:: compare_hashes
