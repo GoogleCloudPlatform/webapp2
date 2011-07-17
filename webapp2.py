@@ -36,17 +36,18 @@ if os.environ.get('APPENGINE_RUNTIME') == 'python27': # pragma: no cover
 else: # pragma: no cover
     try:
         from google.appengine.ext import webapp
-        from google.appengine.ext.webapp import util
     except ImportError: # pragma: no cover
         # Running webapp2 outside of GAE.
         webapp = None
 
 if webapp is None: # pragma: no cover
-    # google.appengine.ext.webapp isn't available.
-    from wsgiref import handlers
-
     class webapp(object):
         RequestHandler = type('RequestHandler', (object,), {})
+
+try:
+    from google.appengine.ext.webapp import util
+except ImportError: # pragma: no cover
+    from wsgiref import handlers
 
     class util(object):
         def _run(app):
