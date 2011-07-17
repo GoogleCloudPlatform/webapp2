@@ -97,9 +97,6 @@ exclude_patterns = ['_build']
 # output. They are ignored by default.
 #show_authors = False
 
-# The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'pygapp2.pygapp2'
-
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
@@ -112,6 +109,8 @@ if on_rtd:
     html_theme = 'default'
 else:
     html_theme = 'webapp2'
+    # The name of the Pygments (syntax highlighting) style to use.
+    pygments_style = 'pygapp2.pygapp2'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
