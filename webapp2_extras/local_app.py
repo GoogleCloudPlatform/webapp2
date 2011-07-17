@@ -3,45 +3,22 @@
     webapp2_extras.local_app
     ~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module implements a WSGIApplication adapted for threaded environments.
+    This module is deprecated. The functionality is now available
+    directly in webapp2.
+
+    Previously it implemented a WSGIApplication adapted for threaded
+    environments.
 
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
+import warnings
+
 import webapp2
 
-from webapp2_extras import local
+warnings.warn(DeprecationWarning(
+    'webapp2_extras.local_app is deprecated. webapp2.WSGIApplication is now '
+    'thread-safe by default when webapp2_extras.local is available.'),
+    stacklevel=1)
 
-
-_local = local.Local()
-_app_class = webapp2.WSGIApplication
-_app_class.app = _app_class.active_instance = _local('app')
-_app_class.request = _local('request')
-
-
-class WSGIApplication(_app_class):
-    """A WSGIApplication for threaded environments.
-
-    This allows webapp2 to be used in non-GAE servers.
-    """
-
-    def set_globals(self, app=None, request=None):
-        """Registers the global variables for app and request.
-
-        This makes the WSGI application thread-safe: the variables are
-        assigned to a proxy object that returns app and request using
-        thread-local.
-
-        :param app:
-            A :class:`webapp2.WSGIApplication` instance or None to remove it
-            from the globals.
-        :param request:
-            A :class:`webapp2.Request` instance or None to remove it from
-            the globals.
-        """
-        _local.app = app
-        _local.request = request
-
-    def clear_globals(self):
-        """Clears global variables. See :meth:`set_globals.`"""
-        _local.__release_local__()
+WSGIApplication = webapp2.WSGIApplication

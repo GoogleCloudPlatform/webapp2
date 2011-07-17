@@ -8,6 +8,7 @@ import test_base
 
 
 class TestMiscellaneous(test_base.BaseTestCase):
+
     def test_abort(self):
         self.assertRaises(webob.exc.HTTPOk, webapp2.abort, 200)
         self.assertRaises(webob.exc.HTTPCreated, webapp2.abort, 201)
@@ -118,6 +119,7 @@ class TestMiscellaneous(test_base.BaseTestCase):
         req = webapp2.Request.blank('/')
         req.app = app
         app.set_globals(app=app, request=req)
+
         rsp = webapp2.redirect_to('home', _code=301, _body='Weee')
         self.assertEqual(rsp.status_int, 301)
         self.assertEqual(rsp.body, 'Weee')

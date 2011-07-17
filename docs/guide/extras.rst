@@ -8,7 +8,7 @@ webapp2. It includes:
 - Extra route classes -- to match subdomains and other conveniences
 - Support for third party libraries: Jinja2, Mako and Google's ProtoRPC
 - Support for threaded environments, so that you can use webapp2 outside of
-  App Engine
+  App Engine or in the upcoming App Engine Python 2.7 runtime
 
 Some of these modules (:ref:`api.extras.i18n`, :ref:`api.extras.jinja2`,
 :ref:`api.extras.mako` and :ref:`api.extras.sessions`) use configuration

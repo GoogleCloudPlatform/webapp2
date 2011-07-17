@@ -194,11 +194,7 @@ request. You can access it in ``request.app``.
 Getting the current request
 ---------------------------
 The active ``Request`` instance can be accessed during a request using the
-function :func:`webapp2.get_request`. It is stored as a class attribute,
-which is fine on App Engine because there are no concurrent requests for
-the same Python interpreter instance. For threaded environments,
-an application that supports threads must be used as described in the
-:ref:`tutorials.quickstart.nogae` tutorial.
+function :func:`webapp2.get_request`.
 
 
 Learn more about WebOb
