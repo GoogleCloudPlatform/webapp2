@@ -8,6 +8,23 @@ Common errors
   **must** be a :class:`webapp2.Response` object. Or it must not return
   anything and write to the response instead using ``self.response.write()``.
 
+Allowing different returned types from handlers
+-----------------------------------------------
+Here, for example, handlers can return a string or tuple that is wrapped by a
+Response in a custom dispatcher::
+
+    def custom_dispatcher(router, request, response):
+        rv = router.default_dispatcher(request, response)
+        if isinstance(rv, basestring):
+            rv = webapp2.Response(rv)
+        elif isinstance(rv, tuple):
+            rv = webapp2.Response(*rv)
+
+        return rv
+
+    app = webapp2.WSGIApplication()
+    app.router.set_dispatcher(custom_dispatcher)
+
 Secret keys
 -----------
 Add a note about how to generate strong session secret keys::

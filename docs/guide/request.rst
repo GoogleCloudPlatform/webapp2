@@ -197,6 +197,19 @@ The active ``Request`` instance can be accessed during a request using the
 function :func:`webapp2.get_request`.
 
 
+.. _guide.request.registry:
+
+Registry
+--------
+A simple dictionary is available in the request object to register instances
+that are shared during a request: it is the :attr:`webapp2.Request.registry`
+attribute.
+
+A registry dictionary is also available in the
+:ref:`WSGI application object <guide.app.registry>`, to store objects shared
+across requests.
+
+
 Learn more about WebOb
 ----------------------
 WebOb is an open source third-party library. See the

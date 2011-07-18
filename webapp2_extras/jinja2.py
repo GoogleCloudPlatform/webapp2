@@ -89,6 +89,9 @@ class Jinja2(object):
     #: Configuration key.
     config_key = __name__
 
+    #: Loaded configuration.
+    config = None
+
     def __init__(self, app, config=None):
         """Initializes the Jinja2 object.
 
@@ -98,7 +101,7 @@ class Jinja2(object):
             A dictionary of configuration values to be overridden. See
             the available keys in :data:`default_config`.
         """
-        config = app.config.load_config(self.config_key,
+        self.config = config = app.config.load_config(self.config_key,
             default_values=default_config, user_values=config,
             required_keys=None)
         kwargs = config['environment_args'].copy()

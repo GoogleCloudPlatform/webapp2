@@ -14,6 +14,7 @@ import cgi
 import logging
 import os
 import re
+import threading
 import urllib
 import urlparse
 
@@ -63,8 +64,8 @@ except ImportError: # pragma: no cover
                     "so webapp2 won't be thread-safe!")
     local = None
 
-__version_info__ = ('2', '0', '1')
-__version__ = '.'.join(__version_info__)
+__version_info__ = (2, 0, 2)
+__version__ = '.'.join(str(n) for n in __version_info__)
 
 #: Base HTTP exception, set here as public interface.
 HTTPException = exc.HTTPException
@@ -675,7 +676,7 @@ class cached_property(object):
        will still work as expected because the lookup logic is replicated
        in __get__ for manual invocation.
 
-    This class comes from `Werkzeug`_.
+    This class was ported from `Werkzeug`_ and `Flask`_.
     """
 
     _default_value = object()
@@ -685,17 +686,19 @@ class cached_property(object):
         self.__module__ = func.__module__
         self.__doc__ = doc or func.__doc__
         self.func = func
+        self.lock = threading.RLock()
 
     def __get__(self, obj, type=None):
         if obj is None:
             return self
 
-        value = obj.__dict__.get(self.__name__, self._default_value)
-        if value is self._default_value:
-            value = self.func(obj)
-            obj.__dict__[self.__name__] = value
+        with self.lock:
+            value = obj.__dict__.get(self.__name__, self._default_value)
+            if value is self._default_value:
+                value = self.func(obj)
+                obj.__dict__[self.__name__] = value
 
-        return value
+            return value
 
 
 class BaseRoute(object):
@@ -1327,10 +1330,10 @@ class Config(dict):
             config.update(user_values)
 
         if required_keys:
-            for required_key in required_keys:
-                if config.get(required_key) is None:
-                    raise Exception('Config key %r for %r is required.' %
-                        (required_key, key))
+            missing = [k for k in required_keys if config.get(k) is None]
+            if missing:
+                raise Exception(
+                    'Missing configuration keys for %r: %r.' % (key, missing))
 
         self[key] = config
         self.loaded.append(key)

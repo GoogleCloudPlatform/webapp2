@@ -143,6 +143,10 @@ registers a fictitious ``MyParser`` instance if it is not yet registered::
 The registry can be used to lazily instantiate objects when needed, and keep a
 reference in the application to be reused.
 
+A registry dictionary is also available in the
+:ref:`request object <guide.request.registry>`, to store shared objects during
+single request.
+
 
 Error handlers
 --------------
