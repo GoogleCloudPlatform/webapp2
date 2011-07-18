@@ -57,8 +57,11 @@ class Mako(object):
     #: Configuration key.
     config_key = __name__
 
+    #: Loaded configuration.
+    config = None
+
     def __init__(self, app, config=None):
-        config = app.config.load_config(self.config_key,
+        self.config = config = app.config.load_config(self.config_key,
             default_values=default_config, user_values=config,
             required_keys=None)
 

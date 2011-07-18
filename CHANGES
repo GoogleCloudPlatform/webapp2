@@ -1,3 +1,13 @@
+Version 2.0.2 - July 18, 2011
+=============================
+- cached_property now uses threading.RLock for thread-safety.
+
+
+Version 2.0.1 - July 17, 2011
+=============================
+- Little fix: use google.appengine.ext.webapp.util if available, like before.
+
+
 Version 2.0 - July 17, 2011
 ===========================
 - Added support for the (not yet released) App Engine Python 2.7 SDK.

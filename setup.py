@@ -34,7 +34,7 @@ from setuptools import setup
 
 setup(
     name = 'webapp2',
-    version = '2.0.1',
+    version = '2.0.2',
     license = 'Apache Software License',
     url = 'http://webapp-improved.appspot.com',
     description = "Taking Google App Engine's webapp to the next level!",
