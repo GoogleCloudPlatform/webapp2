@@ -1075,7 +1075,7 @@ class Webapp2HandlerAdapter(BaseHandlerAdapter):
 class Router(object):
     """A URI router used to match, dispatch and build URIs."""
 
-    #: Class used when the route is a tuple, for compatibility with webapp.
+    #: Class used when the route is set as a tuple.
     route_class = SimpleRoute
     #: All routes that can be matched.
     match_routes = None
@@ -1088,12 +1088,12 @@ class Router(object):
         """Initializes the router.
 
         :param routes:
-            A list of :class:`Route` instances. For compatibility with webapp,
-            the list items can also be a tuple ``(regex, handler_class)``.
+            A sequence of :class:`Route` instances or, for simple routes,
+            tuples ``(regex, handler)``.
         """
-        self.handlers = {}
         self.match_routes = []
         self.build_routes = {}
+        self.handlers = {}
         if routes:
             for route in routes:
                 self.add(route)
@@ -1102,11 +1102,11 @@ class Router(object):
         """Adds a route to this router.
 
         :param route:
-            A :class:`Route` instance or, for compatibility with webapp, a
-            tuple ``(regex, handler_class)``.
+            A :class:`Route` instance or, for simple routes, a tuple
+            ``(regex, handler)``.
         """
         if isinstance(route, tuple):
-            # Exceptional compatibility case: route compatible with webapp.
+            # Exceptional case: simple routes defined as a tuple.
             route = self.route_class(*route)
 
         for r in route.get_match_routes():
@@ -1429,8 +1429,8 @@ class WSGIApplication(object):
         """Initializes the WSGI application.
 
         :param routes:
-            A list of :class:`Route` instances. For compatibility with webapp,
-            the list items can also be a tuple ``(regex, handler_class)``.
+            A sequence of :class:`Route` instances or, for simple routes,
+            tuples ``(regex, handler)``.
         :param debug:
             True to enable debug mode, False otherwise.
         :param config:

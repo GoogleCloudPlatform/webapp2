@@ -103,6 +103,10 @@ Here, our handler is a simple function that receives the request instance,
 positional route variables as ``*args`` and named variables as ``**kwargs``,
 if they are defined.
 
+Apps can have mixed handler classes and functions. Also it is possible to
+implement new interfaces to define how handlers are called: this is done
+setting new handler adapters in the routing system.
+
 Functions are an alternative for those that prefer their simplicity or think
 that handlers don't benefit that much from the power and flexibility provided
 by classes: inheritance, attributes, grouped methods, descriptors, metaclasses,
@@ -116,6 +120,53 @@ etc. An app can have mixed handler classes and functions.
    confusion and prefer to use `handler` instead, like in other Python
    frameworks (webapp, web.py or Tornado, for instance). In essence, though,
    they are synonyms.
+
+
+Returned values
+---------------
+A handler method doesn't need to return anything: it can simply write to the
+response object using ``self.response.write()``.
+
+But a handler **can** return values to be used in the response. Using the
+default dispatcher implementation, if a handler returns anything that is not
+``None`` it **must** be a :class:`webapp2.Response` instance. If it does so,
+that response object will be used instead of the default one.
+
+For example, let's return a response object with a `Hello, world` message::
+
+    class HelloHandler(webapp2.RequestHandler):
+        def get(self):
+            return webapp2.Response('Hello, world!')
+
+This is the same as::
+
+    class HelloHandler(webapp2.RequestHandler):
+        def get(self):
+            self.response.write('Hello, world!')
+
+What if you think that returning a response object is verbose, and want to
+return simple strings? Fortunately webapp2 has all the necessary hooks to make
+this possible. To achieve it, we need to extend the router dispatcher to build
+a ``Response`` object using the returned string. We can go even further and
+also accept tuples: if a tuple is returned, we use its values as positional
+arguments to instantiate the ``Response`` object. So let's define our custom
+dispatcher::
+
+    def custom_dispatcher(router, request, response):
+        rv = router.default_dispatcher(request, response)
+        if isinstance(rv, basestring):
+            rv = webapp2.Response(rv)
+        elif isinstance(rv, tuple):
+            rv = webapp2.Response(*rv)
+
+        return rv
+
+    app = webapp2.WSGIApplication()
+    app.router.set_dispatcher(custom_dispatcher)
+
+And that's all. Now our handlers can return a string or tuple that is used to
+create a ``Response`` in our custom dispatcher, which is set using the router
+method :meth:`webapp2.Router.set_dispatcher`.
 
 
 Overriding __init__()
