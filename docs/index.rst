@@ -29,7 +29,8 @@ Quick links
 -----------
 - `Downloads <http://code.google.com/p/webapp-improved/downloads/list>`_
 - `Google Code Repository <http://code.google.com/p/webapp-improved/>`_
-- `Discussion Group <http://groups.google.com/group/tipfy>`_
+- `Discussion Group <http://groups.google.com/group/webapp2>`_
+- `Documentation PDF <http://webapp-improved.googlecode.com/files/webapp2-2.0.2.pdf>`_
 
 .. `Samples for Google App Engine <http://code.google.com/p/google-app-engine-samples/>`_:
    several mini-apps for webapp that serve as examples (they should work with
@@ -103,9 +104,10 @@ from `the official documentation for App Engine/Python <http://code.google.com/a
 written by the App Engine team and licensed under the Creative Commons
 Attribution 3.0 License.
 
-webapp2 uses code ported from `Werkzeug <http://werkzeug.pocoo.org/>`_.
+webapp2 has code ported from `Werkzeug <http://werkzeug.pocoo.org/>`_ and
+`Tipfy <http://www.tipfy.org/>`_.
 
-webapp2_extras uses code ported from Werkzeug and
+webapp2_extras has code ported from Werkzeug, Tipfy and
 `Tornado Web Server <http://www.tornadoweb.org/>`_.
 
 The `Sphinx <http://sphinx.pocoo.org/>`_ theme mimics the
