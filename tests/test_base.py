@@ -23,11 +23,6 @@ def check_webob_version(minimum_version):
 
 
 class BaseTestCase(unittest.TestCase):
-    DEFAULT_APP_ID = testbed.DEFAULT_APP_ID
-    DEFAULT_AUTH_DOMAIN = testbed.DEFAULT_AUTH_DOMAIN
-    DEFAULT_SERVER_SOFTWARE = testbed.DEFAULT_SERVER_SOFTWARE
-    DEFAULT_SERVER_NAME = testbed.DEFAULT_SERVER_NAME
-    DEFAULT_SERVER_PORT = testbed.DEFAULT_SERVER_PORT
 
     def setUp(self):
         """Set up the test framework.
@@ -45,13 +40,11 @@ class BaseTestCase(unittest.TestCase):
         # First, create an instance of the Testbed class.
         self.testbed = testbed.Testbed()
 
-        # Bug in testbed: even if you call setup_env() before activate(),
-        # setup_env() is called again using default values. So we wrap it.
-        self._orig_setup_env = self.testbed.setup_env
-        self.testbed.setup_env = self.setup_env
-
         # Then activate the testbed, which prepares the service stubs for use.
         self.testbed.activate()
+
+        # To set custom env vars, pass them as kwargs *after* activate().
+        # self.setup_env()
 
         # Next, declare which service stubs you want to use.
         self.testbed.init_datastore_v3_stub()
@@ -61,24 +54,12 @@ class BaseTestCase(unittest.TestCase):
         # Only when testing ndb.
         self.setup_context_cache()
 
-
-
     def tearDown(self):
         # This restores the original stubs so that tests do not interfere
         # with each other.
         self.testbed.deactivate()
-        self.testbed.setup_env = self._orig_setup_env
         # Clear thread-local variables.
         self.clear_globals()
-
-    def setup_env(self, **kwargs):
-        kwargs.setdefault('app_id', self.DEFAULT_APP_ID)
-        kwargs.setdefault('auth_domain', self.DEFAULT_AUTH_DOMAIN)
-        kwargs.setdefault('server_software', self.DEFAULT_SERVER_SOFTWARE)
-        kwargs.setdefault('server_name', self.DEFAULT_SERVER_NAME)
-        kwargs.setdefault('server_port', self.DEFAULT_SERVER_PORT)
-
-        self._orig_setup_env(**kwargs)
 
     def setup_context_cache(self):
         """Set up the context cache.
