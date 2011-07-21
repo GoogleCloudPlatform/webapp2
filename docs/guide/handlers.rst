@@ -150,7 +150,7 @@ this possible. To achieve it, we need to extend the router dispatcher to build
 a ``Response`` object using the returned string. We can go even further and
 also accept tuples: if a tuple is returned, we use its values as positional
 arguments to instantiate the ``Response`` object. So let's define our custom
-dispatcher::
+dispatcher and a handler function that returns a string::
 
     def custom_dispatcher(router, request, response):
         rv = router.default_dispatcher(request, response)
@@ -161,12 +161,18 @@ dispatcher::
 
         return rv
 
-    app = webapp2.WSGIApplication()
+    class HelloHandler(webapp2.RequestHandler):
+        def get(self):
+            return 'Hello, world!'
+
+    app = webapp2.WSGIApplication([
+        (r'/', HelloHandler),
+    ])
     app.router.set_dispatcher(custom_dispatcher)
 
-And that's all. Now our handlers can return a string or tuple that is used to
-create a ``Response`` in our custom dispatcher, which is set using the router
-method :meth:`webapp2.Router.set_dispatcher`.
+And that's all. Now we have a custom dispatcher set using the router method
+:meth:`webapp2.Router.set_dispatcher`, and our ``HelloHandler`` returns a
+string (or it could be tuple) that is used to create a ``Response`` object.
 
 
 Overriding __init__()

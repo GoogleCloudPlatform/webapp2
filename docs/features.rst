@@ -35,10 +35,14 @@ The ``RequestHandler``, ``Request``, ``Response`` and ``WSGIApplication``
 classes are compatible with the webapp API. Migrating from webapp is intended
 to be a breeze.
 
-This means that all the documentation and examples for webapp you find on the
-web or in the App Engine documentation will work for webapp2. Also, the built
-in SDK libraries that use webapp can be used with webapp2 as they are or with
+All the documentation and examples for webapp will work with webapp2. Also, the
+SDK libraries that use webapp can be used with webapp2 as they are or with
 minimal adaptations.
+
+This makes webapp2 insanely easy to learn. Everybody starting with App Engine
+must know a bit of webapp. And webapp2 is its natural evolution -- you can use
+it like webapp, following the official tutorials, and learn the new and
+advanced features later, as you go.
 
 
 Compatible with latest WebOb
@@ -249,10 +253,9 @@ and made to be extended. We like less.
 Independent of the App Engine SDK
 ---------------------------------
 webapp2 doesn't depend on the Google App Engine SDK and
-:ref:`can even be used outside of App Engine <tutorials.quickstart.nogae>`.
-If the SDK is not found, it has fallbacks to be used as a general purpose
-web framework in any server. It supports threaded environments and the latest
-``WebOb`` version.
+:ref:`can be used outside of App Engine <tutorials.quickstart.nogae>`.
+If the SDK is not found, it has fallbacks to be used in any server as a
+general purpose web framework.
 
 
 Future proof

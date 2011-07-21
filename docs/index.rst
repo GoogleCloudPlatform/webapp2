@@ -19,7 +19,7 @@ with several optional utilities: sessions, localization, internationalization,
 domain and subdomain routing, secure cookies and support for threaded
 environments.
 
-webapp2 can even be used outside of Google App Engine, independently of the
+webapp2 can also be used outside of Google App Engine, independently of the
 App Engine SDK.
 
 For a complete description of how webapp2 improves webapp, see :ref:`features`.
