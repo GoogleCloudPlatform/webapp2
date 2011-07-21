@@ -77,8 +77,11 @@ application after initialization using the ``add()`` method::
     app.router.add((r'/', 'handlers.HelloWorldHandler'))
 
 The router has several methods to override how URIs are matched or built or how
-handlers are adapted or dispatched without even requiring subclassing.
-Check the :class:`Router API documentation <webapp2.Router>` for
+handlers are adapted or dispatched without even requiring subclassing. For an
+example of extending the default dispatching mechanism, see
+:ref:`Request handlers: returned values <guide.handlers.returned_values>`.
+
+Also check the :class:`Router API documentation <webapp2.Router>` for
 a description of the methods :meth:`webapp2.Router.set_matcher`,
 :meth:`webapp2.Router.set_dispatcher`, :meth:`webapp2.Router.set_adapter` and
 :meth:`webapp2.Router.set_builder`.
