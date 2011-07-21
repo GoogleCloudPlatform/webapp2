@@ -122,6 +122,8 @@ etc. An app can have mixed handler classes and functions.
    they are synonyms.
 
 
+.. _guide.handlers.returned_values:
+
 Returned values
 ---------------
 A handler method doesn't need to return anything: it can simply write to the
@@ -130,7 +132,7 @@ response object using ``self.response.write()``.
 But a handler **can** return values to be used in the response. Using the
 default dispatcher implementation, if a handler returns anything that is not
 ``None`` it **must** be a :class:`webapp2.Response` instance. If it does so,
-that response object will be used instead of the default one.
+that response object is used instead of the default one.
 
 For example, let's return a response object with a `Hello, world` message::
 
@@ -173,6 +175,14 @@ dispatcher and a handler function that returns a string::
 And that's all. Now we have a custom dispatcher set using the router method
 :meth:`webapp2.Router.set_dispatcher`, and our ``HelloHandler`` returns a
 string (or it could be tuple) that is used to create a ``Response`` object.
+
+Our custom dispatcher could implement its own URI matching and handler
+dispatching mechanism from scratch, but instead it just extends the default
+dispatcher a little bit, wrapping the returned value under certain conditions.
+
+This example just demonstrates some of the power and flexibility that lies
+behind webapp2; explore the :ref:`webapp2 API <api.webapp2>` to discover other
+ways to modify or extend the application behavior.
 
 
 Overriding __init__()

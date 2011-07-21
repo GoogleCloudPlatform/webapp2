@@ -4,7 +4,7 @@
 .. _WebOb: http://pythonpaste.org/webob/
 .. _Werkzeug: http://werkzeug.pocoo.org/
 
-.. _contents:
+.. _api.webapp2:
 
 webapp2
 =======
