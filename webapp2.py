@@ -14,6 +14,7 @@ import cgi
 import logging
 import os
 import re
+import sys
 import threading
 import urllib
 import urlparse
@@ -1604,6 +1605,42 @@ class WSGIApplication(object):
         return self.request_class.blank(*args, **kwargs).get_response(self)
 
 
+class ImportStringError(Exception):
+    """Provides information about a failed :func:`import_string` attempt."""
+
+    #: String in dotted notation that failed to be imported.
+    import_name = None
+    #: Wrapped exception.
+    exception = None
+
+    def __init__(self, import_name, exception):
+        self.import_name = import_name
+        self.exception = exception
+        msg = ('import_string() failed for %r. Possible reasons are:\n\n'
+               '- missing __init__.py in a package;\n'
+               '- package or module path not included in sys.path;\n'
+               '- duplicated package or module name taking precedence in '
+               'sys.path;\n'
+               '- missing module, class, function or variable;\n\n'
+               'Debugged import:\n\n%s\n\n'
+               'Original exception:\n\n%s: %s')
+        name = ''
+        tracked = []
+        for part in import_name.split('.'):
+            name += (name and '.') + part
+            imported = import_string(name, silent=True)
+            if imported:
+                tracked.append((name, imported.__file__))
+            else:
+                track = ['- %r found in %r.' % rv for rv in tracked]
+                track.append('- %r not found.' % name)
+                msg = msg % (import_name, '\n'.join(track),
+                             exception.__class__.__name__, str(exception))
+                break
+
+        Exception.__init__(self, msg)
+
+
 def get_app():
     """Returns the active app instance.
 
@@ -1735,7 +1772,7 @@ def import_string(import_name, silent=False):
     Simplified version of the function with same name from `Werkzeug`_.
 
     :param import_name:
-        The dotted name of the object to be imported.
+        String in dotted notation of the object to be imported.
     :param silent:
         If True, import or attribute errors are ignored and None is returned
         instead of raising an exception.
@@ -1749,44 +1786,9 @@ def import_string(import_name, silent=False):
             return getattr(__import__(module, None, None, [obj]), obj)
         else:
             return __import__(import_name)
-    except (ImportError, AttributeError):
+    except (ImportError, AttributeError), e:
         if not silent:
-            _debug_import_string(import_name)
-            raise
-
-
-def _debug_import_string(import_name):
-    """Logs debug message about a failed :func:`import_string` attempt.
-
-    :param import_name:
-        The dotted name of the object that failed to be imported.
-    """
-    import textwrap
-    parts = import_name.split('.')
-    partial_name = ''
-    tracked = []
-    for part in parts:
-        partial_name += (partial_name and '.') + part
-        partial_imported = import_string(partial_name, silent=True)
-        if partial_imported:
-            tracked.append((partial_name, partial_imported.__file__))
-        else:
-            track = ['            - %r found in %r.' % (n, f) \
-                     for n, f in tracked]
-            track.append('            - %r not found.' % partial_name)
-            s = len(track) != 1 and 's' or ''
-            msg = textwrap.dedent("""
-            import_string() failed for %r. Debugged import%s:\n\n%s
-
-            Possible reasons for failed import_string() are:
-
-            - missing __init__.py in a package;
-            - package or module path not included in sys.path;
-            - duplicated package or module name taking precedence in sys.path;
-            - missing module, class, function or variable;
-            """ % (import_name, s, '\n'.join(track)))
-            logging.warning(msg.strip())
-            break
+            raise ImportStringError(import_name, e), None, sys.exc_info()[2]
 
 
 def _urlunsplit(scheme=None, netloc=None, path=None, query=None,

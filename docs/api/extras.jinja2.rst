@@ -4,8 +4,17 @@ Jinja2
 ======
 .. module:: webapp2_extras.jinja2
 
-This module provides Jinja2 template support for webapp2. Learn more about
-Jinja2:
+This module provides Jinja2 template support for webapp2.
+
+To use it, you must include the ``jinja2`` package inside your application
+directory (for App Engine) or install it in your virtual environment
+(for other servers).
+
+You can download ``jinja2`` from PyPi:
+
+    http://pypi.python.org/pypi/Jinja2
+
+Learn more about Jinja2:
 
     http://jinja.pocoo.org/
 

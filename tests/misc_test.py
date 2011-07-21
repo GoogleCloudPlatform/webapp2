@@ -58,11 +58,11 @@ class TestMiscellaneous(test_base.BaseTestCase):
         self.assertEqual(webapp2.import_string('webob.exc'), webob.exc)
         self.assertEqual(webapp2.import_string('webob'), webob)
 
-        self.assertEqual(webapp2.import_string('dfasfasdfdsfsd', silent=True), None)
-        self.assertEqual(webapp2.import_string('webob.dfasfasdfdsfsd', silent=True), None)
+        self.assertEqual(webapp2.import_string('asdfg', silent=True), None)
+        self.assertEqual(webapp2.import_string('webob.asdfg', silent=True), None)
 
-        self.assertRaises(ImportError, webapp2.import_string, 'dfasfasdfdsfsd')
-        self.assertRaises(AttributeError, webapp2.import_string, 'webob.dfasfasdfdsfsd')
+        self.assertRaises(webapp2.ImportStringError, webapp2.import_string, 'asdfg')
+        self.assertRaises(webapp2.ImportStringError, webapp2.import_string, 'webob.asdfg')
 
     def test_to_utf8(self):
         res = webapp2._to_utf8('ábcdéf'.decode('utf-8'))
