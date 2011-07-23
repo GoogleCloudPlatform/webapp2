@@ -45,6 +45,8 @@ Tutorials
    tutorials/quickstart.rst
    tutorials/quickstart.nogae.rst
    tutorials/gettingstarted/index.rst
+   tutorials/installing.packages.rst
+   tutorials/virtualenv.rst
 
 
 Guide

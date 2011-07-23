@@ -6,7 +6,7 @@ Jinja2
 
 This module provides Jinja2 template support for webapp2.
 
-To use it, you must include the ``jinja2`` package inside your application
+To use it, you must add the ``jinja2`` package to your application
 directory (for App Engine) or install it in your virtual environment
 (for other servers).
 

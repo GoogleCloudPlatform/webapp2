@@ -163,22 +163,73 @@ dispatcher and a handler function that returns a string::
 
         return rv
 
-    class HelloHandler(webapp2.RequestHandler):
-        def get(self):
-            return 'Hello, world!'
+    def hello_handler(request, *args, **kwargs):
+        return 'Hello, world!'
 
     app = webapp2.WSGIApplication([
-        (r'/', HelloHandler),
+        (r'/', hello_handler),
     ])
     app.router.set_dispatcher(custom_dispatcher)
 
 And that's all. Now we have a custom dispatcher set using the router method
-:meth:`webapp2.Router.set_dispatcher`, and our ``HelloHandler`` returns a
-string (or it could be tuple) that is used to create a ``Response`` object.
+:meth:`webapp2.Router.set_dispatcher`. Our "view function" ``hello_handler``
+returns a string (or it could be tuple) that is used to create a ``Response``
+object.
 
 Our custom dispatcher could implement its own URI matching and handler
-dispatching mechanism from scratch, but instead it just extends the default
-dispatcher a little bit, wrapping the returned value under certain conditions.
+dispatching mechanisms from scratch, but in this case it just extends the
+default dispatcher a little bit, wrapping the returned value under certain
+conditions.
+
+
+A micro-framework based on webapp2
+----------------------------------
+Following the previous idea of a custom dispatcher, we could go a little
+further and extend webapp2 to accept routes registered using a decorator,
+like in those Python micro-frameworks.
+
+Without much ado, ladies and gentlemen, we present micro-webapp2::
+
+    import webapp2
+
+    class WSGIApplication(webapp2.WSGIApplication):
+        def __init__(self, *args, **kwargs):
+            super(WSGIApplication, self).__init__(*args, **kwargs)
+            self.router.set_dispatcher(self.__class__.custom_dispatcher)
+
+        @staticmethod
+        def custom_dispatcher(router, request, response):
+            rv = router.default_dispatcher(request, response)
+            if isinstance(rv, basestring):
+                rv = webapp2.Response(rv)
+            elif isinstance(rv, tuple):
+                rv = webapp2.Response(*rv)
+
+            return rv
+
+        def route(self, *args, **kwargs):
+            def wrapper(func):
+                self.router.add(webapp2.Route(handler=func, *args, **kwargs))
+                return func
+
+            return wrapper
+
+Save the above code as ``micro_webapp2.py``. Then you can import it in
+``main.py`` and define your handlers and routes like this::
+
+    import micro_webapp2
+
+    app = micro_webapp2.WSGIApplication()
+
+    @app.route('/')
+    def hello_handler(request, *args, **kwargs):
+        return 'Hello, world!'
+
+    def main():
+        app.run()
+
+    if __name__ == '__main__':
+        main()
 
 This example just demonstrates some of the power and flexibility that lies
 behind webapp2; explore the :ref:`webapp2 API <api.webapp2>` to discover other

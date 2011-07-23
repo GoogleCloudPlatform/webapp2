@@ -21,48 +21,13 @@ as a WSGI framework ouside of GAE as well? Here we'll describe how to do this.
    read the :ref:`tutorials.quickstart` tutorial instead.
 
 
-Install a distutils library
----------------------------
-If you don't have a distutils library (`distribute <http://pypi.python.org/pypi/distribute>`_
-or `setuptools <http://pypi.python.org/pypi/setuptools>`_) installed on
-you system yet, you need to install one. Distribute is recommended, but
-setuptools will serve as well.
+Prerequisites
+-------------
+If you don't have a package installer in your system yet (like ``pip`` or
+``easy_install``), install one. See :ref:`tutorials.installing.packages`.
 
-Distribute is "the standard method for working with Python module
-distributions". It will manage our package dependencies and upgrades.
-If you already have one of them, jump to next step. If not, the installation
-is straighforward:
-
-**1.** Download the installer and save it anywhere. It is a single file:
-
-    http://python-distribute.org/distribute_setup.py
-
-**2.** Execute it using your Python executable (this will require sudo if
-you are using Linux of a Mac):
-
-.. code-block:: text
-
-   $ python distribute_setup.py
-
-If you don't see any error messages, yay, it installed successfully. Let's
-move forward. For Windows, check the distribute or setuptools documentation.
-
-
-Install a package installer
----------------------------
-We need a package installer (``pip`` or ``easy_install``) to install and
-update our libraries. Both will work, but if you don't have any yet, ``pip``
-is recommended. If you already have one of them, jump to next step. If not
-let's install it:
-
-**1.** Call easy_install to install it using your Python executable (this
-will require sudo if you are using Linux of a Mac):
-
-.. code-block:: text
-
-   $ easy_install pip
-
-That's it. If no errors appear, we are good to go.
+If you don't have ``virtualenv`` installed in your system yet, install it.
+See :ref:`tutorials.virtualenv`.
 
 
 Create a directory for your app
@@ -71,52 +36,14 @@ Create a directory ``hellowebapp2`` for your new app. It is where you will
 setup the environment and create your application.
 
 
-Install virtualenv
-------------------
-Install `virtualenv <http://pypi.python.org/pypi/virtualenv>`_, which sets a
-"virtual environment" that allows you to run different projects with separate
-libraries side by side. This is a good idea both for development and
-production, as it'll assure that each project uses their own library versions
-and don't affect each other.
-
-**1.** To install it on a Linux or Mac systems, type in the command line:
-
-.. code-block:: text
-
-   $ sudo pip install virtualenv
-
-Or, using easy_install:
-
-.. code-block:: text
-
-   $ sudo easy_install virtualenv
-
-**2.** Then access your ``hellowebapp2`` and create the virtual environment
-with the following command:
-
-.. code-block:: text
-
-   $ virtualenv env
-
-**3.** Activate the environment. On Linux of Mac, use:
-
-.. code-block:: text
-
-   $ . env/bin/activate
-
-Or on a Windows system:
-
-.. code-block:: text
-
-   $ env\scripts\activate
-
-
 Install WebOb, Paste and webapp2
 --------------------------------
 We need three libraries to use webapp2: `WebOb <http://pypi.python.org/pypi/WebOb>`_, for Request and Response objects,
 `Paste <http://pypi.python.org/pypi/Paste>`_, for the development server,
-and `webapp2 <http://pypi.python.org/pypi/webapp2>`_ itself. Type this to
-install them using the activated environment from the previous step:
+and `webapp2 <http://pypi.python.org/pypi/webapp2>`_ itself.
+
+Type this to install them using the **active virtual environment**
+(see :ref:`tutorials.virtualenv`):
 
 .. code-block:: text
 

@@ -6,7 +6,7 @@ Mako
 
 This module provides Mako template support for webapp2.
 
-To use it, you must include the ``mako`` package inside your application
+To use it, you must add the ``mako`` package to your application
 directory (for App Engine) or install it in your virtual environment
 (for other servers).
 
