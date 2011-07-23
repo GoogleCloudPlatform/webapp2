@@ -5,9 +5,15 @@ i18n
 .. module:: webapp2_extras.i18n
 
 This module provides internationalization and localization support for webapp2.
-It requires the libraries `Babel <http://babel.edgewall.org/>`_ and
-`pytz <http://pypi.python.org/pypi/pytz>`_ (or
-`gaepytz <http://pypi.python.org/pypi/gaepytz>`_ for App Engine).
+
+To use it, you must add the ``babel`` and ``pytz`` packages to your
+application directory (for App Engine) or install it in your virtual
+environment (for other servers).
+
+You can download ``babel`` and ``pytz`` from the following locations:
+
+    http://babel.edgewall.org/
+    http://pypi.python.org/pypi/gaepytz
 
 .. autodata:: default_config
 

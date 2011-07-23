@@ -91,6 +91,9 @@ em {
   margin: 0 0 1em 0;
   margin-left: 203px;
 }
+.body {
+  position: relative;
+}
 code, pre {
   color: #000;
 }
@@ -109,6 +112,11 @@ div.related {
   font-size: 100%;
   margin-top: 1em;
 }
+.plusone {
+  position: absolute;
+  top: 0.4em;
+  right: 10px;
+}
 div.related-bottom {
   margin-top: 2em;
 }
@@ -117,6 +125,7 @@ div.related ul {
   position: absolute;
   right: 5px;
   top: 0.4em;
+  margin-right: 52px;
 }
 div.related li.right {
   float: none;
