@@ -60,3 +60,64 @@ ones. For convenience, configurable modules have a 'default_config'
 variable just for the purpose of documenting the default values, e.g.:
 
     http://webapp-improved.appspot.com/api/extras.i18n.html#webapp2_extras.i18n.default_config
+
+
+Marketplace integration
+-----------------------
+
+.. code-block:: xml
+
+   <?xml version="1.0" encoding="UTF-8" ?>
+   <ApplicationManifest xmlns="http://schemas.google.com/ApplicationManifest/2009">
+     <!-- Name and description pulled from message bundles -->
+     <Name>Tipfy</Name>
+     <Description>A simple application for testing the marketplace.</Description>
+
+     <!-- Support info to show in the marketplace & control panel -->
+     <Support>
+       <!-- URL for application setup as an optional redirect during the install -->
+       <Link rel="setup" href="https://app-id.appspot.com/a/${DOMAIN_NAME}/setup" />
+
+       <!-- URL for application configuration, accessed from the app settings page in the control panel -->
+       <Link rel="manage" href="https://app-id.appspot.com/a/${DOMAIN_NAME}/manage" />
+
+       <!-- URL explaining how customers get support. -->
+       <Link rel="support" href="https://app-id.appspot.com/a/${DOMAIN_NAME}/support" />
+
+       <!-- URL that is displayed to admins during the deletion process, to specify policies such as data retention, how to claim accounts, etc. -->
+       <Link rel="deletion-policy" href="https://app-id.appspot.com/a/${DOMAIN_NAME}/deletion-policy" />
+     </Support>
+
+     <!-- Show this link in Google's universal navigation for all users -->
+     <Extension id="navLink" type="link">
+       <Name>Tipfy</Name>
+       <Url>https://app-id.appspot.com/a/${DOMAIN_NAME}/</Url>
+       <!-- This app also uses the Calendar API -->
+       <Scope ref="Users"/>
+       <!--
+       <Scope ref="Groups"/>
+       <Scope ref="Nicknames"/>
+       -->
+     </Extension>
+
+     <!-- Declare our OpenID realm so our app is white listed -->
+     <Extension id="realm" type="openIdRealm">
+       <Url>https://app-id.appspot.com</Url>
+     </Extension>
+
+     <!-- Special access to APIs -->
+     <Scope id="Users">
+       <Url>https://apps-apis.google.com/a/feeds/user/#readonly</Url>
+       <Reason>Users can be selected to gain special permissions to access or modify content.</Reason>
+     </Scope>
+     <!--
+       <Scope id="Groups">
+       <Url>https://apps-apis.google.com/a/feeds/group/#readonly</Url>
+       <Reason></Reason>
+     </Scope>
+     <Scope id="Nicknames">
+       <Url>https://apps-apis.google.com/a/feeds/nickname/#readonly</Url>
+       <Reason></Reason>
+     </Scope>
+     -->
+   </ApplicationManifest>
