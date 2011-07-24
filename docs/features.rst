@@ -196,6 +196,9 @@ easy to customize URI routing and dispatching mechanisms: you can even extend
 how URIs are matched or built or how handlers are adapted or dispatched
 without subclassing.
 
+For an example of webapp2's flexibility,
+see :ref:`guide.handlers.a.micro.framework.based.on.webapp2`.
+
 
 Domain and subdomain routing
 ----------------------------
