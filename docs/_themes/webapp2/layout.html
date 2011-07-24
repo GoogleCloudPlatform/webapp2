@@ -146,7 +146,7 @@
   {%- block headerlogo %}
   {%- if logo %}
     <p class="logo"><a href="{{ pathto(master_doc) }}">
-      <img class="logo" src="{{ pathto('_static/' + logo, 1) }}" alt="Logo"/>
+      <img class="logo" src="{{ pathto('_static/' + logo, 1) }}" width="{{ theme_logo_width }}" height="{{ theme_logo_height }}" alt="{{ project|e }}" title="{{ project|e }}" />
     </a></p>
   {%- endif %}
   {%- endblock %}
