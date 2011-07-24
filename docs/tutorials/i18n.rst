@@ -31,7 +31,7 @@ your app directory:
 For other servers, install those libraries in your system using ``pip``.
 App Engine users also need babel installed, as we use the command line
 utility provided py it to extract and update message catalogs.
-This assumes a *nix environment:
+This assumes a `*nix` environment:
 
 .. code-block:: text
 
@@ -175,13 +175,14 @@ When translations change, first repeat step 1 above. It will create a new
    $ pybabel update -l es_ES -d ./locale/ -i ./locale/messages.pot
    $ pybabel update -l pt_BR -d ./locale/ -i ./locale/messages.pot
 
-After you translate the new strings in each locale, repeat step 4, compiling
+After you translate the new strings to each language, repeat step 4, compiling
 the translations again.
 
 
 Test your app
 -------------
-Start your application and access the default language:
+Start the development server pointing to the application you created for this
+tutorial and access the default language:
 
     http://localhost:8080/
 

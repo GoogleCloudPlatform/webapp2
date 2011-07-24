@@ -181,6 +181,7 @@ dispatching mechanisms from scratch, but in this case it just extends the
 default dispatcher a little bit, wrapping the returned value under certain
 conditions.
 
+.. _guide.handlers.a.micro.framework.based.on.webapp2:
 
 A micro-framework based on webapp2
 ----------------------------------
