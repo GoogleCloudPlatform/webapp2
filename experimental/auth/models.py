@@ -1,7 +1,9 @@
 from ndb import model
 
 from webapp2_extras import security
-from experimental import unique_model
+
+from experimental import auth
+from experimental.ndb import unique_model
 
 
 class User(model.Model):
@@ -62,17 +64,20 @@ class User(model.Model):
             return user
 
     @classmethod
-    def validate_username_and_password(cls, username, password):
-        """Returns (user, reason-if-not-valid)."""
-        # TODO: check if user.status != 0 here?
+    def get_by_username_and_password(cls, username, password):
+        """Returns user, validating password.
+
+        :raises:
+            ``auth.InvalidUsernameError`` or ``auth.InvalidPasswordError``.
+        """
         user = cls.get_by_username(username)
         if not user:
-            return None, 'invalid-username'
+            raise auth.InvalidUsernameError()
 
         if not security.check_password_hash(password, user.password):
-            return None, 'invalid-password'
+            raise auth.InvalidPasswordError()
 
-        return user, None
+        return user
 
     @classmethod
     def validate_token(cls, subject, token):
