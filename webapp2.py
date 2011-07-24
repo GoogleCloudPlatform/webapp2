@@ -11,6 +11,7 @@
 from __future__ import with_statement
 
 import cgi
+import inspect
 import logging
 import os
 import re
@@ -18,9 +19,12 @@ import sys
 import threading
 import urllib
 import urlparse
+from wsgiref import handlers
 
 import webob
 from webob import exc
+
+_webapp = _webapp_util = _local = None
 
 try: # pragma: no cover
     # WebOb < 1.0 (App Engine Python 2.5).
@@ -31,39 +35,28 @@ except ImportError: # pragma: no cover
     from webob.util import status_reasons
     from webob.headers import ResponseHeaders as BaseResponseHeaders
 
-if os.environ.get('APPENGINE_RUNTIME') == 'python27': # pragma: no cover
-    # google.appengine.ext.webapp imports webapp2 in the App Engine Python 2.7
-    # runtime.
-    webapp = None
-else: # pragma: no cover
+# google.appengine.ext.webapp imports webapp2 in the
+# App Engine Python 2.7 runtime.
+if os.environ.get('APPENGINE_RUNTIME') != 'python27': # pragma: no cover
     try:
-        from google.appengine.ext import webapp
+        from google.appengine.ext import webapp as _webapp
     except ImportError: # pragma: no cover
         # Running webapp2 outside of GAE.
-        webapp = None
-
-if webapp is None: # pragma: no cover
-    class webapp(object):
-        RequestHandler = type('RequestHandler', (object,), {})
+        pass
 
 try:
-    from google.appengine.ext.webapp import util
+    from google.appengine.ext.webapp import util as _webapp_util
 except ImportError: # pragma: no cover
-    from wsgiref import handlers
+    pass
 
-    class util(object):
-        def _run(app):
-            handlers.CGIHandler().run(app)
-
-        run_wsgi_app = run_bare_wsgi_app = staticmethod(_run)
-
-try:
-    # Thread-safety support.
+try: # pragma: no cover
+    # Thread-local variables container.
     from webapp2_extras import local
+    _local = local.Local()
 except ImportError: # pragma: no cover
     logging.warning("webapp2_extras.local is not available "
                     "so webapp2 won't be thread-safe!")
-    local = None
+
 
 __version_info__ = (2, 0, 2)
 __version__ = '.'.join(str(n) for n in __version_info__)
@@ -72,7 +65,7 @@ __version__ = '.'.join(str(n) for n in __version_info__)
 HTTPException = exc.HTTPException
 
 #: Regex for route definitions.
-_ROUTE_REGEX = re.compile(r"""
+_route_re = re.compile(r"""
     \<               # The exact character "<"
     ([a-zA-Z_]\w*)?  # The optional variable name
     (?:\:([^\>]*))?  # The optional :regex part
@@ -80,7 +73,7 @@ _ROUTE_REGEX = re.compile(r"""
     """, re.VERBOSE)
 
 # Set same default messages from webapp plus missing ones.
-webapp_status_reasons = {
+_webapp_status_reasons = {
     203: 'Non-Authoritative Information',
     302: 'Moved Temporarily',
     306: 'Unused',
@@ -89,8 +82,8 @@ webapp_status_reasons = {
     504: 'Gateway Time-out',
     505: 'HTTP Version not supported',
 }
-status_reasons.update(webapp_status_reasons)
-for code, message in webapp_status_reasons.iteritems():
+status_reasons.update(_webapp_status_reasons)
+for code, message in _webapp_status_reasons.iteritems():
     cls = exc.status_map.get(code)
     if cls:
         cls.title = message
@@ -309,7 +302,7 @@ class ResponseHeaders(BaseResponseHeaders):
 
     def __str__(self):
         """Returns the formatted headers ready for HTTP transmission."""
-        return '\r\n'.join(['%s: %s' % kv for kv in self.items()] + ['', ''])
+        return '\r\n'.join(['%s: %s' % v for v in self.items()] + ['', ''])
 
 
 class Response(webob.Response):
@@ -1252,25 +1245,25 @@ class Router(object):
         """Adapts a handler for dispatching.
 
         Because handlers use or implement different dispatching mechanisms,
-        they can be wrapped to use the unified API for routing or dispatching.
+        they can be wrapped to use a unified API for dispatching.
         This way webapp2 can support, for example, a :class:`RequestHandler`
         class and function views or, for compatibility purposes, a
-        ``webapp.RequestHandler`` class. They are dispatched differently by the
-        adapters but use the same router API.
+        ``webapp.RequestHandler`` class. The adapters follow the same router
+        dispatching API but dispatch each handler type differently.
 
         :param handler:
             A handler callable.
         :returns:
             A wrapped handler callable.
         """
-        try:
-            if issubclass(handler, webapp.RequestHandler):
+        if inspect.isclass(handler):
+            if _webapp and issubclass(handler, _webapp.RequestHandler):
                 # Compatible with webapp.RequestHandler.
                 adapter = WebappHandlerAdapter
             else:
                 # Default, compatible with webapp2.RequestHandler.
                 adapter = Webapp2HandlerAdapter
-        except TypeError:
+        else:
             # A "view" function.
             adapter = BaseHandlerAdapter
 
@@ -1453,15 +1446,15 @@ class WSGIApplication(object):
         be used in environments that don't support threading.
 
         If :mod:`webapp2_extras.local` is not available app and request will
-        be assigned directly as class attributes. This should only be used
-        in non-threaded environments (like App Engine Python 2.5).
+        be assigned directly as class attributes. This should only be used in
+        non-threaded environments (e.g., App Engine Python 2.5).
 
         :param app:
             A :class:`WSGIApplication` instance.
         :param request:
             A :class:`Request` instance.
         """
-        if local is not None: # pragma: no cover
+        if _local is not None: # pragma: no cover
             _local.app = app
             _local.request = request
         else: # pragma: no cover
@@ -1470,7 +1463,7 @@ class WSGIApplication(object):
 
     def clear_globals(self):
         """Clears global variables. See :meth:`set_globals`."""
-        if local is not None: # pragma: no cover
+        if _local is not None: # pragma: no cover
             _local.__release_local__()
         else: # pragma: no cover
             WSGIApplication.app = WSGIApplication.active_instance = None
@@ -1565,17 +1558,22 @@ class WSGIApplication(object):
     def run(self, bare=False):
         """Runs this WSGI-compliant application in a CGI environment.
 
-        This uses functions provided by ``google.appengine.ext.webapp.util``:
-        ``run_bare_wsgi_app`` and ``run_wsgi_app``.
+        This uses functions provided by ``google.appengine.ext.webapp.util``,
+        if available: ``run_bare_wsgi_app`` and ``run_wsgi_app``.
+
+        Otherwise, it uses ``wsgiref.handlers.CGIHandler().run()``.
 
         :param bare:
             If True, doesn't add registered WSGI middleware: use
             ``run_bare_wsgi_app`` instead of ``run_wsgi_app``.
         """
-        if bare:
-            util.run_bare_wsgi_app(self)
-        else:
-            util.run_wsgi_app(self)
+        if _webapp_util:
+            if bare:
+                _webapp_util.run_bare_wsgi_app(self)
+            else:
+                _webapp_util.run_wsgi_app(self)
+        else: # pragma: no cover
+            handlers.CGIHandler().run(app)
 
     def get_response(self, *args, **kwargs):
         """Creates a request and returns a response for this app.
@@ -1592,7 +1590,7 @@ class WSGIApplication(object):
 
             # Test the app, passing parameters to build a request.
             response = app.get_response('/')
-            assert response.status == '200 OK'
+            assert response.status_int == 200
             assert response.body == 'Hello, world!'
 
         :param args:
@@ -1864,7 +1862,7 @@ def _parse_route_template(template, default_sufix=''):
     variables = {}
     reverse_template = pattern = ''
     args_count = last = 0
-    for match in _ROUTE_REGEX.finditer(template):
+    for match in _route_re.finditer(template):
         part = template[last:match.start()]
         name = match.group(1)
         expr = match.group(2) or default_sufix
@@ -1899,14 +1897,16 @@ def _get_route_variables(match, default_kwargs=None):
     return args, kwargs
 
 
+def _set_thread_safe_app():
+    """Assigns WSGIApplication globals to a proxy pointing to thread-local."""
+    if _local is not None: # pragma: no cover
+        WSGIApplication.app = WSGIApplication.active_instance = _local('app')
+        WSGIApplication.request = _local('request')
+
+
 Request.ResponseClass = Response
 Response.RequestClass = Request
 # Alias.
 _abort = abort
 # Thread-safety support.
-if local is not None: # pragma: no cover
-    # Thread-local variables container.
-    _local = local.Local()
-    # Assign the class attributes to a proxy object that points to _local.
-    WSGIApplication.app = WSGIApplication.active_instance = _local('app')
-    WSGIApplication.request = _local('request')
+_set_thread_safe_app()
