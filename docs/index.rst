@@ -45,8 +45,7 @@ Tutorials
    tutorials/quickstart.rst
    tutorials/quickstart.nogae.rst
    tutorials/gettingstarted/index.rst
-   tutorials/installing.packages.rst
-   tutorials/virtualenv.rst
+   tutorials/i18n.rst
 
 
 Guide
@@ -126,9 +125,9 @@ tracker:
 
     http://code.google.com/p/webapp-improved/issues/list
 
-We'd love to know if you found a bug or if something can be improved. We are
-also interested in ideas for new webapp2_extras modules and more tests and
-documentation.
+Let us know if you found a bug or if something can be improved. New tutorials
+or webapp2_extras modules are welcome, and tests or documentation are never
+too much.
 
 Thanks!
 
