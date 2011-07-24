@@ -1620,8 +1620,8 @@ class ImportStringError(Exception):
                '- duplicated package or module name taking precedence in '
                'sys.path;\n'
                '- missing module, class, function or variable;\n\n'
-               'Debugged import:\n\n%s\n\n'
-               'Original exception:\n\n%s: %s')
+               'Original exception:\n\n%s: %s\n\n'
+               'Debugged import:\n\n%s')
         name = ''
         tracked = []
         for part in import_name.split('.'):
@@ -1632,8 +1632,8 @@ class ImportStringError(Exception):
             else:
                 track = ['- %r found in %r.' % rv for rv in tracked]
                 track.append('- %r not found.' % name)
-                msg = msg % (import_name, '\n'.join(track),
-                             exception.__class__.__name__, str(exception))
+                msg = msg % (import_name, exception.__class__.__name__,
+                             str(exception), '\n'.join(track))
                 break
 
         Exception.__init__(self, msg)
