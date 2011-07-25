@@ -52,11 +52,6 @@ class Unique(model.Model):
     Based on the idea from http://squeeville.com/2009/01/30/add-a-unique-constraint-to-google-app-engine/
     """
     @classmethod
-    def get_key(cls, value):
-        """Simply returns a key for a given value."""
-        return model.Key(cls, value)
-
-    @classmethod
     def create(cls, value):
         """Creates a new unique value.
 
@@ -72,7 +67,7 @@ class Unique(model.Model):
         :returns:
             True if the unique value was created, False otherwise.
         """
-        entity = cls(key=cls.get_key(value))
+        entity = cls(key=model.Key(cls, value))
         txn = lambda: entity.put() if not entity.key.get() else None
         return model.transaction(txn) is not None
 
@@ -88,20 +83,20 @@ class Unique(model.Model):
             created, bool is False and the list contains all the values that
             already existed in datastore during the creation attempt.
         """
-        keys = [cls.get_key(value) for value in values]
+        keys = [model.Key(cls, value) for value in values]
 
-        # Preliminary check, before going for more expensive transactions.
-        entities = model.get_multi(keys)
-        existing = [entity.key.id() for entity in entities if entity]
-        if existing:
-            return False, existing
+        # Maybe do a preliminary check, before going for transactions?
+        # entities = model.get_multi(keys)
+        # existing = [entity.key.id() for entity in entities if entity]
+        # if existing:
+        #    return False, existing
 
         # Create all records transactionally.
         created = []
         entities = [cls(key=key) for key in keys]
-        for entity in entities:
-            txn = lambda: entity.put() if not entity.key.get() else None
-            key = model.transaction(txn)
+        for e in entities:
+            func = lambda: e.put() if not e.key.get() else None
+            key = model.transaction(func)
             if key:
                 created.append(key)
 
@@ -111,13 +106,3 @@ class Unique(model.Model):
             return False, [k.id() for k in keys if k not in created]
 
         return True, []
-
-    @classmethod
-    def delete_multi(cls, values):
-        """Deletes multiple unique values at once.
-
-        :param values:
-            A sequence of values to be deleted. See :meth:`create`.
-        """
-        keys = [cls.get_key(value) for value in values]
-        model.delete_multi(keys)
