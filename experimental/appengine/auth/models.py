@@ -3,10 +3,12 @@ from ndb import model
 from webapp2_extras import security
 
 from experimental import auth
-from experimental.ndb import unique_model
+from experimental.appengine.ndb import unique_model
 
 
 class User(model.Model):
+    """"""
+
     created = model.DateTimeProperty(auto_now_add=True)
     updated = model.DateTimeProperty(auto_now=True)
     # Display name: username as typed by the user.
@@ -64,7 +66,7 @@ class User(model.Model):
             return user
 
     @classmethod
-    def get_by_username_and_password(cls, username, password):
+    def get_by_auth_password(cls, username, password):
         """Returns user, validating password.
 
         :raises:
@@ -80,43 +82,84 @@ class User(model.Model):
         return user
 
     @classmethod
-    def validate_token(cls, subject, token):
-        return UserToken.get_by_subject_token(subject, token)
+    def validate_token(cls, username, subject, token):
+        rv = UserToken.get(username=username, subject=subject, token=token)
+        return rv is not None
 
     @classmethod
-    def validate_registration_token(cls, token):
-        return cls.validate_token('confirm-registration', token)
-
-    @classmethod
-    def delete_auth_token(cls, username, token):
-        """Interface method that just delegates to UserToken."""
-        UserToken.delete_by_username_subject_token(username, 'auth', token)
-
-    @classmethod
-    def create_auth_token(self, username):
+    def create_auth_token(cls, username):
         entity = UserToken.create(username, 'auth', token_size=64)
         return entity.token
 
     @classmethod
-    def create_signup_token(self, username):
-        entity = UserToken.create(username, 'confirm-signup')
+    def validate_auth_token(cls, username, token):
+        return cls.validate_token(username, 'auth', token)
+
+    @classmethod
+    def delete_auth_token(cls, username, token):
+        UserToken.get_key(username, 'auth', token).delete()
+
+    @classmethod
+    def create_signup_token(cls, username):
+        entity = UserToken.create(username, 'signup')
         return entity.token
 
     @classmethod
-    def register(cls, **user_values):
-        """Registers a new user."""
+    def validate_signup_token(cls, username, token):
+        return cls.validate_token(username, 'signup', token)
+
+    @classmethod
+    def delete_signup_token(cls, username, token):
+        UserToken.get_key(username, 'signup', token).delete()
+
+    @classmethod
+    def create_user(cls, _unique_email=True, **user_values):
+        """Creates a new user.
+
+        :param _unique_email:
+            True to require the email to be unique, False otherwise.
+        :param user_values:
+            Keyword arguments to create a new user entity. Required ones are:
+
+            - name
+            - username
+            - auth_id
+            - email
+
+            Optional keywords:
+
+            - password_raw (a plain password to be hashed)
+            - status
+
+            The properties values of `username` and `auth_id` must be unique.
+            Optionally, `email` can also be required to be unique.
+        :returns:
+            A tuple (boolean, info). The boolean indicates if the user
+            was created. If creation succeeds,  ``info`` is the user entity;
+            otherwise it is a list of duplicated unique properties that
+            caused the creation to fail.
+        """
+        assert user_values.get('password') is None, \
+            'Use password_raw instead of password to create new users'
+
         if 'password_raw' in user_values:
             user_values['password'] = security.create_password_hash(
-                user_values.pop('password_raw'), bit_strength=12)
+                user_values.pop('password_raw'), length=12)
 
-        user_values['username'] = username = user_values['name'].lower()
+        username = user_values['username'].lower()
         user = User(key=cls.get_key(username), **user_values)
 
         # Unique auth id and email.
         unique_auth_id = 'User.auth_id:%s' % user_values['auth_id']
-        unique_email = 'User.email:%s' % user_values['email']
-        uniques = [unique_auth_id, unique_email]
-        success, existing = unique_model.Unique.create_multi(uniques)
+        uniques = [unique_auth_id]
+        if _unique_email:
+            unique_email = 'User.email:%s' % user_values['email']
+            uniques.append(unique_email)
+        else:
+            unique_email = None
+
+        if uniques:
+            success, existing = unique_model.Unique.create_multi(uniques)
 
         if success:
             txn = lambda: user.put() if not user.key.get() else None
@@ -137,6 +180,8 @@ class User(model.Model):
 
 
 class UserToken(model.Model):
+    """Stores validation tokens for users."""
+
     created = model.DateTimeProperty(auto_now_add=True)
     updated = model.DateTimeProperty(auto_now=True)
     username = model.StringProperty(required=True, indexed=False)
@@ -145,10 +190,12 @@ class UserToken(model.Model):
 
     @classmethod
     def get_key(cls, username, subject, token):
+        """Returns a token key."""
         return model.Key(cls, '%s.%s.%s' % (username, subject, token))
 
     @classmethod
     def create(cls, username, subject, token=None, token_size=32):
+        """Fetches a user token."""
         token = token or security.create_token(token_size)
         key = cls.get_key(username, subject, token)
         entity = cls(key=key, username=username, subject=subject, token=token)
@@ -156,16 +203,11 @@ class UserToken(model.Model):
         return entity
 
     @classmethod
-    def get_by_username_subject_token(cls, username, subject, token):
-        key = cls.get_key(username, subject, token)
-        return key.get()
+    def get(cls, username=None, subject=None, token=None):
+        """Fetches a user token."""
+        if username and subject and token:
+            return cls.get_key(username, subject, token).get()
 
-    @classmethod
-    def get_by_subject_token(cls, subject, token):
-        query = cls.query(cls.subject == subject, cls.token == token)
-        return query.get()
-
-    @classmethod
-    def delete_by_username_subject_token(cls, username, subject, token):
-        key = cls.get_key(username, subject, token)
-        return key.delete()
+        assert subject and token, \
+            'subject and token must be provided to UserToken.get().'
+        return cls.query(cls.subject==subject, cls.token==token).get()

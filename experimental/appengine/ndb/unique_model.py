@@ -95,8 +95,8 @@ class Unique(model.Model):
         # Create all records transactionally.
         created = []
         entities = [cls(key=key) for key in keys]
-        for e in entities:
-            func = lambda: e.put() if not e.key.get() else None
+        for entity in entities:
+            func = lambda: entity.put() if not entity.key.get() else None
             key = model.transaction(func)
             if key:
                 created.append(key)
@@ -110,4 +110,9 @@ class Unique(model.Model):
 
     @classmethod
     def delete_multi(cls, values):
+        """Deletes multiple unique values at once.
+
+        :param values:
+            A sequence of values to be deleted.
+        """
         return model.delete_multi(model.Key(cls, v) for v in values)
