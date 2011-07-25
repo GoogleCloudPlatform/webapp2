@@ -1312,15 +1312,19 @@ class Config(dict):
         :raises:
             Exception, when a required key is not set or is None.
         """
-        if key in self.loaded:
-            return self[key]
+        config = self.get(key)
+        loaded = key in self.loaded
+        if not loaded:
+            loaded_config = dict(default_values or ())
 
-        config = dict(default_values or ())
+            if config is not None:
+                loaded_config.update(config)
 
-        if key in self:
-            config.update(self[key])
+            self[key] = config = loaded_config
+            self.loaded.append(key)
 
         if user_values:
+            config = config.copy()
             config.update(user_values)
 
         if required_keys:
@@ -1329,8 +1333,6 @@ class Config(dict):
                 raise Exception(
                     'Missing configuration keys for %r: %r.' % (key, missing))
 
-        self[key] = config
-        self.loaded.append(key)
         return config
 
 
