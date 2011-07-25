@@ -73,9 +73,15 @@ class TestUniqueModel(test_base.BaseTestCase):
 
     def test_delete_multi(self):
         rv = unique_model.Unique.create_multi(('foo', 'bar', 'baz'))
-        self.assertEqual(rv, (True, [])
+        self.assertEqual(rv, (True, []))
         rv = unique_model.Unique.create_multi(('foo', 'bar', 'baz'))
-        self.assertEqual(rv, (False, ['foo', 'bar', 'baz'])
+        self.assertEqual(rv, (False, ['foo', 'bar', 'baz']))
+
+        unique_model.Unique.delete_multi(('foo', 'bar', 'baz'))
+
+        rv = unique_model.Unique.create_multi(('foo', 'bar', 'baz'))
+        self.assertEqual(rv, (True, []))
+
 
 if __name__ == '__main__':
     test_base.main()
