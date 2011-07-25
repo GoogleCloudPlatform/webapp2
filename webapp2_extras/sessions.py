@@ -67,8 +67,8 @@ default_config = {
     },
     'backends': {
         'securecookie': 'webapp2_extras.sessions.SecureCookieSessionFactory',
-        'datastore': 'webapp2_extras.sessions_ndb.DatastoreSessionFactory',
-        'memcache': 'webapp2_extras.sessions_memcache.MemcacheSessionFactory',
+        'datastore': 'webapp2_extras.appengine.sessions_ndb.DatastoreSessionFactory',
+        'memcache': 'webapp2_extras.appengine.sessions_memcache.MemcacheSessionFactory',
     },
 }
 
@@ -357,9 +357,9 @@ class SessionStore(object):
             - ``securecookie``: uses :class:`SecureCookieSessionFactory`.
               This is the default backend.
             - ``datastore``: uses
-              :class:`webapp2_extras.sessions_ndb.DatastoreSessionFactory`.
+              :class:`webapp2_extras.appengine.sessions_ndb.DatastoreSessionFactory`.
             - ``memcache``: uses
-              :class:`webapp2_extras.sessions_memcache.MemcacheSessionFactory`.
+              :class:`webapp2_extras.appengine.sessions_memcache.MemcacheSessionFactory`.
         :returns:
             A dictionary-like session object.
         """
