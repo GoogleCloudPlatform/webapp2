@@ -25,19 +25,19 @@ from webapp2_extras import sessions
 #: cookie_name
 #:     Name of the cookie to save the auth session. Default is `auth`.
 #:
-#: token_expiration
+#: token_max_age
 #:     Number of seconds of inactivity after which an auth token is
-#:     invalidated. The same value is used to set the ``max_age`` of the
-#:     auth session. Default is 86400 * 7 * 3 (3 weeks).
+#:     invalidated. The same value is used to set the ``max_age`` of
+#:     persistent auth sessions. Default is 86400 * 7 * 3 (3 weeks).
 #:
 #: token_interval
 #:     Number of seconds after which a new auth token is created and the old
 #:     one is invalidated. Default is 86400 (1 day).
 default_config = {
-    'user_class':      'experimental.auth.models.User',
+    'user_class':      'experimental.appengine.auth.models.User',
     'cookie_name':     'auth',
-    'token_expiration': 86400 * 7 * 3,
-    'token_interval':   86400,
+    'token_max_age':   86400 * 7 * 3,
+    'token_interval':  86400,
 }
 
 
@@ -45,15 +45,15 @@ class AnonymousUser(object):
     """"""
 
 
-class AuthException(Exception):
+class AuthError(Exception):
     """"""
 
 
-class InvalidUsernameError(AuthException):
+class InvalidUsernameError(AuthError):
     """"""
 
 
-class InvalidPasswordError(AuthException):
+class InvalidPasswordError(AuthError):
     """"""
 
 
@@ -98,27 +98,34 @@ class Auth(object):
         if self._user:
             return self._user
 
-        return self.load_from_session()
+        return self.get_user_by_session()
 
-    def set_user(self, user, token=None, timestamp=None, remember=False):
-        """Saves a user in the session."""
+    # Storing and removing user from session ----------------------------------
+
+    def set_user(self, user, token=None, timestamp=None, remember=False,
+                 **session_args):
+        """Saves a user in the session.
+
+        :param user:
+            A User model instance.
+        :param token:
+            A unique token to be persisted. If None, a new one is created.
+        :param timestamp:
+            Token creation timestamp. If None, a new one is created.
+        :param session_args:
+            Keyword arguments to set the session arguments.
+        :remember:
+            If True, session is set to be persisted.
+        """
         token = token or self.user_class.create_auth_token(user.username)
         timestamp = timestamp or int(time.time())
-
-        self.session['_user'] = [
-            user.username,
-            token,
-            timestamp,
-            int(remember),
-        ]
-
-        session_args = self.session.container.session_args
         if remember:
-            # TODO: do we need a separate config for this?
-            session_args['max_age'] = self.config['token_expiration']
+            session_args.setdefault('max_age', self.config['token_max_age'])
         else:
-            session_args['max_age'] = None
+            session_args.setdefault('max_age', None)
 
+        self._set_session_data(user.username, token, timestamp, int(remember),
+                               **session_kwargs)
         self._user = user
 
     def unset_user(self):
@@ -130,16 +137,52 @@ class Auth(object):
             username, token, timestamp, remember = data
             self.user_class.delete_auth_token(username, token)
 
-    def load_from_session(self):
+    def _set_session_data(self, username, token, timestamp, remember,
+                          **session_kwargs):
+        self.session['_user'] = [username, token, timestamp, remember]
+        self.session.container.session_args.update(session_args)
+
+    def _pop_session_data(self):
+        data = self.session.pop('_user', None)
+        if isinstance(data, list) and len(data) == 4:
+            return data
+
+    # Retrieving a user -------------------------------------------------------
+
+    def get_user_by_session(self):
+        """Returns a user based on the current session.
+
+        This essentially retrieves the auth data from the current session and,
+        if it is available, returns the result of :meth:`get_user_by_token`
+        called using that data.
+
+        :returns:
+            A :class:`User` or :class:`AnonymousUser`.
+        """
         data = self._pop_session_data()
         if not data:
             return anonymous_user
 
-        # timestamp is from the token creation
-        username, token, timestamp, remember = data
-        age = int(time.time()) - timestamp
-        is_expired = age > self.config['token_expiration']
-        need_renewal = age > self.config['token_interval']
+        # data is username, token, timestamp, remember
+        return self.get_user_by_token(*data)
+
+    def get_user_by_token(self, username, token, timestamp=None,
+                          remember=False):
+        """Returns a user based on ...
+
+        :param username:
+        :param token:
+        :param timestamp:
+        :param remember:
+        :returns:
+            A :class:`User` or :class:`AnonymousUser`.
+        """
+        if timestamp:
+            age = int(time.time()) - timestamp
+            is_expired = age > self.config['token_max_age']
+            need_renewal = age > self.config['token_interval']
+        else:
+            is_expired = need_renewal = False
 
         user = None
         if not is_expired:
@@ -148,8 +191,7 @@ class Auth(object):
         if is_expired or need_renewal:
             # Delete token from db.
             self.user_class.delete_auth_token(username, token)
-            token = None
-            timestamp = None
+            token = timestamp = None
 
         if is_expired or not user:
             return anonymous_user
@@ -158,24 +200,25 @@ class Auth(object):
                       remember=remember)
         return user
 
-    def load_from_form(self, username, password, remember=False):
-        """
+    def get_user_by_password(self, username, password, remember=False):
+        """Returns a user based on ...
+
+        :param username:
+        :param password:
+        :param remember:
+        :returns:
+            A :class:`User` or :class:`AnonymousUser`.
         :raises:
             ``InvalidUsernameError`` or ``InvalidPasswordError``.
         """
-        user = self.user_class.get_by_username_and_password(username,
-                                                            password)
+        self.unset_user()
+        user = self.user_class.get_by_auth_password(username, password)
         if user:
             # Form login always create a new token with new timestamp.
             self.set_user(user, remember=remember)
             return user
 
         return anonymous_user
-
-    def _pop_session_data(self):
-        data = self.session.pop('_user', None)
-        if isinstance(data, list) and len(data) == 4:
-            return data
 
 
 # Factories -------------------------------------------------------------------
