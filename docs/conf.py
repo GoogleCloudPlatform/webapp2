@@ -27,11 +27,19 @@ theme_path = os.path.join(current_path, '_themes', 'webapp2')
 sys.path[0:0] = [
     theme_path,
     gae_path,
+    # All libs used by webapp2 and extras.
+    os.path.join(path, 'lib', 'appengine-ndb-experiment'),
+    os.path.join(path, 'lib', 'babel'),
+    os.path.join(path, 'lib', 'Jinja2-2.6'),
+    os.path.join(path, 'lib', 'Mako-0.4.1'),
+    os.path.join(path, 'lib', 'gaepytz-2011h'),
+    os.path.join(path, 'lib', 'WebOb-1.0.8'),
+    # SDK libs.
     os.path.join(gae_path, 'lib', 'django_0_96'),
-    os.path.join(gae_path, 'lib', 'webob'),
+    #os.path.join(gae_path, 'lib', 'webob'),
     os.path.join(gae_path, 'lib', 'yaml', 'lib'),
     os.path.join(gae_path, 'lib', 'protorpc'),
-    os.path.join(path, 'lib'),
+    os.path.join(gae_path, 'lib', 'simplejson'),
     path,
 ]
 
