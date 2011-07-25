@@ -153,7 +153,7 @@ class TestNdbSession(test_base.BaseTestCase):
         self.assertEqual(flashes, [])
 
     def test_misc(self):
-        p = sessions_ndb._PickledProperty(dict)
+        p = sessions_ndb.PickledProperty(dict)
         self.assertRaises(datastore_errors.BadValueError, p._validate, ['foo'])
 
         s = sessions_ndb.Session(id='foo')

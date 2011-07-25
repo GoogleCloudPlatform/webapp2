@@ -1,6 +1,6 @@
 from ndb import model
 
-from experimental.ndb import unique_model
+from experimental.appengine.ndb import unique_model
 
 import test_base
 
