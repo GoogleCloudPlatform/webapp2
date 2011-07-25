@@ -51,6 +51,7 @@ class Unique(model.Model):
 
     Based on the idea from http://squeeville.com/2009/01/30/add-a-unique-constraint-to-google-app-engine/
     """
+
     @classmethod
     def create(cls, value):
         """Creates a new unique value.
@@ -106,3 +107,7 @@ class Unique(model.Model):
             return False, [k.id() for k in keys if k not in created]
 
         return True, []
+
+    @classmethod
+    def delete_multi(cls, values):
+        return model.delete_multi(model.Key(cls, v) for v in values)

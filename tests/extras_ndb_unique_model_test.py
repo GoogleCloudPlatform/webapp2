@@ -71,6 +71,11 @@ class TestUniqueModel(test_base.BaseTestCase):
         self.assertRaises(UniqueConstraintViolation, create_user, 'username_1', 'auth_id_2', 'email_1')
         self.assertRaises(UniqueConstraintViolation, create_user, 'username_1', 'auth_id_1', 'email_2')
 
+    def test_delete_multi(self):
+        rv = unique_model.Unique.create_multi(('foo', 'bar', 'baz'))
+        self.assertEqual(rv, (True, [])
+        rv = unique_model.Unique.create_multi(('foo', 'bar', 'baz'))
+        self.assertEqual(rv, (False, ['foo', 'bar', 'baz'])
 
 if __name__ == '__main__':
     test_base.main()
