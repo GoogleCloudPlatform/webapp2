@@ -75,20 +75,27 @@ API Reference - webapp2_extras
 .. toctree::
    :maxdepth: 1
 
-   api/extras.i18n.rst
-   api/extras.jinja2.rst
-   api/extras.json.rst
-   api/extras.local.rst
-   api/extras.mako.rst
-   api/extras.protorpc.rst
-   api/extras.routes.rst
-   api/extras.securecookie.rst
-   api/extras.security.rst
-   api/extras.sessions.rst
-   api/extras.sessions_memcache.rst
-   api/extras.sessions_ndb.rst
-   api/extras.users.rst
+   api/webapp2_extras/i18n.rst
+   api/webapp2_extras/jinja2.rst
+   api/webapp2_extras/json.rst
+   api/webapp2_extras/local.rst
+   api/webapp2_extras/mako.rst
+   api/webapp2_extras/protorpc.rst
+   api/webapp2_extras/routes.rst
+   api/webapp2_extras/securecookie.rst
+   api/webapp2_extras/security.rst
+   api/webapp2_extras/sessions.rst
 
+API Reference - webapp2_extras.appengine
+----------------------------------------
+App Engine-specific modules.
+
+.. toctree::
+   :maxdepth: 1
+
+   api/webapp2_extras/appengine/sessions_memcache.rst
+   api/webapp2_extras/appengine/sessions_ndb.rst
+   api/webapp2_extras/appengine/users.rst
 
 Indices and tables
 ------------------
@@ -119,9 +126,9 @@ This library was not created and is not maintained by Google.
 
 Contribute
 ----------
-webapp2 is considered feature complete and well tested, but if you think
-something is missing or is not working well, please describe it in our issue
-tracker:
+webapp2 is considered stable, feature complete and well tested, but if you
+think something is missing or is not working well, please describe it in our
+issue tracker:
 
     http://code.google.com/p/webapp-improved/issues/list
 

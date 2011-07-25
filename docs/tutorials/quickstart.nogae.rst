@@ -7,7 +7,7 @@ framework, as it has these features:
 
 - It is independent of the App Engine SDK. If the SDK is not found, it sets
   fallbacks to be used outside of GAE.
-- It supports threaded environments through the module :ref:`api.extras.local`.
+- It supports threaded environments through the module :ref:`api.webapp2_extras.local`.
 - All webapp2_extras modules are designed to be thread-safe.
 - It is compatible with ``WebOb`` 1.0 and superior, which fixes several bugs
   found in the version bundled with the SDK (which is of course supported as

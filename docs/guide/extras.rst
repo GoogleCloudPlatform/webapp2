@@ -10,13 +10,13 @@ webapp2. It includes:
 - Support for threaded environments, so that you can use webapp2 outside of
   App Engine or in the upcoming App Engine Python 2.7 runtime
 
-Some of these modules (:ref:`api.extras.i18n`, :ref:`api.extras.jinja2`,
-:ref:`api.extras.mako` and :ref:`api.extras.sessions`) use configuration
+Some of these modules (:ref:`api.webapp2_extras.i18n`, :ref:`api.webapp2_extras.jinja2`,
+:ref:`api.webapp2_extras.mako` and :ref:`api.webapp2_extras.sessions`) use configuration
 values that can be set in the WSGI application. When a config key is not set,
 the modules will use the default values they define.
 
 All configuration keys are optional, except ``secret_key`` that must be set
-for :ref:`api.extras.sessions`. Here is an example that sets the ``secret_key``
+for :ref:`api.webapp2_extras.sessions`. Here is an example that sets the ``secret_key``
 configuration and tests that the session is working::
 
     import webapp2
