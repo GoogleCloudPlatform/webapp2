@@ -12,7 +12,14 @@
 """
 from __future__ import absolute_import
 
+import warnings
+
 import webapp2
+
+warnings.warn(DeprecationWarning(
+    'webapp2_extras.config is deprecated. '
+    'The WSGIApplication uses webapp2.Config instead.'),
+    stacklevel=1)
 
 #: Value used for missing default values.
 DEFAULT_VALUE = object()

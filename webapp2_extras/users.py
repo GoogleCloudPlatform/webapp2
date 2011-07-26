@@ -11,4 +11,10 @@
     :copyright: 2011 tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
+import warnings
+
+warnings.warn(DeprecationWarning(
+    'webapp2_extras.users is deprecated. '
+    'App Engine-specific modules were moved to webapp2_extras.appengine.'),
+    stacklevel=1)
 from webapp2_extras.appengine.users import *
