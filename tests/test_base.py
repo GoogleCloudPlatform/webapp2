@@ -2,6 +2,9 @@ import unittest
 
 from google.appengine.ext import testbed
 
+from ndb import model
+from ndb import tasklets
+
 import webapp2
 
 
@@ -52,6 +55,7 @@ class BaseTestCase(unittest.TestCase):
         self.testbed.init_user_stub()
 
         # Only when testing ndb.
+        self.reset_kind_map()
         self.setup_context_cache()
 
     def tearDown(self):
@@ -61,6 +65,9 @@ class BaseTestCase(unittest.TestCase):
         # Clear thread-local variables.
         self.clear_globals()
 
+    def reset_kind_map(self):
+        model.Model._reset_kind_map()
+
     def setup_context_cache(self):
         """Set up the context cache.
 
@@ -68,10 +75,12 @@ class BaseTestCase(unittest.TestCase):
         behavior is to disable it to avoid misleading test results. Override
         this when needed.
         """
-        from ndb import tasklets
         ctx = tasklets.get_context()
-        ctx.set_cache_policy(lambda key: False)
-        ctx.set_memcache_policy(lambda key: False)
+        ctx.set_cache_policy(False)
+        ctx.set_memcache_policy(False)
 
     def clear_globals(self):
         webapp2._local.__release_local__()
+
+    def register_model(self, name, cls):
+        model.Model._kind_map[name] = cls

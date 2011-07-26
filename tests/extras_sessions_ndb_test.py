@@ -19,6 +19,10 @@ app = webapp2.WSGIApplication(config={
 class TestNdbSession(test_base.BaseTestCase):
     #factory = sessions_ndb.DatastoreSessionFactory
 
+    def setUp(self):
+        super(TestNdbSession, self).setUp()
+        self.register_model('Session', sessions_ndb.Session)
+
     def test_get_save_session(self):
 
         # Round 1 -------------------------------------------------------------
@@ -153,6 +157,7 @@ class TestNdbSession(test_base.BaseTestCase):
         self.assertEqual(flashes, [])
 
     def test_misc(self):
+
         p = sessions_ndb.PickledProperty(dict)
         self.assertRaises(datastore_errors.BadValueError, p._validate, ['foo'])
 

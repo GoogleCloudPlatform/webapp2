@@ -13,6 +13,10 @@ class User(model.Model):
     email = model.StringProperty()
 
 class TestUniqueModel(test_base.BaseTestCase):
+    def setUp(self):
+        super(TestUniqueModel, self).setUp()
+        self.register_model('Unique', unique_model.Unique)
+
     def test_single(self):
         def create_user(username):
             # Assemble the unique scope/value combinations.
