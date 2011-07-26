@@ -2,6 +2,14 @@ Development version
 ===================
 - import_string() now logs information about common mistakes when it fails.
 
+- App Engine-specific modules were moved to webapp2_extras.appengine.
+  Original modules were kept in the same place for compatibility purposes,
+  and import from the new locations.
+
+- Config.load_config() now makes a copy of the configuration when user_values
+  are passed. That keyword is meant to override app configuration, so previous
+  behavior was wrong.
+
 
 Version 2.0.2 - July 18, 2011
 =============================

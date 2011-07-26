@@ -1312,28 +1312,31 @@ class Config(dict):
         :raises:
             Exception, when a required key is not set or is None.
         """
-        config = self.get(key)
-        loaded = key in self.loaded
-        if not loaded:
-            loaded_config = dict(default_values or ())
+        if key in self.loaded:
+            config = self[key]
+        else:
+            config = dict(default_values or ())
+            if key in self:
+                config.update(self[key])
 
-            if config is not None:
-                loaded_config.update(config)
-
-            self[key] = config = loaded_config
+            self[key] = config
             self.loaded.append(key)
+            if required_keys and not user_values:
+                self._validate_required(key, config, required_keys)
 
         if user_values:
             config = config.copy()
             config.update(user_values)
-
-        if required_keys:
-            missing = [k for k in required_keys if config.get(k) is None]
-            if missing:
-                raise Exception(
-                    'Missing configuration keys for %r: %r.' % (key, missing))
+            if required_keys:
+                self._validate_required(key, config, required_keys)
 
         return config
+
+    def _validate_required(self, key, config, required_keys):
+        missing = [k for k in required_keys if config.get(k) is None]
+        if missing:
+            raise Exception(
+                'Missing configuration keys for %r: %r.' % (key, missing))
 
 
 class RequestContext(object):
