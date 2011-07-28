@@ -229,7 +229,7 @@ class CustomBackendSessionFactory(BaseSessionFactory):
         return sid and self._sid_re.match(sid) is not None
 
     def _get_new_sid(self):
-        return security.create_token(22)
+        return security.generate_random_string(entropy=128)
 
 
 class SessionStore(object):

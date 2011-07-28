@@ -5,7 +5,6 @@ branch = False
 source =
     webapp2
     webapp2_extras
-    experimental
 
 omit =
     /*/webapp2_extras/local.py

@@ -2,7 +2,7 @@
 
 Datastore sessions
 ==================
-.. module:: webapp2_extras.sessions_ndb
+.. module:: webapp2_extras.appengine.sessions_ndb
 
 .. autoclass:: DatastoreSessionFactory
    :members: session_model

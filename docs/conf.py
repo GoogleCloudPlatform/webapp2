@@ -126,6 +126,7 @@ else:
 html_theme_options = {
     'logo_width': 252,
     'logo_height': 60,
+    'analytics_code': 'UA-7132932-5',
 }
 
 # Add any paths that contain custom themes here, relative to this directory.

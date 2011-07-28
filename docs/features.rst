@@ -31,18 +31,12 @@ See how this looks familiar::
     if __name__ == '__main__':
         main()
 
-The ``RequestHandler``, ``Request``, ``Response`` and ``WSGIApplication``
-classes are compatible with the webapp API. Migrating from webapp is intended
-to be a breeze.
+Everybody starting with App Engine must know a bit of webapp. And you you can
+use webapp2 exactly like webapp, following the official tutorials, and learn
+the new features later, as you go. This makes webapp2 insanely easy to learn.
 
-All the documentation and examples for webapp will work with webapp2. Also, the
-SDK libraries that use webapp can be used with webapp2 as they are or with
-minimal adaptations.
-
-This makes webapp2 insanely easy to learn. Everybody starting with App Engine
-must know a bit of webapp. And webapp2 is its natural evolution -- you can use
-it like webapp, following the official tutorials, and learn the new and
-advanced features later, as you go.
+Also, the SDK libraries that use webapp can be used with webapp2 as they are
+or with minimal adaptations.
 
 
 Compatible with latest WebOb
