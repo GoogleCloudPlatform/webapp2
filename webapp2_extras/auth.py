@@ -75,14 +75,17 @@ class InvalidPasswordError(AuthError):
 
 
 class AuthStore(object):
-    """Provides common utilities and configuration for :class:`Auth`."""
+    """Provides common utilities and configuration for :class:`Auth`.
+
+
+    """
 
     #: Configuration key.
     config_key = __name__
 
-    #: Attributes stored in a session.
-    session_attributes = ['auth_id', 'remember',
-                          'token', 'token_ts', 'cache_ts']
+    #: Required attributes stored in a session.
+    _session_attributes = ['auth_id', 'remember',
+                           'token', 'token_ts', 'cache_ts']
 
     def __init__(self, app, config=None):
         """Initializes the session store.
@@ -97,6 +100,28 @@ class AuthStore(object):
         # Base configuration.
         self.config = app.config.load_config(self.config_key,
             default_values=default_config, user_values=config)
+
+    # User data we're interested in -------------------------------------------
+
+    @webapp2.cached_property
+    def session_attributes(self):
+        """
+
+        This must be an ordered list of unique elements.
+        """
+        seen = set()
+        attrs = self._session_attributes + self.user_attributes
+        return [a for a in attrs if a not in seen and not seen.add(a)]
+
+    @webapp2.cached_property
+    def user_attributes(self):
+        """
+
+        This must be an ordered list of unique elements.
+        """
+        seen = set()
+        attrs = self.config['user_attributes'] + ['auth_id']
+        return [a for a in attrs if a not in seen and not seen.add(a)]
 
     # User model related ------------------------------------------------------
 
@@ -120,8 +145,7 @@ class AuthStore(object):
         if not user:
             return None
 
-        attrs = self.config['user_attributes'] + ['auth_id']
-        return dict((a, getattr(user, a)) for a in attrs)
+        return dict((a, getattr(user, a)) for a in self.user_attributes)
 
     def get_user_by_auth_password(self, auth_id, password):
         """
@@ -162,7 +186,13 @@ class AuthStore(object):
         return self.user_model.create_auth_token(auth_id)
 
     def delete_auth_token(self, auth_id, token):
-        """"""
+        """
+
+        :param auth_id:
+            TODO
+        :param token:
+            TODO
+        """
         return self.user_model.delete_auth_token(auth_id, token)
 
     # Session related ---------------------------------------------------------
@@ -179,18 +209,6 @@ class AuthStore(object):
         return store.get_session(self.config['cookie_name'],
                                  backend=self.config['session_backend'])
 
-    def deserialize_session(self, data):
-        """Deserializes values for a session.
-
-        :param data:
-            A list with session data.
-        :returns:
-            A dict with session data.
-        """
-        attrs = self.session_attributes + self.config['user_attributes']
-        assert len(data) == len(attrs)
-        return dict(zip(attrs, data))
-
     def serialize_session(self, data):
         """Serializes values for a session.
 
@@ -199,9 +217,19 @@ class AuthStore(object):
         :returns:
             A list with session data.
         """
-        attrs = self.session_attributes + self.config['user_attributes']
-        assert len(data) == len(attrs)
-        return [data.get(k) for k in attrs]
+        assert len(data) == len(self.session_attributes)
+        return [data.get(k) for k in self.session_attributes]
+
+    def deserialize_session(self, data):
+        """Deserializes values for a session.
+
+        :param data:
+            A list with session data.
+        :returns:
+            A dict with session data.
+        """
+        assert len(data) == len(self.session_attributes)
+        return dict(zip(self.session_attributes, data))
 
     # Validators --------------------------------------------------------------
 
@@ -290,7 +318,7 @@ class Auth(object):
     request = None
     #: An :class:`AuthStore` instance.
     store = None
-    #: Caches user for the request.
+    #: Cached user for the request.
     _user = None
 
     def __init__(self, request):
@@ -304,41 +332,101 @@ class Auth(object):
 
     # Retrieving a user -------------------------------------------------------
 
-    def get_user_by_session(self):
+    def get_user_by_session(self, save_session=True):
         """Returns a user based on ...
 
-        :param:
+        :param save_session:
             TODO
         :returns:
             TODO
         """
-        # TODO
+        if self._user is not None:
+            return self._user
 
-    def get_user_by_token(self, auth_id, token, cache=None, cache_ts=None):
+        data = self.get_session_data(pop=True)
+        if not data:
+            user = anonymous_user
+        else:
+            user = self.get_user_by_token(auth_id=data['auth_id'],
+                                          token=data['token'],
+                                          token_ts=data['token_ts'],
+                                          cache=data,
+                                          cache_ts=data['cache_ts'],
+                                          remember=data['remember'],
+                                          save_session=save_session)
+
+        self._user = user
+        return user
+
+    def get_user_by_token(self, auth_id, token, token_ts=None, cache=None,
+                          cache_ts=None, remember=False, save_session=True):
         """Returns a user based on ...
 
-        :param:
+        :param auth_id:
             TODO
-        :param:
+        :param token:
             TODO
-        :param:
+        :param token_ts:
             TODO
-        :param:
+        :param cache:
+            TODO
+        :param cache_ts:
+            TODO
+        :param remember:
+            TODO
+        :param save_session:
             TODO
         :returns:
             TODO
         """
-        # TODO
+        if self._user is not None:
+            return self._user
+
+        user = None
+        if cache and cache_ts:
+            # Check if we can use the cached info.
+            now = int(time.time())
+            valid = (now - cache_ts) < self.store.config['token_cache_age']
+
+            if valid and token_ts:
+                valid2 = (now - token_ts) < self.store.config['token_max_age']
+                valid3 = (now - token_ts) < self.store.config['token_new_age']
+                valid = valid2 and valid3
+
+            if valid:
+                user = cache
+            else:
+                cache_ts = None
+
+        if not user:
+            # Fetch and validate the token.
+            user, token = self.store.validate_token(auth_id, token,
+                                                    token_ts=token_ts)
+
+        if not user:
+            user = anonymous_user
+        elif save_session:
+            if not token:
+                token_ts = None
+
+            self.set_session(user, token=token, token_ts=token_ts,
+                             cache_ts=cache_ts, remember=remember)
+
+        self._user = user
+        return user
 
     def get_user_by_password(self, auth_id, password, remember=False,
                              save_session=True):
         """Returns a user based on ...
 
         :param auth_id:
+            TODO
         :param password:
+            TODO
         :param remember:
             If True, saves permanent sessions.
         :param save_session:
+            TODO
         :returns:
             A :class:`User` or :class:`AnonymousUser`.
         :raises:
