@@ -2,7 +2,7 @@
 
 Users
 =====
-.. module:: webapp2_extras.users
+.. module:: webapp2_extras.appengine.users
 
 .. autofunction:: login_required
 

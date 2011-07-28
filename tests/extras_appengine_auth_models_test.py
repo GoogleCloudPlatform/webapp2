@@ -1,6 +1,6 @@
-from experimental import auth
-from experimental.appengine.auth import models
-from experimental.appengine.ndb import unique_model
+from webapp2_extras import auth
+from webapp2_extras.appengine.auth import models
+from webapp2_extras.appengine.ndb import unique_model
 
 import test_base
 
@@ -22,27 +22,28 @@ class TestAuthModels(test_base.BaseTestCase):
         self.assertTrue(user is not None)
         self.assertTrue(user.password is not None)
 
-        token = m.create_auth_token('username_1')
+        token = m.create_auth_token('auth_id_1')
 
-        self.assertEqual(m.get_by_username('username_1').key, user.key)
+        self.assertEqual(m.get_by_username('username_1'), user)
         self.assertEqual(m.get_by_username('username_2'), None)
 
-        self.assertEqual(m.get_by_auth_id('auth_id_1').key, user.key)
+        self.assertEqual(m.get_by_auth_id('auth_id_1'), user)
         self.assertEqual(m.get_by_auth_id('auth_id_2'), None)
 
-        self.assertEqual(m.get_by_email('email_1').key, user.key)
+        self.assertEqual(m.get_by_email('email_1'), user)
         self.assertEqual(m.get_by_email('email_2'), None)
 
-        self.assertEqual(m.get_by_auth_token('username_1', token).key,
-                         user.key)
-        self.assertEqual(m.get_by_auth_token('username_2', token), None)
+        u, ts = m.get_by_auth_token('auth_id_1', token)
+        self.assertEqual(u, user)
+        u, ts = m.get_by_auth_token('auth_id_2', token)
+        self.assertEqual(u, None)
 
-        self.assertEqual(m.get_by_auth_password('username_1', 'foo').key,
-                         user.key)
+        u = m.get_by_auth_password('auth_id_1', 'foo')
+        self.assertEqual(u, user)
         self.assertRaises(auth.InvalidPasswordError,
-                          m.get_by_auth_password, 'username_1', 'bar')
-        self.assertRaises(auth.InvalidUsernameError,
-                          m.get_by_auth_password, 'username_2', 'foo')
+                          m.get_by_auth_password, 'auth_id_1', 'bar')
+        self.assertRaises(auth.InvalidAuthIdError,
+                          m.get_by_auth_password, 'auth_id_2', 'foo')
 
     def test_create_user(self):
         m = models.User
@@ -56,12 +57,12 @@ class TestAuthModels(test_base.BaseTestCase):
         success, info = m.create_user(name='name_1', username='username_1',
                                       auth_id='auth_id_1', email='email_1')
         self.assertEqual(success, False)
-        self.assertEqual(info, ['auth_id', 'email'])
+        self.assertEqual(info, ['username', 'email'])
 
-        success, info = m.create_user(name='name_1', username='username_1',
-                                      auth_id='auth_id_2', email='email_2')
+        success, info = m.create_user(name='name_1', username='username_2',
+                                      auth_id='auth_id_1', email='email_2')
         self.assertEqual(success, False)
-        self.assertEqual(info, ['username'])
+        self.assertEqual(info, ['auth_id'])
 
         success, info = m.create_user(name='name_1', username='username_2',
                                       auth_id='auth_id_2', email='email_1',
@@ -72,20 +73,20 @@ class TestAuthModels(test_base.BaseTestCase):
     def test_token(self):
         m = models.UserToken
 
-        username = 'foo'
+        auth_id = 'foo'
         subject = 'bar'
-        token_1 = m.create(username, subject, token=None, token_size=32)
+        token_1 = m.create(auth_id, subject, token=None)
         token = token_1.token
 
-        token_2 = m.get(username=username, subject=subject, token=token)
+        token_2 = m.get(user=auth_id, subject=subject, token=token)
         self.assertEqual(token_2, token_1)
 
         token_3 = m.get(subject=subject, token=token)
         self.assertEqual(token_3, token_1)
 
-        m.get_key(username, subject, token).delete()
+        m.get_key(auth_id, subject, token).delete()
 
-        token_2 = m.get(username=username, subject=subject, token=token)
+        token_2 = m.get(user=auth_id, subject=subject, token=token)
         self.assertEqual(token_2, None)
 
         token_3 = m.get(subject=subject, token=token)
@@ -93,17 +94,17 @@ class TestAuthModels(test_base.BaseTestCase):
 
     def test_user_token(self):
         m = models.User
-        username = 'foo'
+        auth_id = 'foo'
 
-        token = m.create_auth_token(username)
-        self.assertTrue(m.validate_auth_token(username, token))
-        m.delete_auth_token(username, token)
-        self.assertFalse(m.validate_auth_token(username, token))
+        token = m.create_auth_token(auth_id)
+        self.assertTrue(m.validate_auth_token(auth_id, token))
+        m.delete_auth_token(auth_id, token)
+        self.assertFalse(m.validate_auth_token(auth_id, token))
 
-        token = m.create_signup_token(username)
-        self.assertTrue(m.validate_signup_token(username, token))
-        m.delete_signup_token(username, token)
-        self.assertFalse(m.validate_signup_token(username, token))
+        token = m.create_signup_token(auth_id)
+        self.assertTrue(m.validate_signup_token(auth_id, token))
+        m.delete_signup_token(auth_id, token)
+        self.assertFalse(m.validate_signup_token(auth_id, token))
 
 
 if __name__ == '__main__':

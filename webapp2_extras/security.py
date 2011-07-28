@@ -8,54 +8,94 @@
 
     :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
+    :copyright: (c) 2011 Yesudeep Mangalapilly <yesudeep@gmail.com>
+    :license: Apache Sotware License, see LICENSE for details.
 """
+from __future__ import division
+
 import hashlib
 import hmac
+import math
 import random
 import string
 
 import webapp2
 
 _rng = random.SystemRandom()
-_chars = string.letters + string.digits
+
+HEXADECIMAL_DIGITS = string.digits + 'abcdef'
+DIGITS = string.digits
+LOWERCASE_ALPHA = string.lowercase
+UPPERCASE_ALPHA = string.uppercase
+LOWERCASE_ALPHANUMERIC = string.lowercase + string.digits
+UPPERCASE_ALPHANUMERIC = string.uppercase + string.digits
+ALPHA = string.letters
+ALPHANUMERIC = string.letters + string.digits
+ASCII_PRINTABLE = string.letters + string.digits + string.punctuation
+ALL_PRINTABLE = string.printable
+PUNCTUATION = string.punctuation
 
 
-def create_token(length=22):
-    """Generates a random string with the specified length.
+def generate_random_string(length=None, entropy=None, pool=ALPHANUMERIC):
+    """Generates a random string using the given sequence pool.
+
+    To generate stronger passwords, use ASCII_PRINTABLE as pool.
+
+    Entropy is:
+
+         H = log2(N**L)
+
+    where:
+
+    - H is the entropy in bits.
+    - N is the possible symbol count
+    - L is length of string of symbols
+
+    Entropy chart::
+
+        -----------------------------------------------------------------
+        Symbol set              Symbol Count (N)  Entropy per symbol (H)
+        -----------------------------------------------------------------
+        HEXADECIMAL_DIGITS      16                4.0000 bits
+        DIGITS                  10                3.3219 bits
+        LOWERCASE_ALPHA         26                4.7004 bits
+        UPPERCASE_ALPHA         26                4.7004 bits
+        PUNCTUATION             32                5.0000 bits
+        LOWERCASE_ALPHANUMERIC  36                5.1699 bits
+        UPPERCASE_ALPHANUMERIC  36                5.1699 bits
+        ALPHA                   52                5.7004 bits
+        ALPHANUMERIC            62                5.9542 bits
+        ASCII_PRINTABLE         94                6.5546 bits
+        ALL_PRINTABLE           100               6.6438 bits
 
     :param length:
-        Length of the token to be created. Default is 22 (128 bits entropy).
-        The following table shows how to achieve different entropies:
-
-          =========  =========
-          Entropy    Length
-          =========  =========
-          32 bits	 6
-          40 bits	 7
-          64 bits	 11
-          80 bits	 14
-          96 bits    17
-          128 bits   22
-          160 bits   27
-          192 bits   33
-          224 bits   38
-          256 bits   43
-          =========  =========
-
+        The length of the random sequence. Use this or `entropy`, not both.
+    :param entropy:
+        Desired entropy in bits. Use this or `length`, not both.
+        Use this to generate passwords based on entropy:
+        http://en.wikipedia.org/wiki/Password_strength
+    :param pool:
+        A sequence of characters from which random characters are chosen.
+        Default to case-sensitive alpha-numeric characters.
     :returns:
-        A random string using case sensitive alphanumeric characters and
-        the specified length.
-
-    This function was ported and adapted from `Werkzeug`_.
+        A string with characters randomly chosen from the pool.
     """
-    if length <= 0:
-        raise ValueError(
-            'Token length must be greater than 0, got %r.' % length)
+    pool = list(set(pool))
 
-    return ''.join(_rng.choice(_chars) for _ in xrange(length))
+    if length and entropy:
+        raise ValueError('Use length or entropy, not both.')
+
+    if length <= 0 and entropy <= 0:
+        raise ValueError('Length or entropy must be greater than 0.')
+
+    if entropy:
+        log_of_2 = 0.6931471805599453
+        length = long(math.ceil((log_of_2 / math.log(len(pool))) * entropy))
+
+    return ''.join(_rng.choice(pool) for _ in xrange(length))
 
 
-def create_password_hash(password, method='sha1', length=22, pepper=None):
+def generate_password_hash(password, method='sha1', length=22, pepper=None):
     """Hashes a password.
 
     The format of the string returned includes the method that was used
@@ -80,7 +120,7 @@ def create_password_hash(password, method='sha1', length=22, pepper=None):
 
     This function was ported and adapted from `Werkzeug`_.
     """
-    salt = method != 'plain' and create_token(length) or ''
+    salt = method != 'plain' and generate_random_string(length) or ''
     hashval = hash_password(password, method, salt, pepper)
     if hashval is None:
         raise TypeError('Invalid method %r.' % method)
@@ -97,7 +137,7 @@ def check_password_hash(password, pwhash, pepper=None):
     :param password:
         The plaintext password to compare against the hash.
     :param pwhash:
-        A hashed string like returned by :func:`create_password_hash`.
+        A hashed string like returned by :func:`generate_password_hash`.
     :param pepper:
         A secret constant stored in the application code.
     :returns:
@@ -171,3 +211,8 @@ def compare_hashes(a, b):
         result |= ord(x) ^ ord(y)
 
     return result == 0
+
+
+# Old names.
+create_token = generate_random_string
+create_password_hash = generate_password_hash

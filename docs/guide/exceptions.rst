@@ -21,35 +21,6 @@ it will be used as a standard response, setting the header status code and
 a default error message in the body.
 
 
-abort()
--------
-The function :func:`webapp2.abort` (or :func:`webapp2.RequestHandler.abort`
-inside handlers) raises an ``HTTPException`` that can be caught by
-:func:`webapp2.RequestHandler.handle_exception` or by the WSGI app.
-
-``abort`` is just a factory for the HTTP exceptions provided by WebOb: it takes
-an HTTP status code (403, 404, 500 etc) and raises the corresponding exception.
-
-Besides the status code, some extra keyword arguments can be passed to
-``abort()``:
-
-detail
-  An explanation about the error.
-comment
-  An more detailed comment to be included in the response body.
-headers
-  Extra response headers to be set.
-body_template
-  A string to be used as template for the response body. The default template
-  has the following format, with variables replaced by arguments, if defined:
-
-.. code-block:: html
-
-   ${explanation}<br /><br />
-   ${detail}
-   ${html_comment}
-
-
 Exceptions in handlers
 ----------------------
 Handlers can catch exceptions implementing the method
@@ -135,3 +106,32 @@ Error"::
 The error handler can be a simple function that accepts
 ``(request, response, exception)`` as parameters, and is responsible for
 setting the response status code and, if needed, logging the exception.
+
+
+abort()
+-------
+The function :func:`webapp2.abort` (or :func:`webapp2.RequestHandler.abort`
+inside handlers) raises an ``HTTPException`` that can be caught by
+:func:`webapp2.RequestHandler.handle_exception` or by the WSGI app.
+
+``abort`` is just a factory for the HTTP exceptions provided by WebOb: it takes
+an HTTP status code (403, 404, 500 etc) and raises the corresponding exception.
+
+Besides the status code, some extra keyword arguments can be passed to
+``abort()``:
+
+detail
+  An explanation about the error.
+comment
+  An more detailed comment to be included in the response body.
+headers
+  Extra response headers to be set.
+body_template
+  A string to be used as template for the response body. The default template
+  has the following format, with variables replaced by arguments, if defined:
+
+.. code-block:: html
+
+   ${explanation}<br /><br />
+   ${detail}
+   ${html_comment}

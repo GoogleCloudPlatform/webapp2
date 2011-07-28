@@ -133,8 +133,8 @@ issue tracker:
     http://code.google.com/p/webapp-improved/issues/list
 
 Let us know if you found a bug or if something can be improved. New tutorials
-or webapp2_extras modules are welcome, and tests or documentation are never
-too much.
+and webapp2_extras modules are also welcome, and tests or documentation are
+never too much.
 
 Thanks!
 

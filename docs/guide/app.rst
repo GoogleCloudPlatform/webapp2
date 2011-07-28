@@ -7,7 +7,7 @@ returning a response to the client. It stores the URI routes that the app will
 accept, configuration variables and registered objects that can be shared
 between requests. The WSGI app is also responsible for handling uncaught
 exceptions, avoiding that stack traces "leak" to the client when in production.
-Let's take a look at it more deeply now.
+Let's take an in depth look at it now.
 
 .. note::
    If the WSGI word looks totally unfamiliar to you, read the
@@ -147,8 +147,8 @@ The registry can be used to lazily instantiate objects when needed, and keep a
 reference in the application to be reused.
 
 A registry dictionary is also available in the
-:ref:`request object <guide.request.registry>`, to store shared objects during
-single request.
+:ref:`request object <guide.request.registry>`, to store shared objects
+used during a single request.
 
 
 Error handlers
