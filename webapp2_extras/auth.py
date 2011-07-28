@@ -18,8 +18,8 @@ from webapp2_extras import sessions
 #: Default configuration values for this module. Keys are:
 #:
 #: user_model
-#:     User model which implements the API to load and validate users and
-#:     tokens. Can also be a string in dotted notation to be lazily imported.
+#:     User model which authenticates custom users and tokens.
+#:     Can also be a string in dotted notation to be lazily imported.
 #:     Default is :class:`webapp2_extras.appengine.auth.models.User`.
 #:
 #: session_backend
@@ -105,7 +105,7 @@ class AuthStore(object):
 
     @webapp2.cached_property
     def session_attributes(self):
-        """
+        """The list of attributes stored in a session.
 
         This must be an ordered list of unique elements.
         """
@@ -115,7 +115,7 @@ class AuthStore(object):
 
     @webapp2.cached_property
     def user_attributes(self):
-        """
+        """The list of attributes retrieved from the user model.
 
         This must be an ordered list of unique elements.
         """
@@ -135,12 +135,16 @@ class AuthStore(object):
         return cls
 
     def user_to_dict(self, user):
-        """
+        """Returns a dictionary based on a user object.
+
+        The user object must provide at least the ``auth_id`` attribute.
+        Extra attributes to be retrieved must be set in this module's
+        configuration.
 
         :param user:
-            TODO
+            User object: an instance the custom user model.
         :returns:
-            TODO
+            A dictionary with user data.
         """
         if not user:
             return None
@@ -148,16 +152,16 @@ class AuthStore(object):
         return dict((a, getattr(user, a)) for a in self.user_attributes)
 
     def get_user_by_auth_password(self, auth_id, password, silent=False):
-        """
+        """Returns a user dict based on auth_id and password.
 
         :param auth_id:
-            TODO
+            Authentication id.
         :param password:
-            TODO
+            User password.
         :param silent:
             If True, raises an exception if auth_id or password are invalid.
         :returns:
-            user dict
+            A dictionary with user data.
         :raises:
             ``InvalidAuthIdError`` or ``InvalidPasswordError``.
         """
@@ -171,35 +175,37 @@ class AuthStore(object):
             return None
 
     def get_user_by_auth_token(self, auth_id, token):
-        """
+        """Returns a user dict based on auth_id and auth token.
 
         :param auth_id:
-            TODO
+            Authentication id.
         :param token:
-            TODO
+            Authentication token.
         :returns:
-            (user_dict, token_timestamp)
+            A tuple ``(user_dict, token_timestamp)``. Both values can be None.
+            The token timestamp will be None if the user is invalid or it
+            is valid but the token requires renewal.
         """
         user, ts = self.user_model.get_by_auth_token(auth_id, token)
         return self.user_to_dict(user), ts
 
     def create_auth_token(self, auth_id):
-        """
+        """Creates a new authentication token.
 
         :param auth_id:
-            TODO
+            Authentication id.
         :returns:
-            token
+            A new authentication token.
         """
         return self.user_model.create_auth_token(auth_id)
 
     def delete_auth_token(self, auth_id, token):
-        """
+        """Deletes an authentication token.
 
         :param auth_id:
-            TODO
+            Authentication id.
         :param token:
-            TODO
+            Authentication token.
         """
         return self.user_model.delete_auth_token(auth_id, token)
 
@@ -242,20 +248,20 @@ class AuthStore(object):
     # Validators --------------------------------------------------------------
 
     def set_password_validator(self, func):
-        """
+        """Sets the function used to perform password validation.
 
         :param func:
             A function that receives ``(store, auth_id, password)``
-            and returns ...
+            and returns a user dict or an anonymous user.
         """
         self.validate_password = func.__get__(self, self.__class__)
 
     def set_token_validator(self, func):
-        """
+        """Sets the function used to perform token validation.
 
         :param func:
             A function that receives ``(store, auth_id, token, token_ts)``
-            and returns ...
+            and returns a tuple ``(user_dict, token)``.
         """
         self.validate_token = func.__get__(self, self.__class__)
 
@@ -266,7 +272,7 @@ class AuthStore(object):
         from services.
 
         :param auth_id:
-            Auth_id.
+            Authentication id.
         :param password:
             Password to be checked.
         :param silent:
@@ -285,13 +291,13 @@ class AuthStore(object):
         used to validate sessions or service requests.
 
         :param auth_id:
-            Auth_id.
+            Authentication id.
         :param token:
             Token to be checked.
         :param token_ts:
             Optional token timestamp used to pre-validate the token age.
         :returns:
-            A tuple ``(user, token)``.
+            A tuple ``(user_dict, token)``.
         """
         now = int(time.time())
         delete = token_ts and ((now - token_ts) > self.config['token_max_age'])
@@ -343,12 +349,12 @@ class Auth(object):
     # Retrieving a user -------------------------------------------------------
 
     def get_user_by_session(self, save_session=True):
-        """Returns a user based on ...
+        """Returns a user based on the current session.
 
         :param save_session:
-            TODO
+            If True, saves the user in the session if authentication succeeds.
         :returns:
-            TODO
+            A user dict or an anonymous user.
         """
         if self._user is not None:
             return self._user
@@ -368,24 +374,24 @@ class Auth(object):
 
     def get_user_by_token(self, auth_id, token, token_ts=None, cache=None,
                           cache_ts=None, remember=False, save_session=True):
-        """Returns a user based on ...
+        """Returns a user based on an authentication token.
 
         :param auth_id:
-            TODO
+            Authentication id.
         :param token:
-            TODO
+            Authentication token.
         :param token_ts:
-            TODO
+            Token timestamp, used to perform pre-validation.
         :param cache:
-            TODO
+            Cached user data (from the session).
         :param cache_ts:
-            TODO
+            Cache timestamp.
         :param remember:
-            TODO
+            If True, saves permanent sessions.
         :param save_session:
-            TODO
+            If True, saves the user in the session if authentication succeeds.
         :returns:
-            TODO
+            A user dict or an anonymous user.
         """
         user = self._user
         if user is not None and user is not anonymous_user:
@@ -427,20 +433,20 @@ class Auth(object):
 
     def get_user_by_password(self, auth_id, password, remember=False,
                              save_session=True, silent=False):
-        """Returns a user based on ...
+        """Returns a user based on password credentials.
 
         :param auth_id:
-            TODO
+            Authentication id.
         :param password:
-            TODO
+            User password.
         :param remember:
             If True, saves permanent sessions.
         :param save_session:
-            TODO
+            If True, saves the user in the session if authentication succeeds.
         :param silent:
             If True, raises an exception if auth_id or password are invalid.
         :returns:
-            A :class:`User` or :class:`AnonymousUser`.
+            A user dict or an anonymous user.
         :raises:
             ``InvalidAuthIdError`` or ``InvalidPasswordError``.
         """
@@ -514,7 +520,7 @@ class Auth(object):
             self.store.delete_auth_token(data['auth_id'], data['token'])
 
     def get_session_data(self, pop=False):
-        """
+        """Returns the session data as a dictionary.
 
         :param pop:
             If True, removes the session.
@@ -527,7 +533,7 @@ class Auth(object):
             return self.store.deserialize_session(rv)
 
     def set_session_data(self, data, **session_args):
-        """
+        """Sets the session data as a list.
 
         :param data:
             Deserialized session data.
