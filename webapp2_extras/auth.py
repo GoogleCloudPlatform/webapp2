@@ -3,7 +3,7 @@
     webapp2_extras.auth
     ===================
 
-    Authentication utilities.
+    Utilities for authentication and authorization.
 
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
@@ -147,20 +147,28 @@ class AuthStore(object):
 
         return dict((a, getattr(user, a)) for a in self.user_attributes)
 
-    def get_user_by_auth_password(self, auth_id, password):
+    def get_user_by_auth_password(self, auth_id, password, silent=False):
         """
 
         :param auth_id:
             TODO
         :param password:
             TODO
+        :param silent:
+            If True, raises an exception if auth_id or password are invalid.
         :returns:
             user dict
         :raises:
             ``InvalidAuthIdError`` or ``InvalidPasswordError``.
         """
-        user = self.user_model.get_by_auth_password(auth_id, password)
-        return self.user_to_dict(user)
+        try:
+            user = self.user_model.get_by_auth_password(auth_id, password)
+            return self.user_to_dict(user)
+        except (InvalidAuthIdError, InvalidPasswordError):
+            if not silent:
+                raise
+
+            return None
 
     def get_user_by_auth_token(self, auth_id, token):
         """
@@ -251,7 +259,7 @@ class AuthStore(object):
         """
         self.validate_token = func.__get__(self, self.__class__)
 
-    def default_password_validator(self, auth_id, password):
+    def default_password_validator(self, auth_id, password, silent=False):
         """Validates a password.
 
         Passwords are used to log-in using forms or to request auth tokens
@@ -261,12 +269,14 @@ class AuthStore(object):
             Auth_id.
         :param password:
             Password to be checked.
+        :param silent:
+            If True, raises an exception if auth_id or password are invalid.
         :returns:
             user or None
         :raises:
             ``InvalidAuthIdError`` or ``InvalidPasswordError``.
         """
-        return self.get_user_by_auth_password(auth_id, password)
+        return self.get_user_by_auth_password(auth_id, password, silent=silent)
 
     def default_token_validator(self, auth_id, token, token_ts=None):
         """Validates a token.
@@ -347,13 +357,11 @@ class Auth(object):
         if not data:
             user = anonymous_user
         else:
-            user = self.get_user_by_token(auth_id=data['auth_id'],
-                                          token=data['token'],
-                                          token_ts=data['token_ts'],
-                                          cache=data,
-                                          cache_ts=data['cache_ts'],
-                                          remember=data['remember'],
-                                          save_session=save_session)
+            user = self.get_user_by_token(
+                auth_id=data['auth_id'], token=data['token'],
+                token_ts=data['token_ts'], cache=data,
+                cache_ts=data['cache_ts'], remember=data['remember'],
+                save_session=save_session)
 
         self._user = user
         return user
@@ -379,8 +387,10 @@ class Auth(object):
         :returns:
             TODO
         """
-        if self._user is not None:
-            return self._user
+        user = self._user
+        if user is not None and user is not anonymous_user:
+            if user['auth_id'] == auth_id and user['token'] == token:
+                return user
 
         user = None
         if cache and cache_ts:
@@ -416,7 +426,7 @@ class Auth(object):
         return user
 
     def get_user_by_password(self, auth_id, password, remember=False,
-                             save_session=True):
+                             save_session=True, silent=False):
         """Returns a user based on ...
 
         :param auth_id:
@@ -427,6 +437,8 @@ class Auth(object):
             If True, saves permanent sessions.
         :param save_session:
             TODO
+        :param silent:
+            If True, raises an exception if auth_id or password are invalid.
         :returns:
             A :class:`User` or :class:`AnonymousUser`.
         :raises:
@@ -436,7 +448,7 @@ class Auth(object):
             # During a login attempt, invalidate current session.
             self.unset_session()
 
-        user = self.store.validate_password(auth_id, password)
+        user = self.store.validate_password(auth_id, password, silent=silent)
         if not user:
             user = anonymous_user
         elif save_session:
@@ -480,14 +492,17 @@ class Auth(object):
             max_age = None
 
         session_args.setdefault('max_age', max_age)
-        data = dict(user)
-        data.update({
+        # Create a new dict or just update user?
+        # We are doing the latter, and so the user dict will always have
+        # the session metadata (token, timestamps etc). This is easier to test.
+        # But we could just keep auth_id and extra user attributes instead.
+        user.update({
             'token':    token,
             'token_ts': token_ts,
             'cache_ts': cache_ts,
             'remember': int(remember),
         })
-        self.set_session_data(data, **session_args)
+        self.set_session_data(user, **session_args)
         self._user = user
 
     def unset_session(self):
