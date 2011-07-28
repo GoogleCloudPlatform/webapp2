@@ -1,5 +1,15 @@
 Development version
 ===================
+- Added webapp2_extras.auth: high-level utilities for authentication and
+  authorization.
+
+- Added webapp2_extras.appengine.auth.models: default model implementations
+  for webapp2_extras.auth (can be overridden).
+
+- Added webapp2_extras.appengine.ndb.unique_model: a model to store unique
+  values. This was added mainly so that the default user model can have
+  multiple unique properties.
+
 - import_string() now logs information about common mistakes when it fails.
 
 - App Engine-specific modules were moved to webapp2_extras.appengine.
@@ -7,8 +17,10 @@ Development version
   and import from the new locations.
 
 - Config.load_config() now makes a copy of the configuration when user_values
-  are passed. That keyword is meant to override app configuration, so previous
-  behavior was wrong.
+  are passed. That keyword is meant to override app configuration, so the
+  previous behavior was actually wrong. This is a side feature not used inside
+  webapp2 or even well documented so the change should not affect existing
+  apps.
 
 
 Version 2.0.2 - July 18, 2011
