@@ -74,7 +74,7 @@ is a good place to handle '404 Not Found' or '500 Internal Server Error'
 errors, since it serves as a last attempt to handle all uncaught exceptions,
 including non-registered URI paths or unexpected application behavior.
 
-We catch exceptions in the WSGI App using error handlers registered in
+We catch exceptions in the WSGI app using error handlers registered in
 :attr:`webapp2.WSGIApplication.error_handlers`. This is a dictionary that
 maps HTTP status codes to callables that will handle the corresponding error
 code. If the exception is not an ``HTTPException``, the status code 500 is
@@ -110,12 +110,14 @@ setting the response status code and, if needed, logging the exception.
 
 abort()
 -------
-The function :func:`webapp2.abort` (or :func:`webapp2.RequestHandler.abort`
-inside handlers) raises an ``HTTPException`` that can be caught by
-:func:`webapp2.RequestHandler.handle_exception` or by the WSGI app.
+The function :func:`webapp2.abort` is a shortcut to raise one of the HTTP
+exceptions provided by WebOb: it takes an HTTP status code (403, 404, 500 etc)
+and raises the corresponding exception.
 
-``abort`` is just a factory for the HTTP exceptions provided by WebOb: it takes
-an HTTP status code (403, 404, 500 etc) and raises the corresponding exception.
+Use ``abort`` (or :func:`webapp2.RequestHandler.abort` inside handlers)
+to raise an ``HTTPException`` to be handled by an exception handler.
+For example, we could call ``abort(404)`` when a requested item is not found
+in the database, and have an exception handler ready to handle 404s.
 
 Besides the status code, some extra keyword arguments can be passed to
 ``abort()``:
