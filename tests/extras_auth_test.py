@@ -19,6 +19,72 @@ class TestAuth(test_base.BaseTestCase):
         rv = models.UserToken.get(user=auth_id, subject=subject, token=token)
         return rv is not None
 
+    def test_get_user_by_session(self):
+        app = webapp2.WSGIApplication(config={
+            'webapp2_extras.sessions': {
+                'secret_key': 'foo',
+            }
+        })
+        req = webapp2.Request.blank('/')
+        rsp = webapp2.Response()
+        req.app = app
+        s = auth.get_store(app=app)
+        a = auth.Auth(request=req)
+        session_store = sessions.get_store(request=req)
+
+        # Create a user.
+        m = models.User
+        success, user = m.create_user(name='name', username='username',
+                                      auth_id='auth_id', email='email',
+                                      password_raw='password')
+
+        # Get user with session. An anonymous_user is returned.
+        rv = a.get_user_by_session()
+        self.assertTrue(rv is auth.anonymous_user)
+
+        # Login with password. User dict is returned.
+        rv = a.get_user_by_password('auth_id', 'password')
+        self.assertEqual(rv['auth_id'], user.auth_id)
+
+        # Save sessions.
+        session_store.save_sessions(rsp)
+
+        # Get user with session. Voila!
+        cookies = rsp.headers.get('Set-Cookie')
+        req = webapp2.Request.blank('/', headers=[('Cookie', cookies)])
+        rsp = webapp2.Response()
+        req.app = app
+        a = auth.Auth(request=req)
+
+        # only auth_id is returned when there're no
+        # custom user attributes defined.
+        rv = a.get_user_by_session()
+        self.assertEqual(rv['auth_id'], 'auth_id')
+
+        # If we call get_user_by_token() now, the same user is returned.
+        rv2 = a.get_user_by_token(rv['auth_id'], rv['token'])
+        self.assertTrue(rv is rv2)
+
+        # Let's get it again and check that token is the same.
+        token = rv['token']
+        a._user = None
+        rv = a.get_user_by_session()
+        self.assertEqual(rv['auth_id'], 'auth_id')
+        self.assertEqual(rv['token'], token)
+
+        # Now let's force token to be renewed and check that we have a new one.
+        s.config['token_new_age'] = -300
+        a._user = None
+        rv = a.get_user_by_session()
+        self.assertEqual(rv['auth_id'], 'auth_id')
+        self.assertNotEqual(rv['token'], token)
+
+        # Now let's force token to be invalid.
+        s.config['token_max_age'] = -300
+        a._user = None
+        rv = a.get_user_by_session()
+        self.assertEqual(rv, None)
+
     def test_get_user_by_password(self):
         app = webapp2.WSGIApplication(config={
             'webapp2_extras.sessions': {
@@ -32,12 +98,33 @@ class TestAuth(test_base.BaseTestCase):
         session_store = sessions.get_store(request=req)
 
         m = models.User
-        success, user = m.create_user(name='name_1', username='username_1',
-                                      auth_id='auth_id_1', email='email_1',
+        success, user = m.create_user(name='name', username='username',
+                                      auth_id='auth_id', email='email',
                                       password_raw='password')
 
-        rv = a.get_user_by_password('auth_id_1', 'password')
-        self.assertTrue(rv, s.user_to_dict(user))
+        # Lets test the cookie max_age when we use remember=True or False.
+        rv = a.get_user_by_password('auth_id', 'password', remember=True)
+        self.assertEqual(rv['auth_id'], user.auth_id)
+        self.assertEqual(session_store.sessions['auth'].session_args['max_age'],
+                         86400 * 7 * 3)
+
+        # Now remember=False.
+        rv = a.get_user_by_password('auth_id', 'password')
+        self.assertEqual(rv['auth_id'], user.auth_id)
+        self.assertEqual(session_store.sessions['auth'].session_args['max_age'],
+                         None)
+
+        # User was set so getting it from session will return the same one.
+        rv = a.get_user_by_session()
+        self.assertEqual(rv['auth_id'], 'auth_id')
+
+        # Now try a failed password submission: user will be unset.
+        rv = a.get_user_by_password('auth_id', 'password_2', silent=True)
+        self.assertTrue(rv is auth.anonymous_user)
+
+        # And getting by session will no longer work.
+        rv = a.get_user_by_session()
+        self.assertTrue(rv is auth.anonymous_user)
 
     def test_validate_password(self):
         app = webapp2.WSGIApplication()
@@ -46,14 +133,14 @@ class TestAuth(test_base.BaseTestCase):
         s = auth.get_store(app=app)
 
         m = models.User
-        success, user = m.create_user(name='name_1', username='username_1',
-                                      auth_id='auth_id_1', email='email_1',
+        success, user = m.create_user(name='name', username='username',
+                                      auth_id='auth_id', email='email',
                                       password_raw='foo')
 
-        u = s.validate_password('auth_id_1', 'foo')
+        u = s.validate_password('auth_id', 'foo')
         self.assertEqual(u, s.user_to_dict(user))
         self.assertRaises(auth.InvalidPasswordError,
-                          s.validate_password, 'auth_id_1', 'bar')
+                          s.validate_password, 'auth_id', 'bar')
         self.assertRaises(auth.InvalidAuthIdError,
                           s.validate_password, 'auth_id_2', 'foo')
 
@@ -71,39 +158,39 @@ class TestAuth(test_base.BaseTestCase):
         self.assertEqual(rv, (None, None))
 
         m = models.User
-        success, user = m.create_user(name='name_1', username='username_1',
-                                      auth_id='auth_id_1', email='email_1',
+        success, user = m.create_user(name='name', username='username',
+                                      auth_id='auth_id', email='email',
                                       password_raw='foo')
 
-        token = m.create_auth_token('auth_id_1')
-        rv = s.validate_token('auth_id_1', token)
+        token = m.create_auth_token('auth_id')
+        rv = s.validate_token('auth_id', token)
         self.assertEqual(rv, (s.user_to_dict(user), token))
         # Token must still be there.
-        self.assertTrue(self._check_token('auth_id_1', token))
+        self.assertTrue(self._check_token('auth_id', token))
 
         # Expired timestamp.
-        token = m.create_auth_token('auth_id_1')
-        rv = s.validate_token('auth_id_1', token, -300)
+        token = m.create_auth_token('auth_id')
+        rv = s.validate_token('auth_id', token, -300)
         self.assertEqual(rv, (None, None))
         # Token must have been deleted.
-        self.assertFalse(self._check_token('auth_id_1', token))
+        self.assertFalse(self._check_token('auth_id', token))
 
         # Force expiration.
-        token = m.create_auth_token('auth_id_1')
+        token = m.create_auth_token('auth_id')
         s.config['token_max_age'] = -300
-        rv = s.validate_token('auth_id_1', token)
+        rv = s.validate_token('auth_id', token)
         self.assertEqual(rv, (None, None))
         # Token must have been deleted.
-        self.assertFalse(self._check_token('auth_id_1', token))
+        self.assertFalse(self._check_token('auth_id', token))
 
         # Revert expiration, force renewal.
-        token = m.create_auth_token('auth_id_1')
+        token = m.create_auth_token('auth_id')
         s.config['token_max_age'] = 86400 * 7 * 3
         s.config['token_new_age'] = -300
-        rv = s.validate_token('auth_id_1', token)
+        rv = s.validate_token('auth_id', token)
         self.assertEqual(rv, (s.user_to_dict(user), None))
         # Token must have been deleted.
-        self.assertFalse(self._check_token('auth_id_1', token))
+        self.assertFalse(self._check_token('auth_id', token))
 
     def test_set_auth_store(self):
         app = webapp2.WSGIApplication()
@@ -139,11 +226,7 @@ class TestAuth(test_base.BaseTestCase):
         self.assertTrue(isinstance(a, auth.Auth))
 
     def test_get_auth(self):
-        app = webapp2.WSGIApplication(config={
-            'webapp2_extras.sessions': {
-                'secret_key': 'my-super-secret',
-            }
-        })
+        app = webapp2.WSGIApplication()
         req = webapp2.Request.blank('/')
         req.app = app
         self.assertEqual(len(req.registry), 0)
