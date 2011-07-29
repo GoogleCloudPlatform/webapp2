@@ -30,7 +30,6 @@ Quick links
 - `Downloads <http://code.google.com/p/webapp-improved/downloads/list>`_
 - `Google Code Repository <http://code.google.com/p/webapp-improved/>`_
 - `Discussion Group <http://groups.google.com/group/webapp2>`_
-- `Download docs in PDF <http://webapp-improved.googlecode.com/files/webapp2-2.0.2.pdf>`_
 - `Follow us on Twitter <https://twitter.com/#!/webapp2>`_
 
 .. `Samples for Google App Engine <http://code.google.com/p/google-app-engine-samples/>`_:
