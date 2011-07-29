@@ -10,3 +10,9 @@
 # repository level.
 *.egg-info
 
+
+# OSX
+.DS_Store
+
+#PyCharm
+.idea
