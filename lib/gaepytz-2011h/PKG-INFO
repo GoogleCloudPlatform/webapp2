@@ -1,0 +1,37 @@
+Metadata-Version: 1.0
+Name: gaepytz
+Version: 2011h
+Summary: A version of pytz that works well on Google App Engine.
+Home-page: http://code.google.com/p/gae-pytz/
+Author: Rodrigo Moraes
+Author-email: rodrigo.moraes@gmail.com
+License: MIT
+Description: 
+        gae-pytz
+        ========
+        pytz has a severe performance problem that impedes its usage on Google App
+        Engine. This is caused because pytz.__init__ builds a list of available
+        zoneinfos checking the entire zoneinfo database (which means: it tries to open
+        hundreds of files). This is done in the module globals, so it is not easily
+        avoidable. And it is far from ideal to do this in App Engine - app
+        initialization becomes unacceptable if every time we import pytz it checks
+        500+ files.
+        
+        In this alternative version, pytz is highly optimized for App Engine, following
+        ideas from several recipes around:
+        
+        - database files are not automatically reads when the module is imported
+        - the database files are loaded using zipimport to reduce number of files
+        - it uses memcache to cache already loaded zoneinfos
+        
+        This results in almost unnoticeable load time and makes pytz usable on App
+        Engine.
+        
+Platform: any
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Python Modules

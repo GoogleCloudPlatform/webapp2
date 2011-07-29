@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /paste/view/
+Disallow: /paste/view-raw/
