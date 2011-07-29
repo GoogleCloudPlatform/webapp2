@@ -26,15 +26,14 @@ Quick links
 
 - `User Guide <http://webapp-improved.appspot.com/>`_
 - `Official Repository <http://code.google.com/p/webapp-improved/>`_
-- `Discussion Group <http://groups.google.com/group/tipfy>`_
-
-**Featured link:** Nick Johnson's `Using BlobReader, wildcard subdomains and webapp2 <http://blog.notdot.net/2010/08/Using-BlobReader-wildcard-subdomains-and-webapp2>`_
+- `Discussion Group <https://groups.google.com/forum/#!forum/webapp2>`_
+- `Follow us on Twitter <https://twitter.com/#!/webapp2>`
 """
 from setuptools import setup
 
 setup(
     name = 'webapp2',
-    version = '2.0.2',
+    version = '2.1',
     license = 'Apache Software License',
     url = 'http://webapp-improved.appspot.com',
     description = "Taking Google App Engine's webapp to the next level!",

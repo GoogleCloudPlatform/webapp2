@@ -3,11 +3,8 @@
 Tutorials
 =========
 .. toctree::
+   :glob:
    :maxdepth: 1
 
-   quickstart.rst
-   quickstart.nogae.rst
-   gettingstarted/index.rst
-   i18n.rst
-   installing.packages.rst
-   virtualenv.rst
+   gettingstarted/index
+   *

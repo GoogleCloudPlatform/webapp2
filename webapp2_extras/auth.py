@@ -5,6 +5,9 @@
 
     Utilities for authentication and authorization.
 
+    .. warning::
+       This is an experimental module. The API is subject to changes.
+
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
@@ -57,9 +60,8 @@ default_config = {
     'user_attributes': [],
 }
 
-
-class AnonymousUser(object):
-    """TODO"""
+#: A singleton anonymous user.
+_anon = object()
 
 
 class AuthError(Exception):
@@ -75,10 +77,7 @@ class InvalidPasswordError(AuthError):
 
 
 class AuthStore(object):
-    """Provides common utilities and configuration for :class:`Auth`.
-
-
-    """
+    """Provides common utilities and configuration for :class:`Auth`."""
 
     #: Configuration key.
     config_key = __name__
@@ -252,7 +251,7 @@ class AuthStore(object):
 
         :param func:
             A function that receives ``(store, auth_id, password)``
-            and returns a user dict or an anonymous user.
+            and returns a user dict or None.
         """
         self.validate_password = func.__get__(self, self.__class__)
 
@@ -348,29 +347,29 @@ class Auth(object):
 
     # Retrieving a user -------------------------------------------------------
 
+    def _user_or_none(self):
+        return self._user if self._user is not _anon else None
+
     def get_user_by_session(self, save_session=True):
         """Returns a user based on the current session.
 
         :param save_session:
             If True, saves the user in the session if authentication succeeds.
         :returns:
-            A user dict or an anonymous user.
+            A user dict or None.
         """
-        if self._user is not None:
-            return self._user
+        if self._user is None:
+            data = self.get_session_data(pop=True)
+            if not data:
+                self._user = _anon
+            else:
+                self._user = self.get_user_by_token(
+                    auth_id=data['auth_id'], token=data['token'],
+                    token_ts=data['token_ts'], cache=data,
+                    cache_ts=data['cache_ts'], remember=data['remember'],
+                    save_session=save_session)
 
-        data = self.get_session_data(pop=True)
-        if not data:
-            user = anonymous_user
-        else:
-            user = self.get_user_by_token(
-                auth_id=data['auth_id'], token=data['token'],
-                token_ts=data['token_ts'], cache=data,
-                cache_ts=data['cache_ts'], remember=data['remember'],
-                save_session=save_session)
-
-        self._user = user
-        return user
+        return self._user_or_none()
 
     def get_user_by_token(self, auth_id, token, token_ts=None, cache=None,
                           cache_ts=None, remember=False, save_session=True):
@@ -391,14 +390,14 @@ class Auth(object):
         :param save_session:
             If True, saves the user in the session if authentication succeeds.
         :returns:
-            A user dict or an anonymous user.
+            A user dict or None.
         """
-        user = self._user
-        if user is not None and user is not anonymous_user:
-            if user['auth_id'] == auth_id and user['token'] == token:
-                return user
+        if self._user is not None:
+            assert (self._user is not _anon and
+                    self._user['auth_id'] == auth_id and
+                    self._user['token'] == token)
+            return self._user_or_none()
 
-        user = None
         if cache and cache_ts:
             # Check if we can use the cached info.
             now = int(time.time())
@@ -410,26 +409,25 @@ class Auth(object):
                 valid = valid2 and valid3
 
             if valid:
-                user = cache
+                self._user = cache
             else:
                 cache_ts = None
 
-        if not user:
+        if self._user is None:
             # Fetch and validate the token.
-            user, token = self.store.validate_token(auth_id, token,
-                                                    token_ts=token_ts)
+            self._user, token = self.store.validate_token(auth_id, token,
+                                                          token_ts=token_ts)
 
-        if not user:
-            user = anonymous_user
+        if self._user is None:
+            self._user = _anon
         elif save_session:
             if not token:
                 token_ts = None
 
-            self.set_session(user, token=token, token_ts=token_ts,
+            self.set_session(self._user, token=token, token_ts=token_ts,
                              cache_ts=cache_ts, remember=remember)
 
-        self._user = user
-        return user
+        return self._user_or_none()
 
     def get_user_by_password(self, auth_id, password, remember=False,
                              save_session=True, silent=False):
@@ -446,7 +444,7 @@ class Auth(object):
         :param silent:
             If True, raises an exception if auth_id or password are invalid.
         :returns:
-            A user dict or an anonymous user.
+            A user dict or None.
         :raises:
             ``InvalidAuthIdError`` or ``InvalidPasswordError``.
         """
@@ -454,15 +452,15 @@ class Auth(object):
             # During a login attempt, invalidate current session.
             self.unset_session()
 
-        user = self.store.validate_password(auth_id, password, silent=silent)
-        if not user:
-            user = anonymous_user
+        self._user = self.store.validate_password(auth_id, password,
+                                                  silent=silent)
+        if not self._user:
+            self._user = _anon
         elif save_session:
             # This always creates a new token with new timestamp.
-            self.set_session(user, remember=remember)
+            self.set_session(self._user, remember=remember)
 
-        self._user = user
-        return user
+        return self._user_or_none()
 
     # Storing and removing user from session ----------------------------------
 
@@ -632,7 +630,3 @@ def set_auth(auth, key=_auth_registry_key, request=None):
     """
     request = request or webapp2.get_request()
     request.registry[key] = auth
-
-
-#: A singleton anonymous user.
-anonymous_user = AnonymousUser()

@@ -3,12 +3,7 @@
 webapp2's Guide to the Gaelaxy
 ==============================
 .. toctree::
+   :glob:
    :maxdepth: 3
 
-   handlers.rst
-   routing.rst
-   request.rst
-   response.rst
-   exceptions.rst
-   testing.rst
-   extras.rst
+   **
