@@ -23,8 +23,6 @@ class User(model.Model):
 
     created = model.DateTimeProperty(auto_now_add=True)
     updated = model.DateTimeProperty(auto_now=True)
-    # Display name: username as typed by the user.
-    name = model.StringProperty(required=True)
     # Username in lower case. UNIQUE.
     username = model.StringProperty(required=True)
     # ID for third party authentication, e.g. 'google:username'. UNIQUE.
