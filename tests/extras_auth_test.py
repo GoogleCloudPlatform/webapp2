@@ -40,7 +40,7 @@ class TestAuth(test_base.BaseTestCase):
 
         # Get user with session. An anonymous_user is returned.
         rv = a.get_user_by_session()
-        self.assertTrue(rv is auth.anonymous_user)
+        self.assertTrue(rv is None)
 
         # Login with password. User dict is returned.
         rv = a.get_user_by_password('auth_id', 'password')
@@ -120,11 +120,11 @@ class TestAuth(test_base.BaseTestCase):
 
         # Now try a failed password submission: user will be unset.
         rv = a.get_user_by_password('auth_id', 'password_2', silent=True)
-        self.assertTrue(rv is auth.anonymous_user)
+        self.assertTrue(rv is None)
 
         # And getting by session will no longer work.
         rv = a.get_user_by_session()
-        self.assertTrue(rv is auth.anonymous_user)
+        self.assertTrue(rv is None)
 
     def test_validate_password(self):
         app = webapp2.WSGIApplication()

@@ -1,5 +1,5 @@
-Development version
-===================
+Version 2.1 - July 29, 2011
+===========================
 - Added webapp2_extras.auth: high-level utilities for authentication and
   authorization.
 
@@ -10,11 +10,20 @@ Development version
   values. This was added mainly so that the default user model can have
   multiple unique properties.
 
-- import_string() now logs information about common mistakes when it fails.
+- import_string() now displays useful debug information when it fails.
 
-- App Engine-specific modules were moved to webapp2_extras.appengine.
-  Original modules were kept in the same place for compatibility purposes,
-  and import from the new locations.
+- To make things clearly separated specially for those using webapp2
+  outside of App Engine, from now on all App Engine-specific modules will
+  be placed in webapp2_extras.appengine. Also three modules were moved to
+  the new package:
+
+  - webapp2_extras.sessions_memcache
+  - webapp2_extras.sessions_ndb
+  - webapp2_extras.users
+
+  The original modules were not removed, though: they will be kept in the same
+  place for compatibility purposes, just importing their stuff from the new
+  locations.
 
 - Config.load_config() now makes a copy of the configuration when user_values
   are passed. That keyword is meant to override app configuration, so the

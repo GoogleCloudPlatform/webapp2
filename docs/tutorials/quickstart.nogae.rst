@@ -6,7 +6,7 @@ webapp2 can also be used outside of App Engine as a general purpose web
 framework, as it has these features:
 
 - It is independent of the App Engine SDK. If the SDK is not found, it sets
-  fallbacks to be used outside of GAE.
+  fallbacks to be used outside of App Engine.
 - It supports threaded environments through the module :ref:`api.webapp2_extras.local`.
 - All webapp2_extras modules are designed to be thread-safe.
 - It is compatible with ``WebOb`` 1.0 and superior, which fixes several bugs
@@ -14,7 +14,7 @@ framework, as it has these features:
   well).
 
 It won't support App Engine services, but if you like webapp, why not use it
-as a WSGI framework ouside of GAE as well? Here we'll describe how to do this.
+in other servers as well? Here we'll describe how to do this.
 
 .. note::
    If you want to use webapp2 on App Engine,

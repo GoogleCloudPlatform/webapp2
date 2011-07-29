@@ -72,7 +72,7 @@ default_config = {
     },
 }
 
-DEFAULT_VALUE = object()
+_default_value = object()
 
 
 class _UpdateDictMixin(object):
@@ -165,7 +165,7 @@ class BaseSessionFactory(object):
         self.session_args = session_store.config['cookie_args'].copy()
         self.session = None
 
-    def get_session(self, max_age=DEFAULT_VALUE):
+    def get_session(self, max_age=_default_value):
         raise NotImplementedError()
 
     def save_session(self, response):
@@ -186,7 +186,7 @@ class SecureCookieSessionFactory(BaseSessionFactory):
        can't be visible to users. For this, use datastore or memcache sessions.
     """
 
-    def get_session(self, max_age=DEFAULT_VALUE):
+    def get_session(self, max_age=_default_value):
         if self.session is None:
             data = self.session_store.get_secure_cookie(self.name,
                                                         max_age=max_age)
@@ -212,7 +212,7 @@ class CustomBackendSessionFactory(BaseSessionFactory):
     #: Used to validate session ids.
     _sid_re = re.compile(r'^\w{22}$')
 
-    def get_session(self, max_age=DEFAULT_VALUE):
+    def get_session(self, max_age=_default_value):
         if self.session is None:
             data = self.session_store.get_secure_cookie(self.name,
                                                         max_age=max_age)
@@ -335,7 +335,7 @@ class SessionStore(object):
 
         return self.sessions[name]
 
-    def get_session(self, name=None, max_age=DEFAULT_VALUE, factory=None,
+    def get_session(self, name=None, max_age=_default_value, factory=None,
                     backend='securecookie'):
         """Returns a session for a given name. If the session doesn't exist, a
         new session is returned.
@@ -366,7 +366,7 @@ class SessionStore(object):
         factory = factory or self.get_backend(backend)
         name = name or self.config['cookie_name']
 
-        if max_age is DEFAULT_VALUE:
+        if max_age is _default_value:
             max_age = self.config['session_max_age']
 
         container = self._get_session_container(name, factory)
@@ -374,7 +374,7 @@ class SessionStore(object):
 
     # Signed cookies ----------------------------------------------------------
 
-    def get_secure_cookie(self, name, max_age=DEFAULT_VALUE):
+    def get_secure_cookie(self, name, max_age=_default_value):
         """Returns a deserialized secure cookie value.
 
         :param name:
@@ -385,7 +385,7 @@ class SessionStore(object):
         :returns:
             A secure cookie value or None if it is not set.
         """
-        if max_age is DEFAULT_VALUE:
+        if max_age is _default_value:
             max_age = self.config['session_max_age']
 
         value = self.request.cookies.get(name)

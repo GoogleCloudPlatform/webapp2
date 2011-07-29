@@ -30,7 +30,8 @@ Quick links
 - `Downloads <http://code.google.com/p/webapp-improved/downloads/list>`_
 - `Google Code Repository <http://code.google.com/p/webapp-improved/>`_
 - `Discussion Group <http://groups.google.com/group/webapp2>`_
-- `Documentation PDF <http://webapp-improved.googlecode.com/files/webapp2-2.0.2.pdf>`_
+- `Download docs in PDF <http://webapp-improved.googlecode.com/files/webapp2-2.0.2.pdf>`_
+- `Follow us on Twitter <https://twitter.com/#!/webapp2>`_
 
 .. `Samples for Google App Engine <http://code.google.com/p/google-app-engine-samples/>`_:
    several mini-apps for webapp that serve as examples (they should work with
@@ -70,11 +71,13 @@ API Reference - webapp2
 
    api/webapp2.rst
 
+
 API Reference - webapp2_extras
 ------------------------------
 .. toctree::
    :maxdepth: 1
 
+   api/webapp2_extras/auth.rst
    api/webapp2_extras/i18n.rst
    api/webapp2_extras/jinja2.rst
    api/webapp2_extras/json.rst
@@ -85,6 +88,7 @@ API Reference - webapp2_extras
    api/webapp2_extras/securecookie.rst
    api/webapp2_extras/security.rst
    api/webapp2_extras/sessions.rst
+
 
 API Reference - webapp2_extras.appengine
 ----------------------------------------
@@ -106,6 +110,9 @@ Indices and tables
 
 Credits
 -------
+webapp2 is a superset of `webapp <http://code.google.com/appengine/docs/python/tools/webapp/>`_,
+created by the App Engine team.
+
 Because webapp2 is intended to be compatible with webapp, the official webapp
 documentation is valid for webapp2 too. Parts of this documentation were ported
 from `the official documentation for App Engine/Python <http://code.google.com/appengine/docs/python/>`_,

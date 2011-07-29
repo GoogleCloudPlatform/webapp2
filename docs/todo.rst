@@ -40,7 +40,7 @@ Notice that configuration is set primarily in the application. See:
     http://webapp-improved.appspot.com/guide/app.html#config
 
 By convention, modules that are configurable in webapp2 use the module
-name as key, to avpoid name clashes. Their configuration is then set in
+name as key, to avoid name clashes. Their configuration is then set in
 a nested dict. So, e.g., i18n, jinja2 and sessions are configured like this::
 
     config = {}

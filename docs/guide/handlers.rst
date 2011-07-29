@@ -152,7 +152,7 @@ this possible. To achieve it, we need to extend the router dispatcher to build
 a ``Response`` object using the returned string. We can go even further and
 also accept tuples: if a tuple is returned, we use its values as positional
 arguments to instantiate the ``Response`` object. So let's define our custom
-dispatcher and a handler function that returns a string::
+dispatcher and a handler that returns a string::
 
     def custom_dispatcher(router, request, response):
         rv = router.default_dispatcher(request, response)
@@ -163,18 +163,18 @@ dispatcher and a handler function that returns a string::
 
         return rv
 
-    def hello_handler(request, *args, **kwargs):
-        return 'Hello, world!'
+    class HelloHandler(webapp2.RequestHandler):
+        def get(self, *args, **kwargs):
+            return 'Hello, world!'
 
     app = webapp2.WSGIApplication([
-        (r'/', hello_handler),
+        (r'/', HelloHandler),
     ])
     app.router.set_dispatcher(custom_dispatcher)
 
 And that's all. Now we have a custom dispatcher set using the router method
-:meth:`webapp2.Router.set_dispatcher`. Our "view function" ``hello_handler``
-returns a string (or it could be tuple) that is used to create a ``Response``
-object.
+:meth:`webapp2.Router.set_dispatcher`. Our ``HelloHandler`` returns a string
+(or it could be tuple) that is used to create a ``Response`` object.
 
 Our custom dispatcher could implement its own URI matching and handler
 dispatching mechanisms from scratch, but in this case it just extends the
