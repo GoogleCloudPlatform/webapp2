@@ -62,6 +62,24 @@ class TestAuthModels(test_base.BaseTestCase):
         self.assertEqual(success, False)
         self.assertEqual(info, ['auth_id'])
 
+        # 3 extras and unique properties; plus 1 extra and not unique.
+        extras = ['foo', 'bar', 'baz']
+        values = dict((v, v + '_value') for v in extras)
+        values['ding'] = 'ding_value'
+        success, info = m.create_user(auth_id='auth_id_2',
+                                      unique_properties=extras, **values)
+        self.assertEqual(success, True)
+        self.assertTrue(info is not None)
+        for prop in extras:
+            self.assertEqual(getattr(info, prop), prop + '_value')
+        self.assertEqual(info.ding, 'ding_value')
+
+        # Let's do it again.
+        success, info = m.create_user(auth_id='auth_id_3',
+                                      unique_properties=extras, **values)
+        self.assertEqual(success, False)
+        self.assertEqual(info, extras)
+
     def test_token(self):
         m = models.UserToken
 

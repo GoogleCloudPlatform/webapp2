@@ -60,7 +60,7 @@ default_config = {
     'user_attributes': [],
 }
 
-#: A singleton anonymous user.
+#: Internal flag for anonymous users.
 _anon = object()
 
 
@@ -136,7 +136,6 @@ class AuthStore(object):
     def user_to_dict(self, user):
         """Returns a dictionary based on a user object.
 
-        The user object must provide at least the ``auth_id`` attribute.
         Extra attributes to be retrieved must be set in this module's
         configuration.
 
@@ -149,7 +148,7 @@ class AuthStore(object):
             return None
 
         user_dict = dict((a, getattr(user, a)) for a in self.user_attributes)
-        user_dict.update({'user_id': user.key.id()})
+        user_dict['user_id'] = user.key.id()
         return user_dict
 
     def get_user_by_auth_password(self, auth_id, password, silent=False):
@@ -176,7 +175,7 @@ class AuthStore(object):
             return None
 
     def get_user_by_auth_token(self, user_id, token):
-        """Returns a user dict based on auth_id and auth token.
+        """Returns a user dict based on user_id and auth token.
 
         :param user_id:
             User id.
@@ -261,7 +260,7 @@ class AuthStore(object):
         """Sets the function used to perform token validation.
 
         :param func:
-            A function that receives ``(store, auth_id, token, token_ts)``
+            A function that receives ``(store, user_id, token, token_ts)``
             and returns a tuple ``(user_dict, token)``.
         """
         self.validate_token = func.__get__(self, self.__class__)
@@ -501,7 +500,7 @@ class Auth(object):
         # Create a new dict or just update user?
         # We are doing the latter, and so the user dict will always have
         # the session metadata (token, timestamps etc). This is easier to test.
-        # But we could just keep auth_id and extra user attributes instead.
+        # But we could store only user_id and custom user attributes instead.
         user.update({
             'token':    token,
             'token_ts': token_ts,
