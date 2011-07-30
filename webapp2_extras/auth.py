@@ -200,15 +200,15 @@ class AuthStore(object):
         """
         return self.user_model.create_auth_token(user_id)
 
-    def delete_auth_token(self, auth_id, token):
+    def delete_auth_token(self, user_id, token):
         """Deletes an authentication token.
 
-        :param auth_id:
-            Authentication id.
+        :param user_id:
+            User id.
         :param token:
             Authentication token.
         """
-        return self.user_model.delete_auth_token(auth_id, token)
+        return self.user_model.delete_auth_token(user_id, token)
 
     # Session related ---------------------------------------------------------
 
