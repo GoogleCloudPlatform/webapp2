@@ -212,8 +212,8 @@ class User(model.Expando):
         :param user_id:
             ``User.key.id()`` of requesting user.
         :param subject:
-            The subject of the key.
-            Examples:
+            The subject of the key. Examples:
+
             - 'auth'
             - 'signup'
         :param token:
@@ -264,9 +264,9 @@ class User(model.Expando):
             - google:username
             - yahoo:username
 
-            The properties values of `auth_id` must be unique.
+            The value of `auth_id` must be unique.
         :param unique_properties:
-            Sequence of properties that must be unique.
+            Sequence of extra property names that must be unique.
         :param user_values:
             Keyword arguments to create a new user entity. Since the model is
             an ``Expando``, any provided custom properties will be saved.
@@ -324,15 +324,15 @@ class UserToken(model.Model):
         :param user:
             ``User.key.id()`` of requesting user.
         :param subject:
-            The subject of the key.
-            Examples:
+            The subject of the key. Examples:
+
             - 'auth'
             - 'signup'
         :param token:
-            randomly generated token
+            Randomly generated token.
         :returns:
             ``model.Key`` containing a string id in the following format:
-            {user_id}.{subject}.{token}
+            {user_id}.{subject}.{token}.
         """
         return model.Key(cls, '%s.%s.%s' % (str(user), subject, token))
 
@@ -344,15 +344,15 @@ class UserToken(model.Model):
         :param user:
             ``User.key.id()`` of requesting user.
         :param subject:
-            The subject of the key.
-            Examples:
+            The subject of the key. Examples:
+
             - 'auth'
             - 'signup'
         :param token:
             Default None a random ``token`` will be generated. Optionally a
             and existing ``token`` may be provided.
         :returns:
-            The newly created ``UserToken``
+            The newly created ``UserToken``.
         """
         user = str(user)
         token = token or security.generate_random_string(entropy=64)
@@ -368,8 +368,8 @@ class UserToken(model.Model):
         :param user:
             ``User.key.id()`` of requesting user.
         :param subject:
-            The subject of the key.
-            Examples:
+            The subject of the key. Examples:
+
             - 'auth'
             - 'signup'
         :param token:
