@@ -134,8 +134,8 @@ class Unique(model.Model):
         return model.delete_multi(model.Key(cls, v) for v in values)
 
 
-class User(model.Model):
-    """"""
+class User(model.Expando):
+    """Stores user authentication credentials or authorization ids."""
 
     #: The model used to ensure uniqueness.
     unique_model = Unique
@@ -149,19 +149,8 @@ class User(model.Model):
     password = model.StringProperty()
 
     @classmethod
-    def get_key(cls, user_id):
-        """Returns a User Key from a user_id
-
-        :param user_id:
-            Integer or string unique id of the user.
-        :returns:
-            ``User.key``
-        """
-        return model.Key(cls, user_id)
-
-    @classmethod
     def get_by_auth_id(cls, auth_id):
-        """Returns a User Key from a auth_id
+        """Returns a ``User`` entity from a auth_id.
 
         :param auth_id:
             String representing a unique id for the user.
@@ -175,9 +164,7 @@ class User(model.Model):
 
     @classmethod
     def get_by_auth_token(cls, user_id, token):
-        """Given a ``user_id`` and existing ``token`` returns a tuple
-        consisting of a (User, timestamp), or (None, None) if
-        authentication fails.
+        """Returns a ``User`` entity from a user ID and token.
 
         :param user_id:
             The user_id of the requesting user.
@@ -188,7 +175,7 @@ class User(model.Model):
             fails.
         """
         token_key = UserToken.get_key(user_id, 'auth', token)
-        user_key = cls.get_key(user_id)
+        user_key = model.Key(cls, user_id)
         # Use get_multi() to save a RPC call.
         valid_token, user = model.get_multi([token_key, user_key])
         if valid_token and user:
@@ -220,7 +207,7 @@ class User(model.Model):
 
     @classmethod
     def validate_token(cls, user_id, subject, token):
-        """Checks for existence of a token, given user_id, subject and token
+        """Checks for existence of a token, given user_id, subject and token.
 
         :param user_id:
             ``User.key.id()`` of requesting user.
@@ -263,11 +250,12 @@ class User(model.Model):
         UserToken.get_key(user_id, 'signup', token).delete()
 
     @classmethod
-    def create_user(cls, auth_id, **user_values):
+    def create_user(cls, auth_id, unique_properties=None, **user_values):
         """Creates a new user.
 
         :param auth_id:
-            A string that is unique to the user. User many have multiple auth ids.
+            A string that is unique to the user. User many have multiple
+            auth ids.
 
             Example auth ids:
 
@@ -277,12 +265,12 @@ class User(model.Model):
             - yahoo:username
 
             The properties values of `auth_id` must be unique.
+        :param unique_properties:
+            Sequence of properties that must be unique.
         :param user_values:
-            Keyword arguments to create a new user entity.
-
-            Optional keywords:
-
-            - password_raw (a plain password to be hashed)
+            Keyword arguments to create a new user entity. Since the model is
+            an ``Expando``, any provided custom properties will be saved.
+            To hash a plain password, pass a keyword ``password_raw``.
         :returns:
             A tuple (boolean, info). The boolean indicates if the user
             was created. If creation succeeds,  ``info`` is the user entity;
@@ -290,11 +278,11 @@ class User(model.Model):
             caused the creation to fail.
         """
         assert user_values.get('password') is None, \
-            'Use password_raw instead of password to create new users'
+            'Use password_raw instead of password to create new users.'
 
         assert not isinstance(auth_id, list), \
             'Creating a user with multiple auth_ids is not allowed, ' \
-            'please provide a single auth_id'
+            'please provide a single auth_id.'
 
         if 'password_raw' in user_values:
             user_values['password'] = security.generate_password_hash(
@@ -304,22 +292,19 @@ class User(model.Model):
         user_values['auth_ids'] = [auth_id]
         user = User(**user_values)
 
-        # Unique auth id and email.
-        unique_auth_id = 'User.auth_id:%s' % auth_id
+        # Set up unique properties.
+        uniques = [('%s.auth_id:%s' % (cls.__name__, auth_id), 'auth_id')]
+        if unique_properties:
+            for name in unique_properties:
+                key = '%s.%s:%s' % (cls.__name__, name, user_values[name])
+                uniques.append((key, name))
 
-        uniques = [unique_auth_id]
-
-        success, existing = cls.unique_model.create_multi(uniques)
-
-        if success:
+        ok, existing = cls.unique_model.create_multi(k for k, v in uniques)
+        if ok:
             user.put()
             return True, user
         else:
-            properties = []
-
-            if unique_auth_id in existing:
-                properties.append('auth_id')
-
+            properties = [v for k, v in uniques if k in existing]
             return False, properties
 
 
