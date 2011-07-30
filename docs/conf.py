@@ -43,6 +43,12 @@ sys.path[0:0] = [
     path,
 ]
 
+try:
+    from google.appengine.dist import use_library
+    use_library('django', '1.2')
+except ImportError:
+    pass
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.

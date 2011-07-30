@@ -100,11 +100,46 @@ App Engine-specific modules.
    api/webapp2_extras/appengine/sessions_ndb.rst
    api/webapp2_extras/appengine/users.rst
 
+
+Misc
+----
+.. toctree::
+   :maxdepth: 1
+
+   features.rst
+
+
 Indices and tables
 ------------------
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+.. Old docs linking to new ones or pages we don't want to link.
+
+.. toctree::
+   :hidden:
+
+   api/index.rst
+   api/extras.config.rst
+   api/extras.i18n.rst
+   api/extras.jinja2.rst
+   api/extras.json.rst
+   api/extras.local.rst
+   api/extras.local_app.rst
+   api/extras.mako.rst
+   api/extras.protorpc.rst
+   api/extras.routes.rst
+   api/extras.securecookie.rst
+   api/extras.security.rst
+   api/extras.sessions.rst
+   api/extras.sessions_memcache.rst
+   api/extras.sessions_ndb.rst
+   api/extras.users.rst
+   guide/index.rst
+   tutorials/index.rst
+   todo.rst
 
 
 Credits

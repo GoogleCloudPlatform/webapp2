@@ -9,16 +9,19 @@ services, including the datastore and the Google user service.
 
 This tutorial has the following sections:
 
-- :ref:`tutorials.gettingstarted.introduction`
-- :ref:`tutorials.gettingstarted.devenvironment`
-- :ref:`tutorials.gettingstarted.helloworld`
-- :ref:`tutorials.gettingstarted.usingwebapp2`
-- :ref:`tutorials.gettingstarted.usingusers`
-- :ref:`tutorials.gettingstarted.handlingforms`
-- :ref:`tutorials.gettingstarted.usingdatastore`
-- :ref:`tutorials.gettingstarted.templates`
-- :ref:`tutorials.gettingstarted.staticfiles`
-- :ref:`tutorials.gettingstarted.uploading`
+.. toctree::
+   :maxdepth: 1
+
+   introduction.rst
+   devenvironment.rst
+   helloworld.rst
+   usingwebapp2.rst
+   usingusers.rst
+   handlingforms.rst
+   usingdatastore.rst
+   templates.rst
+   staticfiles.rst
+   uploading.rst
 
 .. note::
    This tutorial is a port from the official Python
