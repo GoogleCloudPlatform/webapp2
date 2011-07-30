@@ -15,8 +15,8 @@ class TestAuth(test_base.BaseTestCase):
         self.register_model('UserToken', models.UserToken)
         self.register_model('Unique', unique_model.Unique)
 
-    def _check_token(self, auth_id, token, subject='auth'):
-        rv = models.UserToken.get(user=auth_id, subject=subject, token=token)
+    def _check_token(self, user_id, token, subject='auth'):
+        rv = models.UserToken.get(user=user_id, subject=subject, token=token)
         return rv is not None
 
     def test_get_user_by_session(self):
@@ -37,13 +37,15 @@ class TestAuth(test_base.BaseTestCase):
         success, user = m.create_user(auth_id='auth_id', email='email',
                                       password_raw='password')
 
+        user_id = user.key.id()
+
         # Get user with session. An anonymous_user is returned.
         rv = a.get_user_by_session()
         self.assertTrue(rv is None)
 
         # Login with password. User dict is returned.
         rv = a.get_user_by_password('auth_id', 'password')
-        self.assertEqual(rv['auth_id'], user.auth_id)
+        self.assertEqual(rv['user_id'], user_id)
 
         # Save sessions.
         session_store.save_sessions(rsp)
@@ -58,24 +60,24 @@ class TestAuth(test_base.BaseTestCase):
         # only auth_id is returned when there're no
         # custom user attributes defined.
         rv = a.get_user_by_session()
-        self.assertEqual(rv['auth_id'], 'auth_id')
+        self.assertEqual(rv['user_id'], user_id)
 
         # If we call get_user_by_token() now, the same user is returned.
-        rv2 = a.get_user_by_token(rv['auth_id'], rv['token'])
+        rv2 = a.get_user_by_token(rv['user_id'], rv['token'])
         self.assertTrue(rv is rv2)
 
         # Let's get it again and check that token is the same.
         token = rv['token']
         a._user = None
         rv = a.get_user_by_session()
-        self.assertEqual(rv['auth_id'], 'auth_id')
+        self.assertEqual(rv['user_id'], user_id)
         self.assertEqual(rv['token'], token)
 
         # Now let's force token to be renewed and check that we have a new one.
         s.config['token_new_age'] = -300
         a._user = None
         rv = a.get_user_by_session()
-        self.assertEqual(rv['auth_id'], 'auth_id')
+        self.assertEqual(rv['user_id'], user_id)
         self.assertNotEqual(rv['token'], token)
 
         # Now let's force token to be invalid.
@@ -100,21 +102,22 @@ class TestAuth(test_base.BaseTestCase):
         success, user = m.create_user(auth_id='auth_id', email='email',
                                       password_raw='password')
 
+        user_id = user.key.id()
         # Lets test the cookie max_age when we use remember=True or False.
         rv = a.get_user_by_password('auth_id', 'password', remember=True)
-        self.assertEqual(rv['auth_id'], user.auth_id)
+        self.assertEqual(rv['user_id'], user_id)
         self.assertEqual(session_store.sessions['auth'].session_args['max_age'],
                          86400 * 7 * 3)
 
         # Now remember=False.
         rv = a.get_user_by_password('auth_id', 'password')
-        self.assertEqual(rv['auth_id'], user.auth_id)
+        self.assertEqual(rv['user_id'], user_id)
         self.assertEqual(session_store.sessions['auth'].session_args['max_age'],
                          None)
 
         # User was set so getting it from session will return the same one.
         rv = a.get_user_by_session()
-        self.assertEqual(rv['auth_id'], 'auth_id')
+        self.assertEqual(rv['user_id'], user_id)
 
         # Now try a failed password submission: user will be unset.
         rv = a.get_user_by_password('auth_id', 'password_2', silent=True)
@@ -158,35 +161,36 @@ class TestAuth(test_base.BaseTestCase):
         success, user = m.create_user(auth_id='auth_id', email='email',
                                       password_raw='foo')
 
-        token = m.create_auth_token('auth_id')
-        rv = s.validate_token('auth_id', token)
+        user_id = user.key.id()
+        token = m.create_auth_token(user_id)
+        rv = s.validate_token(user_id, token)
         self.assertEqual(rv, (s.user_to_dict(user), token))
         # Token must still be there.
-        self.assertTrue(self._check_token('auth_id', token))
+        self.assertTrue(self._check_token(user_id, token))
 
         # Expired timestamp.
-        token = m.create_auth_token('auth_id')
-        rv = s.validate_token('auth_id', token, -300)
+        token = m.create_auth_token(user_id)
+        rv = s.validate_token(user_id, token, -300)
         self.assertEqual(rv, (None, None))
         # Token must have been deleted.
-        self.assertFalse(self._check_token('auth_id', token))
+        self.assertFalse(self._check_token(user_id, token))
 
         # Force expiration.
-        token = m.create_auth_token('auth_id')
+        token = m.create_auth_token(user_id)
         s.config['token_max_age'] = -300
-        rv = s.validate_token('auth_id', token)
+        rv = s.validate_token(user_id, token)
         self.assertEqual(rv, (None, None))
         # Token must have been deleted.
-        self.assertFalse(self._check_token('auth_id', token))
+        self.assertFalse(self._check_token(user_id, token))
 
         # Revert expiration, force renewal.
-        token = m.create_auth_token('auth_id')
+        token = m.create_auth_token(user_id)
         s.config['token_max_age'] = 86400 * 7 * 3
         s.config['token_new_age'] = -300
-        rv = s.validate_token('auth_id', token)
+        rv = s.validate_token(user_id, token)
         self.assertEqual(rv, (s.user_to_dict(user), None))
         # Token must have been deleted.
-        self.assertFalse(self._check_token('auth_id', token))
+        self.assertFalse(self._check_token(user_id, token))
 
     def test_set_auth_store(self):
         app = webapp2.WSGIApplication()

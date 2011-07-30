@@ -24,7 +24,7 @@ class User(model.Model):
     created = model.DateTimeProperty(auto_now_add=True)
     updated = model.DateTimeProperty(auto_now=True)
     # ID for third party authentication, e.g. 'google:username'. UNIQUE.
-    auth_id = model.StringProperty(required=True)
+    auth_ids = model.StringProperty(repeated=True)
     # Primary email address. Optionally UNIQUE.
     email = model.StringProperty()
     # Hashed password. Not required because third party authentication
@@ -32,21 +32,21 @@ class User(model.Model):
     password = model.StringProperty()
 
     @classmethod
-    def get_key(cls, auth_id):
-        return model.Key(cls, auth_id.lower())
+    def get_key(cls, user_id):
+        return model.Key(cls, user_id)
 
     @classmethod
     def get_by_auth_id(cls, auth_id):
-        return cls.get_key(auth_id).get()
+        return cls.query(cls.auth_ids == auth_id.lower()).get()
 
     @classmethod
     def get_by_email(cls, email):
         return cls.query(cls.email == email).get()
 
     @classmethod
-    def get_by_auth_token(cls, auth_id, token):
-        token_key = UserToken.get_key(auth_id, 'auth', token)
-        user_key = cls.get_key(auth_id)
+    def get_by_auth_token(cls, user_id, token):
+        token_key = UserToken.get_key(user_id, 'auth', token)
+        user_key = cls.get_key(user_id)
         # Use get_multi() to save a RPC call.
         valid_token, user = model.get_multi([token_key, user_key])
         if valid_token and user:
@@ -58,6 +58,10 @@ class User(model.Model):
     @classmethod
     def get_by_auth_password(cls, auth_id, password):
         """Returns user, validating password.
+        :param auth_id:
+            Authentication id.
+        :param password:
+            Password to be checked.
 
         :raises:
             ``auth.InvalidAuthIdError`` or ``auth.InvalidPasswordError``.
@@ -72,34 +76,34 @@ class User(model.Model):
         return user
 
     @classmethod
-    def validate_token(cls, auth_id, subject, token):
-        return UserToken.get(user=auth_id, subject=subject,
+    def validate_token(cls, user_id, subject, token):
+        return UserToken.get(user=user_id, subject=subject,
                              token=token) is not None
 
     @classmethod
-    def create_auth_token(cls, auth_id):
-        return UserToken.create(auth_id, 'auth').token
+    def create_auth_token(cls, user_id):
+        return UserToken.create(user_id, 'auth').token
 
     @classmethod
-    def validate_auth_token(cls, auth_id, token):
-        return cls.validate_token(auth_id, 'auth', token)
+    def validate_auth_token(cls, user_id, token):
+        return cls.validate_token(user_id, 'auth', token)
 
     @classmethod
-    def delete_auth_token(cls, auth_id, token):
-        UserToken.get_key(auth_id, 'auth', token).delete()
+    def delete_auth_token(cls, user_id, token):
+        UserToken.get_key(user_id, 'auth', token).delete()
 
     @classmethod
-    def create_signup_token(cls, auth_id):
-        entity = UserToken.create(auth_id, 'signup')
+    def create_signup_token(cls, user_id):
+        entity = UserToken.create(user_id, 'signup')
         return entity.token
 
     @classmethod
-    def validate_signup_token(cls, auth_id, token):
-        return cls.validate_token(auth_id, 'signup', token)
+    def validate_signup_token(cls, user_id, token):
+        return cls.validate_token(user_id, 'signup', token)
 
     @classmethod
-    def delete_signup_token(cls, auth_id, token):
-        UserToken.get_key(auth_id, 'signup', token).delete()
+    def delete_signup_token(cls, user_id, token):
+        UserToken.get_key(user_id, 'signup', token).delete()
 
     @classmethod
     def create_user(cls, auth_id,  _unique_email=True, **user_values):
@@ -140,11 +144,14 @@ class User(model.Model):
             user_values['password'] = security.generate_password_hash(
                 user_values.pop('password_raw'), length=12)
 
-        user_values['auth_id'] = auth_id.lower()
-        user = User(key=cls.get_key(user_values['auth_id']), **user_values)
+        auth_id = auth_id.lower()
+        user_values['auth_ids'] = [auth_id]
+        user = User(**user_values)
 
         # Unique auth id and email.
-        uniques = []
+        unique_auth_id = 'User.auth_id:%s' % auth_id
+
+        uniques = [unique_auth_id]
         if _unique_email:
             unique_email = 'User.email:%s' % user_values['email']
             uniques.append(unique_email)
@@ -154,16 +161,15 @@ class User(model.Model):
         success, existing = unique_model.Unique.create_multi(uniques)
 
         if success:
-            txn = lambda: user.put() if not user.key.get() else None
-            if model.transaction(txn):
-                return True, user
-            else:
-                unique_model.Unique.delete_multi(uniques)
-                return False, ['auth_id']
+            user.put()
+            return True, user
         else:
             properties = []
 
-            if unique_email in uniques:
+            if unique_auth_id in existing:
+                properties.append('auth_id')
+
+            if unique_email in existing:
                 properties.append('email')
 
             return False, properties
@@ -181,11 +187,12 @@ class UserToken(model.Model):
     @classmethod
     def get_key(cls, user, subject, token):
         """Returns a token key."""
-        return model.Key(cls, '%s.%s.%s' % (user, subject, token))
+        return model.Key(cls, '%s.%s.%s' % (str(user), subject, token))
 
     @classmethod
     def create(cls, user, subject, token=None):
         """Fetches a user token."""
+        user = str(user)
         token = token or security.generate_random_string(entropy=64)
         key = cls.get_key(user, subject, token)
         entity = cls(key=key, user=user, subject=subject, token=token)
