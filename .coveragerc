@@ -1,0 +1,12 @@
+# .coveragerc to control coverage.py
+[run]
+branch = False
+
+source =
+    webapp2
+    webapp2_extras
+
+omit =
+    /*/webapp2_extras/local.py
+
+[report]
