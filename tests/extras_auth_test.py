@@ -34,8 +34,7 @@ class TestAuth(test_base.BaseTestCase):
 
         # Create a user.
         m = models.User
-        success, user = m.create_user(username='username',
-                                      auth_id='auth_id', email='email',
+        success, user = m.create_user(auth_id='auth_id', email='email',
                                       password_raw='password')
 
         # Get user with session. An anonymous_user is returned.
@@ -98,8 +97,7 @@ class TestAuth(test_base.BaseTestCase):
         session_store = sessions.get_store(request=req)
 
         m = models.User
-        success, user = m.create_user(username='username',
-                                      auth_id='auth_id', email='email',
+        success, user = m.create_user(auth_id='auth_id', email='email',
                                       password_raw='password')
 
         # Lets test the cookie max_age when we use remember=True or False.
@@ -133,8 +131,7 @@ class TestAuth(test_base.BaseTestCase):
         s = auth.get_store(app=app)
 
         m = models.User
-        success, user = m.create_user(username='username',
-                                      auth_id='auth_id', email='email',
+        success, user = m.create_user(auth_id='auth_id', email='email',
                                       password_raw='foo')
 
         u = s.validate_password('auth_id', 'foo')
@@ -158,8 +155,7 @@ class TestAuth(test_base.BaseTestCase):
         self.assertEqual(rv, (None, None))
 
         m = models.User
-        success, user = m.create_user(username='username',
-                                      auth_id='auth_id', email='email',
+        success, user = m.create_user(auth_id='auth_id', email='email',
                                       password_raw='foo')
 
         token = m.create_auth_token('auth_id')
