@@ -154,8 +154,7 @@ class User(model.Model):
 
         :param user_id:
             Integer or string unique id of the user.
-
-        :return:
+        :returns:
             ``User.key``
         """
         return model.Key(cls, user_id)
@@ -169,8 +168,7 @@ class User(model.Model):
             Examples:
             - own:username
             - google:username
-
-        :return:
+        :returns:
             ``User`` User instance
         """
         return cls.query(cls.auth_ids == auth_id.lower()).get()
@@ -185,8 +183,7 @@ class User(model.Model):
             The user_id of the requesting user.
         :param token:
             Existing Token needing verification.
-
-        :return:
+        :returns:
             A tuple (User, timestamp) or (None, None) if authentication
             fails.
         """
@@ -234,8 +231,7 @@ class User(model.Model):
             - 'signup'
         :param token:
             The existing token needing verified.
-
-        :return:
+        :returns:
             A ``UserToken`` or ``None`` if the ``token`` does not exist.
         """
         return UserToken.get(user=user_id, subject=subject,
@@ -349,7 +345,7 @@ class UserToken(model.Model):
             - 'signup'
         :param token:
             randomly generated token
-        :return:
+        :returns:
             ``model.Key`` containing a string id in the following format:
             {user_id}.{subject}.{token}
         """
@@ -370,8 +366,7 @@ class UserToken(model.Model):
         :param token:
             Default None a random ``token`` will be generated. Optionally a
             and existing ``token`` may be provided.
-
-        :return:
+        :returns:
             The newly created ``UserToken``
         """
         user = str(user)
@@ -394,8 +389,7 @@ class UserToken(model.Model):
             - 'signup'
         :param token:
             The existing token needing verified.
-
-        :return:
+        :returns:
             A ``UserToken`` or ``None`` if the ``token`` does not exist.
         """
         if user and subject and token:
