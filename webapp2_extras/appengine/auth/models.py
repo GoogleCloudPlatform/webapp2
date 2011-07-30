@@ -173,8 +173,6 @@ class User(model.Model):
         :return:
             ``User`` User instance
         """
-        assert auth_id is not list, \
-            'Querying by list is not allowed, please provide a single auth_id'
         return cls.query(cls.auth_ids == auth_id.lower()).get()
 
     @classmethod
@@ -298,7 +296,7 @@ class User(model.Model):
         assert user_values.get('password') is None, \
             'Use password_raw instead of password to create new users'
 
-        assert auth_id is not list, \
+        assert not isinstance(auth_id, list), \
             'Creating a user with multiple auth_ids is not allowed, ' \
             'please provide a single auth_id'
 
