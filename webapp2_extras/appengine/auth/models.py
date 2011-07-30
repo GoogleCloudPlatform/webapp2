@@ -23,12 +23,10 @@ class User(model.Model):
 
     created = model.DateTimeProperty(auto_now_add=True)
     updated = model.DateTimeProperty(auto_now=True)
-    # Username in lower case. UNIQUE.
-    username = model.StringProperty(required=True)
     # ID for third party authentication, e.g. 'google:username'. UNIQUE.
     auth_id = model.StringProperty(required=True)
     # Primary email address. Optionally UNIQUE.
-    email = model.StringProperty(required=True)
+    email = model.StringProperty()
     # Hashed password. Not required because third party authentication
     # doesn't use password.
     password = model.StringProperty()
@@ -40,10 +38,6 @@ class User(model.Model):
     @classmethod
     def get_by_auth_id(cls, auth_id):
         return cls.get_key(auth_id).get()
-
-    @classmethod
-    def get_by_username(cls, username):
-        return cls.query(cls.username == username.lower()).get()
 
     @classmethod
     def get_by_email(cls, email):
@@ -108,25 +102,31 @@ class User(model.Model):
         UserToken.get_key(auth_id, 'signup', token).delete()
 
     @classmethod
-    def create_user(cls, _unique_email=True, **user_values):
+    def create_user(cls, auth_id,  _unique_email=True, **user_values):
         """Creates a new user.
 
+        :param auth_id:
+            A string that is unique to the user. User many have
+            multiple auth ids.
+
+            Example auth ids:
+
+            - own:username
+            - google:username
+            - yahoo:username
+
+            The properties values of `auth_id` must be unique.
         :param _unique_email:
             True to require the email to be unique, False otherwise.
         :param user_values:
-            Keyword arguments to create a new user entity. Required ones are:
-
-            - name
-            - username
-            - auth_id
-            - email
+            Keyword arguments to create a new user entity.
 
             Optional keywords:
 
+            - email
             - password_raw (a plain password to be hashed)
 
-            The properties values of `username` and `auth_id` must be unique.
-            Optionally, `email` can also be required to be unique.
+            `email` can be required to be unique.
         :returns:
             A tuple (boolean, info). The boolean indicates if the user
             was created. If creation succeeds,  ``info`` is the user entity;
@@ -140,21 +140,18 @@ class User(model.Model):
             user_values['password'] = security.generate_password_hash(
                 user_values.pop('password_raw'), length=12)
 
-        user_values['username'] = user_values['username'].lower()
-        user_values['auth_id'] = user_values['auth_id'].lower()
+        user_values['auth_id'] = auth_id.lower()
         user = User(key=cls.get_key(user_values['auth_id']), **user_values)
 
         # Unique auth id and email.
-        unique_username = 'User.username:%s' % user_values['username']
-        uniques = [unique_username]
+        uniques = []
         if _unique_email:
             unique_email = 'User.email:%s' % user_values['email']
             uniques.append(unique_email)
         else:
             unique_email = None
 
-        if uniques:
-            success, existing = unique_model.Unique.create_multi(uniques)
+        success, existing = unique_model.Unique.create_multi(uniques)
 
         if success:
             txn = lambda: user.put() if not user.key.get() else None
@@ -165,8 +162,6 @@ class User(model.Model):
                 return False, ['auth_id']
         else:
             properties = []
-            if unique_username in uniques:
-                properties.append('username')
 
             if unique_email in uniques:
                 properties.append('email')
