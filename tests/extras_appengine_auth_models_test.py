@@ -21,7 +21,10 @@ class TestAuthModels(test_base.BaseTestCase):
         self.assertTrue(user is not None)
         self.assertTrue(user.password is not None)
 
-        token = m.create_auth_token('auth_id_1')
+        # user.key.id() is required to retrieve the auth token
+        user_id = user.key.id()
+
+        token = m.create_auth_token(user_id)
 
         self.assertEqual(m.get_by_auth_id('auth_id_1'), user)
         self.assertEqual(m.get_by_auth_id('auth_id_2'), None)
@@ -29,9 +32,9 @@ class TestAuthModels(test_base.BaseTestCase):
         self.assertEqual(m.get_by_email('email_1'), user)
         self.assertEqual(m.get_by_email('email_2'), None)
 
-        u, ts = m.get_by_auth_token('auth_id_1', token)
+        u, ts = m.get_by_auth_token(user_id, token)
         self.assertEqual(u, user)
-        u, ts = m.get_by_auth_token('auth_id_2', token)
+        u, ts = m.get_by_auth_token('fake_user_id', token)
         self.assertEqual(u, None)
 
         u = m.get_by_auth_password('auth_id_1', 'foo')
@@ -49,7 +52,7 @@ class TestAuthModels(test_base.BaseTestCase):
         self.assertTrue(info is not None)
         self.assertTrue(info.password is not None)
 
-        success, info = m.create_user(auth_id='auth_id_1', email='email_1')
+        success, info = m.create_user(auth_id='auth_id_2', email='email_1')
         self.assertEqual(success, False)
         self.assertEqual(info, ['email'])
 
@@ -57,7 +60,7 @@ class TestAuthModels(test_base.BaseTestCase):
         self.assertEqual(success, False)
         self.assertEqual(info, ['auth_id'])
 
-        success, info = m.create_user(auth_id='auth_id_2', email='email_1',
+        success, info = m.create_user(auth_id='auth_id_3', email='email_1',
             _unique_email=False)
         self.assertEqual(success, True)
         self.assertTrue(info is not None)

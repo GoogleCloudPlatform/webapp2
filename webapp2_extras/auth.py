@@ -83,7 +83,7 @@ class AuthStore(object):
     config_key = __name__
 
     #: Required attributes stored in a session.
-    _session_attributes = ['auth_id', 'remember',
+    _session_attributes = ['user_id', 'remember',
                            'token', 'token_ts', 'cache_ts']
 
     def __init__(self, app, config=None):
@@ -119,7 +119,7 @@ class AuthStore(object):
         This must be an ordered list of unique elements.
         """
         seen = set()
-        attrs = self.config['user_attributes'] + ['auth_id']
+        attrs = self.config['user_attributes']
         return [a for a in attrs if a not in seen and not seen.add(a)]
 
     # User model related ------------------------------------------------------
@@ -148,7 +148,9 @@ class AuthStore(object):
         if not user:
             return None
 
-        return dict((a, getattr(user, a)) for a in self.user_attributes)
+        user_dict = dict((a, getattr(user, a)) for a in self.user_attributes)
+        user_dict.update({'user_id': user.key.id()})
+        return user_dict
 
     def get_user_by_auth_password(self, auth_id, password, silent=False):
         """Returns a user dict based on auth_id and password.
@@ -173,11 +175,11 @@ class AuthStore(object):
 
             return None
 
-    def get_user_by_auth_token(self, auth_id, token):
+    def get_user_by_auth_token(self, user_id, token):
         """Returns a user dict based on auth_id and auth token.
 
-        :param auth_id:
-            Authentication id.
+        :param user_id:
+            User id.
         :param token:
             Authentication token.
         :returns:
@@ -185,18 +187,18 @@ class AuthStore(object):
             The token timestamp will be None if the user is invalid or it
             is valid but the token requires renewal.
         """
-        user, ts = self.user_model.get_by_auth_token(auth_id, token)
+        user, ts = self.user_model.get_by_auth_token(user_id, token)
         return self.user_to_dict(user), ts
 
-    def create_auth_token(self, auth_id):
+    def create_auth_token(self, user_id):
         """Creates a new authentication token.
 
-        :param auth_id:
+        :param user_id:
             Authentication id.
         :returns:
             A new authentication token.
         """
-        return self.user_model.create_auth_token(auth_id)
+        return self.user_model.create_auth_token(user_id)
 
     def delete_auth_token(self, auth_id, token):
         """Deletes an authentication token.
@@ -283,14 +285,14 @@ class AuthStore(object):
         """
         return self.get_user_by_auth_password(auth_id, password, silent=silent)
 
-    def default_token_validator(self, auth_id, token, token_ts=None):
+    def default_token_validator(self, user_id, token, token_ts=None):
         """Validates a token.
 
         Tokens are random strings used to authenticate temporarily. They are
         used to validate sessions or service requests.
 
-        :param auth_id:
-            Authentication id.
+        :param user_id:
+            User id.
         :param token:
             Token to be checked.
         :param token_ts:
@@ -304,7 +306,7 @@ class AuthStore(object):
 
         if not delete:
             # Try to fetch the user.
-            user, ts = self.get_user_by_auth_token(auth_id, token)
+            user, ts = self.get_user_by_auth_token(user_id, token)
             if user:
                 # Now validate the real timestamp.
                 delete = (now - ts) > self.config['token_max_age']
@@ -313,7 +315,7 @@ class AuthStore(object):
         if delete or create or not user:
             if delete or create:
                 # Delete token from db.
-                self.delete_auth_token(auth_id, token)
+                self.delete_auth_token(user_id, token)
 
                 if delete:
                     user = None
@@ -364,19 +366,19 @@ class Auth(object):
                 self._user = _anon
             else:
                 self._user = self.get_user_by_token(
-                    auth_id=data['auth_id'], token=data['token'],
+                    user_id=data['user_id'], token=data['token'],
                     token_ts=data['token_ts'], cache=data,
                     cache_ts=data['cache_ts'], remember=data['remember'],
                     save_session=save_session)
 
         return self._user_or_none()
 
-    def get_user_by_token(self, auth_id, token, token_ts=None, cache=None,
+    def get_user_by_token(self, user_id, token, token_ts=None, cache=None,
                           cache_ts=None, remember=False, save_session=True):
         """Returns a user based on an authentication token.
 
-        :param auth_id:
-            Authentication id.
+        :param user_id:
+            User id.
         :param token:
             Authentication token.
         :param token_ts:
@@ -394,7 +396,7 @@ class Auth(object):
         """
         if self._user is not None:
             assert (self._user is not _anon and
-                    self._user['auth_id'] == auth_id and
+                    self._user['user_id'] == user_id and
                     self._user['token'] == token)
             return self._user_or_none()
 
@@ -415,7 +417,7 @@ class Auth(object):
 
         if self._user is None:
             # Fetch and validate the token.
-            self._user, token = self.store.validate_token(auth_id, token,
+            self._user, token = self.store.validate_token(user_id, token,
                                                           token_ts=token_ts)
 
         if self._user is None:
@@ -487,7 +489,7 @@ class Auth(object):
             Keyword arguments to set the session arguments.
         """
         now = int(time.time())
-        token = token or self.store.create_auth_token(user['auth_id'])
+        token = token or self.store.create_auth_token(user['user_id'])
         token_ts = token_ts or now
         cache_ts = cache_ts or now
         if remember:
@@ -515,7 +517,7 @@ class Auth(object):
         data = self.get_session_data(pop=True)
         if data:
             # Invalidate current token.
-            self.store.delete_auth_token(data['auth_id'], data['token'])
+            self.store.delete_auth_token(data['user_id'], data['token'])
 
     def get_session_data(self, pop=False):
         """Returns the session data as a dictionary.
