@@ -25,8 +25,6 @@ class User(model.Model):
     updated = model.DateTimeProperty(auto_now=True)
     # ID for third party authentication, e.g. 'google:username'. UNIQUE.
     auth_ids = model.StringProperty(repeated=True)
-    # Primary email address. Optionally UNIQUE.
-    email = model.StringProperty()
     # Hashed password. Not required because third party authentication
     # doesn't use password.
     password = model.StringProperty()
@@ -38,10 +36,6 @@ class User(model.Model):
     @classmethod
     def get_by_auth_id(cls, auth_id):
         return cls.query(cls.auth_ids == auth_id.lower()).get()
-
-    @classmethod
-    def get_by_email(cls, email):
-        return cls.query(cls.email == email).get()
 
     @classmethod
     def get_by_auth_token(cls, user_id, token):
@@ -106,7 +100,7 @@ class User(model.Model):
         UserToken.get_key(user_id, 'signup', token).delete()
 
     @classmethod
-    def create_user(cls, auth_id,  _unique_email=True, **user_values):
+    def create_user(cls, auth_id, **user_values):
         """Creates a new user.
 
         :param auth_id:
@@ -127,10 +121,7 @@ class User(model.Model):
 
             Optional keywords:
 
-            - email
             - password_raw (a plain password to be hashed)
-
-            `email` can be required to be unique.
         :returns:
             A tuple (boolean, info). The boolean indicates if the user
             was created. If creation succeeds,  ``info`` is the user entity;
@@ -152,11 +143,6 @@ class User(model.Model):
         unique_auth_id = 'User.auth_id:%s' % auth_id
 
         uniques = [unique_auth_id]
-        if _unique_email:
-            unique_email = 'User.email:%s' % user_values['email']
-            uniques.append(unique_email)
-        else:
-            unique_email = None
 
         success, existing = unique_model.Unique.create_multi(uniques)
 
@@ -168,9 +154,6 @@ class User(model.Model):
 
             if unique_auth_id in existing:
                 properties.append('auth_id')
-
-            if unique_email in existing:
-                properties.append('email')
 
             return False, properties
 

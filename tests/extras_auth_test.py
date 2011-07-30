@@ -34,7 +34,7 @@ class TestAuth(test_base.BaseTestCase):
 
         # Create a user.
         m = models.User
-        success, user = m.create_user(auth_id='auth_id', email='email',
+        success, user = m.create_user(auth_id='auth_id', 
                                       password_raw='password')
 
         user_id = user.key.id()
@@ -99,7 +99,7 @@ class TestAuth(test_base.BaseTestCase):
         session_store = sessions.get_store(request=req)
 
         m = models.User
-        success, user = m.create_user(auth_id='auth_id', email='email',
+        success, user = m.create_user(auth_id='auth_id', 
                                       password_raw='password')
 
         user_id = user.key.id()
@@ -134,7 +134,7 @@ class TestAuth(test_base.BaseTestCase):
         s = auth.get_store(app=app)
 
         m = models.User
-        success, user = m.create_user(auth_id='auth_id', email='email',
+        success, user = m.create_user(auth_id='auth_id', 
                                       password_raw='foo')
 
         u = s.validate_password('auth_id', 'foo')
@@ -158,7 +158,7 @@ class TestAuth(test_base.BaseTestCase):
         self.assertEqual(rv, (None, None))
 
         m = models.User
-        success, user = m.create_user(auth_id='auth_id', email='email',
+        success, user = m.create_user(auth_id='auth_id', 
                                       password_raw='foo')
 
         user_id = user.key.id()
