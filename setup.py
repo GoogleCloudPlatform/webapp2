@@ -27,7 +27,7 @@ Quick links
 - `User Guide <http://webapp-improved.appspot.com/>`_
 - `Official Repository <http://code.google.com/p/webapp-improved/>`_
 - `Discussion Group <https://groups.google.com/forum/#!forum/webapp2>`_
-- `Follow us on Twitter <https://twitter.com/#!/webapp2>`
+- `@webapp2 <https://twitter.com/#!/webapp2>`_
 """
 from setuptools import setup
 

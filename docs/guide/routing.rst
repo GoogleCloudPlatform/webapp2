@@ -234,10 +234,8 @@ In the example above, we define a template ``'<subdomain>.app-id.appspot.com'``
 for the domain matching. When a request comes in, only if the request server
 name matches that pattern, the nested route will be tested. Otherwise the
 routing system will test the next route until one matches. So the first route
-``/foo`` will only match when a subdomain of the ``app-id.appspot.com`` domain
-is accessed: when a subdomain is accessed and the path is ``/``, the handler
-``SubdomainHomeHandler`` will be used, but when no subdomain is accessed (or
-the domain is different) the ``HomeHandler`` will be used instead.
+with path ``/`` will only match when a subdomain of the ``app-id.appspot.com``
+domain is accessed. Otherwise the second route with path ``/`` will be used.
 
 The template follows the same syntax used by :class:`webapp2.Route` and
 must define named groups if any value must be added to the match results.
