@@ -12,9 +12,8 @@ import time
 
 from ndb import model
 
-from webapp2_extras import security
-
 from webapp2_extras import auth
+from webapp2_extras import security
 
 
 class Unique(model.Model):
@@ -27,9 +26,6 @@ class Unique(model.Model):
     For example, suppose we have a model `User` with three properties that
     must be unique across a given group: `username`, `auth_id` and `email`::
 
-        class UniqueConstraintViolation(Exception):
-            pass
-
         class User(model.Model):
             username = model.StringProperty(required=True)
             auth_id = model.StringProperty(required=True)
@@ -41,29 +37,26 @@ class Unique(model.Model):
 
         @classmethod
         def create_user(cls, username, auth_id, email):
-            # Assemble the unique scope/value combinations.
-            unique_username = 'User.username:%s' % username
-            unique_auth_id = 'User.auth_id:%s' % auth_id
-            unique_email = 'User.email:%s' % email
+            # Assemble the unique values for a given class and attribute scope.
+            uniques = [
+                'User.username.%s' % username,
+                'User.auth_id.%s' % auth_id,
+                'User.email.%s' % email,
+            ]
 
             # Create the unique username, auth_id and email.
-            uniques = [unique_username, unique_auth_id, unique_email]
             success, existing = Unique.create_multi(uniques)
 
             if success:
+                # The unique values were created, so we can save the user.
                 user = User(username=username, auth_id=auth_id, email=email)
                 user.put()
                 return user
             else:
-                if unique_username in existing:
-                    raise UniqueConstraintViolation('Username %s already '
-                        'exists' % username)
-                if unique_auth_id in existing:
-                    raise UniqueConstraintViolation('Auth id %s already '
-                        'exists' % auth_id)
-                if unique_email in existing:
-                    raise UniqueConstraintViolation('Email %s already '
-                        'exists' % email)
+                # At least one of the values is not unique.
+                # Make a list of the property names that failed.
+                props = [name.split('.', 2)[1] for name in uniques]
+                raise ValueError('Properties %r are not unique.' % props)
 
     Based on the idea from http://squeeville.com/2009/01/30/add-a-unique-constraint-to-google-app-engine/
     """
@@ -100,8 +93,6 @@ class Unique(model.Model):
             created, bool is False and the list contains all the values that
             already existed in datastore during the creation attempt.
         """
-        keys = [model.Key(cls, value) for value in values]
-
         # Maybe do a preliminary check, before going for transactions?
         # entities = model.get_multi(keys)
         # existing = [entity.key.id() for entity in entities if entity]
@@ -109,17 +100,14 @@ class Unique(model.Model):
         #    return False, existing
 
         # Create all records transactionally.
-        created = []
+        keys = [model.Key(cls, value) for value in values]
         entities = [cls(key=key) for key in keys]
-        for entity in entities:
-            func = lambda: entity.put() if not entity.key.get() else None
-            key = model.transaction(func)
-            if key:
-                created.append(key)
+        func = lambda e: e.put() if not e.key.get() else None
+        created = [model.transaction(lambda: func(e)) for e in entities]
 
         if created != keys:
             # A poor man's "rollback": delete all recently created records.
-            model.delete_multi(created)
+            model.delete_multi(k for k in created if k)
             return False, [k.id() for k in keys if k not in created]
 
         return True, []
@@ -153,12 +141,12 @@ class User(model.Expando):
         """Returns a ``User`` entity from a auth_id.
 
         :param auth_id:
-            String representing a unique id for the user.
-            Examples:
+            String representing a unique id for the user. Examples:
+
             - own:username
             - google:username
         :returns:
-            ``User`` User instance
+            A :class:`User` instance.
         """
         return cls.query(cls.auth_ids == auth_id.lower()).get()
 
@@ -171,8 +159,8 @@ class User(model.Expando):
         :param token:
             Existing Token needing verification.
         :returns:
-            A tuple (User, timestamp) or (None, None) if authentication
-            fails.
+            A tuple ``(User, timestamp)``, with a :class:`User` instance and
+            the token timestamp, or ``(None, None)`` if both were not found.
         """
         token_key = UserToken.get_key(user_id, 'auth', token)
         user_key = model.Key(cls, user_id)
@@ -192,7 +180,8 @@ class User(model.Expando):
             Authentication id.
         :param password:
             Password to be checked.
-
+        :returns:
+            A :class:`User` instance, if found and password matches.
         :raises:
             ``auth.InvalidAuthIdError`` or ``auth.InvalidPasswordError``.
         """
@@ -217,9 +206,9 @@ class User(model.Expando):
             - 'auth'
             - 'signup'
         :param token:
-            The existing token needing verified.
+            The token string to be validated.
         :returns:
-            A ``UserToken`` or ``None`` if the ``token`` does not exist.
+            A :class:`UserToken` or None if the token does not exist.
         """
         return UserToken.get(user=user_id, subject=subject,
                              token=token) is not None
@@ -254,10 +243,8 @@ class User(model.Expando):
         """Creates a new user.
 
         :param auth_id:
-            A string that is unique to the user. User many have multiple
-            auth ids.
-
-            Example auth ids:
+            A string that is unique to the user. Users may have multiple
+            auth ids. Example auth ids:
 
             - own:username
             - own:email@example.com
@@ -273,9 +260,9 @@ class User(model.Expando):
             To hash a plain password, pass a keyword ``password_raw``.
         :returns:
             A tuple (boolean, info). The boolean indicates if the user
-            was created. If creation succeeds,  ``info`` is the user entity;
+            was created. If creation succeeds, ``info`` is the user entity;
             otherwise it is a list of duplicated unique properties that
-            caused the creation to fail.
+            caused creation to fail.
         """
         assert user_values.get('password') is None, \
             'Use password_raw instead of password to create new users.'
@@ -332,14 +319,13 @@ class UserToken(model.Model):
             Randomly generated token.
         :returns:
             ``model.Key`` containing a string id in the following format:
-            {user_id}.{subject}.{token}.
+            ``{user_id}.{subject}.{token}.``
         """
         return model.Key(cls, '%s.%s.%s' % (str(user), subject, token))
 
     @classmethod
     def create(cls, user, subject, token=None):
-        """Creates a token for the given ``user`` and ``subject`` optionally
-        a ``token`` may also be provided.
+        """Creates a new token for the given user.
 
         :param user:
             ``User.key.id()`` of requesting user.
@@ -349,13 +335,13 @@ class UserToken(model.Model):
             - 'auth'
             - 'signup'
         :param token:
-            Default None a random ``token`` will be generated. Optionally a
-            and existing ``token`` may be provided.
+            Optionally an existing token may be provided.
+            If None, a random token will be generated.
         :returns:
-            The newly created ``UserToken``.
+            The newly created :class:`UserToken`.
         """
         user = str(user)
-        token = token or security.generate_random_string(entropy=64)
+        token = token or security.generate_random_string(entropy=128)
         key = cls.get_key(user, subject, token)
         entity = cls(key=key, user=user, subject=subject, token=token)
         entity.put()
@@ -375,7 +361,7 @@ class UserToken(model.Model):
         :param token:
             The existing token needing verified.
         :returns:
-            A ``UserToken`` or ``None`` if the ``token`` does not exist.
+            A :class:`UserToken` or None if the token does not exist.
         """
         if user and subject and token:
             return cls.get_key(user, subject, token).get()

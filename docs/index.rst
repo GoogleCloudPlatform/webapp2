@@ -98,6 +98,7 @@ App Engine-specific modules.
 
    api/webapp2_extras/appengine/sessions_memcache.rst
    api/webapp2_extras/appengine/sessions_ndb.rst
+   api/webapp2_extras/appengine/auth/models.rst
    api/webapp2_extras/appengine/users.rst
 
 
@@ -140,6 +141,17 @@ Indices and tables
    guide/index.rst
    tutorials/index.rst
    todo.rst
+
+
+Requirements
+------------
+webapp2 is compatible with Python 2.5, 2.6 and 2.7.
+
+`WebOb <http://docs.webob.org/>`_ is the only library required for the core
+functionality.
+
+Modules from webapp2_extras may require additional libraries, as indicated in
+their docs.
 
 
 Credits

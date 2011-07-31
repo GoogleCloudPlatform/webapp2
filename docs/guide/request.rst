@@ -1,10 +1,12 @@
+.. _WebOb: http://docs.webob.org/
+
 .. _guide.request:
 
 Request data
 ============
 The request handler instance can access the request data using its ``request``
-property. This is initialized to a populated `WebOb <http://pythonpaste.org/webob/>`_
-``Request`` object by the application.
+property. This is initialized to a populated `WebOb`_ ``Request`` object by
+the application.
 
 The request object provides a ``get()`` method that returns values for
 arguments parsed from the query and from POST data. The method takes the
@@ -212,6 +214,5 @@ across requests.
 
 Learn more about WebOb
 ----------------------
-WebOb is an open source third-party library. See the
-`WebOb <http://pythonpaste.org/webob/>`_ documentation for a detailed API
-reference and examples.
+WebOb is an open source third-party library. See the `WebOb`_ documentation
+for a detailed API reference and examples.

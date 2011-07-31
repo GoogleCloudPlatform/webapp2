@@ -1,10 +1,12 @@
+.. _WebOb: http://docs.webob.org/
+
 .. _guide.response:
 
 Building a Response
 ===================
 The request handler instance builds the response using its response property.
-This is initialized to an empty `WebOb <http://pythonpaste.org/webob/>`_
-``Response`` object by the application.
+This is initialized to an empty `WebOb`_ ``Response`` object by the
+application.
 
 The response object's acts as a file-like object that can be used for
 writing the body of the response::
@@ -121,6 +123,5 @@ etag
 
 Learn more about WebOb
 ----------------------
-WebOb is an open source third-party library. See the
-`WebOb <http://pythonpaste.org/webob/>`_ documentation for a detailed API
-reference and examples.
+WebOb is an open source third-party library. See the `WebOb`_ documentation
+for a detailed API reference and examples.
