@@ -1,7 +1,7 @@
-.. _Another Do-It-Yourself Framework: http://pythonpaste.org/webob/do-it-yourself.html
+.. _Another Do-It-Yourself Framework: http://docs.webob.org/en/latest/do-it-yourself.html
 .. _Flask: http://flask.pocoo.org/
 .. _Tornado: http://www.tornadoweb.org/
-.. _WebOb: http://pythonpaste.org/webob/
+.. _WebOb: http://docs.webob.org/
 .. _Werkzeug: http://werkzeug.pocoo.org/
 
 .. _api.webapp2:

@@ -1,3 +1,5 @@
+.. _Another Do-It-Yourself Framework: http://docs.webob.org/en/latest/do-it-yourself.html
+
 .. _guide.app:
 
 The WSGI application
@@ -11,11 +13,11 @@ Let's take an in depth look at it now.
 
 .. note::
    If the WSGI word looks totally unfamiliar to you, read the
-   `Another Do-It-Yourself Framework <http://pythonpaste.org/webob/do-it-yourself.html>`_
-   tutorial by Ian Bicking. It is a very recommended introduction to WSGI and
-   you should at least take a quick look at the concepts, but following the
-   whole tutorial is really worth. A more advanced reading is the WSGI
-   specification described in the
+   `Another Do-It-Yourself Framework`_ tutorial by Ian Bicking. It is a very
+   recommended introduction to WSGI and you should at least take a quick look
+   at the concepts, but following the whole tutorial is really worth.
+
+   A more advanced reading is the WSGI specification described in the
    `PEP 333 <http://www.python.org/dev/peps/pep-0333/>`_.
 
 

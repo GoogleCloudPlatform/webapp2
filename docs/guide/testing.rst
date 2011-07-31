@@ -1,10 +1,12 @@
+.. _WebOb: http://docs.webob.org/
+
 .. _guide.testing:
 
 Unit testing
 ============
-Thanks to `WebOb <http://pythonpaste.org/webob/>`_, webapp2 is very testable.
-Testing a handler is a matter of building a custom ``Request`` object and
-calling ``get_response()`` on it passing the WSGI application.
+Thanks to `WebOb`_, webapp2 is very testable. Testing a handler is a matter
+of building a custom ``Request`` object and calling ``get_response()`` on it
+passing the WSGI application.
 
 Let's see an example. First define a simple 'Hello world' handler to be
 tested::
@@ -101,8 +103,7 @@ application, returning the resulting response::
     assert response.status_int == 200
     assert response.body == 'Hello, world!'
 
-Testing handlers could not be easier. Check the
-`WebOb <http://pythonpaste.org/webob/>`_ documentation for more
+Testing handlers could not be easier. Check the `WebOb`_ documentation for more
 information about the request and response objects.
 
 
