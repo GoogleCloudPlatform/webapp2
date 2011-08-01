@@ -58,7 +58,7 @@ except ImportError: # pragma: no cover
                     "so webapp2 won't be thread-safe!")
 
 
-__version_info__ = (2, 2)
+__version_info__ = (2, 2, 1)
 __version__ = '.'.join(str(n) for n in __version_info__)
 
 #: Base HTTP exception, set here as public interface.
@@ -1578,7 +1578,7 @@ class WSGIApplication(object):
             else:
                 _webapp_util.run_wsgi_app(self)
         else: # pragma: no cover
-            handlers.CGIHandler().run(app)
+            handlers.CGIHandler().run(self)
 
     def get_response(self, *args, **kwargs):
         """Creates a request and returns a response for this app.
