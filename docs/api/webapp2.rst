@@ -1,9 +1,3 @@
-.. _Another Do-It-Yourself Framework: http://docs.webob.org/en/latest/do-it-yourself.html
-.. _Flask: http://flask.pocoo.org/
-.. _Tornado: http://www.tornadoweb.org/
-.. _WebOb: http://docs.webob.org/
-.. _Werkzeug: http://werkzeug.pocoo.org/
-
 .. _api.webapp2:
 
 webapp2
@@ -149,3 +143,10 @@ These are some other utilities also available for general use.
 .. autofunction:: abort
 
 .. autofunction:: import_string
+
+
+.. _Another Do-It-Yourself Framework: http://docs.webob.org/en/latest/do-it-yourself.html
+.. _Flask: http://flask.pocoo.org/
+.. _Tornado: http://www.tornadoweb.org/
+.. _WebOb: http://docs.webob.org/
+.. _Werkzeug: http://werkzeug.pocoo.org/

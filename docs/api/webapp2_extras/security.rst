@@ -1,5 +1,3 @@
-.. _Werkzeug: http://werkzeug.pocoo.org/
-
 .. _api.webapp2_extras.security:
 
 Security
@@ -14,3 +12,6 @@ tools and a random string generator.
 .. autofunction:: check_password_hash
 .. autofunction:: hash_password
 .. autofunction:: compare_hashes
+
+
+.. _Werkzeug: http://werkzeug.pocoo.org/

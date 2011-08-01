@@ -1,5 +1,3 @@
-.. _Another Do-It-Yourself Framework: http://docs.webob.org/en/latest/do-it-yourself.html
-
 .. _guide.app:
 
 The WSGI application
@@ -272,3 +270,6 @@ access the app registry or configuration values::
 
     app = webapp2.get_app()
     config_value = app.config.get('my-config-key')
+
+
+.. _Another Do-It-Yourself Framework: http://docs.webob.org/en/latest/do-it-yourself.html

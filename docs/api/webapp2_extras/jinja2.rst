@@ -4,7 +4,7 @@ Jinja2
 ======
 .. module:: webapp2_extras.jinja2
 
-This module provides Jinja2 template support for webapp2.
+This module provides `Jinja2`_ template support for webapp2.
 
 To use it, you must add the ``jinja2`` package to your application
 directory (for App Engine) or install it in your virtual environment
@@ -25,3 +25,6 @@ Learn more about Jinja2:
 
 .. autofunction:: get_jinja2
 .. autofunction:: set_jinja2
+
+
+.. _Jinja2: http://jinja.pocoo.org/

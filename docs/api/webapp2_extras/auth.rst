@@ -4,6 +4,8 @@ Auth
 ====
 .. module:: webapp2_extras.auth
 
+Utilities for authentication and authorization.
+
 .. warning::
    This is an experimental module. The API is subject to changes.
 

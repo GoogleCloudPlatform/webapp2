@@ -4,7 +4,7 @@ Mako
 ====
 .. module:: webapp2_extras.mako
 
-This module provides Mako template support for webapp2.
+This module provides `Mako`_ template support for webapp2.
 
 To use it, you must add the ``mako`` package to your application
 directory (for App Engine) or install it in your virtual environment
@@ -25,3 +25,6 @@ Learn more about Mako:
 
 .. autofunction:: get_mako
 .. autofunction:: set_mako
+
+
+.. _Mako: http://www.makotemplates.org/

@@ -1,5 +1,3 @@
-.. _NDB: http://code.google.com/p/appengine-ndb-experiment/
-
 .. _api.webapp2_extras.appengine.auth.models:
 
 User Models
@@ -24,3 +22,6 @@ This module requires you to add the ``ndb`` package to your app. See `NDB`_.
 
 .. autoclass:: Unique
    :members: create, create_multi, delete_multi
+
+
+.. _NDB: http://code.google.com/p/appengine-ndb-experiment/

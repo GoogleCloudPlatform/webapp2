@@ -5,19 +5,16 @@
 
 Welcome to webapp2!
 ===================
-`webapp2 <http://code.google.com/p/webapp-improved/>`_ is a lightweight Python
-web framework compatible with Google App Engine's
-`webapp <http://code.google.com/appengine/docs/python/tools/webapp/>`_.
+`webapp2`_ is a lightweight Python web framework compatible with Google App
+Engine's `webapp`_.
 
-webapp2 is a `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_
-that follows the simplicity of webapp, but improves it in some ways: it extends
-webapp to offer better URI routing and exception handling, a full featured
-response object and a more flexible dispatching mechanism.
+webapp2 is a `single file`_ that follows the simplicity of webapp, but improves
+it in some ways: it adds better URI routing and exception handling, a full
+featured response object and a more flexible dispatching mechanism.
 
-webapp2 also offers the package `webapp2_extras <http://code.google.com/p/webapp-improved/source/browse/#hg%2Fwebapp2_extras>`_
-with several optional utilities: sessions, localization, internationalization,
-domain and subdomain routing, secure cookies and support for threaded
-environments.
+webapp2 also offers the package `webapp2_extras`_ with several optional
+utilities: sessions, localization, internationalization, domain and subdomain
+routing, secure cookies and others.
 
 webapp2 can also be used outside of Google App Engine, independently of the
 App Engine SDK.
@@ -145,10 +142,9 @@ Indices and tables
 
 Requirements
 ------------
-webapp2 is compatible with Python 2.5, 2.6 and 2.7.
+webapp2 is compatible with Python 2.5 and superior. No Python 3 yet.
 
-`WebOb <http://docs.webob.org/>`_ is the only library required for the core
-functionality.
+`WebOb`_ is the only library required for the core functionality.
 
 Modules from webapp2_extras may require additional libraries, as indicated in
 their docs.
@@ -156,23 +152,18 @@ their docs.
 
 Credits
 -------
-webapp2 is a superset of `webapp <http://code.google.com/appengine/docs/python/tools/webapp/>`_,
-created by the App Engine team.
+webapp2 is a superset of `webapp`_, created by the App Engine team.
 
 Because webapp2 is intended to be compatible with webapp, the official webapp
 documentation is valid for webapp2 too. Parts of this documentation were ported
-from `the official documentation for App Engine/Python <http://code.google.com/appengine/docs/python/>`_,
-written by the App Engine team and licensed under the Creative Commons
-Attribution 3.0 License.
+from the `App Engine documentation`_, written by the App Engine team and
+licensed under the Creative Commons Attribution 3.0 License.
 
-webapp2 has code ported from `Werkzeug <http://werkzeug.pocoo.org/>`_ and
-`Tipfy <http://www.tipfy.org/>`_.
+webapp2 has code ported from `Werkzeug`_ and `Tipfy`_.
 
-webapp2_extras has code ported from Werkzeug, Tipfy and
-`Tornado Web Server <http://www.tornadoweb.org/>`_.
+webapp2_extras has code ported from Werkzeug, Tipfy and `Tornado Web Server`_.
 
-The `Sphinx <http://sphinx.pocoo.org/>`_ theme mimics the
-`App Engine official documentation <http://code.google.com/appengine/docs/>`_.
+The `Sphinx`_ theme mimics the App Engine documentation.
 
 This library was not created and is not maintained by Google.
 
@@ -194,5 +185,17 @@ Thanks!
 
 License
 -------
-webapp2 is licensed under the
-`Apache License 2.0 <http://www.apache.org/licenses/LICENSE-2.0>`_.
+webapp2 is licensed under the `Apache License 2.0`_.
+
+
+.. _webapp: http://code.google.com/appengine/docs/python/tools/webapp/
+.. _webapp2: http://code.google.com/p/webapp-improved/
+.. _single file: http://code.google.com/p/webapp-improved/source/browse/webapp2.py
+.. _webapp2_extras: http://code.google.com/p/webapp-improved/source/browse/#hg%2Fwebapp2_extras
+.. _WebOb: http://docs.webob.org/
+.. _Werkzeug: http://werkzeug.pocoo.org/
+.. _Tipfy: http://www.tipfy.org/
+.. _Tornado Web Server: http://www.tornadoweb.org/
+.. _Sphinx: http://sphinx.pocoo.org/
+.. _App Engine documentation: http://code.google.com/appengine/docs/
+.. _Apache License 2.0: http://www.apache.org/licenses/LICENSE-2.0

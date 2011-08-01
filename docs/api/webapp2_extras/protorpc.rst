@@ -8,9 +8,8 @@ ProtoRPC
 You can register service mappings in a normal webapp2 WSGI application, and it
 will be fully compatible with the ProtoRPC library.
 
-Check the `ProtoRPC documentation <http://code.google.com/appengine/docs/python/tools/protorpc/overview.html>`_
-or the `ProtoRPC project page <http://code.google.com/p/google-protorpc/>`_
-for usage details.
+Check the `ProtoRPC documentation`_ or the `ProtoRPC project page`_ for usage
+details.
 
 .. warning::
    This is an experimental package, as the ProtoRPC API is not stable yet.
@@ -21,3 +20,6 @@ for usage details.
 .. autofunction:: get_app
 .. autofunction:: run_services
 
+
+.. _ProtoRPC documentation: http://code.google.com/appengine/docs/python/tools/protorpc/overview.html
+.. _ProtoRPC project page: http://code.google.com/p/google-protorpc/
