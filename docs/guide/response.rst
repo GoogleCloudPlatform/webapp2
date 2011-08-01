@@ -1,5 +1,3 @@
-.. _WebOb: http://docs.webob.org/
-
 .. _guide.response:
 
 Building a Response
@@ -125,3 +123,6 @@ Learn more about WebOb
 ----------------------
 WebOb is an open source third-party library. See the `WebOb`_ documentation
 for a detailed API reference and examples.
+
+
+.. _WebOb: http://docs.webob.org/

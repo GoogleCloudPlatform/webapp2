@@ -1,5 +1,3 @@
-.. _WebOb: http://docs.webob.org/
-
 .. _guide.testing:
 
 Unit testing
@@ -115,3 +113,6 @@ Memcache or other App Engine services, read
 in the official documentation. The App Engine SDK provides the module
 ``google.appengine.ext.testbed`` that can be used to setup all the necessary
 service stubs for testing.
+
+
+.. _WebOb: http://docs.webob.org/

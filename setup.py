@@ -7,13 +7,12 @@ Engine's `webapp <http://code.google.com/appengine/docs/python/tools/webapp/>`_.
 
 webapp2 is a `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_
 that follows the simplicity of webapp, but improves it in some ways:
-it extends webapp to offer better URI routing and exception handling,
-a full featured response object and a more flexible dispatching mechanism.
+it adds better URI routing and exception handling, a full featured response
+object and a more flexible dispatching mechanism.
 
 webapp2 also offers the package `webapp2_extras <http://code.google.com/p/webapp-improved/source/browse/#hg%2Fwebapp2_extras>`_
 with several optional utilities: sessions, localization, internationalization,
-domain and subdomain routing, secure cookies and support for threaded
-environments.
+domain and subdomain routing, secure cookies and others.
 
 webapp2 can also be used outside of Google App Engine, independently of the
 App Engine SDK.
