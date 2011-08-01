@@ -1,3 +1,9 @@
+Version 2.2.1 - August 1st, 2011
+--------------------------------
+- Fixed a bug in WSGIApplication.run() when running outside of App Engine:
+  CGIHandler().run(app) -> CGIHandler().run(self). (issue 9)
+
+
 Version 2.2 - July 30, 2011
 ===========================
 - Revised webapp2_extras.auth and simplified User model, by Kyle Finley.
