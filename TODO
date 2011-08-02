@@ -12,9 +12,15 @@ documentation.
 
 Thanks!
 
+The real TODO
+-------------
+- Add WSGI middleware:
+  - sessions
+  - auth
 
-webapp
-------
+
+The webapp TODO
+---------------
 Here is a list of updates for webapp that could be gradually implemented in
 future SDK releases, to make webapp more close to webapp2:
 
