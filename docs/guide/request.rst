@@ -46,31 +46,28 @@ the body of an HTTP PUT request, the request object provides the attributes
 
 GET data
 --------
-Query string variables are available in ``request.GET`` or ``request.str_GET``.
-Both carry the same values, but in the first they are converted to unicode,
-and in the latter they are strings.
+Query string variables are available in ``request.GET``.
 
-``GET`` or ``str_GET`` are a
-`MultiDict <http://pythonpaste.org/webob/class-webob.multidict.MultiDict.html>`_:
-they act as a dictionary but the same key can have multiple values. When you
-call ``.get(key)`` for a key that has multiple values, the last value is
-returned. To get all values for a key, use ``.getall(key)``. Examples::
+``.GET`` is a `MultiDict`_: it is like a dictionary but the same key can have
+multiple values. When you call ``.get(key)`` for a key with multiple values,
+the last value is returned. To get all values for a key, use ``.getall(key)``.
+Examples::
 
     request = Request.blank('/test?check=a&check=b&name=Bob')
 
     # The whole MultiDict:
     # GET([('check', 'a'), ('check', 'b'), ('name', 'Bob')])
-    get_values = request.str_GET
+    get_values = request.GET
 
     # The last value for a key: 'b'
-    check_value = request.str_GET['check']
+    check_value = request.GET['check']
 
     # All values for a key: ['a', 'b']
-    check_values = request.str_GET.getall('check')
+    check_values = request.GET.getall('check')
 
     # An iterable with alll items in the MultiDict:
     # [('check', 'a'), ('check', 'b'), ('name', 'Bob')]
-    request.str_GET.items()
+    request.GET.items()
 
 The name ``GET`` is a bit misleading, but has historical reasons:
 ``request.GET`` is not only available when the HTTP method is GET. It is
@@ -82,12 +79,10 @@ POST data
 ---------
 Variables url encoded in the body of a request (generally a POST form submitted
 using the ``application/x-www-form-urlencoded`` media type) are available in
-``request.POST`` or ``request.str_POST`` (the first as unicode and the latter
-as string).
+``request.POST``.
 
-Like ``request.GET`` and ``request.str_GET``, they are a
-`MultiDict <http://pythonpaste.org/webob/class-webob.multidict.MultiDict.html>`_
-and can be accessed in the same way. Examples::
+It is also a `MultiDict`_ and can be accessed in the same way as ``.GET``.
+Examples::
 
     request = Request.blank('/')
     request.method = 'POST'
@@ -95,19 +90,19 @@ and can be accessed in the same way. Examples::
 
     # The whole MultiDict:
     # POST([('check', 'a'), ('check', 'b'), ('name', 'Bob')])
-    post_values = request.str_POST
+    post_values = request.POST
 
     # The last value for a key: 'b'
-    check_value = request.str_POST['check']
+    check_value = request.POST['check']
 
     # All values for a key: ['a', 'b']
-    check_values = request.str_POST.getall('check')
+    check_values = request.POST.getall('check')
 
     # An iterable with alll items in the MultiDict:
     # [('check', 'a'), ('check', 'b'), ('name', 'Bob')]
-    request.str_POST.items()
+    request.POST.items()
 
-Like ``GET``, the name ``POST`` is a bit misleading, but has historical
+Like ``GET``, the name ``POST`` is a somewjat misleading, but has historical
 reasons: they are also available when the HTTP method is PUT, and not only
 POST.
 
@@ -168,12 +163,8 @@ headers
   A dictionary like object with request headers. Keys are case-insensitive.
 GET
   A dictionary-like object with variables from the query string, as unicode.
-str_GET
-  A dictionary-like object with variables from the query string, as a string.
 POST
   A dictionary-like object with variables from a POST form, as unicode.
-str_POST
-  A dictionary-like object with variables from a POST form, as a strings.
 params
   A dictionary-like object combining the variables GET and POST.
 cookies
@@ -217,3 +208,4 @@ for a detailed API reference and examples.
 
 
 .. _WebOb: http://docs.webob.org/
+.. _MultiDict: http://pythonpaste.org/webob/class-webob.multidict.MultiDict.html
