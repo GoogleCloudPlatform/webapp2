@@ -4,6 +4,8 @@ from webapp2_extras import sessions
 from webapp2_extras import auth
 from webapp2_extras.appengine.auth import models
 
+from ndb import model
+
 import test_base
 
 
@@ -262,14 +264,12 @@ class TestAuth(test_base.BaseTestCase):
         self.assertEqual(rv, 'validate_token')
 
     def test_extended_user(self):
-        from webapp2_extras.appengine.auth import models
-        from ndb import model
-
         class MyUser(models.User):
             newsletter = model.BooleanProperty()
+            age = model.IntegerProperty()
 
         auth_id = 'own:username'
-        success, info = MyUser.create_user(auth_id, newsletter=True)
+        success, info = MyUser.create_user(auth_id, newsletter=True, age=22)
         self.assertTrue(success)
 
         app = webapp2.WSGIApplication(config={
@@ -278,7 +278,10 @@ class TestAuth(test_base.BaseTestCase):
             }
         })
         s = auth.get_store(app=app)
-        self.assertEqual(info, s.user_model.get_by_auth_id(auth_id))
+        user = s.user_model.get_by_auth_id(auth_id)
+        self.assertEqual(info, user)
+        self.assertEqual(user.age, 22)
+        self.assertTrue(user.newsletter is True)
 
 
 if __name__ == '__main__':
