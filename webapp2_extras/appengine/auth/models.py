@@ -277,7 +277,7 @@ class User(model.Expando):
 
         auth_id = auth_id.lower()
         user_values['auth_ids'] = [auth_id]
-        user = User(**user_values)
+        user = cls(**user_values)
 
         # Set up unique properties.
         uniques = [('%s.auth_id:%s' % (cls.__name__, auth_id), 'auth_id')]

@@ -261,6 +261,25 @@ class TestAuth(test_base.BaseTestCase):
         rv = s.validate_token('auth_id', 'token', 'token_ts')
         self.assertEqual(rv, 'validate_token')
 
+    def test_extended_user(self):
+        from webapp2_extras.appengine.auth import models
+        from ndb import model
+
+        class MyUser(models.User):
+            newsletter = model.BooleanProperty()
+
+        auth_id = 'own:username'
+        success, info = MyUser.create_user(auth_id, newsletter=True)
+        self.assertTrue(success)
+
+        app = webapp2.WSGIApplication(config={
+            'webapp2_extras.auth': {
+                'user_model': MyUser,
+            }
+        })
+        s = auth.get_store(app=app)
+        self.assertEqual(info, s.user_model.get_by_auth_id(auth_id))
+
 
 if __name__ == '__main__':
     test_base.main()
