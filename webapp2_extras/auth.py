@@ -5,9 +5,6 @@
 
     Utilities for authentication and authorization.
 
-    .. warning::
-       This is an experimental module. The API is subject to changes.
-
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
@@ -544,6 +541,7 @@ class Auth(object):
 
 
 # Factories -------------------------------------------------------------------
+
 
 #: Key used to store :class:`AuthStore` in the app registry.
 _store_registry_key = 'webapp2_extras.auth.Auth'
