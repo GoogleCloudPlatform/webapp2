@@ -123,7 +123,12 @@ class Request(webob.Request):
         """
         if kwargs.get('charset') is None:
             match = _charset_re.search(environ.get('CONTENT_TYPE', ''))
-            kwargs['charset'] = match.group(1).lower() if match else 'utf-8'
+            if match:
+                charset = match.group(1).lower().strip().strip('"').strip()
+            else:
+                charset = 'utf-8'
+
+            kwargs['charset'] = charset
 
         kwargs.setdefault('unicode_errors', 'ignore')
         kwargs.setdefault('decode_param_names', True)
