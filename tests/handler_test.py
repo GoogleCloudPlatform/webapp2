@@ -653,6 +653,30 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'hello')
 
+    def test_encoding(self):
+        class PostHandler(webapp2.RequestHandler):
+            def post(self):
+                foo = self.request.POST['foo']
+                if not foo:
+                    foo = 'empty'
+
+                self.response.write(foo)
+
+        app = webapp2.WSGIApplication([
+            webapp2.Route('/', PostHandler),
+        ], debug=True)
+
+        # foo with umlauts in the vowels.
+        value = 'f\xc3\xb6\xc3\xb6'
+
+        rsp = app.get_response('/', POST={'foo': value},
+            headers=[('Content-Type', 'application/x-www-form-urlencoded; charset=utf-8')])
+        self.assertEqual(rsp.body, 'föö')
+
+        rsp = app.get_response('/', POST={'foo': value},
+            headers=[('Content-Type', 'application/x-www-form-urlencoded')])
+        self.assertEqual(rsp.body, 'föö')
+
 
 if __name__ == '__main__':
     test_base.main()
