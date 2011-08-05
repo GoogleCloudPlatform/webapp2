@@ -1659,6 +1659,15 @@ def get_app():
     :returns:
         A :class:`WSGIApplication` instance.
     """
+    try:
+        if _local:
+            assert getattr(_local, 'app', None) is not None
+        else:
+            assert WSGIApplication.app is not None
+    except AssertionError:
+        msg = 'WSGIApplication global variable is not set yet.'
+        raise AssertionError(msg), None, sys.exc_info()[2]
+
     return WSGIApplication.app
 
 
@@ -1668,6 +1677,15 @@ def get_request():
     :returns:
         A :class:`Request` instance.
     """
+    try:
+        if _local:
+            assert getattr(_local, 'request', None) is not None
+        else:
+            assert WSGIApplication.request is not None
+    except AssertionError:
+        msg = 'Request global variable is not set yet.'
+        raise AssertionError(msg), None, sys.exc_info()[2]
+
     return WSGIApplication.request
 
 
