@@ -1,3 +1,5 @@
+.. _index:
+
 .. webapp2 documentation master file, created by
    sphinx-quickstart on Sat Jul 31 10:41:37 2010.
    You can adapt this file completely to your liking, but it should at least
@@ -12,9 +14,9 @@ webapp2 is a `single file`_ that follows the simplicity of webapp, but improves
 it in some ways: it adds better URI routing and exception handling, a full
 featured response object and a more flexible dispatching mechanism.
 
-webapp2 also offers the package `webapp2_extras`_ with several optional
-utilities: sessions, localization, internationalization, domain and subdomain
-routing, secure cookies and others.
+webapp2 also offers the package :ref:`webapp2_extras <index.api-reference-webapp2-extras>`
+with several optional utilities: sessions, localization, internationalization,
+domain and subdomain routing, secure cookies and others.
 
 webapp2 can also be used outside of Google App Engine, independently of the
 App Engine SDK.
@@ -68,6 +70,8 @@ API Reference - webapp2
    api/webapp2.rst
 
 
+.. _index.api-reference-webapp2-extras:
+
 API Reference - webapp2_extras
 ------------------------------
 .. toctree::
@@ -88,7 +92,8 @@ API Reference - webapp2_extras
 
 API Reference - webapp2_extras.appengine
 ----------------------------------------
-App Engine-specific modules.
+Modules that use App Engine libraries and services are restricted to
+``webapp2_extras.appengine``.
 
 .. toctree::
    :maxdepth: 1
@@ -99,8 +104,8 @@ App Engine-specific modules.
    api/webapp2_extras/appengine/users.rst
 
 
-Misc
-----
+Miscelaneous
+------------
 .. toctree::
    :maxdepth: 1
 
@@ -191,7 +196,6 @@ webapp2 is licensed under the `Apache License 2.0`_.
 .. _webapp: http://code.google.com/appengine/docs/python/tools/webapp/
 .. _webapp2: http://code.google.com/p/webapp-improved/
 .. _single file: http://code.google.com/p/webapp-improved/source/browse/webapp2.py
-.. _webapp2_extras: http://code.google.com/p/webapp-improved/source/browse/#hg%2Fwebapp2_extras
 .. _WebOb: http://docs.webob.org/
 .. _Werkzeug: http://werkzeug.pocoo.org/
 .. _Tipfy: http://www.tipfy.org/

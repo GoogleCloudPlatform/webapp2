@@ -6,9 +6,6 @@ Auth
 
 Utilities for authentication and authorization.
 
-.. warning::
-   This is an experimental module. The API is subject to changes.
-
 .. autodata:: default_config
 
 .. autoclass:: AuthStore

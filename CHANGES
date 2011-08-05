@@ -1,3 +1,13 @@
+Version 2.2.2 - August 5, 2011 (more 2's than ever!)
+----------------------------------------------------
+- A default charset is always set in the Request object: if it is not defined
+  in the constructor, environ['CONTENT_TYPE'] is checked; and if it is still
+  not defined 'utf-8' is used.
+
+- Added token_model as an attribute of the User model; it is used instead of
+  the hardcoded class.
+
+
 Version 2.2.1 - August 1st, 2011
 --------------------------------
 - Fixed a bug in WSGIApplication.run() when running outside of App Engine:

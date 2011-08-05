@@ -4,28 +4,41 @@ TODO: documentation
 Unordered list of topics to be documented
 -----------------------------------------
 - sessions
+
   - basic usage & configuration
   - using multiple sessions in the same request
   - using different backends
   - using flashes
   - updating session arguments (max_age etc)
+  - purging db sessions
+
 - i18n (increment existing tutorial)
+
   - basic usage & configuration
   - loading locale/timezone automatically for each request
   - formatting date/time/datetime
   - formatting currency
   - using i18n in templates
-- jinja2
+
+- jinja2 & mako
+
   - basic usage & configuration
   - setting global filters and variables (using config or factory)
+
 - auth
+
   - basic usage & configuration
   - setting up 'own auth'
   - making user available automatically on each request
+  - purging tokens
+
 - config
+
   - configuration conventions ("namespaced" configuration for webapp2_extras
     modules)
+
 - tricks
+
   - configuration in a separate file
   - routes in a separate file
   - reduce verbosity when defining routes (R = webapp2.Route)
@@ -61,6 +74,10 @@ To create Jinja2 with custom filters and global variables::
 
     # When you need jinja, get it passing the factory.
     j = jinja2.get_jinja2(factory=jinja2_factory)
+
+Debugging Jinja2
+----------------
+http://stackoverflow.com/questions/3086091/debug-jinja2-in-google-app-engine
 
 Configuration notes
 -------------------
