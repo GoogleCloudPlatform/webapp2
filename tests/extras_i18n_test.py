@@ -33,7 +33,7 @@ class I18nTestCase(test_base.BaseTestCase):
     def test_translations_not_set(self):
         # We release it here because it is set on setUp()
         self.app.clear_globals()
-        self.assertRaises(RuntimeError, i18n.gettext, 'foo')
+        self.assertRaises(AssertionError, i18n.gettext, 'foo')
 
     def test_gettext(self):
         self.assertEqual(i18n.gettext('foo'), u'foo')
