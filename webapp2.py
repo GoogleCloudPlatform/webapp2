@@ -71,6 +71,8 @@ _route_re = re.compile(r"""
     (?:\:([^\>]*))?  # The optional :regex part
     \>               # The exact character ">"
     """, re.VERBOSE)
+#: Regex extract charset from environ.
+_charset_re = re.compile(r';\s*charset=([^;]*)', re.I)
 
 # Set same default messages from webapp plus missing ones.
 _webapp_status_reasons = {
@@ -119,11 +121,13 @@ class Request(webob.Request):
         :param environ:
             A WSGI-compliant environment dictionary.
         """
-        unicode_errors = kwargs.pop('unicode_errors', 'ignore')
-        decode_param_names = kwargs.pop('decode_param_names', True)
-        super(Request, self).__init__(environ, unicode_errors=unicode_errors,
-                                      decode_param_names=decode_param_names,
-                                      *args, **kwargs)
+        if kwargs.get('charset') is None:
+            match = _charset_re.search(environ.get('CONTENT_TYPE', ''))
+            kwargs['charset'] = match.group(1).lower() if match else 'utf-8'
+
+        kwargs.setdefault('unicode_errors', 'ignore')
+        kwargs.setdefault('decode_param_names', True)
+        super(Request, self).__init__(environ, *args, **kwargs)
         self.registry = {}
 
     def get(self, argument_name, default_value='', allow_multiple=False):
