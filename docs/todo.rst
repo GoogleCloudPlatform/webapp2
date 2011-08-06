@@ -77,7 +77,7 @@ To create Jinja2 with custom filters and global variables::
 
 Debugging Jinja2
 ----------------
-http://stackoverflow.com/questions/3086091/debug-jinja2-in-google-app-engine
+http://stackoverflow.com/questions/3086091/debug-jinja2-in-google-app-engine/3694434#3694434
 
 Configuration notes
 -------------------

@@ -37,7 +37,7 @@ from setuptools import setup
 
 setup(
     name = 'webapp2',
-    version = '2.2.2',
+    version = '2.2.3',
     license = 'Apache Software License',
     url = 'http://webapp-improved.appspot.com',
     description = "Taking Google App Engine's webapp to the next level!",
@@ -51,6 +51,8 @@ setup(
     ],
     packages = [
         'webapp2_extras',
+        'webapp2_extras.appengine',
+        'webapp2_extras.appengine.auth',
     ],
     include_package_data=True,
     classifiers = [
