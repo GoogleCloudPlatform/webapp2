@@ -1617,6 +1617,23 @@ class WSGIApplication(object):
         return self.request_class.blank(*args, **kwargs).get_response(self)
 
 
+_import_string_error = """\
+import_string() failed for %r. Possible reasons are:
+
+- missing __init__.py in a package;
+- package or module path not included in sys.path;
+- duplicated package or module name taking precedence in sys.path;
+- missing module, class, function or variable;
+
+Original exception:
+
+%s: %s
+
+Debugged import:
+
+%s"""
+
+
 class ImportStringError(Exception):
     """Provides information about a failed :func:`import_string` attempt."""
 
@@ -1628,14 +1645,7 @@ class ImportStringError(Exception):
     def __init__(self, import_name, exception):
         self.import_name = import_name
         self.exception = exception
-        msg = ('import_string() failed for %r. Possible reasons are:\n\n'
-               '- missing __init__.py in a package;\n'
-               '- package or module path not included in sys.path;\n'
-               '- duplicated package or module name taking precedence in '
-               'sys.path;\n'
-               '- missing module, class, function or variable;\n\n'
-               'Original exception:\n\n%s: %s\n\n'
-               'Debugged import:\n\n%s')
+        msg = _import_string_error
         name = ''
         tracked = []
         for part in import_name.split('.'):
@@ -1653,20 +1663,20 @@ class ImportStringError(Exception):
         Exception.__init__(self, msg)
 
 
+_get_app_error = 'WSGIApplication global variable is not set.'
+_get_request_error = 'Request global variable is not set.'
+
+
 def get_app():
     """Returns the active app instance.
 
     :returns:
         A :class:`WSGIApplication` instance.
     """
-    try:
-        if _local:
-            assert getattr(_local, 'app', None) is not None
-        else:
-            assert WSGIApplication.app is not None
-    except AssertionError:
-        msg = 'WSGIApplication global variable is not set yet.'
-        raise AssertionError(msg), None, sys.exc_info()[2]
+    if _local:
+        assert getattr(_local, 'app', None) is not None, _get_app_error
+    else:
+        assert WSGIApplication.app is not None, _get_app_error
 
     return WSGIApplication.app
 
@@ -1677,14 +1687,10 @@ def get_request():
     :returns:
         A :class:`Request` instance.
     """
-    try:
-        if _local:
-            assert getattr(_local, 'request', None) is not None
-        else:
-            assert WSGIApplication.request is not None
-    except AssertionError:
-        msg = 'Request global variable is not set yet.'
-        raise AssertionError(msg), None, sys.exc_info()[2]
+    if _local:
+        assert getattr(_local, 'request', None) is not None, _get_request_error
+    else:
+        assert WSGIApplication.request is not None, _get_request_error
 
     return WSGIApplication.request
 

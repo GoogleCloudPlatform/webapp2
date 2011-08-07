@@ -96,6 +96,31 @@ class TestWebapp1(test_base.BaseTestCase):
         self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'foo')
 
+    def test_unicode_cookie(self):
+        # see http://stackoverflow.com/questions/6839922/unicodedecodeerror-is-raised-when-getting-a-cookie-in-google-app-engine
+        import urllib
+
+        # This is the value we want to set.
+        initial_value = u'äëïöü'
+        # WebOb version that comes with SDK doesn't quote cookie values.
+        # So we have to do it.
+        quoted_value = urllib.quote(initial_value.encode('utf-8'))
+
+        rsp = webapp.Response()
+        rsp.headers['Set-Cookie'] = 'app=%s; Path=/' % quoted_value
+
+        cookie = rsp.headers.get('Set-Cookie')
+        req = webapp.Request.blank('/', headers=[('Cookie', cookie)])
+
+        # The stored value is the same quoted value from before.
+        # Notice that here we use .str_cookies, not .cookies.
+        stored_value = req.str_cookies.get('app')
+        self.assertEqual(stored_value, quoted_value)
+
+        # And we can get the initial value unquoting and decoding.
+        final_value = urllib.unquote(stored_value).decode('utf-8')
+        self.assertEqual(final_value, initial_value)
+
 
 if __name__ == '__main__':
     test_base.main()

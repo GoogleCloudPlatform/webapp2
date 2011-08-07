@@ -107,6 +107,10 @@ variable just for the purpose of documenting the default values, e.g.:
 
     http://webapp-improved.appspot.com/api/extras.i18n.html#webapp2_extras.i18n.default_config
 
+Cookies, quoting & unicode
+--------------------------
+http://groups.google.com/group/webapp2/msg/985092351378c43e
+http://stackoverflow.com/questions/6839922/unicodedecodeerror-is-raised-when-getting-a-cookie-in-google-app-engine
 
 Marketplace integration
 -----------------------
