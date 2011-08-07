@@ -101,6 +101,79 @@ class TestRequest(test_base.BaseTestCase):
         self.assertEqual(res, '4')
         self.assertTrue(isinstance(res, str))
 
+    def test_cookie_unicode(self):
+        import urllib
+        import base64
+
+        # With base64 ---------------------------------------------------------
+
+        value = base64.b64encode(u'á'.encode('utf-8'))
+        rsp = webapp2.Response()
+        rsp.set_cookie('foo', value)
+
+        cookie = rsp.headers.get('Set-Cookie')
+        req = webapp2.Request.blank('/', headers=[('Cookie', cookie)])
+
+        self.assertEqual(req.cookies.get('foo'), value)
+        self.assertEqual(base64.b64decode(req.cookies.get('foo')).decode('utf-8'), u'á')
+
+        # Without quote -------------------------------------------------------
+
+        # Most recent WebOb versions take care of quoting.
+        # (not the version available on App Engine though)
+
+        value = u'föö=bär; föo, bär, bäz=dïng;'
+        rsp = webapp2.Response()
+        rsp.set_cookie('foo', value)
+
+        cookie = rsp.headers.get('Set-Cookie')
+        req = webapp2.Request.blank('/', headers=[('Cookie', cookie)])
+
+        self.assertEqual(req.cookies.get('foo'), value)
+
+        # With quote, hard way ------------------------------------------------
+
+        # Here is our test value.
+        x = u'föö'
+        # We must store cookies quoted. To quote unicode, we need to encode it.
+        y = urllib.quote(x.encode('utf8'))
+        # The encoded, quoted string looks ugly.
+        self.assertEqual(y, 'f%C3%B6%C3%B6')
+        # But it is easy to get it back to our initial value.
+        z = urllib.unquote(y).decode('utf8')
+        # And it is indeed the same value.
+        self.assertEqual(z, x)
+
+        # Set a cookie using the encoded/quoted value.
+        rsp = webapp2.Response()
+        rsp.set_cookie('foo', y)
+        cookie = rsp.headers.get('Set-Cookie')
+        self.assertEqual(cookie, 'foo=f%C3%B6%C3%B6; Path=/')
+
+        # Get the cookie back.
+        req = webapp2.Request.blank('/', headers=[('Cookie', cookie)])
+        self.assertEqual(req.cookies.get('foo'), y)
+        # Here is our original value, again. Problem: the value is decoded
+        # before we had a chance to unquote it.
+        w = urllib.unquote(req.cookies.get('foo').encode('utf8')).decode('utf8')
+        # And it is indeed the same value.
+        self.assertEqual(w, x)
+
+        # With quote, easy way ------------------------------------------------
+
+        value = u'föö=bär; föo, bär, bäz=dïng;'
+        quoted_value = urllib.quote(value.encode('utf8'))
+        rsp = webapp2.Response()
+        rsp.set_cookie('foo', quoted_value)
+
+        cookie = rsp.headers.get('Set-Cookie')
+        req = webapp2.Request.blank('/', headers=[('Cookie', cookie)])
+
+        cookie_value = req.str_cookies.get('foo')
+        unquoted_cookie_value = urllib.unquote(cookie_value).decode('utf-8')
+        self.assertEqual(cookie_value, quoted_value)
+        self.assertEqual(unquoted_cookie_value, value)
+
     def test_get(self):
         req = webapp2.Request.blank('/?1=2&1=3&3=4', POST='5=6&7=8')
 
