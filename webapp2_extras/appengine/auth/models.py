@@ -58,7 +58,7 @@ class Unique(model.Model):
                 props = [name.split('.', 2)[1] for name in uniques]
                 raise ValueError('Properties %r are not unique.' % props)
 
-    Based on the idea from http://squeeville.com/2009/01/30/add-a-unique-constraint-to-google-app-engine/
+    Based on the idea from http://goo.gl/pBQhB
     """
 
     @classmethod
@@ -195,7 +195,7 @@ class UserToken(model.Model):
 
         assert subject and token, \
             'subject and token must be provided to UserToken.get().'
-        return cls.query(cls.subject==subject, cls.token==token).get()
+        return cls.query(cls.subject == subject, cls.token == token).get()
 
 
 class User(model.Expando):

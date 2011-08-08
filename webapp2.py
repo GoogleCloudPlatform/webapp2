@@ -26,34 +26,34 @@ from webob import exc
 
 _webapp = _webapp_util = _local = None
 
-try: # pragma: no cover
+try:  # pragma: no cover
     # WebOb < 1.0 (App Engine Python 2.5).
     from webob.statusreasons import status_reasons
     from webob.headerdict import HeaderDict as BaseResponseHeaders
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     # WebOb >= 1.0.
     from webob.util import status_reasons
     from webob.headers import ResponseHeaders as BaseResponseHeaders
 
 # google.appengine.ext.webapp imports webapp2 in the
 # App Engine Python 2.7 runtime.
-if os.environ.get('APPENGINE_RUNTIME') != 'python27': # pragma: no cover
+if os.environ.get('APPENGINE_RUNTIME') != 'python27':  # pragma: no cover
     try:
         from google.appengine.ext import webapp as _webapp
-    except ImportError: # pragma: no cover
+    except ImportError:  # pragma: no cover
         # Running webapp2 outside of GAE.
         pass
 
 try:
     from google.appengine.ext.webapp import util as _webapp_util
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     pass
 
-try: # pragma: no cover
+try:  # pragma: no cover
     # Thread-local variables container.
     from webapp2_extras import local
     _local = local.Local()
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     logging.warning("webapp2_extras.local is not available "
                     "so webapp2 won't be thread-safe!")
 
@@ -240,7 +240,7 @@ class Request(webob.Request):
 
     @classmethod
     def blank(cls, path, environ=None, base_url=None,
-              headers=None, **kwargs): # pragma: no cover
+              headers=None, **kwargs):  # pragma: no cover
         """Adds parameters compatible with WebOb >= 1.0: POST and **kwargs."""
         try:
             return super(Request, cls).blank(path, environ=environ,
@@ -289,7 +289,8 @@ class ResponseHeaders(BaseResponseHeaders):
 
         Example::
 
-            h.add_header('content-disposition', 'attachment', filename='bud.gif')
+            h.add_header('content-disposition', 'attachment',
+                         filename='bud.gif')
 
         Note that unlike the corresponding 'email.message' method, this does
         *not* handle '(charset, language, value)' tuples: all values must be
@@ -627,7 +628,8 @@ class RedirectHandler(RequestHandler):
 
         app = WSGIApplication([
             Route('/old-url', RedirectHandler, defaults={'_uri': '/new-url'}),
-            Route('/other-old-url', RedirectHandler, defaults={'_uri': get_redirect_url}),
+            Route('/other-old-url', RedirectHandler, defaults={
+                  '_uri': get_redirect_url}),
         ])
 
     Based on idea from `Tornado`_.
@@ -878,8 +880,10 @@ class Route(BaseRoute):
             If only the name is set, it will match anything except a slash.
             So these routes are equivalent::
 
-                Route('/<user_id>/settings', handler=SettingsHandler, name='user-settings')
-                Route('/<user_id:[^/]+>/settings', handler=SettingsHandler, name='user-settings')
+                Route('/<user_id>/settings', handler=SettingsHandler,
+                      name='user-settings')
+                Route('/<user_id:[^/]+>/settings', handler=SettingsHandler,
+                      name='user-settings')
 
             .. note::
                The handler only receives ``*args`` if no named variables are
@@ -1468,18 +1472,18 @@ class WSGIApplication(object):
         :param request:
             A :class:`Request` instance.
         """
-        if _local is not None: # pragma: no cover
+        if _local is not None:  # pragma: no cover
             _local.app = app
             _local.request = request
-        else: # pragma: no cover
+        else:  # pragma: no cover
             WSGIApplication.app = WSGIApplication.active_instance = app
             WSGIApplication.request = request
 
     def clear_globals(self):
         """Clears global variables. See :meth:`set_globals`."""
-        if _local is not None: # pragma: no cover
+        if _local is not None:  # pragma: no cover
             _local.__release_local__()
-        else: # pragma: no cover
+        else:  # pragma: no cover
             WSGIApplication.app = WSGIApplication.active_instance = None
             WSGIApplication.request = None
 
@@ -1586,7 +1590,7 @@ class WSGIApplication(object):
                 _webapp_util.run_bare_wsgi_app(self)
             else:
                 _webapp_util.run_wsgi_app(self)
-        else: # pragma: no cover
+        else:  # pragma: no cover
             handlers.CGIHandler().run(self)
 
     def get_response(self, *args, **kwargs):
@@ -1937,7 +1941,7 @@ def _get_route_variables(match, default_kwargs=None):
 
 def _set_thread_safe_app():
     """Assigns WSGIApplication globals to a proxy pointing to thread-local."""
-    if _local is not None: # pragma: no cover
+    if _local is not None:  # pragma: no cover
         WSGIApplication.app = WSGIApplication.active_instance = _local('app')
         WSGIApplication.request = _local('request')
 

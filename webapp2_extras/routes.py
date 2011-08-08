@@ -76,8 +76,9 @@ class DomainRoute(MultiRoute):
 
     The template follows the same syntax used by :class:`webapp2.Route` and
     must define named groups if any value must be added to the match results.
-    In the example above, an extra `subdomain` keyword is passed to the handler,
-    but if the regex didn't define any named groups, nothing would be added.
+    In the example above, an extra `subdomain` keyword is passed to the
+    handler, but if the regex didn't define any named groups, nothing would
+    be added.
     """
 
     def __init__(self, template, routes):
@@ -120,8 +121,10 @@ class NamePrefixRoute(MultiRoute):
         app = WSGIApplication([
             NamePrefixRoute('user-', [
                 Route('/users/<user:\w+>/', UserOverviewHandler, 'overview'),
-                Route('/users/<user:\w+>/profile', UserProfileHandler, 'profile'),
-                Route('/users/<user:\w+>/projects', UserProjectsHandler, 'projects'),
+                Route('/users/<user:\w+>/profile', UserProfileHandler,
+                      'profile'),
+                Route('/users/<user:\w+>/projects', UserProjectsHandler,
+                      'projects'),
             ]),
         ])
 
@@ -130,8 +133,10 @@ class NamePrefixRoute(MultiRoute):
 
         app = WSGIApplication([
             Route('/users/<user:\w+>/', UserOverviewHandler, 'user-overview'),
-            Route('/users/<user:\w+>/profile', UserProfileHandler, 'user-profile'),
-            Route('/users/<user:\w+>/projects', UserProjectsHandler, 'user-projects'),
+            Route('/users/<user:\w+>/profile', UserProfileHandler,
+                  'user-profile'),
+            Route('/users/<user:\w+>/projects', UserProjectsHandler,
+                  'user-projects'),
         ])
     """
 
@@ -164,9 +169,12 @@ class PathPrefixRoute(NamePrefixRoute):
     For example, imagine we have these routes::
 
         app = WSGIApplication([
-            Route('/users/<user:\w+>/', UserOverviewHandler, 'user-overview'),
-            Route('/users/<user:\w+>/profile', UserProfileHandler, 'user-profile'),
-            Route('/users/<user:\w+>/projects', UserProjectsHandler, 'user-projects'),
+            Route('/users/<user:\w+>/', UserOverviewHandler,
+                  'user-overview'),
+            Route('/users/<user:\w+>/profile', UserProfileHandler,
+                  'user-profile'),
+            Route('/users/<user:\w+>/projects', UserProjectsHandler,
+                  'user-projects'),
         ])
 
     We could refactor them to reuse the common path prefix::
@@ -236,7 +244,8 @@ class RedirectRoute(webapp2.Route):
             convenience to use :class:`RedirectHandler`. These two are
             equivalent::
 
-                route = Route('/foo', handler=webapp2.RedirectHandler, defaults={'_uri': '/bar'})
+                route = Route('/foo', handler=webapp2.RedirectHandler,
+                              defaults={'_uri': '/bar'})
                 route = Route('/foo', redirect_to='/bar')
 
         :param redirect_to_name:
@@ -315,7 +324,8 @@ class RedirectRoute(webapp2.Route):
 
     def _redirect(self, handler, *args, **kwargs):
         # Get from request because args is empty if named routes are set?
-        # args, kwargs = handler.request.route_args, handler.request.route_kwargs
+        # args, kwargs = (handler.request.route_args,
+        #                 handler.request.route_kwargs)
         kwargs.pop('_uri', None)
         kwargs.pop('_code', None)
         return handler.uri_for(kwargs.pop('_name'), *args, **kwargs)

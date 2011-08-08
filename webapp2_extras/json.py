@@ -17,11 +17,11 @@ try:
     # Preference for installed library with updated fixes.
     # Also available in Google App Engine SDK >= 1.4.2.
     import simplejson as json
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     try:
         # Standard library module in Python >= 2.6.
         import json
-    except ImportError:
+    except ImportError:  # pragma: no cover
         raise RuntimeError(
             'A JSON parser is required, e.g., simplejson at '
             'http://pypi.python.org/pypi/simplejson/')
@@ -51,7 +51,7 @@ def encode(value, *args, **kwargs):
     # in HTML, as it prevents </script> tags from prematurely terminating
     # the javascript.  Some json libraries do this escaping by default,
     # although python's standard library does not, so we do it here.
-    # http://stackoverflow.com/questions/1580647/json-why-are-forward-slashes-escaped
+    # See: http://goo.gl/WsXwv
     return json.dumps(value, *args, **kwargs).replace("</", "<\\/")
 
 

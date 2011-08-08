@@ -142,8 +142,8 @@ def service_mapping(services, registry_path=forms.DEFAULT_REGISTRY_PATH):
         - service: Service type, service factory or string definition name of
           service being mapped.
 
-      Can also be a dict.  If so, the keys are treated as the path and values as
-      the service.
+      Can also be a dict.  If so, the keys are treated as the path and values
+      as the service.
     :param registry_path:
         Path to give to registry service. Use None to disable registry service.
     :returns:
