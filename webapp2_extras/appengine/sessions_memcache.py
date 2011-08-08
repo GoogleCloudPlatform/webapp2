@@ -24,7 +24,8 @@ class MemcacheSessionFactory(sessions.CustomBackendSessionFactory):
         # [...]
 
         session = self.session_store.get_session(
-            name='mc_session', factory=sessions_memcache.MemcacheSessionFactory)
+            name='mc_session',
+            factory=sessions_memcache.MemcacheSessionFactory)
 
     See in :meth:`webapp2_extras.sessions.SessionStore` an example of how to
     make sessions available in a :class:`webapp2.RequestHandler`.

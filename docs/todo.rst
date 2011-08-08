@@ -1,8 +1,13 @@
 TODO: documentation
 ===================
+Miscelaneous notes abotu things to be documented.
 
 Unordered list of topics to be documented
 -----------------------------------------
+- routing
+
+  - common regular expressions examples
+
 - sessions
 
   - basic usage & configuration
