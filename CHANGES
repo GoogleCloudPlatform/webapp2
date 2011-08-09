@@ -1,3 +1,13 @@
+Development version
+-------------------
+- webapp2_extras.auth:
+  - If user data is missing attributes, don't raise AssertionError.
+    Simply don't save or return a valid session, instead.
+  - call user_model.get_id() instead of the ndb-specific user.key.id().
+  - removed set_password_validator() and set_token_validator().
+    They add complexity to the API without a use case to justify.
+    Extend AuthStore to achieve the same thing.
+
 Version 2.2.3 - August 6, 2011
 ------------------------------
 - Version 2.2.2 missed the webapp2_extras.appengine package.

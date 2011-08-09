@@ -136,7 +136,7 @@ class UserToken(model.Model):
         """Returns a token key.
 
         :param user:
-            ``User.key.id()`` of requesting user.
+            User unique ID.
         :param subject:
             The subject of the key. Examples:
 
@@ -155,7 +155,7 @@ class UserToken(model.Model):
         """Creates a new token for the given user.
 
         :param user:
-            ``User.key.id()`` of requesting user.
+            User unique ID.
         :param subject:
             The subject of the key. Examples:
 
@@ -179,7 +179,7 @@ class UserToken(model.Model):
         """Fetches a user token.
 
         :param user:
-            ``User.key.id()`` of requesting user.
+            User unique ID.
         :param subject:
             The subject of the key. Examples:
 
@@ -214,9 +214,13 @@ class User(model.Expando):
     # doesn't use password.
     password = model.StringProperty()
 
+    def get_id(self):
+        """Returns this user's unique ID, which can be an integer or string."""
+        return self._key.id()
+
     @classmethod
     def get_by_auth_id(cls, auth_id):
-        """Returns a ``User`` entity from a auth_id.
+        """Returns a user object based on a auth_id.
 
         :param auth_id:
             String representing a unique id for the user. Examples:
@@ -224,20 +228,20 @@ class User(model.Expando):
             - own:username
             - google:username
         :returns:
-            A :class:`User` instance.
+            A user object.
         """
         return cls.query(cls.auth_ids == auth_id.lower()).get()
 
     @classmethod
     def get_by_auth_token(cls, user_id, token):
-        """Returns a ``User`` entity from a user ID and token.
+        """Returns a user object based on a user ID and token.
 
         :param user_id:
             The user_id of the requesting user.
         :param token:
-            Existing Token needing verification.
+            The token string to be verified.
         :returns:
-            A tuple ``(User, timestamp)``, with a :class:`User` instance and
+            A tuple ``(User, timestamp)``, with a user object and
             the token timestamp, or ``(None, None)`` if both were not found.
         """
         token_key = cls.token_model.get_key(user_id, 'auth', token)
@@ -252,14 +256,14 @@ class User(model.Expando):
 
     @classmethod
     def get_by_auth_password(cls, auth_id, password):
-        """Returns user, validating password.
+        """Returns a user object, validating password.
 
         :param auth_id:
             Authentication id.
         :param password:
             Password to be checked.
         :returns:
-            A :class:`User` instance, if found and password matches.
+            A user object, if found and password matches.
         :raises:
             ``auth.InvalidAuthIdError`` or ``auth.InvalidPasswordError``.
         """
@@ -277,7 +281,7 @@ class User(model.Expando):
         """Checks for existence of a token, given user_id, subject and token.
 
         :param user_id:
-            ``User.key.id()`` of requesting user.
+            User unique ID.
         :param subject:
             The subject of the key. Examples:
 
@@ -293,6 +297,13 @@ class User(model.Expando):
 
     @classmethod
     def create_auth_token(cls, user_id):
+        """Creates a new authorization token for a given user ID.
+
+        :param user_id:
+            User unique ID.
+        :returns:
+            A string with the authorization token.
+        """
         return cls.token_model.create(user_id, 'auth').token
 
     @classmethod
@@ -301,6 +312,13 @@ class User(model.Expando):
 
     @classmethod
     def delete_auth_token(cls, user_id, token):
+        """Deletes a given authorization token.
+
+        :param user_id:
+            User unique ID.
+        :param token:
+            A string with the authorization token.
+        """
         cls.token_model.get_key(user_id, 'auth', token).delete()
 
     @classmethod
