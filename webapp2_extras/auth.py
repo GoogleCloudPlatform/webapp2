@@ -8,6 +8,7 @@
     :copyright: 2011 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
+import logging
 import time
 
 import webapp2
@@ -34,7 +35,8 @@ from webapp2_extras import sessions
 #:     persistent auth sessions. Default is 86400 * 7 * 3 (3 weeks).
 #:
 #: token_new_age
-#:     Number of seconds after which a new token is written to the database.
+#:     Number of seconds after which a new token is created and written to
+#:     the database, and the old one is invalidated.
 #:     Use this to limit database writes; set to None to write on all requests.
 #:     Default is 86400 (1 day).
 #:
@@ -130,24 +132,6 @@ class AuthStore(object):
 
         return cls
 
-    def user_to_dict(self, user):
-        """Returns a dictionary based on a user object.
-
-        Extra attributes to be retrieved must be set in this module's
-        configuration.
-
-        :param user:
-            User object: an instance the custom user model.
-        :returns:
-            A dictionary with user data.
-        """
-        if not user:
-            return None
-
-        user_dict = dict((a, getattr(user, a)) for a in self.user_attributes)
-        user_dict['user_id'] = user.key.id()
-        return user_dict
-
     def get_user_by_auth_password(self, auth_id, password, silent=False):
         """Returns a user dict based on auth_id and password.
 
@@ -206,6 +190,24 @@ class AuthStore(object):
         """
         return self.user_model.delete_auth_token(user_id, token)
 
+    def user_to_dict(self, user):
+        """Returns a dictionary based on a user object.
+
+        Extra attributes to be retrieved must be set in this module's
+        configuration.
+
+        :param user:
+            User object: an instance the custom user model.
+        :returns:
+            A dictionary with user data.
+        """
+        if not user:
+            return None
+
+        user_dict = dict((a, getattr(user, a)) for a in self.user_attributes)
+        user_dict['user_id'] = user.get_id()
+        return user_dict
+
     # Session related ---------------------------------------------------------
 
     def get_session(self, request):
@@ -228,8 +230,14 @@ class AuthStore(object):
         :returns:
             A list with session data.
         """
-        assert len(data) == len(self.session_attributes)
-        return [data.get(k) for k in self.session_attributes]
+        try:
+            assert len(data) >= len(self.session_attributes)
+            return [data.get(k) for k in self.session_attributes]
+        except AssertionError:
+            logging.warning(
+                'Invalid user data: %r. Expected attributes: %r.' %
+                (data, self.session_attributes))
+            return None
 
     def deserialize_session(self, data):
         """Deserializes values for a session.
@@ -239,30 +247,18 @@ class AuthStore(object):
         :returns:
             A dict with session data.
         """
-        assert len(data) == len(self.session_attributes)
-        return dict(zip(self.session_attributes, data))
+        try:
+            assert len(data) >= len(self.session_attributes)
+            return dict(zip(self.session_attributes, data))
+        except AssertionError:
+            logging.warning(
+                'Invalid user data: %r. Expected attributes: %r.' %
+                (data, self.session_attributes))
+            return None
 
     # Validators --------------------------------------------------------------
 
-    def set_password_validator(self, func):
-        """Sets the function used to perform password validation.
-
-        :param func:
-            A function that receives ``(store, auth_id, password)``
-            and returns a user dict or None.
-        """
-        self.validate_password = func.__get__(self, self.__class__)
-
-    def set_token_validator(self, func):
-        """Sets the function used to perform token validation.
-
-        :param func:
-            A function that receives ``(store, user_id, token, token_ts)``
-            and returns a tuple ``(user_dict, token)``.
-        """
-        self.validate_token = func.__get__(self, self.__class__)
-
-    def default_password_validator(self, auth_id, password, silent=False):
+    def validate_password(self, auth_id, password, silent=False):
         """Validates a password.
 
         Passwords are used to log-in using forms or to request auth tokens
@@ -281,7 +277,7 @@ class AuthStore(object):
         """
         return self.get_user_by_auth_password(auth_id, password, silent=silent)
 
-    def default_token_validator(self, user_id, token, token_ts=None):
+    def validate_token(self, user_id, token, token_ts=None):
         """Validates a token.
 
         Tokens are random strings used to authenticate temporarily. They are
@@ -320,8 +316,25 @@ class AuthStore(object):
 
         return user, token
 
-    validate_password = default_password_validator
-    validate_token = default_token_validator
+    def validate_cache_timestamp(self, cache_ts, token_ts=None):
+        """Validates a cache timestamp.
+
+        :param cache_ts:
+            Token timestamp to validate the cache age.
+        :param token_ts:
+            Token timestamp to validate the token age.
+        :returns:
+            True if it is valid, False otherwise.
+        """
+        now = int(time.time())
+        valid = (now - cache_ts) < self.config['token_cache_age']
+
+        if valid and token_ts:
+            valid2 = (now - token_ts) < self.config['token_max_age']
+            valid3 = (now - token_ts) < self.config['token_new_age']
+            valid = valid2 and valid3
+
+        return valid
 
 
 class Auth(object):
@@ -397,15 +410,7 @@ class Auth(object):
             return self._user_or_none()
 
         if cache and cache_ts:
-            # Check if we can use the cached info.
-            now = int(time.time())
-            valid = (now - cache_ts) < self.store.config['token_cache_age']
-
-            if valid and token_ts:
-                valid2 = (now - token_ts) < self.store.config['token_max_age']
-                valid3 = (now - token_ts) < self.store.config['token_new_age']
-                valid = valid2 and valid3
-
+            valid = self.store.validate_cache_timestamp(cache_ts, token_ts)
             if valid:
                 self._user = cache
             else:
@@ -525,8 +530,14 @@ class Auth(object):
         """
         func = self.session.pop if pop else self.session.get
         rv = func('_user', None)
-        if rv:
-            return self.store.deserialize_session(rv)
+        if rv is not None:
+            data = self.store.deserialize_session(rv)
+            if data:
+                return data
+            elif not pop:
+                self.session.pop('_user', None)
+
+        return None
 
     def set_session_data(self, data, **session_args):
         """Sets the session data as a list.
@@ -536,8 +547,10 @@ class Auth(object):
         :param session_args:
             Extra arguments for the session.
         """
-        self.session['_user'] = self.store.serialize_session(data)
-        self.session.container.session_args.update(session_args)
+        data = self.store.serialize_session(data)
+        if data is not None:
+            self.session['_user'] = data
+            self.session.container.session_args.update(session_args)
 
 
 # Factories -------------------------------------------------------------------

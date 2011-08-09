@@ -34,6 +34,15 @@ class TestAuth(test_base.BaseTestCase):
         a = auth.Auth(request=req)
         session_store = sessions.get_store(request=req)
 
+        # This won't work.
+        a.set_session_data({})
+        self.assertEqual(a.session.get('_user'), None)
+
+        # This won't work.
+        a.session['_user'] = {}
+        self.assertEqual(a.get_session_data(), None)
+        self.assertEqual(a.session.get('_user'), None)
+
         # Create a user.
         m = models.User
         success, user = m.create_user(auth_id='auth_id',
@@ -236,6 +245,7 @@ class TestAuth(test_base.BaseTestCase):
         self.assertEqual(len(req.registry), 1)
         self.assertTrue(isinstance(a, auth.Auth))
 
+    '''
     def test_set_callables(self):
         app = webapp2.WSGIApplication()
         req = webapp2.Request.blank('/')
@@ -262,6 +272,7 @@ class TestAuth(test_base.BaseTestCase):
         s.set_token_validator(validate_token)
         rv = s.validate_token('auth_id', 'token', 'token_ts')
         self.assertEqual(rv, 'validate_token')
+    '''
 
     def test_extended_user(self):
         class MyUser(models.User):
