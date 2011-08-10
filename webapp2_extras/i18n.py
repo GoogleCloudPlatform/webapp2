@@ -44,12 +44,12 @@ import webapp2
 #:     database. Default is ``'UTC'``.
 #:
 #: locale_selector
-#:     A function that receives (request, i18n_store) and returns a locale
+#:     A function that receives (store, request) and returns a locale
 #:     to be used for a request. If not defined, uses `default_locale`.
 #:     Can also be a string in dotted notation to be imported.
 #:
 #: timezone_selector
-#:     A function that receives (request, i18n_store) and returns a timezone
+#:     A function that receives (store, request) and returns a timezone
 #:     to be used for a request. If not defined, uses `default_timezone`.
 #:     Can also be a string in dotted notation to be imported.
 #:
