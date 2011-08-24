@@ -230,7 +230,7 @@ class User(model.Expando):
         :returns:
             A user object.
         """
-        return cls.query(cls.auth_ids == auth_id.lower()).get()
+        return cls.query(cls.auth_ids == auth_id).get()
 
     @classmethod
     def get_by_auth_token(cls, user_id, token):
@@ -371,7 +371,6 @@ class User(model.Expando):
             user_values['password'] = security.generate_password_hash(
                 user_values.pop('password_raw'), length=12)
 
-        auth_id = auth_id.lower()
         user_values['auth_ids'] = [auth_id]
         user = cls(**user_values)
 
