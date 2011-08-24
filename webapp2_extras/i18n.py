@@ -185,7 +185,8 @@ class I18nStore(object):
             locales = (locale, self.default_locale)
             trans = self.load_translations(self.translations_path, locales,
                                            self.domains)
-            self.translations[locale] = trans
+            if not webapp2.get_app().debug:
+                self.translations[locale] = trans
 
         return trans
 
