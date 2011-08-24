@@ -200,6 +200,7 @@ div.sphinxsidebar ul ul li {
 }
 #header {
   position: relative;
+  min-height: 79px;
 }
 #header #searchbox {
   position: absolute;
