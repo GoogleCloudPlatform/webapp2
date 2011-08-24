@@ -1,6 +1,11 @@
 Development version
 -------------------
 - webapp2_extras.auth:
+  - ATTENTION: auth_id is no longer converted to lower case to retrieve
+    a key or save a new user in webapp2_extras.appengine.auth.models.User.
+    This is a more general approach, as not all systems use case-insensitive
+    user ids. If you want case-insensitive auth ids, convert them to lower
+    case before passing auth ids to the auth module.
   - If user data is missing attributes, don't raise AssertionError.
     Simply don't save or return a valid session, instead.
   - call user_model.get_id() instead of the ndb-specific user.key.id().
