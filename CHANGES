@@ -2,6 +2,9 @@ Version 2.3 - August 24, 2011
 -----------------------------
 - webapp2.Response.out creates a reference loop that impedes garbage
   collection. Changing it to a property fixed this (Issue #15).
+- webapp2_extras.i18n:
+  - When in debug mode, translations are not cached, so compiling new
+    translations make them readily available (Issue #13).
 - webapp2_extras.auth:
   - ATTENTION: auth_id is no longer converted to lower case to retrieve
     a key or save a new user in webapp2_extras.appengine.auth.models.User.
