@@ -335,16 +335,19 @@ class Response(webob.Response):
 
     #: Default charset as in webapp.
     default_charset = 'utf-8'
-    #: A reference to the Response instance itself, for compatibility with
-    #: webapp only: webapp uses `Response.out.write()`, so we point `out` to
-    #: `self` and it will use `Response.write()`.
-    out = None
 
     def __init__(self, *args, **kwargs):
         """Constructs a response with the default settings."""
         super(Response, self).__init__(*args, **kwargs)
-        self.out = self
         self.headers['Cache-Control'] = 'no-cache'
+
+    @property
+    def out(self):
+        """A reference to the Response instance itself, for compatibility with
+        webapp only: webapp uses `Response.out.write()`, so we point `out` to
+        `self` and it will use `Response.write()`.
+        """
+        return self
 
     def write(self, text):
         """Appends a text to the response body."""
