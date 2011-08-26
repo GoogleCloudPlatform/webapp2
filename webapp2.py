@@ -44,11 +44,6 @@ if os.environ.get('APPENGINE_RUNTIME') != 'python27':  # pragma: no cover
         # Running webapp2 outside of GAE.
         pass
 
-try:
-    from google.appengine.ext.webapp import util as _webapp_util
-except ImportError:  # pragma: no cover
-    pass
-
 try:  # pragma: no cover
     # Thread-local variables container.
     from webapp2_extras import local
@@ -1955,3 +1950,11 @@ Response.RequestClass = Request
 _abort = abort
 # Thread-safety support.
 _set_thread_safe_app()
+
+# Defer importing google.appengine.ext.webapp.util until every public symbol
+# has been defined since google.appengine.ext.webapp in App Engine Python 2.7
+# runtime imports this module to provide its public interface.
+try:
+    from google.appengine.ext.webapp import util as _webapp_util
+except ImportError:  # pragma: no cover
+    pass
