@@ -1549,7 +1549,7 @@ class WSGIApplication(object):
 
         :param request:
             A :class:`Request` instance.
-        :param request:
+        :param response:
             A :class:`Response` instance.
         :param e:
             The uncaught exception.
