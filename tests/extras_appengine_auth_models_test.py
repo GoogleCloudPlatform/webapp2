@@ -1,7 +1,7 @@
 from webapp2_extras import auth
 from webapp2_extras.appengine.auth import models
 
-from ndb import model
+from google.appengine.ext.ndb import model
 
 import test_base
 

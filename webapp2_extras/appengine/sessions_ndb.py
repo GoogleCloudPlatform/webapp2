@@ -15,7 +15,7 @@ import pickle
 from google.appengine.api import datastore_errors
 from google.appengine.api import memcache
 
-from ndb import model
+from google.appengine.ext.ndb import model
 
 from webapp2_extras import sessions
 
