@@ -997,7 +997,7 @@ class Route(BaseRoute):
         values = {}
         for name, regex in variables.iteritems():
             value = kwargs.pop(name, self.defaults.get(name))
-            if not value:
+            if value is None:
                 raise KeyError('Missing argument "%s" to build URI.' % \
                     name.strip('_'))
 
