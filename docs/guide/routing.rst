@@ -108,10 +108,10 @@ below.
 
 The URL template
 ~~~~~~~~~~~~~~~~
-The URL template defines the URL path to be matched. It can have variables
-defined as regular expressions using the syntax ``<name:regex>``; everything
+The URL template defines the URL path to be matched. It can have regular
+expressions for variables using the syntax ``<name:regex>``; everything
 outside of ``<>`` is not interpreted as a regular expression to be matched.
-Both name and regex are optional, as the table below shows:
+Both name and regex are optional, like in the examples below:
 
 =================  ==================================
 Format             Example
