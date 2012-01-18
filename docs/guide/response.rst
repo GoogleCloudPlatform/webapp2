@@ -67,6 +67,9 @@ key
   Cookie name.
 value
   Cookie value.
+expires
+  An expiration date. Must be a datetime.datetime object. Use this instead
+  of max_age since the former is not supported by Internet Explorer.
 max_age
   Cookie max age in seconds.
 path
@@ -77,10 +80,11 @@ secure
   If True, the cookie is only available via HTTPS.
 httponly
   Disallow JavaScript to access the cookie.
-version
-  Defines a cookie version number.
 comment
   Defines a cookie comment.
+overwrite
+  If true, overwrites previously set (and not yet sent to the client) cookies
+  with the same name.
 
 .. seealso::
    :ref:`How to read cookies from the request object <guide.request.cookies>`
