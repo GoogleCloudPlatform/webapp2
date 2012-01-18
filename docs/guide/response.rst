@@ -39,7 +39,7 @@ Setting cookies
 ---------------
 Cookies are set in the response object. The methods to handle cookies are:
 
-set_cookie(key, value='', max_age=None, path='/', domain=None, secure=None, httponly=False, version=None, comment=None)
+set_cookie(key, value='', max_age=None, path='/', domain=None, secure=None, httponly=False, comment=None, expires=None, overwrite=False)
   Sets a cookie.
 
 delete_cookie(key, path='/', domain=None)
