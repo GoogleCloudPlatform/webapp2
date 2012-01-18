@@ -23,6 +23,11 @@ App Engine SDK.
 
 For a complete description of how webapp2 improves webapp, see :ref:`features`.
 
+.. note::
+   webapp2 is part of the Python 2.7 runtime since App Engine SDK 1.6.0.
+   To include it in your app see
+   `Configuring Libraries <http://code.google.com/appengine/docs/python/python27/using27.html#Configuring_Libraries>`_.
+
 
 Quick links
 -----------

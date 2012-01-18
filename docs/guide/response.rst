@@ -68,8 +68,8 @@ key
 value
   Cookie value.
 expires
-  An expiration date. Must be a datetime.datetime object. Use this instead
-  of max_age since the former is not supported by Internet Explorer.
+  An expiration date. Must be a :py:mod:`datetime`.datetime object. Use this
+  instead of max_age since the former is not supported by Internet Explorer.
 max_age
   Cookie max age in seconds.
 path
