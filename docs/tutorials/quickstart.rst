@@ -23,6 +23,11 @@ unpack it and add ``webapp2.py`` to that directory. If you want to use extra
 features such as sessions, extra routes, localization, internationalization
 and more, also add the ``webapp2_extras`` directory to your app.
 
+.. note::
+   webapp2 is part of the Python 2.7 runtime since App Engine SDK 1.6.0,
+   so you don't need to upload it with your app anymore. To include it in
+   your app see
+   `Configuring Libraries <http://code.google.com/appengine/docs/python/python27/using27.html#Configuring_Libraries>`_.
 
 Hello, webapp2!
 ---------------
