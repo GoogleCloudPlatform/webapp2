@@ -284,6 +284,6 @@ package provides common utilities that integrate well with webapp2:
 - Localization and internationalization support
 - Sessions using secure cookies, memcache or datastore
 - Extra route classes -- to match subdomains and other conveniences
-- Support for third party libraries: Jinja2, Mako and Google's ProtoRPC
+- Support for third party libraries: Jinja2 and Mako
 - Support for threaded environments, so that you can use webapp2 outside of
   App Engine or in the upcoming App Engine Python 2.7 runtime

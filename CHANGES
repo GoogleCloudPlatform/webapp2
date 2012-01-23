@@ -1,6 +1,8 @@
 Version 2.4 - January 23, 2012
 ------------------------------
 - Maintenance release. Fixed outstanding bugs related to App Engine.
+- Removed webapp2_extras/protorpc, broken since webapp2 was added
+	to App Engine.
 
 
 Version 2.3 - August 24, 2011
