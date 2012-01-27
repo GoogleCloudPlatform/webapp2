@@ -2,7 +2,7 @@
 \.DS_Store$
 \.coverage
 \.egg-info
-dist
-docs/_build
-docs/project
-tests/project
+dist/
+temp/
+docs/_build/
+\.egg-info$

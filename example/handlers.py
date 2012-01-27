@@ -1,6 +1,6 @@
-from webapp2 import RequestHandler
+import webapp2
 
 
-class LazyHandler(RequestHandler):
+class LazyHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
         self.response.out.write('I am a laaazy view.')

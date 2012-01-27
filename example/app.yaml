@@ -1,4 +1,4 @@
-application: tipfy-org
+application: webapp2
 version: webapp2
 runtime: python
 api_version: 1
