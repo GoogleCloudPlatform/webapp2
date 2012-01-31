@@ -420,7 +420,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             self.assertEqual(func('methods', _scheme='https', _full=False), 'https://localhost:80/methods')
             self.assertEqual(func('methods', _scheme='https', _fragment='my-anchor'), 'https://localhost:80/methods#my-anchor')
 
-            self.assertEqual(func('route-test', year='2010', month=0, name='test'), '/2010/0/test')
+            self.assertEqual(func('route-test', year='2010', month='0', name='test'), '/2010/0/test')
             self.assertEqual(func('route-test', year='2010', month='07', name='test'), '/2010/07/test')
             self.assertEqual(func('route-test', year='2010', month='07', name='test', foo='bar'), '/2010/07/test?foo=bar')
             self.assertEqual(func('route-test', _fragment='my-anchor', year='2010', month='07', name='test', foo='bar'), '/2010/07/test?foo=bar#my-anchor')
