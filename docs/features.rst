@@ -240,11 +240,11 @@ Old URIs can be conveniently redirected using a simple route::
     ])
 
 
-Single file, well-tested and documented
----------------------------------------
-webapp2 is an extensively documented `single file <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_
-and has almost 100% test coverage. The source code is explicit, magic-free
-and made to be extended. We like less.
+Simple, well-tested and documented
+----------------------------------
+webapp2 is `simple <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_,
+extensively documented and has almost 100% test coverage. The source code is
+explicit, magic-free and made to be extended. We like less.
 
 
 Independent of the App Engine SDK
