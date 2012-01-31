@@ -35,14 +35,15 @@ Create an ``app.yaml`` file in your app directory with the following contents:
 
 .. code-block:: yaml
 
-   application: hellowebapp2
+   application: helloworld
    version: 1
-   runtime: python
+   runtime: python27
    api_version: 1
+   threadsafe: true
 
    handlers:
    - url: /.*
-     script: main.py
+     script: main.app
 
 Then create a file ``main.py`` and define a handler to display a
 'Hello, webapp2!' message::
@@ -56,12 +57,6 @@ Then create a file ``main.py`` and define a handler to display a
     app = webapp2.WSGIApplication([
         ('/', HelloWebapp2),
     ], debug=True)
-
-    def main():
-        app.run()
-
-    if __name__ == '__main__':
-        main()
 
 
 Test your app
