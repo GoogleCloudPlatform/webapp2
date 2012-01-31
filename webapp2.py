@@ -147,8 +147,6 @@ class Request(webob.Request):
                 charset = match.group(1).lower().strip().strip('"').strip()
                 kwargs['charset'] = charset
 
-        kwargs.setdefault('unicode_errors', 'ignore')
-        kwargs.setdefault('decode_param_names', True)
         super(Request, self).__init__(environ, *args, **kwargs)
         self.registry = {}
 
