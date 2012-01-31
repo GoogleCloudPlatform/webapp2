@@ -10,11 +10,32 @@
 """
 from __future__ import absolute_import
 
+import pickle
+
 from google.appengine.api import memcache
 
 from google.appengine.ext.ndb import model
 
 from webapp2_extras import sessions
+
+try:
+    from google.appengine.ext.ndb.model import PickleProperty
+except ImportError:
+    # SDK 1.6.1
+    class PickleProperty(model.BlobProperty):
+        """A Property whose value is any picklable Python object."""
+
+        def _validate(self, value):
+            return value
+
+        def _db_set_value(self, v, p, value):
+            super(PickleProperty, self)._db_set_value(v, p, pickle.dumps(value))
+
+        def _db_get_value(self, v, p):
+            if not v.has_stringvalue():
+                return None
+
+            return pickle.loads(v.stringvalue())
 
 
 class Session(model.Model):
@@ -23,7 +44,7 @@ class Session(model.Model):
     #: Save time.
     updated = model.DateTimeProperty(auto_now=True)
     #: Session data, pickled.
-    data = model.PickleProperty()
+    data = PickleProperty()
 
     @classmethod
     def get_by_sid(cls, sid):
