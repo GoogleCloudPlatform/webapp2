@@ -215,9 +215,9 @@ class TestHandler(test_base.BaseTestCase):
         app = webapp2.WSGIApplication([
             webapp2.Route('/broken', BrokenHandler),
         ], debug=True)
-
         req = webapp2.Request.blank('/broken')
-        self.assertRaises(ValueError, req.get_response, app)
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 500)
 
     def test_custom_error_handlers(self):
         app.error_handlers = {
@@ -519,7 +519,8 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         app.error_handlers[500] = handle_exception
 
         req = webapp2.Request.blank('/')
-        self.assertRaises(ValueError, req.get_response, app)
+        rsp = req.get_response(app)
+        self.assertEqual(rsp.status_int, 500)
 
     def test_function_handler(self):
         def my_view(request, *args, **kwargs):
