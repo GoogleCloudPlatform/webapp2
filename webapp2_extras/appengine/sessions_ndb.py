@@ -10,8 +10,6 @@
 """
 from __future__ import absolute_import
 
-import pickle
-
 from google.appengine.api import memcache
 
 try:
@@ -24,7 +22,9 @@ from webapp2_extras import sessions
 try:
     from google.appengine.ext.ndb.model import PickleProperty
 except ImportError:
-    # SDK 1.6.1
+    # ndb in SDK 1.6.1 doesn't have PickleProperty.
+    import pickle
+
     class PickleProperty(model.BlobProperty):
         """A Property whose value is any picklable Python object."""
 
