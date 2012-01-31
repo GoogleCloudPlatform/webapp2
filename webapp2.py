@@ -145,10 +145,7 @@ class Request(webob.Request):
             match = _charset_re.search(environ.get('CONTENT_TYPE', ''))
             if match:
                 charset = match.group(1).lower().strip().strip('"').strip()
-            else:
-                charset = 'utf-8'
-
-            kwargs['charset'] = charset
+                kwargs['charset'] = charset
 
         kwargs.setdefault('unicode_errors', 'ignore')
         kwargs.setdefault('decode_param_names', True)
