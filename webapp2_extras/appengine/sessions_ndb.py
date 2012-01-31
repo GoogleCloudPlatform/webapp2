@@ -14,7 +14,10 @@ import pickle
 
 from google.appengine.api import memcache
 
-from google.appengine.ext.ndb import model
+try:
+    from ndb import model
+except ImportError: # pragma: no cover
+    from google.appengine.ext.ndb import model
 
 from webapp2_extras import sessions
 
