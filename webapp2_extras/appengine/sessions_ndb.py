@@ -17,9 +17,9 @@ try:
 except ImportError: # pragma: no cover
     from google.appengine.ext.ndb import model
 
-from webapp2_extras import sessions
-
 try:
+    from ndb.model import PickleProperty
+except ImportError:
     from google.appengine.ext.ndb.model import PickleProperty
 except ImportError:
     # ndb in SDK 1.6.1 doesn't have PickleProperty.
@@ -40,6 +40,8 @@ except ImportError:
 
             return pickle.loads(v.stringvalue())
 
+
+from webapp2_extras import sessions
 
 class Session(model.Model):
     """A model to store session data."""
