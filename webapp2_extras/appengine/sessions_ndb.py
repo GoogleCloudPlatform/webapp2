@@ -20,25 +20,26 @@ except ImportError: # pragma: no cover
 try:
     from ndb.model import PickleProperty
 except ImportError:
-    from google.appengine.ext.ndb.model import PickleProperty
-except ImportError:
-    # ndb in SDK 1.6.1 doesn't have PickleProperty.
-    import pickle
+    try:
+        from google.appengine.ext.ndb.model import PickleProperty
+    except ImportError:
+        # ndb in SDK 1.6.1 doesn't have PickleProperty.
+        import pickle
 
-    class PickleProperty(model.BlobProperty):
-        """A Property whose value is any picklable Python object."""
+        class PickleProperty(model.BlobProperty):
+            """A Property whose value is any picklable Python object."""
 
-        def _validate(self, value):
-            return value
+            def _validate(self, value):
+                return value
 
-        def _db_set_value(self, v, p, value):
-            super(PickleProperty, self)._db_set_value(v, p, pickle.dumps(value))
+            def _db_set_value(self, v, p, value):
+                super(PickleProperty, self)._db_set_value(v, p, pickle.dumps(value))
 
-        def _db_get_value(self, v, p):
-            if not v.has_stringvalue():
-                return None
+            def _db_get_value(self, v, p):
+                if not v.has_stringvalue():
+                    return None
 
-            return pickle.loads(v.stringvalue())
+                return pickle.loads(v.stringvalue())
 
 
 from webapp2_extras import sessions
