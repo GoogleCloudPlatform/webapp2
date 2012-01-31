@@ -36,11 +36,3 @@ app = webapp2.WSGIApplication([
     # No exception should pass. If exceptions are not handled, a 500 page is displayed.
     webapp2.Route('/exception', HandlerWithError),
 ])
-
-
-def main():
-    app.run()
-
-
-if __name__ == '__main__':
-    main()
