@@ -1,7 +1,8 @@
 application: webapp2
-version: webapp2
-runtime: python
+version: 1
+runtime: python27
 api_version: 1
+threadsafe: false
 
 derived_file_type:
 - python_precompiled
@@ -15,4 +16,4 @@ handlers:
   script: test.py
 
 - url: /.*
-  script: main.py
+  script: main.app
