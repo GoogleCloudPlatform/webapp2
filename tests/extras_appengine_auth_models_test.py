@@ -80,6 +80,26 @@ class TestAuthModels(test_base.BaseTestCase):
         self.assertEqual(success, False)
         self.assertEqual(info, extras)
 
+    def test_add_auth_ids(self):
+        m = models.User
+        success, new_user = m.create_user(auth_id='auth_id_1', password_raw='foo')
+        self.assertEqual(success, True)
+        self.assertTrue(new_user is not None)
+        self.assertTrue(new_user.password is not None)
+
+        success, new_user_2 = m.create_user(auth_id='auth_id_2', password_raw='foo')
+        self.assertEqual(success, True)
+        self.assertTrue(new_user is not None)
+        self.assertTrue(new_user.password is not None)
+
+        success, info = new_user.add_auth_id('auth_id_3')
+        self.assertEqual(success, True)
+        self.assertEqual(info.auth_ids, ['auth_id_1', 'auth_id_3'])
+
+        success, info = new_user.add_auth_id('auth_id_2')
+        self.assertEqual(success, False)
+        self.assertEqual(info, ['auth_id'])
+
     def test_token(self):
         m = models.UserToken
 
