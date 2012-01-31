@@ -19,10 +19,10 @@ except ImportError: # pragma: no cover
 
 try:
     from ndb.model import PickleProperty
-except ImportError:
+except ImportError: # pragma: no cover
     try:
         from google.appengine.ext.ndb.model import PickleProperty
-    except ImportError:
+    except ImportError: # pragma: no cover
         # ndb in SDK 1.6.1 doesn't have PickleProperty.
         import pickle
 
@@ -33,7 +33,8 @@ except ImportError:
                 return value
 
             def _db_set_value(self, v, p, value):
-                super(PickleProperty, self)._db_set_value(v, p, pickle.dumps(value))
+                super(PickleProperty, self)._db_set_value(v, p,
+                    pickle.dumps(value))
 
             def _db_get_value(self, v, p):
                 if not v.has_stringvalue():
