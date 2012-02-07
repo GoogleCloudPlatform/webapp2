@@ -141,11 +141,16 @@ class Request(webob.Request):
         :param environ:
             A WSGI-compliant environment dictionary.
         """
-        if kwargs.get('charset') is None:
+        if kwargs.get('charset') is None and not hasattr(webob, '__version__'):
+            # webob 0.9 didn't have a __version__ attribute and also defaulted
+            # to None rather than UTF-8 if no charset was provided. Providing a
+            # default charset is required for backwards compatibility.
             match = _charset_re.search(environ.get('CONTENT_TYPE', ''))
             if match:
                 charset = match.group(1).lower().strip().strip('"').strip()
-                kwargs['charset'] = charset
+            else:
+                charset = 'utf-8'
+            kwargs['charset'] = charset
 
         super(Request, self).__init__(environ, *args, **kwargs)
         self.registry = {}
