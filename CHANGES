@@ -1,3 +1,11 @@
+Version 2.5.1 - February 07, 2012
+---------------------------------
+- Bug fix release related to request charset in old versions of
+	WebOb.
+
+Version 2.5 - February 01, 2012
+-------------------------------
+
 Version 2.4 - January 23, 2012
 ------------------------------
 - Maintenance release. Fixed outstanding bugs related to App Engine.
