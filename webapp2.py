@@ -249,12 +249,12 @@ class Request(webob.Request):
             value = int(value)
         except ValueError:
             value = default
-            if value is not None:
-                if max_value is not None:
-                    value = min(value, max_value)
+        if value is not None:
+            if max_value is not None:
+                value = min(value, max_value)
 
-                if min_value is not None:
-                    value = max(value, min_value)
+            if min_value is not None:
+                value = max(value, min_value)
 
         return value
 
