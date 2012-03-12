@@ -53,7 +53,7 @@ configuration and tests that the session is working::
         'secret_key': 'some-secret-key',
     }
 
-    app = webapp2.WSGIAppplication([
+    app = webapp2.WSGIApplication([
         ('/', HomeHandler),
     ], debug=True, config=config)
 
