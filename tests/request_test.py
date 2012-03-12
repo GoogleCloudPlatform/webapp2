@@ -236,6 +236,10 @@ class TestRequest(test_base.BaseTestCase):
         res = req.get_range('1', min_value=1, max_value=99, default=100)
         self.assertEqual(res, 99)
 
+        req = webapp2.Request.blank('/?a=4')
+        res = req.get_range('a', min_value=10, max_value=20, default=100)
+        self.assertEqual(res, 10)
+
     def test_issue_3426(self):
         """When the content-type is 'application/x-www-form-urlencoded' and
         POST data is empty the content-type is dropped by Google appengine.
