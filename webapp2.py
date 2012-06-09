@@ -115,7 +115,7 @@ class Request(webob.Request):
     """Abstraction for an HTTP request.
 
     Most extra methods and attributes are ported from webapp. Check the
-    `WebOb documentation <WebOb>`_ for the ones not listed here.
+    `WebOb`_ documentation for the ones not listed here.
     """
 
     #: A reference to the active :class:`WSGIApplication` instance.
@@ -339,7 +339,7 @@ class Response(webob.Response):
     """Abstraction for an HTTP response.
 
     Most extra methods and attributes are ported from webapp. Check the
-    `WebOb documentation <WebOb>`_ for the ones not listed here.
+    `WebOb`_ documentation for the ones not listed here.
 
     Differences from webapp.Response:
 
