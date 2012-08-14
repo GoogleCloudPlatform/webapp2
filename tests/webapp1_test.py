@@ -113,12 +113,11 @@ class TestWebapp1(test_base.BaseTestCase):
         req = webapp.Request.blank('/', headers=[('Cookie', cookie)])
 
         # The stored value is the same quoted value from before.
-        # Notice that here we use .str_cookies, not .cookies.
-        stored_value = req.str_cookies.get('app')
+        stored_value = req.cookies.get('app')
         self.assertEqual(stored_value, quoted_value)
 
         # And we can get the initial value unquoting and decoding.
-        final_value = urllib.unquote(stored_value).decode('utf-8')
+        final_value = urllib.unquote(stored_value.encode('utf-8')).decode('utf-8')
         self.assertEqual(final_value, initial_value)
 
 
