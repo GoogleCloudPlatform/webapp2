@@ -46,13 +46,13 @@ class TestRequest(test_base.BaseTestCase):
             'CONTENT_TYPE': 'text/html; charset=ISO-8859-4',
         })
         self.assertEqual(req.content_type, 'text/html')
-        self.assertEqual(req.charset, 'iso-8859-4')
+        self.assertEqual(req.charset.lower(), 'iso-8859-4')
 
         req = webapp2.Request.blank('/', environ={
             'CONTENT_TYPE': 'application/json; charset="ISO-8859-1"',
         })
         self.assertEqual(req.content_type, 'application/json')
-        self.assertEqual(req.charset, 'iso-8859-1')
+        self.assertEqual(req.charset.lower(), 'iso-8859-1')
 
         req = webapp2.Request.blank('/', environ={
             'CONTENT_TYPE': 'application/json',
@@ -95,17 +95,9 @@ class TestRequest(test_base.BaseTestCase):
         self.assertEqual(res, '2')
         self.assertTrue(isinstance(res, unicode))
 
-        res = req.str_GET.get('1')
-        self.assertEqual(res, '2')
-        self.assertTrue(isinstance(res, str))
-
         res = req.POST.get('3')
         self.assertEqual(res, '4')
         self.assertTrue(isinstance(res, unicode))
-
-        res = req.str_POST.get('3')
-        self.assertEqual(res, '4')
-        self.assertTrue(isinstance(res, str))
 
     def test_cookie_unicode(self):
         import urllib
@@ -175,8 +167,8 @@ class TestRequest(test_base.BaseTestCase):
         cookie = rsp.headers.get('Set-Cookie')
         req = webapp2.Request.blank('/', headers=[('Cookie', cookie)])
 
-        cookie_value = req.str_cookies.get('foo')
-        unquoted_cookie_value = urllib.unquote(cookie_value).decode('utf-8')
+        cookie_value = req.cookies.get('foo')
+        unquoted_cookie_value = urllib.unquote(cookie_value.encode('utf8')).decode('utf8')
         self.assertEqual(cookie_value, quoted_value)
         self.assertEqual(unquoted_cookie_value, value)
 
@@ -186,13 +178,13 @@ class TestRequest(test_base.BaseTestCase):
         res = req.get('1')
         self.assertEqual(res, '2')
 
-        res = req.get('1', allow_multiple=True)
+        res = req.get_all('1')
         self.assertEqual(res, ['2', '3'])
 
         res = req.get('8')
         self.assertEqual(res, '')
 
-        res = req.get('8', allow_multiple=True)
+        res = req.get_all('8')
         self.assertEqual(res, [])
 
         res = req.get('8', default_value='9')
@@ -205,13 +197,13 @@ class TestRequest(test_base.BaseTestCase):
         res = req.get('1')
         self.assertEqual(res, '2')
 
-        res = req.get('1', allow_multiple=True)
+        res = req.get_all('1')
         self.assertEqual(res, ['2', '3'])
 
         res = req.get('8')
         self.assertEqual(res, '')
 
-        res = req.get('8', allow_multiple=True)
+        res = req.get_all('8')
         self.assertEqual(res, [])
 
         res = req.get('8', default_value='9')

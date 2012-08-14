@@ -2,7 +2,7 @@ import os
 import sys
 import unittest
 
-gae_path = '/usr/local/google_appengine'
+gae_path = '/usr/local/google/home/proppy/google_appengine'
 
 current_path = os.path.abspath(os.path.dirname(__file__))
 tests_path = os.path.join(current_path, 'tests')
@@ -15,7 +15,7 @@ sys.path[0:0] = [
     os.path.join(current_path, 'lib', 'Jinja2-2.6'),
     os.path.join(current_path, 'lib', 'Mako-0.4.1'),
     os.path.join(current_path, 'lib', 'gaepytz-2011h'),
-    os.path.join(current_path, 'lib', 'WebOb-1.0.8'),
+    os.path.join(current_path, 'lib', 'WebOb-1.2.2'),
     # SDK libs.
     os.path.join(gae_path, 'lib', 'django_0_96'),
     #os.path.join(gae_path, 'lib', 'webob'),

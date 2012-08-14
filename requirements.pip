@@ -1,6 +1,6 @@
 webapp2==2.0.1
 google-appengine==1.5.2
-WebOb==1.0.8
+WebOb==1.2.2
 Jinja2==2.5.5
 Mako==0.4.1
 simplejson==2.1.6
