@@ -1474,7 +1474,6 @@ class WSGIApplication(object):
         self.debug = debug
         self.registry = {}
         self.error_handlers = {}
-        self.set_globals(app=self)
         self.config = self.config_class(config)
         self.router = self.router_class(routes)
 
