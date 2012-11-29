@@ -1,6 +1,16 @@
-import cgi
+# -*- coding: utf-8 -*-
+"""
+    webapp2_extras.xsrf
+    ===================
 
-__author__ = 'john'
+    Helpers for defending against cross-site request forgery attacks.
+
+    :copyright: 2011 by tipfy.org.
+    :license: Apache Sotware License, see LICENSE for details.
+"""
+
+__author__ = 'John Lockwood'
+
 import base64
 import hmac
 import hashlib
@@ -37,7 +47,7 @@ class XSRFToken(object):
         self.user_id = user_id
         self.secret = secret
         if current_time is None:
-          current_time = int(time.time())
+          self.current_time = int(time.time())
         else:
           self.current_time = int(current_time)
 
@@ -63,11 +73,15 @@ class XSRFToken(object):
             digest_maker.update(action)
             digest_maker.update(self._DELIMITER)
 
-        digest_maker.update(self.current_time)
-        return base64.b64encode(
-            digest_maker.hexdigest() + self._DELIMITER + self.current_time)
+        digest_maker.update(str(self.current_time))
+        return base64.b64encode(self._DELIMITER.join([digest_maker.hexdigest(),
+                                                      str(self.current_time)]))
 
-    def verify_token_string(self, token_string, action=None, timeout=None):
+    def verify_token_string(self,
+                            token_string,
+                            action=None,
+                            timeout=None,
+                            current_time=None):
         """Generate a hash of the given token contents that can be verified.
 
         :param token_string:
@@ -84,7 +98,12 @@ class XSRFToken(object):
             XSRFTokenInvalid if the given token string does not match the
             contents of the `XSRFToken`. 
         """
-        split_token = base64.b64decode(token_string).split(self._DELIMITER)
+        try:
+          decoded_token_string = base64.b64decode(token_string)
+        except TypeError:
+          raise XSRFTokenMalformed()
+
+        split_token = decoded_token_string.split(self._DELIMITER)
         if len(split_token) != 2:
           raise XSRFTokenMalformed()
 
@@ -94,9 +113,11 @@ class XSRFToken(object):
           raise XSRFTokenMalformed()
 
         if timeout is not None:
+          if current_time is None:
+            current_time = time.time()
           # If an attacker modifies the plain text time then it will not match
           # the hashed time so this check is sufficient.
-          if (token_time + timout) < time.time():
+          if (token_time + timeout) < current_time:
             raise XSRFTokenExpiredException()
 
         expected_token = XSRFToken(self.user_id, self.secret, token_time)
