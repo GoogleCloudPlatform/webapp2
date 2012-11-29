@@ -90,8 +90,12 @@ class XSRFToken(object):
         :param action:
             A string containing the action that is being verified.
         :param timeout:
-            An int of float representing the number of seconds that the token
+            An int or float representing the number of seconds that the token
             is valid for. If None then tokens are valid forever.
+        :current_time:
+            An int representing the number of seconds since the epoch. Will be
+            used by to check for token expiry if `timeout` is set. If `None`
+            then the current time will be used.
         :raises:
             XSRFTokenMalformed if the given token_string cannot be parsed.
             XSRFTokenExpiredException if the given token string is expired.
