@@ -55,6 +55,19 @@ class TestXSRFToken(test_base.BaseTestCase):
                            'differentsecret',
                            current_time=1354160000).generate_token_string())
 
+    def test_verify_substring(self):
+        """Tests that a substring of the correct token fails to verify."""
+        token = xsrf.XSRFToken('user@example.com',
+                               'secret',
+                               current_time=1354160000)
+        token_string = token.generate_token_string()
+        test_token, test_time = base64.urlsafe_b64decode(token_string).split('|')
+        test_string = base64.urlsafe_b64encode('|'.join([test_token[:-1],
+                                                         test_time]))
+        self.assertRaises(xsrf.XSRFTokenInvalid,
+                          token.verify_token_string,
+                          test_string)
+
     def test_verify_bad_base_64(self):
         token = xsrf.XSRFToken('user@example.com',
                                'secret')

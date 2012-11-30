@@ -5,7 +5,7 @@
 
     Helpers for defending against cross-site request forgery attacks.
 
-    :copyright: 2011 by tipfy.org.
+    :copyright: 2012 by tipfy.org.
     :license: Apache Sotware License, see LICENSE for details.
 """
 
@@ -74,8 +74,9 @@ class XSRFToken(object):
             digest_maker.update(self._DELIMITER)
 
         digest_maker.update(str(self.current_time))
-        return base64.b64encode(self._DELIMITER.join([digest_maker.hexdigest(),
-                                                      str(self.current_time)]))
+        return base64.urlsafe_b64encode(
+            self._DELIMITER.join([digest_maker.hexdigest(),
+                                  str(self.current_time)]))
 
     def verify_token_string(self,
                             token_string,
@@ -103,7 +104,7 @@ class XSRFToken(object):
             contents of the `XSRFToken`. 
         """
         try:
-          decoded_token_string = base64.b64decode(token_string)
+          decoded_token_string = base64.urlsafe_b64decode(token_string)
         except TypeError:
           raise XSRFTokenMalformed()
 
@@ -126,5 +127,13 @@ class XSRFToken(object):
 
         expected_token = XSRFToken(self.user_id, self.secret, token_time)
         expected_token_string = expected_token.generate_token_string(action)
-        if token_string != expected_token_string:
+
+        if len(expected_token_string) != len(token_string):
+          raise XSRFTokenInvalid()
+
+        # Compare the two strings in constant time to prevent timing attacks.
+        different = 0
+        for a, b in zip(token_string, expected_token_string):
+          different |= ord(a) ^ ord(b)
+        if different:
           raise XSRFTokenInvalid()
