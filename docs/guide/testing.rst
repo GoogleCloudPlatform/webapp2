@@ -15,7 +15,7 @@ tested::
         def get(self):
             self.response.write('Hello, world!')
 
-    app = webapp2.WSGIapplication([('/', HelloHandler)])
+    app = webapp2.WSGIApplication([('/', HelloHandler)])
 
     def main():
         app.run()
@@ -94,7 +94,7 @@ application, returning the resulting response::
         def get(self):
             self.response.write('Hello, world!')
 
-    app = webapp2.WSGIapplication([('/', HelloHandler)])
+    app = webapp2.WSGIApplication([('/', HelloHandler)])
 
     # Test the app, passing parameters to build a request.
     response = app.get_response('/')
