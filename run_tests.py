@@ -2,7 +2,7 @@ import os
 import sys
 import unittest
 
-gae_path = '/usr/local/google/home/proppy/google_appengine'
+gae_path = os.environ['GAE_SDK_PATH']
 
 current_path = os.path.abspath(os.path.dirname(__file__))
 tests_path = os.path.join(current_path, 'tests')
@@ -51,4 +51,7 @@ if __name__ == '__main__':
         tests = all_tests
     tests = ['%s_test' % t for t in tests]
     suite = get_suite(tests)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+
+    if result.errors or result.failures:
+        sys.exit(1)

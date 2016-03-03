@@ -16,3 +16,6 @@
 
 #PyCharm
 .idea
+
+# Testing stuff
+.nox
