@@ -18,7 +18,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-gae_path = '/usr/local/google_appengine'
+gae_path = os.environ['GAE_SDK_PATH']
 
 current_path = os.path.abspath(os.path.dirname(__file__))
 path = os.path.join(current_path, '..')
@@ -27,18 +27,13 @@ theme_path = os.path.join(current_path, '_themes', 'webapp2')
 sys.path[0:0] = [
     theme_path,
     gae_path,
-    # All libs used by webapp2 and extras.
-    os.path.join(path, 'lib', 'babel'),
-    os.path.join(path, 'lib', 'Jinja2-2.6'),
-    os.path.join(path, 'lib', 'Mako-0.4.1'),
-    os.path.join(path, 'lib', 'gaepytz-2011h'),
-    os.path.join(path, 'lib', 'WebOb-1.2.2'),
     # SDK libs.
     os.path.join(gae_path, 'lib', 'django_0_96'),
     os.path.join(gae_path, 'lib', 'yaml', 'lib'),
-    os.path.join(gae_path, 'lib', 'simplejson'),
     path,
 ]
+
+print sys.path
 
 try:
     from google.appengine.dist import use_library

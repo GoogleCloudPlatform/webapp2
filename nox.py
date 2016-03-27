@@ -20,3 +20,16 @@ def session_tests(session):
     session.run('gcprepotools', 'download-appengine-sdk', tmpdir)
     session.env['GAE_SDK_PATH'] = os.path.join(tmpdir, 'google_appengine')
     session.run('python', 'run_tests.py', *session.posargs)
+
+
+def session_docs(session):
+    tmpdir = gettempdir()
+    session.interpreter = 'python2.7'
+    session.install(
+        'git+https://github.com/GoogleCloudPlatform/python-repo-tools')
+    session.install('-r', 'requirements-dev.txt')
+    session.install('sphinx')
+    session.run('gcprepotools', 'download-appengine-sdk', tmpdir)
+    session.env['GAE_SDK_PATH'] = os.path.join(tmpdir, 'google_appengine')
+    session.chdir('docs')
+    session.run('make', 'html')
