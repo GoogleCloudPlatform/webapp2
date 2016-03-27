@@ -12,12 +12,18 @@ sys.path[0:0] = [
     gae_path,
     # SDK libs.
     os.path.join(gae_path, 'lib', 'django_0_96'),
-    #os.path.join(gae_path, 'lib', 'webob'),
     os.path.join(gae_path, 'lib', 'yaml', 'lib'),
     os.path.join(gae_path, 'lib', 'protorpc'),
-    os.path.join(gae_path, 'lib', 'simplejson'),
 ]
 
+# Temporary: setup memcache testbed. This is needed for gaepytz to work.
+# In the future, we'll use a py.test runner and a global fixture to fix this.
+from google.appengine.ext import testbed
+tb = testbed.Testbed()
+tb.activate()
+tb.init_memcache_stub()
+
+# Discover tests.
 all_tests = [f[:-8] for f in os.listdir(tests_path) if f.endswith('_test.py')]
 
 def get_suite(tests):
