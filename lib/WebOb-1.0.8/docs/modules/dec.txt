@@ -1,9 +1,0 @@
-:mod:`webob.dec` -- WSGIfy decorator
-====================================
-
-.. automodule:: webob.dec
-
-Decorator
----------
-
-.. autoclass:: wsgify

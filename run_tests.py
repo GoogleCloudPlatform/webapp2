@@ -10,12 +10,6 @@ sys.path[0:0] = [
     current_path,
     tests_path,
     gae_path,
-    # All libs used by webapp2 and extras.
-    os.path.join(current_path, 'lib', 'babel'),
-    os.path.join(current_path, 'lib', 'Jinja2-2.6'),
-    os.path.join(current_path, 'lib', 'Mako-0.4.1'),
-    os.path.join(current_path, 'lib', 'gaepytz-2011h'),
-    os.path.join(current_path, 'lib', 'WebOb-1.2.2'),
     # SDK libs.
     os.path.join(gae_path, 'lib', 'django_0_96'),
     #os.path.join(gae_path, 'lib', 'webob'),
