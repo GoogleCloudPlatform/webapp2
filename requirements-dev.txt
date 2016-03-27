@@ -1,5 +1,5 @@
 WebOb==1.2.2
 Jinja2==2.6.0
 Mako==0.4.1
-Babel==0.9.6
+Babel==2.2
 gaepytz==2011h
