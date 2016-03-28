@@ -18,28 +18,25 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-gae_path = os.environ['GAE_SDK_PATH']
 
-current_path = os.path.abspath(os.path.dirname(__file__))
-path = os.path.join(current_path, '..')
-theme_path = os.path.join(current_path, '_themes', 'webapp2')
+# Setup GAE imports
+from gcp.testing import appengine
 
-sys.path[0:0] = [
-    theme_path,
-    gae_path,
-    # SDK libs.
-    os.path.join(gae_path, 'lib', 'django_0_96'),
-    os.path.join(gae_path, 'lib', 'yaml', 'lib'),
-    path,
-]
+appengine.setup_sdk_imports()
 
-print sys.path
+# Setup the libary import path
+current_path = os.path.dirname(__file__)
+webapp2_path = os.path.abspath(os.path.join(current_path, '..'))
+sys.path.insert(1, webapp2_path)
 
-try:
-    from google.appengine.dist import use_library
-    use_library('django', '1.2')
-except ImportError:
-    pass
+# Insert theme path
+sys.path.insert(1, os.path.join(current_path, '_themes', 'webapp2'))
+
+# try:
+#     from google.appengine.dist import use_library
+#     use_library('django', '1.2')
+# except ImportError:
+#     pass
 
 # -- General configuration -----------------------------------------------------
 

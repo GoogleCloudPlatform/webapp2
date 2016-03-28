@@ -30,6 +30,6 @@ def session_docs(session):
     session.install('-r', 'requirements-dev.txt')
     session.install('sphinx')
     session.run('gcprepotools', 'download-appengine-sdk', tmpdir)
-    session.env['GAE_SDK_PATH'] = os.path.join(tmpdir, 'google_appengine')
+    session.env['PYTHONPATH'] = os.path.join(tmpdir, 'google_appengine')
     session.chdir('docs')
     session.run('make', 'html')
