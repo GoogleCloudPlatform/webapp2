@@ -19,6 +19,7 @@
 
 # Testing stuff
 .nox
+.cache
 
 # Built documentation
 docs/_build

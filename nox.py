@@ -18,8 +18,8 @@ def session_tests(session):
     session.install('-r', 'requirements-dev.txt')
     session.install('-e', '.')
     session.run('gcprepotools', 'download-appengine-sdk', tmpdir)
-    session.env['GAE_SDK_PATH'] = os.path.join(tmpdir, 'google_appengine')
-    session.run('python', 'run_tests.py', *session.posargs)
+    session.env['PYTHONPATH'] = os.path.join(tmpdir, 'google_appengine')
+    session.run('py.test', *(['tests'] or session.posargs))
 
 
 def session_docs(session):
