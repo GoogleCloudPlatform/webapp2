@@ -20,6 +20,7 @@
 # Testing stuff
 .nox
 .cache
+.coverage
 
 # Built documentation
 docs/_build

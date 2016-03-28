@@ -4,3 +4,4 @@ Mako==0.4.1
 Babel==2.2
 gaepytz==2011h
 pytest==2.9.1
+pytest-cov==2.2.1

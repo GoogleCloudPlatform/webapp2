@@ -19,7 +19,11 @@ def session_tests(session):
     session.install('-e', '.')
     session.run('gcprepotools', 'download-appengine-sdk', tmpdir)
     session.env['PYTHONPATH'] = os.path.join(tmpdir, 'google_appengine')
-    session.run('py.test', *(['tests'] or session.posargs))
+    session.run(
+        'py.test',
+        '--cov=webapp2',
+        '--cov=webapp2_extras',
+        *(['tests'] or session.posargs))
 
 
 def session_docs(session):
