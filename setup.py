@@ -36,26 +36,26 @@ Quick links
 from setuptools import setup
 
 setup(
-    name = 'webapp2',
-    version = '2.5.2',
-    license = 'Apache Software License',
-    url = 'http://webapp-improved.appspot.com',
-    description = "Taking Google App Engine's webapp to the next level!",
-    long_description = __doc__,
-    author = 'Rodrigo Moraes',
-    author_email = 'rodrigo.moraes@gmail.com',
-    zip_safe = False,
-    platforms = 'any',
-    py_modules = [
+    name='webapp2',
+    version='2.5.2',
+    license='Apache Software License',
+    url='http://webapp-improved.appspot.com',
+    description="Taking Google App Engine's webapp to the next level!",
+    long_description=__doc__,
+    author='The Webapp2 Maintainers',
+    author_email='webapp2-maintainers@googlegroups.com',
+    zip_safe=False,
+    platforms='any',
+    py_modules=[
         'webapp2',
     ],
-    packages = [
+    packages=[
         'webapp2_extras',
         'webapp2_extras.appengine',
         'webapp2_extras.appengine.auth',
     ],
     include_package_data=True,
-    classifiers = [
+    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
