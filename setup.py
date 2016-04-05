@@ -1,46 +1,32 @@
-# -*- coding: utf-8 -*-
-"""
-webapp2
-=======
-`webapp2`_ is a lightweight Python web framework compatible with Google App
-Engine's `webapp`_.
+# Copyright 2016 webapp2 AUTHORS.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-webapp2 is simple. it follows the simplicity of webapp, but
-improves it in some ways: it adds better URI routing and exception handling,
-a full featured response object and a more flexible dispatching mechanism.
+from codecs import open
 
-webapp2 also offers the package `webapp2_extras`_ with several optional
-utilities: sessions, localization, internationalization, domain and subdomain
-routing, secure cookies and others.
-
-webapp2 can also be used outside of Google App Engine, independently of the
-App Engine SDK.
-
-For a complete description of how webapp2 improves webapp, see
-`webapp2 features`_.
-
-Quick links
------------
-
-- `User Guide <https://webapp2.readthedocs.org/>`_
-- `Repository <https://github.com/GoogleCloudPlatform/webapp2>`_
-- `Discussion Group <https://groups.google.com/forum/#!forum/webapp2>`_
-- `@webapp2 <https://twitter.com/#!/webapp2>`_
-
-.. _webapp: http://code.google.com/appengine/docs/python/tools/webapp/
-.. _webapp2: https://github.com/GoogleCloudPlatform/webapp2
-.. _webapp2_extras: https://webapp2.readthedocs.org/#api-reference-webapp2-extras
-.. _webapp2 features: https://webapp2.readthedocs.org/features.html
-"""
 from setuptools import setup
+
+
+long_description = open('README.rst', 'r', encoding='utf-8').read()
+
 
 setup(
     name='webapp2',
     version='2.5.2',
     license='Apache Software License',
-    url='http://webapp-improved.appspot.com',
+    url='http://webapp2.readthedocs.org',
     description="Taking Google App Engine's webapp to the next level!",
-    long_description=__doc__,
+    long_description=long_description,
     author='The Webapp2 Maintainers',
     author_email='webapp2-maintainers@googlegroups.com',
     zip_safe=False,

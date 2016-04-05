@@ -47,6 +47,7 @@ def session_docs(session):
         'git+https://github.com/GoogleCloudPlatform/python-repo-tools')
     session.install('-r', 'requirements-dev.txt')
     session.install('sphinx')
+    session.install('-e', '.')
     session.run('gcprepotools', 'download-appengine-sdk', tmpdir)
     session.env['PYTHONPATH'] = os.path.join(tmpdir, 'google_appengine')
     session.chdir('docs')
