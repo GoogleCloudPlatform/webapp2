@@ -22,7 +22,7 @@ long_description = open('README.rst', 'r', encoding='utf-8').read()
 
 setup(
     name='webapp2',
-    version='2.5.2',
+    version='3.0.0',
     license='Apache Software License',
     url='http://webapp2.readthedocs.org',
     description="Taking Google App Engine's webapp to the next level!",
