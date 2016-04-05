@@ -7,7 +7,7 @@ webapp2 is very easy to get started. You can use webapp2 exactly like webapp,
 and learn the new features as you go.
 
 If you are new to App Engine, read :ref:`tutorials.gettingstarted.index` first.
-You will need the `App Engine SDK <http://code.google.com/appengine/docs/python/gettingstarted/devenvironment.html>`_
+You will need the `App Engine SDK <https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python>`_
 installed for this quick start.
 
 .. note::
@@ -27,7 +27,7 @@ and more, also add the ``webapp2_extras`` directory to your app.
    webapp2 is part of the Python 2.7 runtime since App Engine SDK 1.6.0,
    so you don't need to upload it with your app anymore. To include it in
    your app see
-   `Configuring Libraries <http://code.google.com/appengine/docs/python/python27/using27.html#Configuring_Libraries>`_.
+   `Configuring Libraries <https://cloud.google.com/appengine/docs/python/tools/libraries27>`_.
 
 Hello, webapp2!
 ---------------

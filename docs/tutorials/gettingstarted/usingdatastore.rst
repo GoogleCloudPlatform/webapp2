@@ -14,7 +14,7 @@ App Engine's infrastructure takes care of all of the distribution, replication
 and load balancing of data behind a simple API -- and you get a powerful
 query engine and transactions as well.
 
-The default datastore for an application is now the `High Replication datastore <http://code.google.com/appengine/docs/python/datastore/hr/>`_.
+The default datastore for an application is now the `High Replication datastore <https://cloud.google.com/appengine/docs/python/ndb/>`_.
 This datastore uses the `Paxos algorithm <http://labs.google.com/papers/paxos_made_live.html>`_
 to replicate data across datacenters. The High Replication datastore is
 extremely resilient in the face of catastrophic failure.
@@ -24,7 +24,7 @@ datastore may differ from what you are familiar with. It also differs slightly
 from the Master/Slave datastore, the other datastore option that App Engine
 offers. In the example code comments, we highlight some ways this might affect
 the design of your app. For more detailed information,
-see `Using the High Replication Datastore <http://code.google.com/appengine/docs/python/datastore/hr/overview.html>`_
+see `Using the High Replication Datastore <https://cloud.google.com/appengine/docs/python/ndb/>`_
 (HRD).
 
 The datastore writes data in objects known as entities, and each entity has a
@@ -43,7 +43,7 @@ The code samples in this guide organize like entities into entity groups, and
 use ancestor queries on those entity groups to return strongly consistent
 results. In the example code comments, we highlight some ways this might affect
 the design of your app. For more detailed information,
-see `Using the High Replication Datastore <http://code.google.com/appengine/docs/python/datastore/hr/overview.html>`_.
+see `Using the High Replication Datastore <https://cloud.google.com/appengine/docs/python/ndb/>`_.
 
 
 A Complete Example Using the Datastore
@@ -177,7 +177,7 @@ says that values for this property can contain newline characters. Giving the
 ``db.DateTimeProperty`` constructor a ``auto_now_add=True`` parameter
 configures the model to automatically give new objects a ``date`` of the time
 the object is created, if the application doesn't otherwise provide a value.
-For a complete list of property types and their options, see `the Datastore reference <http://code.google.com/appengine/docs/python/datastore/>`_.
+For a complete list of property types and their options, see `the Datastore reference <https://cloud.google.com/appengine/docs/python/ndb/>`_.
 
 Now that we have a data model for greetings, the application can use the model
 to create new ``Greeting`` objects and put them into the datastore. The following
@@ -201,8 +201,8 @@ This new ``Guestbook`` handler creates a new ``Greeting`` object, then sets its
 The parent has an entity kind "Guestbook". There is no need to create the
 "Guestbook" entity before setting it to be the parent of another entity. In
 this example, the parent is used as a placeholder for transaction and
-consistency purposes. See `Entity Groups and Ancestor Paths <http://code.google.com/appengine/docs/python/datastore/entities.html#Entity_Groups_and_Ancestor_Paths>`_
-for more information. Objects that share a common `ancestor <http://code.google.com/appengine/docs/python/datastore/queryclass.html#Query_ancestor>`_
+consistency purposes. See `Entity Groups and Ancestor Paths <https://cloud.google.com/appengine/docs/python/ndb/entities>`_
+for more information. Objects that share a common `ancestor <https://cloud.google.com/appengine/docs/python/ndb/queries>`_
 belong to the same entity group. It does not set the date property, so date is
 automatically set to "now," as we configured the model to do.
 
@@ -217,7 +217,7 @@ example by setting the same parent for each Greeting. This means a user will
 always see a Greeting immediately after it was written. However, the rate at
 which you can write to the same entity group is limited to 1 write to the
 entity group per second. When you design a real application you'll need to
-keep this fact in mind. Note that by using services such as `Memcache <http://code.google.com/appengine/docs/python/memcache/>`_,
+keep this fact in mind. Note that by using services such as `Memcache <https://cloud.google.com/appengine/docs/python/memcache/>`_,
 you can mitigate the chance that a user won't see fresh results when querying
 across entity groups immediately after a write.
 
@@ -307,7 +307,7 @@ query objects using methods. The query above could also be prepared as follows::
     greetings.filter("author =", users.get_current_user())
     greetings.order("-date")
 
-For a complete description of GQL and the query APIs, see the `Datastore reference <http://code.google.com/appengine/docs/python/datastore/>`_.
+For a complete description of GQL and the query APIs, see the `Datastore reference <https://cloud.google.com/appengine/docs/python/ndb/>`_.
 
 
 Clearing the Development Server Datastore

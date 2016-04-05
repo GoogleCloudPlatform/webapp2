@@ -4,8 +4,8 @@ webapp2
 webapp2 is a lightweight Python web framework compatible with Google App
 Engine's webapp.
 
-- Project page: http://code.google.com/p/webapp-improved/
-- User guide: http://webapp-improved.appspot.com/
+- Project page: https://github.com/GoogleCloudPlatform/webapp2
+- User guide: http://webapp2.readthedocs.org
 
 Contributing changes
 --------------------

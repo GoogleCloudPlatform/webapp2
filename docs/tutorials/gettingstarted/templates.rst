@@ -13,7 +13,7 @@ For your convenience, the ``webapp2`` module includes Django's templating
 engine. Versions 1.2 and 0.96 are included with the SDK and are part of App
 Engine, so you do not need to bundle Django yourself to use it.
 
-See the Django section of `Third-party libraries <http://code.google.com/appengine/docs/python/tools/libraries.html#Django>`_
+See the Django section of `Third-party libraries <https://cloud.google.com/appengine/docs/python/tools/libraries27>`_
 for information on using supported Django versions.
 
 

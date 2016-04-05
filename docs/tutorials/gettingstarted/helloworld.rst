@@ -67,7 +67,7 @@ application:
 
 The syntax of this file is `YAML <http://www.yaml.org/>`_. For a complete list
 of configuration options, see
-`the app.yaml reference <http://code.google.com/appengine/docs/python/config/appconfig.html>`_.
+`the app.yaml reference <https://cloud.google.com/appengine/docs/python/config/appconfig>`_.
 
 
 Testing the Application
@@ -96,7 +96,7 @@ test the application by visiting the following URL in your web browser:
     http://localhost:8080/
 
 For more information about running the development web server, including how
-to change which port it uses, see `the Dev Web Server reference <http://code.google.com/appengine/docs/python/tools/devserver.html>`_,
+to change which port it uses, see `the Dev Web Server reference <https://cloud.google.com/appengine/docs/python/tools/devserver>`_,
 or run the command with the option ``--help``.
 
 

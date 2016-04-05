@@ -26,19 +26,15 @@ For a complete description of how webapp2 improves webapp, see :ref:`features`.
 .. note::
    webapp2 is part of the Python 2.7 runtime since App Engine SDK 1.6.0.
    To include it in your app see
-   `Configuring Libraries <http://code.google.com/appengine/docs/python/python27/using27.html#Configuring_Libraries>`_.
+   `Configuring Libraries <https://cloud.google.com/appengine/docs/python/tools/libraries27>`_.
 
 
 Quick links
 -----------
-- `Downloads <http://code.google.com/p/webapp-improved/downloads/list>`_
-- `Google Code Repository <http://code.google.com/p/webapp-improved/>`_
+- `Package Index Page <https://pypi.python.org/pypi/webapp2>`_
+- `Github <https://github.com/GoogleCloudPlatform/webapp2>`_
 - `Discussion Group <http://groups.google.com/group/webapp2>`_
 - `@webapp2 <https://twitter.com/#!/webapp2>`_
-
-.. `Samples for Google App Engine <http://code.google.com/p/google-app-engine-samples/>`_:
-   several mini-apps for webapp that serve as examples (they should work with
-   webapp2 too).
 
 
 Tutorials
@@ -182,7 +178,7 @@ webapp2 is considered stable, feature complete and well tested, but if you
 think something is missing or is not working well, please describe it in our
 issue tracker:
 
-    http://code.google.com/p/webapp-improved/issues/list
+    https://github.com/GoogleCloudPlatform/webapp2/issues
 
 Let us know if you found a bug or if something can be improved. New tutorials
 and webapp2_extras modules are also welcome, and tests or documentation are
@@ -197,12 +193,12 @@ webapp2 is licensed under the `Apache License 2.0`_.
 
 
 .. _webapp: http://code.google.com/appengine/docs/python/tools/webapp/
-.. _webapp2: http://code.google.com/p/webapp-improved/
-.. _simple: http://code.google.com/p/webapp-improved/source/browse/webapp2.py
+.. _webapp2: https://github.com/GoogleCloudPlatform/webapp2
+.. _simple: https://github.com/GoogleCloudPlatform/webapp2/blob/master/webapp2.py
 .. _WebOb: http://docs.webob.org/
 .. _Werkzeug: http://werkzeug.pocoo.org/
 .. _Tipfy: http://www.tipfy.org/
 .. _Tornado Web Server: http://www.tornadoweb.org/
 .. _Sphinx: http://sphinx.pocoo.org/
-.. _App Engine documentation: http://code.google.com/appengine/docs/
+.. _App Engine documentation: http://cloud.google.com/appengine/docs/
 .. _Apache License 2.0: http://www.apache.org/licenses/LICENSE-2.0
