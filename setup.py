@@ -17,8 +17,17 @@ from codecs import open
 from setuptools import setup
 
 
-long_description = open('README.rst', 'r', encoding='utf-8').read()
+LONG_DESCRIPTION = open('README.rst', 'r', encoding='utf-8').read()
 
+REQUIREMENTS = [
+    'webob>=1.2.0',
+]
+
+EXTRA_REQUIREMENTS = {
+    'jinja2>=2.4',
+    'Babel>=2.2',
+    'gaepytz>=2011h'
+}
 
 setup(
     name='webapp2',
@@ -26,7 +35,7 @@ setup(
     license='Apache Software License',
     url='http://webapp2.readthedocs.org',
     description="Taking Google App Engine's webapp to the next level!",
-    long_description=long_description,
+    long_description=LONG_DESCRIPTION,
     author='The Webapp2 Maintainers',
     author_email='webapp2-maintainers@googlegroups.com',
     zip_safe=False,
@@ -40,6 +49,8 @@ setup(
         'webapp2_extras.appengine.auth',
     ],
     include_package_data=True,
+    install_requires=REQUIREMENTS,
+    extras_require={'extras': EXTRA_REQUIREMENTS},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
