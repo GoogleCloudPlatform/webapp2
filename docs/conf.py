@@ -32,11 +32,6 @@ sys.path.insert(1, webapp2_path)
 # Insert theme path
 sys.path.insert(1, os.path.join(current_path, '_themes', 'webapp2'))
 
-# try:
-#     from google.appengine.dist import use_library
-#     use_library('django', '1.2')
-# except ImportError:
-#     pass
 
 # -- General configuration -----------------------------------------------------
 
