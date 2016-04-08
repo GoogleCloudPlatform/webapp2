@@ -126,7 +126,7 @@ exclude_patterns = ['_build']
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-if on_rtd:
+if on_rtd and False:
     html_theme = 'default'
 else:
     html_theme = 'webapp2'
