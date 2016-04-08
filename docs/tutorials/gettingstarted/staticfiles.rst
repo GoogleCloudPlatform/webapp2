@@ -49,7 +49,7 @@ URL handler path patterns are tested in the order they appear in ``app.yaml``,
 from top to bottom. In this case, the ``/stylesheets`` pattern will match
 before the ``/.*`` pattern will for the appropriate paths. For more information
 on URL mapping and other options you can specify in ``app.yaml``, see
-`the app.yaml reference <http://code.google.com/appengine/docs/python/config/appconfig.html>`_.
+`the app.yaml reference <https://cloud.google.com/appengine/docs/python/config/appconfig>`_.
 
 Create the directory ``helloworld/stylesheets``. In this new directory, create
 a new file named ``main.css`` with the following contents:

@@ -1,0 +1,11 @@
+# These requirements versions match what's provided by the app engine sdk.
+WebOb==1.2.3
+Jinja2==2.6.0
+# The remaining requirements are defined by webapp2. These are the versions
+# that were used with release 2.5.2, except for babel.
+Mako==0.4.1
+Babel==2.2
+gaepytz==2011h
+# Test dependencies.
+pytest==2.9.1
+pytest-cov==2.2.1

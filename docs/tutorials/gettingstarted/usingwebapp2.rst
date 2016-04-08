@@ -8,22 +8,7 @@ for you, so you can focus your development efforts on your application's
 features. Google App Engine supports any framework written in pure Python
 that speaks CGI (and any
 `WSGI <http://www.python.org/dev/peps/pep-0333/>`_-compliant framework using a
-CGI adaptor). You can bundle a framework of your choosing with your application
-code by copying its code into your application directory.
-
-App Engine includes a simple web application framework of its own, called
-``webapp``. The ``webapp`` framework is already installed in the App Engine
-environment and in the SDK, and as ``webapp2`` is based on it, you only need
-to bundle a single file with your application code to use it. We will use
-``webapp2`` for the rest of this tutorial.
-
-Follow these steps to bundle the ``webapp2`` framework with your application:
-
-- Create a file ``webapp2.py`` inside your application directory. Paste the
-  contents from `webapp2.py <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_
-  inside it.
-- There's no second step. You can start using webapp2 right now.
-
+CGI adaptor).
 
 Hello, webapp2!
 ---------------

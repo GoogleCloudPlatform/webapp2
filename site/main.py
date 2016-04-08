@@ -1,4 +1,4 @@
-# Copyright 2011 webapp2 AUTHORS.
+# Copyright 2015 webapp2 AUTHORS.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import webapp2
 
 
-class LazyHandler(webapp2.RequestHandler):
-    def get(self, **kwargs):
-        self.response.out.write('I am a laaazy view.')
+NEW_BASE_URL = 'https://webapp2.readthedocs.org/'
+
+
+class RedirectHandler(webapp2.RequestHandler):
+    def get(self, uri):
+        return webapp2.redirect(
+            NEW_BASE_URL + uri,
+            permanent=True)
+
+
+app = webapp2.WSGIApplication([
+    webapp2.Route(r'/<:.*>', RedirectHandler)])

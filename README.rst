@@ -1,11 +1,35 @@
 webapp2
 =======
 
-webapp2 is a lightweight Python web framework compatible with Google App
-Engine's webapp.
+`webapp2`_ is a lightweight Python web framework compatible with Google App
+Engine's `webapp`_.
 
-- Project page: http://code.google.com/p/webapp-improved/
-- User guide: http://webapp-improved.appspot.com/
+webapp2 is simple. it follows the simplicity of webapp, but
+improves it in some ways: it adds better URI routing and exception handling,
+a full featured response object and a more flexible dispatching mechanism.
+
+webapp2 also offers the package `webapp2_extras`_ with several optional
+utilities: sessions, localization, internationalization, domain and subdomain
+routing, secure cookies and others.
+
+webapp2 can also be used outside of Google App Engine, independently of the
+App Engine SDK.
+
+For a complete description of how webapp2 improves webapp, see
+`webapp2 features`_.
+
+Quick links
+-----------
+
+- `User Guide <https://webapp2.readthedocs.org/>`_
+- `Repository <https://github.com/GoogleCloudPlatform/webapp2>`_
+- `Discussion Group <https://groups.google.com/forum/#!forum/webapp2>`_
+- `@webapp2 <https://twitter.com/#!/webapp2>`_
+
+.. _webapp: http://code.google.com/appengine/docs/python/tools/webapp/
+.. _webapp2: https://github.com/GoogleCloudPlatform/webapp2
+.. _webapp2_extras: https://webapp2.readthedocs.org/#api-reference-webapp2-extras
+.. _webapp2 features: https://webapp2.readthedocs.org/features.html
 
 Contributing changes
 --------------------

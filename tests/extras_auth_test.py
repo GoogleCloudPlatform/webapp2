@@ -1,3 +1,17 @@
+# Copyright 2011 webapp2 AUTHORS.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import webapp2
 from webapp2_extras import sessions
 
@@ -85,14 +99,14 @@ class TestAuth(test_base.BaseTestCase):
         self.assertEqual(rv['token'], token)
 
         # Now let's force token to be renewed and check that we have a new one.
-        s.config['token_new_age'] = -300
+        s.config['token_new_age'] = None
         a._user = None
         rv = a.get_user_by_session()
         self.assertEqual(rv['user_id'], user_id)
         self.assertNotEqual(rv['token'], token)
 
         # Now let's force token to be invalid.
-        s.config['token_max_age'] = -300
+        s.config['token_max_age'] = None
         a._user = None
         rv = a.get_user_by_session()
         self.assertEqual(rv, None)
@@ -188,7 +202,7 @@ class TestAuth(test_base.BaseTestCase):
 
         # Force expiration.
         token = m.create_auth_token(user_id)
-        s.config['token_max_age'] = -300
+        s.config['token_max_age'] = None
         rv = s.validate_token(user_id, token)
         self.assertEqual(rv, (None, None))
         # Token must have been deleted.
@@ -197,7 +211,7 @@ class TestAuth(test_base.BaseTestCase):
         # Revert expiration, force renewal.
         token = m.create_auth_token(user_id)
         s.config['token_max_age'] = 86400 * 7 * 3
-        s.config['token_new_age'] = -300
+        s.config['token_new_age'] = None
         rv = s.validate_token(user_id, token)
         self.assertEqual(rv, (s.user_to_dict(user), None))
         # Token must have been deleted.

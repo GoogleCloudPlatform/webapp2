@@ -1,4 +1,4 @@
-# Copyright 2011 webapp2 AUTHORS.
+# Copyright 2016 webapp2 AUTHORS All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import webapp2
+import os
+import sys
+
+from gcp.testing import appengine
 
 
-class LazyHandler(webapp2.RequestHandler):
-    def get(self, **kwargs):
-        self.response.out.write('I am a laaazy view.')
+def pytest_configure():
+    appengine.pytest_configure()
+
+    # Prune the SDK's webapp2 path from sys.path to prevent loading the SDK's
+    # bundled webapp2.
+    import dev_appserver
+    gae_path = os.path.dirname(dev_appserver.__file__)
+    gae_webapp2_path = os.path.join(gae_path, 'lib', 'webapp2')
+
+    sys.path = [path for path in sys.path if gae_webapp2_path not in path]

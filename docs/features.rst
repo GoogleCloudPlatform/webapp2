@@ -105,7 +105,7 @@ Keyword arguments from URI
 ``RequestHandler`` methods can also receive keyword arguments, which are easier
 to maintain than positional ones. Simply use the ``Route`` class to define
 URIs (and you can also create custom route classes, examples
-`here <http://code.google.com/p/webapp-improved/source/browse/webapp2_extras/routes.py>`_)::
+`here <https://github.com/GoogleCloudPlatform/webapp2/blob/master/webapp2_extras/routes.py>`_)::
 
     class BlogArchiveHandler(webapp2.RequestHandler):
         def get(self, year=None, month=None):
@@ -242,7 +242,7 @@ Old URIs can be conveniently redirected using a simple route::
 
 Simple, well-tested and documented
 ----------------------------------
-webapp2 is `simple <http://code.google.com/p/webapp-improved/source/browse/webapp2.py>`_,
+webapp2 is `simple <https://github.com/GoogleCloudPlatform/webapp2/blob/master/webapp2.py>`_,
 extensively documented and has almost 100% test coverage. The source code is
 explicit, magic-free and made to be extended. We like less.
 
@@ -278,7 +278,7 @@ cold start:
 
 Extras
 ------
-The `webapp2_extras <http://code.google.com/p/webapp-improved/source/browse/#hg%2Fwebapp2_extras>`_
+The `webapp2_extras <https://github.com/GoogleCloudPlatform/webapp2/tree/master/webapp2_extras>`_
 package provides common utilities that integrate well with webapp2:
 
 - Localization and internationalization support

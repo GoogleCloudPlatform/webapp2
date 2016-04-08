@@ -16,18 +16,18 @@ The Python SDK for Windows and Mac includes Google App Engine Launcher, an
 application that runs on your computer and provides a graphical interface that
 simplifies many common App Engine development tasks.
 
-If necessary, download and install Python 2.5 for your platform from
-`the Python web site <http://www.python.org/>`_. Mac OS X 10.5 Leopard users
-already have Python 2.5 installed.
+If necessary, download and install Python 2.7 for your platform from
+`the Python web site <http://www.python.org/>`_. Mac OS X users
+already have Python installed.
 
-`Download the App Engine SDK <http://code.google.com/appengine/downloads.html>`_.
+`Download the App Engine SDK <http://cloud.google.com/appengine/downloads>`_.
 Follow the instructions on the download page to install the SDK on your
 computer.
 
 For this tutorial, you will use two commands from the SDK:
 
-- `dev_appserver.py <http://code.google.com/appengine/docs/python/tools/devserver.html>`_, the development web server
-- `appcfg.py <http://code.google.com/appengine/docs/python/tools/uploadinganapp.html>`_, for uploading your app to App Engine
+- `dev_appserver.py <https://cloud.google.com/appengine/docs/python/tools/devserver>`_, the development web server
+- `appcfg.py <https://cloud.google.com/appengine/docs/python/tools/uploadinganapp>`_, for uploading your app to App Engine
 
 Windows and Mac users can run Google App Engine Launcher and simply click the
 Run and Deploy buttons instead of using these commands.

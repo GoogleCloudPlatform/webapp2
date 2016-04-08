@@ -1,12 +1,26 @@
 # -*- coding: utf-8 -*-
+# Copyright 2011 webapp2 AUTHORS.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
-    webapp2
-    =======
+webapp2
+=======
 
-    Taking Google App Engine's webapp to the next level!
+Taking Google App Engine's webapp to the next level!
 
-    :copyright: 2011 by tipfy.org.
-    :license: Apache Sotware License, see LICENSE for details.
+:copyright: 2011 webapp2 AUTHORS.
+:license: Apache Sotware License, see LICENSE for details.
 """
 from __future__ import with_statement
 
@@ -54,7 +68,7 @@ except ImportError: # pragma: no cover
                     "so webapp2 won't be thread-safe!")
 
 
-__version_info__ = (2, 5, 2)
+__version_info__ = (3, 0, 0)
 __version__ = '.'.join(str(n) for n in __version_info__)
 
 #: Base HTTP exception, set here as public interface.
