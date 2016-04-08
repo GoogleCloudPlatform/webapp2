@@ -10,9 +10,9 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
+import mock
 import os
 import sys
-
 from pkg_resources import get_distribution
 
 
@@ -22,10 +22,29 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-# Setup GAE imports
-from gcp.testing import appengine
+# See
+# (http://read-the-docs.readthedocs.org/en/latest/faq.html#\
+#  i-get-import-errors-on-libraries-that-depend-on-c-modules)
 
-appengine.setup_sdk_imports()
+
+class Mock(mock.Mock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = (
+    'google',
+    'google.appengine',
+    'google.appengine.api',
+    'google.appengine.ext',
+    'google.appengine.ext.ndb',
+    'google.appengine.ext.ndb.model',
+    'google.appengine.ext.webapp',
+    'google.appengine.ext.webapp.util',
+)
+
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 
 # Setup the libary import path
 current_path = os.path.dirname(__file__)
