@@ -59,7 +59,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'webapp2'
-copyright = u'2016, webapp2 authors'
+copyright = u'2011, webapp2 AUTHORS'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

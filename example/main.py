@@ -1,4 +1,4 @@
-# Copyright 2015 webapp2 AUTHORS.
+# Copyright 2011 webapp2 AUTHORS.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
