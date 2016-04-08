@@ -1,6 +1,8 @@
 webapp2
 =======
 
+|Build Status| |Coverage Status| |PyPI Version|
+
 `webapp2`_ is a lightweight Python web framework compatible with Google App
 Engine's `webapp`_.
 
@@ -43,3 +45,9 @@ Licensing
 
 .. _LICENSE: https://github.com/GoogleCloudPlatform/webapp2/blob/master/LICENSE
 .. _CONTRIBUTING.md: https://github.com/GoogleCloudPlatform/webapp2/blob/master/CONTRIBUTING.md
+.. |Build Status| image:: https://travis-ci.org/GoogleCloudPlatform/webapp2.svg
+   :target: https://travis-ci.org/GoogleCloudPlatform/webapp2
+.. |Coverage Status| image:: https://codecov.io/github/GoogleCloudPlatform/webapp2/coverage.svg?branch=master
+   :target: https://codecov.io/github/GoogleCloudPlatform/webapp2?branch=master
+.. |PyPI Version| image:: https://img.shields.io/pypi/v/webapp2.svg
+   :target: https://pypi.python.org/pypi/webapp2
