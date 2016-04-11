@@ -330,7 +330,7 @@ class User(model.Expando):
             A :class:`UserToken` or None if the token does not exist.
         """
         return cls.token_model.get(user=user_id, subject=subject,
-                                   token=token) is not None
+                                   token=token)
 
     @classmethod
     def create_auth_token(cls, user_id):
