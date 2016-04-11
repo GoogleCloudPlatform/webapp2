@@ -141,14 +141,14 @@ class TestAuthModels(test_base.BaseTestCase):
         auth_id = 'foo'
 
         token = m.create_auth_token(auth_id)
-        self.assertTrue(m.validate_auth_token(auth_id, token))
+        self.assertIsNotNone(m.validate_auth_token(auth_id, token))
         m.delete_auth_token(auth_id, token)
-        self.assertFalse(m.validate_auth_token(auth_id, token))
+        self.assertIsNone(m.validate_auth_token(auth_id, token))
 
         token = m.create_signup_token(auth_id)
-        self.assertTrue(m.validate_signup_token(auth_id, token))
+        self.assertIsNotNone(m.validate_signup_token(auth_id, token))
         m.delete_signup_token(auth_id, token)
-        self.assertFalse(m.validate_signup_token(auth_id, token))
+        self.assertIsNone(m.validate_signup_token(auth_id, token))
 
 
 class TestUniqueModel(test_base.BaseTestCase):
