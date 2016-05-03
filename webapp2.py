@@ -72,7 +72,7 @@ except ImportError: # pragma: no cover
                     "so webapp2 won't be thread-safe!")
 
 
-def iteritems(d):
+def _iteritems(d):
     try:
         return d.iteritems()
     except AttributeError:
@@ -130,7 +130,7 @@ _webapp_status_reasons = {
     505: 'HTTP Version not supported',
 }
 status_reasons.update(_webapp_status_reasons)
-for code, message in iteritems(_webapp_status_reasons):
+for code, message in _iteritems(_webapp_status_reasons):
     cls = exc.status_map.get(code)
     if cls:
         cls.title = message
@@ -1045,7 +1045,7 @@ class Route(BaseRoute):
                     kwargs[key] = value
 
         values = {}
-        for name, regex in iteritems(variables):
+        for name, regex in _iteritems(variables):
             value = kwargs.pop(name, self.defaults.get(name))
             if value is None:
                 raise KeyError('Missing argument "%s" to build URI.' % \
@@ -1332,7 +1332,7 @@ class Router(object):
 
     def __repr__(self):
         routes = self.match_routes + [v for k, v in \
-            iteritems(self.build_routes) if v not in self.match_routes]
+            _iteritems(self.build_routes) if v not in self.match_routes]
 
         return '<Router(%r)>' % routes
 
@@ -1908,7 +1908,7 @@ def _urlunsplit(scheme=None, netloc=None, path=None, query=None,
 
     if query and not isinstance(query, basestring):
         if isinstance(query, dict):
-            query = iteritems(query)
+            query = _iteritems(query)
 
         # Sort args: commonly needed to build signatures for services.
         query = urllib.urlencode(sorted(query))
