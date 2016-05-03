@@ -33,7 +33,11 @@ import sys
 import threading
 import traceback
 import urllib
-import urlparse
+try:
+    from urlparse import urljoin, urlunsplit
+except ImportError:
+    urljoin = urllib.parse
+    urlunsplit = urllib.parse
 from wsgiref import handlers
 
 import webob
@@ -119,7 +123,7 @@ _webapp_status_reasons = {
     505: 'HTTP Version not supported',
 }
 status_reasons.update(_webapp_status_reasons)
-for code, message in _webapp_status_reasons.iteritems():
+for code, message in _webapp_status_reasons.items():
     cls = exc.status_map.get(code)
     if cls:
         cls.title = message
@@ -582,7 +586,7 @@ class RequestHandler(object):
 
         try:
             return method(*args, **kwargs)
-        except Exception, e:
+        except Exception as e:
             return self.handle_exception(e, self.app.debug)
 
     def error(self, code):
@@ -1034,7 +1038,7 @@ class Route(BaseRoute):
                     kwargs[key] = value
 
         values = {}
-        for name, regex in variables.iteritems():
+        for name, regex in variables.items():
             value = kwargs.pop(name, self.defaults.get(name))
             if value is None:
                 raise KeyError('Missing argument "%s" to build URI.' % \
@@ -1101,7 +1105,7 @@ class WebappHandlerAdapter(BaseHandlerAdapter):
 
         try:
             method(*args, **kwargs)
-        except Exception, e:
+        except Exception as e:
             handler.handle_exception(e, request.app.debug)
 
 
@@ -1321,7 +1325,7 @@ class Router(object):
 
     def __repr__(self):
         routes = self.match_routes + [v for k, v in \
-            self.build_routes.iteritems() if v not in self.match_routes]
+            self.build_routes.items() if v not in self.match_routes]
 
         return '<Router(%r)>' % routes
 
@@ -1543,22 +1547,22 @@ class WSGIApplication(object):
                 rv = self.router.dispatch(request, response)
                 if rv is not None:
                     response = rv
-            except Exception, e:
+            except Exception as e:
                 try:
                     # Try to handle it with a custom error handler.
                     rv = self.handle_exception(request, response, e)
                     if rv is not None:
                         response = rv
-                except HTTPException, e:
+                except HTTPException as e:
                     # Use the HTTP exception as response.
                     response = e
-                except Exception, e:
+                except Exception as e:
                     # Error wasn't handled so we have nothing else to do.
                     response = self._internal_error(e)
 
             try:
                 return response(environ, start_response)
-            except Exception, e:
+            except Exception as e:
                 return self._internal_error(e)(environ, start_response)
 
     def _internal_error(self, exception):
@@ -1777,7 +1781,7 @@ def redirect(uri, permanent=False, abort=False, code=None, body=None,
     """
     if uri.startswith(('.', '/')):
         request = request or get_request()
-        uri = str(urlparse.urljoin(request.url, uri))
+        uri = str(urljoin(request.url, uri))
 
     if code is None:
         if permanent:
@@ -1864,9 +1868,9 @@ def import_string(import_name, silent=False):
             return getattr(__import__(module, None, None, [obj]), obj)
         else:
             return __import__(import_name)
-    except (ImportError, AttributeError), e:
+    except (ImportError, AttributeError) as e:
         if not silent:
-            raise ImportStringError(import_name, e), None, sys.exc_info()[2]
+            raise ImportStringError(import_name, e)
 
 
 def _urlunsplit(scheme=None, netloc=None, path=None, query=None,
@@ -1897,7 +1901,7 @@ def _urlunsplit(scheme=None, netloc=None, path=None, query=None,
 
     if query and not isinstance(query, basestring):
         if isinstance(query, dict):
-            query = query.iteritems()
+            query = query.items()
 
         # Sort args: commonly needed to build signatures for services.
         query = urllib.urlencode(sorted(query))
@@ -1905,7 +1909,7 @@ def _urlunsplit(scheme=None, netloc=None, path=None, query=None,
     if fragment:
         fragment = urllib.quote(_to_utf8(fragment))
 
-    return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
+    return urlunsplit((scheme, netloc, path, query, fragment))
 
 
 def _get_handler_methods(handler):
