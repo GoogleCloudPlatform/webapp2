@@ -1800,7 +1800,9 @@ def redirect(uri, permanent=False, abort=False, code=None, body=None,
         'Invalid redirect status code.'
 
     if abort:
-        _abort(code, headers=[('Location', uri)])
+        headers = response.headers.copy() if response is not None else []
+        headers['Location'] = uri
+        _abort(code, headers=headers)
 
     if response is None:
         request = request or get_request()
