@@ -68,6 +68,7 @@ class RedirectToHandler(webapp2.RequestHandler):
 
 class RedirectAbortHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
+        self.response.headers.add_header('Set-Cookie', 'a=b')
         self.redirect('/somewhere', abort=True)
 
 
@@ -354,6 +355,7 @@ class TestHandler(test_base.BaseTestCase):
 
 The resource was found at http://localhost/somewhere; you should be redirected automatically.  """)
         self.assertEqual(rsp.headers['Location'], 'http://localhost/somewhere')
+        self.assertEqual(rsp.headers['Set-Cookie'], 'a=b')
 
     def test_run(self):
         os.environ['REQUEST_METHOD'] = 'GET'
