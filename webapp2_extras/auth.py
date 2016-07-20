@@ -24,7 +24,6 @@ import time
 
 import webapp2
 
-from webapp2_extras import security
 from webapp2_extras import sessions
 
 #: Default configuration values for this module. Keys are:
@@ -107,8 +106,11 @@ class AuthStore(object):
         """
         self.app = app
         # Base configuration.
-        self.config = app.config.load_config(self.config_key,
-            default_values=default_config, user_values=config)
+        self.config = app.config.load_config(
+            self.config_key,
+            default_values=default_config,
+            user_values=config
+        )
 
     # User data we're interested in -------------------------------------------
 

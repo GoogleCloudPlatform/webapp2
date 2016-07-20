@@ -21,21 +21,26 @@ Helpers for defending against cross-site request forgery attacks.
 """
 
 import base64
-import hmac
 import hashlib
+import hmac
 import time
+
 
 class XSRFException(Exception):
     pass
 
+
 class XSRFTokenMalformed(XSRFException):
     pass
+
 
 class XSRFTokenExpiredException(XSRFException):
     pass
 
+
 class XSRFTokenInvalid(XSRFException):
     pass
+
 
 class XSRFToken(object):
     _DELIMITER = '|'
@@ -56,9 +61,9 @@ class XSRFToken(object):
         self.user_id = user_id
         self.secret = secret
         if current_time is None:
-          self.current_time = int(time.time())
+            self.current_time = int(time.time())
         else:
-          self.current_time = int(current_time)
+            self.current_time = int(current_time)
 
     def _digest_maker(self):
         return hmac.new(self.secret, digestmod=hashlib.sha1)
@@ -110,39 +115,39 @@ class XSRFToken(object):
             XSRFTokenMalformed if the given token_string cannot be parsed.
             XSRFTokenExpiredException if the given token string is expired.
             XSRFTokenInvalid if the given token string does not match the
-            contents of the `XSRFToken`. 
+            contents of the `XSRFToken`.
         """
         try:
-          decoded_token_string = base64.urlsafe_b64decode(token_string)
+            decoded_token_string = base64.urlsafe_b64decode(token_string)
         except TypeError:
-          raise XSRFTokenMalformed()
+            raise XSRFTokenMalformed()
 
         split_token = decoded_token_string.split(self._DELIMITER)
         if len(split_token) != 2:
-          raise XSRFTokenMalformed()
+            raise XSRFTokenMalformed()
 
         try:
-          token_time = int(split_token[1])
+            token_time = int(split_token[1])
         except ValueError:
-          raise XSRFTokenMalformed()
+            raise XSRFTokenMalformed()
 
         if timeout is not None:
-          if current_time is None:
-            current_time = time.time()
-          # If an attacker modifies the plain text time then it will not match
-          # the hashed time so this check is sufficient.
-          if (token_time + timeout) < current_time:
-            raise XSRFTokenExpiredException()
+            if current_time is None:
+                current_time = time.time()
+            # If an attacker modifies the plain text time then
+            # it will not match the hashed time so this check is sufficient.
+            if (token_time + timeout) < current_time:
+                raise XSRFTokenExpiredException()
 
         expected_token = XSRFToken(self.user_id, self.secret, token_time)
         expected_token_string = expected_token.generate_token_string(action)
 
         if len(expected_token_string) != len(token_string):
-          raise XSRFTokenInvalid()
+            raise XSRFTokenInvalid()
 
         # Compare the two strings in constant time to prevent timing attacks.
         different = 0
         for a, b in zip(token_string, expected_token_string):
-          different |= ord(a) ^ ord(b)
+            different |= ord(a) ^ ord(b)
         if different:
-          raise XSRFTokenInvalid()
+            raise XSRFTokenInvalid()

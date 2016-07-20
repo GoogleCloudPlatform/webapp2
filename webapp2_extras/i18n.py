@@ -24,20 +24,18 @@ Several ideas borrowed from tipfy.i18n and Flask-Babel.
 import datetime
 import gettext as gettext_stdlib
 
-import babel
 from babel import dates
 from babel import numbers
 from babel import support
+import pytz
+
+import webapp2
 
 try:
     # Monkeypatches pytz for gae.
     import pytz.gae
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     pass
-
-import pytz
-
-import webapp2
 
 #: Default configuration values for this module. Keys are:
 #:
@@ -132,9 +130,12 @@ class I18nStore(object):
             A dictionary of configuration values to be overridden. See
             the available keys in :data:`default_config`.
         """
-        config = app.config.load_config(self.config_key,
-            default_values=default_config, user_values=config,
-            required_keys=None)
+        config = app.config.load_config(
+            self.config_key,
+            default_values=default_config,
+            user_values=config,
+            required_keys=None
+        )
         self.translations = {}
         self.translations_path = config['translations_path']
         self.domains = config['domains']
@@ -754,8 +755,8 @@ def format_time(time=None, format=None, rebase=True):
     return get_i18n().format_time(time, format, rebase)
 
 
-def format_timedelta(datetime_or_timedelta, granularity='second',
-    threshold=.85):
+def format_timedelta(
+        datetime_or_timedelta, granularity='second', threshold=.85):
     """See :meth:`I18n.format_timedelta`."""
     return get_i18n().format_timedelta(datetime_or_timedelta,
                                        granularity, threshold)

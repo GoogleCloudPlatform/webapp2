@@ -78,9 +78,9 @@ default_config = {
     },
     'backends': {
         'securecookie': 'webapp2_extras.sessions.SecureCookieSessionFactory',
-        'datastore':    'webapp2_extras.appengine.sessions_ndb.' \
+        'datastore':    'webapp2_extras.appengine.sessions_ndb.'
                         'DatastoreSessionFactory',
-        'memcache':     'webapp2_extras.appengine.sessions_memcache.' \
+        'memcache':     'webapp2_extras.appengine.sessions_memcache.'
                         'MemcacheSessionFactory',
     },
 }
@@ -314,9 +314,12 @@ class SessionStore(object):
         """
         self.request = request
         # Base configuration.
-        self.config = request.app.config.load_config(self.config_key,
-            default_values=default_config, user_values=config,
-            required_keys=('secret_key',))
+        self.config = request.app.config.load_config(
+            self.config_key,
+            default_values=default_config,
+            user_values=config,
+            required_keys=('secret_key',)
+        )
         # Tracked sessions.
         self.sessions = {}
 

@@ -19,12 +19,10 @@ webapp2_extras.routes
 
 Extra route classes for webapp2.
 """
-import re
 import urllib
 
-from webob import exc
-
 import webapp2
+from webob import exc
 
 
 class MultiRoute(object):

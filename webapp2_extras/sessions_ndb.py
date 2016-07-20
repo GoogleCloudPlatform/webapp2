@@ -28,4 +28,3 @@ warnings.warn(DeprecationWarning(
     'webapp2_extras.sessions_ndb is deprecated. '
     'App Engine-specific modules were moved to webapp2_extras.appengine.'),
     stacklevel=1)
-from webapp2_extras.appengine.sessions_ndb import *
