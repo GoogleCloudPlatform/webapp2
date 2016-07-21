@@ -13,12 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.appengine.api import datastore_errors
 from google.appengine.api import memcache
 
 import webapp2
 from webapp2_extras import sessions
-from webapp2_extras import sessions_ndb
+from webapp2_extras.appengine import sessions_ndb
 
 import test_base
 
@@ -31,7 +30,7 @@ app = webapp2.WSGIApplication(config={
 
 
 class TestNdbSession(test_base.BaseTestCase):
-    #factory = sessions_ndb.DatastoreSessionFactory
+    # factory = sessions_ndb.DatastoreSessionFactory
 
     def setUp(self):
         super(TestNdbSession, self).setUp()

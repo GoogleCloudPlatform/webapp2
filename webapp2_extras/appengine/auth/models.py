@@ -23,7 +23,7 @@ import time
 
 try:
     from ndb import model
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     from google.appengine.ext.ndb import model
 
 from webapp2_extras import auth
@@ -91,9 +91,11 @@ class Unique(model.Model):
         :returns:
             True if the unique value was created, False otherwise.
         """
+        def txn(e):
+            return e.put() if not e.key.get() else None
+
         entity = cls(key=model.Key(cls, value))
-        txn = lambda: entity.put() if not entity.key.get() else None
-        return model.transaction(txn) is not None
+        return model.transaction(lambda: txn(entity)) is not None
 
     @classmethod
     def create_multi(cls, values):
@@ -114,9 +116,11 @@ class Unique(model.Model):
         #    return False, existing
 
         # Create all records transactionally.
+        def func(entity):
+            return entity.put() if not entity.key.get() else None
+
         keys = [model.Key(cls, value) for value in values]
         entities = [cls(key=key) for key in keys]
-        func = lambda e: e.put() if not e.key.get() else None
         created = [model.transaction(lambda: func(e)) for e in entities]
 
         if created != keys:

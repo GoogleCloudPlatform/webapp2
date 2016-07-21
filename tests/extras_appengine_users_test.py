@@ -16,7 +16,7 @@
 import os
 
 import webapp2
-from webapp2_extras import users
+from webapp2_extras.appengine import users
 
 import test_base
 
