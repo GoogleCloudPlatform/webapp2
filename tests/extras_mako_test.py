@@ -15,10 +15,11 @@
 
 import os
 
+import test_base
+
 import webapp2
 from webapp2_extras import mako
 
-import test_base
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
 template_path = os.path.join(current_dir, 'resources', 'mako_templates')
@@ -36,7 +37,7 @@ class TestMako(test_base.BaseTestCase):
         m = mako.Mako(app)
 
         message = 'Hello, World!'
-        res = m.render_template( 'template1.html', message=message)
+        res = m.render_template('template1.html', message=message)
         self.assertEqual(res, message + '\n')
 
     def test_set_mako(self):

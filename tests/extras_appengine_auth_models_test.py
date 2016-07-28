@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from webapp2_extras import auth
-from webapp2_extras.appengine.auth import models
-
 from google.appengine.ext.ndb import model
 
 import test_base
+
+from webapp2_extras import auth
+from webapp2_extras.appengine.auth import models
 
 
 class UniqueConstraintViolation(Exception):
@@ -96,12 +96,18 @@ class TestAuthModels(test_base.BaseTestCase):
 
     def test_add_auth_ids(self):
         m = models.User
-        success, new_user = m.create_user(auth_id='auth_id_1', password_raw='foo')
+        success, new_user = m.create_user(
+            auth_id='auth_id_1',
+            password_raw='foo'
+        )
         self.assertEqual(success, True)
         self.assertTrue(new_user is not None)
         self.assertTrue(new_user.password is not None)
 
-        success, new_user_2 = m.create_user(auth_id='auth_id_2', password_raw='foo')
+        success, new_user_2 = m.create_user(
+            auth_id='auth_id_2',
+            password_raw='foo'
+        )
         self.assertEqual(success, True)
         self.assertTrue(new_user is not None)
         self.assertTrue(new_user.password is not None)
@@ -169,13 +175,13 @@ class TestUniqueModel(test_base.BaseTestCase):
                 user.put()
                 return user
             else:
-                raise UniqueConstraintViolation('Username %s already '
-                    'exists' % username)
+                raise UniqueConstraintViolation(
+                    'Username %s already exists' % username)
 
-        user = create_user('username_1')
+        create_user('username_1')
         self.assertRaises(UniqueConstraintViolation, create_user, 'username_1')
 
-        user = create_user('username_2')
+        create_user('username_2')
         self.assertRaises(UniqueConstraintViolation, create_user, 'username_2')
 
     def test_multi(self):
@@ -195,24 +201,36 @@ class TestUniqueModel(test_base.BaseTestCase):
                 return user
             else:
                 if unique_username in existing:
-                    raise UniqueConstraintViolation('Username %s already '
-                        'exists' % username)
+                    raise UniqueConstraintViolation(
+                        'Username %s already exists' % username)
                 if unique_auth_id in existing:
-                    raise UniqueConstraintViolation('Auth id %s already '
-                        'exists' % auth_id)
+                    raise UniqueConstraintViolation(
+                        'Auth id %s already exists' % auth_id)
                 if unique_email in existing:
-                    raise UniqueConstraintViolation('Email %s already '
-                        'exists' % email)
+                    raise UniqueConstraintViolation(
+                        'Email %s already exists' % email)
 
-        user = create_user('username_1', 'auth_id_1', 'email_1')
-        self.assertRaises(UniqueConstraintViolation, create_user, 'username_1', 'auth_id_2', 'email_2')
-        self.assertRaises(UniqueConstraintViolation, create_user, 'username_2', 'auth_id_1', 'email_2')
-        self.assertRaises(UniqueConstraintViolation, create_user, 'username_2', 'auth_id_2', 'email_1')
+        create_user('username_1', 'auth_id_1', 'email_1')
+        self.assertRaises(
+            UniqueConstraintViolation,
+            create_user, 'username_1', 'auth_id_2', 'email_2')
+        self.assertRaises(
+            UniqueConstraintViolation,
+            create_user, 'username_2', 'auth_id_1', 'email_2')
+        self.assertRaises(
+            UniqueConstraintViolation,
+            create_user, 'username_2', 'auth_id_2', 'email_1')
 
-        user = create_user('username_2', 'auth_id_2', 'email_2')
-        self.assertRaises(UniqueConstraintViolation, create_user, 'username_2', 'auth_id_1', 'email_1')
-        self.assertRaises(UniqueConstraintViolation, create_user, 'username_1', 'auth_id_2', 'email_1')
-        self.assertRaises(UniqueConstraintViolation, create_user, 'username_1', 'auth_id_1', 'email_2')
+        create_user('username_2', 'auth_id_2', 'email_2')
+        self.assertRaises(
+            UniqueConstraintViolation,
+            create_user, 'username_2', 'auth_id_1', 'email_1')
+        self.assertRaises(
+            UniqueConstraintViolation,
+            create_user, 'username_1', 'auth_id_2', 'email_1')
+        self.assertRaises(
+            UniqueConstraintViolation,
+            create_user, 'username_1', 'auth_id_1', 'email_2')
 
     def test_delete_multi(self):
         rv = models.Unique.create_multi(('foo', 'bar', 'baz'))

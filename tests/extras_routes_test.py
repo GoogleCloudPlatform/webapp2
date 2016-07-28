@@ -13,12 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import test_base
+
 import webapp2
 
-from webapp2_extras.routes import (DomainRoute, HandlerPrefixRoute,
-    RedirectRoute, NamePrefixRoute, PathPrefixRoute)
-
-import test_base
+from webapp2_extras.routes import DomainRoute
+from webapp2_extras.routes import HandlerPrefixRoute
+from webapp2_extras.routes import NamePrefixRoute
+from webapp2_extras.routes import PathPrefixRoute
+from webapp2_extras.routes import RedirectRoute
 
 
 class HomeHandler(webapp2.RequestHandler):
@@ -27,14 +30,24 @@ class HomeHandler(webapp2.RequestHandler):
 
 
 app = webapp2.WSGIApplication([
-    #RedirectRoute('/', name='home', handler=HomeHandler),
-    RedirectRoute('/redirect-me-easily', redirect_to='/i-was-redirected-easily'),
-    RedirectRoute('/redirect-me-easily2', redirect_to='/i-was-redirected-easily', defaults={'_code': 302}),
-    RedirectRoute('/redirect-me-easily3', redirect_to='/i-was-redirected-easily', defaults={'_permanent': False}),
-    RedirectRoute('/strict-foo', HomeHandler, 'foo-strict', strict_slash=True),
-    RedirectRoute('/strict-bar/', HomeHandler, 'bar-strict', strict_slash=True),
-    RedirectRoute('/redirect-to-name-destination', name='redirect-to-name-destination', handler=HomeHandler),
-    RedirectRoute('/redirect-to-name', redirect_to_name='redirect-to-name-destination'),
+    # RedirectRoute('/', name='home', handler=HomeHandler),
+    RedirectRoute('/redirect-me-easily',
+                  redirect_to='/i-was-redirected-easily'),
+    RedirectRoute('/redirect-me-easily2',
+                  redirect_to='/i-was-redirected-easily',
+                  defaults={'_code': 302}),
+    RedirectRoute('/redirect-me-easily3',
+                  redirect_to='/i-was-redirected-easily',
+                  defaults={'_permanent': False}),
+    RedirectRoute('/strict-foo', HomeHandler, 'foo-strict',
+                  strict_slash=True),
+    RedirectRoute('/strict-bar/', HomeHandler, 'bar-strict',
+                  strict_slash=True),
+    RedirectRoute('/redirect-to-name-destination',
+                  name='redirect-to-name-destination',
+                  handler=HomeHandler),
+    RedirectRoute('/redirect-to-name',
+                  redirect_to_name='redirect-to-name-destination'),
 ])
 
 
@@ -42,7 +55,8 @@ class TestRedirectRoute(test_base.BaseTestCase):
     def test_route_redirect_to(self):
         route = RedirectRoute('/foo', redirect_to='/bar')
         router = webapp2.Router([route])
-        route_match, args, kwargs = router.match(webapp2.Request.blank('/foo'))
+        route_match, args, kwargs = router.match(
+            webapp2.Request.blank('/foo'))
         self.assertEqual(route_match, route)
         self.assertEqual(args, ())
         self.assertEqual(kwargs, {'_uri': '/bar'})
@@ -52,26 +66,38 @@ class TestRedirectRoute(test_base.BaseTestCase):
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 301)
         self.assertEqual(rsp.body, '')
-        self.assertEqual(rsp.headers['Location'], 'http://localhost/i-was-redirected-easily')
+        self.assertEqual(
+            rsp.headers['Location'],
+            'http://localhost/i-was-redirected-easily'
+        )
 
         req = webapp2.Request.blank('/redirect-me-easily2')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 302)
         self.assertEqual(rsp.body, '')
-        self.assertEqual(rsp.headers['Location'], 'http://localhost/i-was-redirected-easily')
+        self.assertEqual(
+            rsp.headers['Location'],
+            'http://localhost/i-was-redirected-easily'
+        )
 
         req = webapp2.Request.blank('/redirect-me-easily3')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 302)
         self.assertEqual(rsp.body, '')
-        self.assertEqual(rsp.headers['Location'], 'http://localhost/i-was-redirected-easily')
+        self.assertEqual(
+            rsp.headers['Location'],
+            'http://localhost/i-was-redirected-easily'
+        )
 
     def test_redirect_to_name(self):
         req = webapp2.Request.blank('/redirect-to-name')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 301)
         self.assertEqual(rsp.body, '')
-        self.assertEqual(rsp.headers['Location'], 'http://localhost/redirect-to-name-destination')
+        self.assertEqual(
+            rsp.headers['Location'],
+            'http://localhost/redirect-to-name-destination'
+        )
 
     def test_strict_slash(self):
         req = webapp2.Request.blank('/strict-foo')
@@ -90,20 +116,30 @@ class TestRedirectRoute(test_base.BaseTestCase):
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 301)
         self.assertEqual(rsp.body, '')
-        self.assertEqual(rsp.headers['Location'], 'http://localhost/strict-foo')
+        self.assertEqual(
+            rsp.headers['Location'],
+            'http://localhost/strict-foo'
+        )
 
         req = webapp2.Request.blank('/strict-bar')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 301)
         self.assertEqual(rsp.body, '')
-        self.assertEqual(rsp.headers['Location'], 'http://localhost/strict-bar/')
+        self.assertEqual(
+            rsp.headers['Location'],
+            'http://localhost/strict-bar/'
+        )
 
         # Strict slash routes must have a name.
 
-        self.assertRaises(ValueError, RedirectRoute, '/strict-bar/', handler=HomeHandler, strict_slash=True)
+        self.assertRaises(ValueError,
+                          RedirectRoute, '/strict-bar/',
+                          handler=HomeHandler, strict_slash=True)
 
     def test_build_only(self):
-        self.assertRaises(ValueError, RedirectRoute, '/', handler=HomeHandler, build_only=True)
+        self.assertRaises(ValueError,
+                          RedirectRoute, '/',
+                          handler=HomeHandler, build_only=True)
 
 
 class TestPrefixRoutes(test_base.BaseTestCase):
@@ -123,33 +159,68 @@ class TestPrefixRoutes(test_base.BaseTestCase):
 
         path = '/a/'
         match = ((), {})
-        self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a', match[0], match[1]), path)
+        self.assertEqual(
+            router.match(webapp2.Request.blank(path))[1:], match)
+        self.assertEqual(
+            router.build(webapp2.Request.blank('/'),
+                         'name-a', match[0], match[1]),
+            path
+        )
 
         path = '/a/b'
         match = ((), {})
-        self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a/b', match[0], match[1]), path)
+        self.assertEqual(
+            router.match(webapp2.Request.blank(path))[1:],
+            match
+        )
+        self.assertEqual(
+            router.build(webapp2.Request.blank('/'),
+                         'name-a/b', match[0], match[1]),
+            path
+        )
 
         path = '/a/c'
         match = ((), {})
-        self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a/c', match[0], match[1]), path)
+        self.assertEqual(
+            router.match(webapp2.Request.blank(path))[1:],
+            match
+        )
+        self.assertEqual(
+            router.build(webapp2.Request.blank('/'),
+                         'name-a/c', match[0], match[1]),
+            path
+        )
 
         path = '/a/d/'
         match = ((), {})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a/d', match[0], match[1]), path)
+        self.assertEqual(
+            router.build(webapp2.Request.blank('/'),
+                         'name-a/d', match[0], match[1]),
+            path
+        )
 
         path = '/a/d/b'
         match = ((), {})
-        self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a/d/b', match[0], match[1]), path)
+        self.assertEqual(
+            router.match(webapp2.Request.blank(path))[1:],
+            match
+        )
+        self.assertEqual(
+            router.build(
+                webapp2.Request.blank('/'),
+                'name-a/d/b', match[0], match[1]),
+            path
+        )
 
         path = '/a/d/c'
         match = ((), {})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'name-a/d/c', match[0], match[1]), path)
+        self.assertEqual(
+            router.build(webapp2.Request.blank('/'),
+                         'name-a/d/c', match[0], match[1]),
+            path
+        )
 
     def test_with_variables_name_and_handler(self):
         router = webapp2.Router([
@@ -157,8 +228,10 @@ class TestPrefixRoutes(test_base.BaseTestCase):
                 HandlerPrefixRoute('apps.users.', [
                     NamePrefixRoute('user-', [
                         webapp2.Route('/', 'UserOverviewHandler', 'overview'),
-                        webapp2.Route('/profile', 'UserProfileHandler', 'profile'),
-                        webapp2.Route('/projects', 'UserProjectsHandler', 'projects'),
+                        webapp2.Route(
+                            '/profile', 'UserProfileHandler', 'profile'),
+                        webapp2.Route(
+                            '/projects', 'UserProjectsHandler', 'projects'),
                     ]),
                 ]),
             ])
@@ -167,17 +240,29 @@ class TestPrefixRoutes(test_base.BaseTestCase):
         path = '/user/calvin/'
         match = ((), {'username': 'calvin'})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-overview', match[0], match[1]), path)
+        self.assertEqual(
+            router.build(webapp2.Request.blank('/'),
+                         'user-overview', match[0], match[1]),
+            path
+        )
 
         path = '/user/calvin/profile'
         match = ((), {'username': 'calvin'})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-profile', match[0], match[1]), path)
+        self.assertEqual(
+            router.build(webapp2.Request.blank('/'),
+                         'user-profile', match[0], match[1]),
+            path
+        )
 
         path = '/user/calvin/projects'
         match = ((), {'username': 'calvin'})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-projects', match[0], match[1]), path)
+        self.assertEqual(
+            router.build(webapp2.Request.blank('/'),
+                         'user-projects', match[0], match[1]),
+            path
+        )
 
 
 class TestDomainRoute(test_base.BaseTestCase):
@@ -188,16 +273,29 @@ class TestDomainRoute(test_base.BaseTestCase):
             ])
         ])
 
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank('/foo'))
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank('/foo'))
 
-        match = router.match(webapp2.Request.blank('http://my-subdomain.app-id.appspot.com/foo'))
+        match = router.match(
+            webapp2.Request.blank(
+                'http://my-subdomain.app-id.appspot.com/foo'))
         self.assertEqual(match[1:], ((), {'subdomain': 'my-subdomain'}))
 
-        match = router.match(webapp2.Request.blank('http://another-subdomain.app-id.appspot.com/foo'))
+        match = router.match(
+            webapp2.Request.blank(
+                'http://another-subdomain.app-id.appspot.com/foo'))
         self.assertEqual(match[1:], ((), {'subdomain': 'another-subdomain'}))
 
-        url = router.build(webapp2.Request.blank('/'), 'subdomain-thingie', (), {'_netloc': 'another-subdomain.app-id.appspot.com'})
-        self.assertEqual(url, 'http://another-subdomain.app-id.appspot.com/foo')
+        url = router.build(
+            webapp2.Request.blank('/'),
+            'subdomain-thingie', (),
+            {'_netloc': 'another-subdomain.app-id.appspot.com'}
+        )
+        self.assertEqual(
+            url,
+            'http://another-subdomain.app-id.appspot.com/foo'
+        )
 
     def test_with_variables_name_and_handler(self):
         router = webapp2.Router([
@@ -205,9 +303,21 @@ class TestDomainRoute(test_base.BaseTestCase):
                 PathPrefixRoute('/user/<username:\w+>', [
                     HandlerPrefixRoute('apps.users.', [
                         NamePrefixRoute('user-', [
-                            webapp2.Route('/', 'UserOverviewHandler', 'overview'),
-                            webapp2.Route('/profile', 'UserProfileHandler', 'profile'),
-                            webapp2.Route('/projects', 'UserProjectsHandler', 'projects'),
+                            webapp2.Route(
+                                '/',
+                                'UserOverviewHandler',
+                                'overview'
+                            ),
+                            webapp2.Route(
+                                '/profile',
+                                'UserProfileHandler',
+                                'profile'
+                            ),
+                            webapp2.Route(
+                                '/projects',
+                                'UserProjectsHandler',
+                                'projects'
+                            ),
                         ]),
                     ]),
                 ])
@@ -219,21 +329,34 @@ class TestDomainRoute(test_base.BaseTestCase):
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
         match[1].pop('subdomain')
         match[1]['_netloc'] = 'my-subdomain.app-id.appspot.com'
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-overview', match[0], match[1]), path)
+        self.assertEqual(
+            router.build(webapp2.Request.blank('/'),
+                         'user-overview', match[0], match[1]),
+            path
+        )
 
         path = 'http://my-subdomain.app-id.appspot.com/user/calvin/profile'
         match = ((), {'username': 'calvin', 'subdomain': 'my-subdomain'})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
         match[1].pop('subdomain')
         match[1]['_netloc'] = 'my-subdomain.app-id.appspot.com'
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-profile', match[0], match[1]), path)
+        self.assertEqual(
+            router.build(webapp2.Request.blank('/'),
+                         'user-profile', match[0], match[1]),
+            path
+        )
 
         path = 'http://my-subdomain.app-id.appspot.com/user/calvin/projects'
         match = ((), {'username': 'calvin', 'subdomain': 'my-subdomain'})
         self.assertEqual(router.match(webapp2.Request.blank(path))[1:], match)
         match[1].pop('subdomain')
         match[1]['_netloc'] = 'my-subdomain.app-id.appspot.com'
-        self.assertEqual(router.build(webapp2.Request.blank('/'), 'user-projects', match[0], match[1]), path)
+
+        self.assertEqual(
+            router.build(webapp2.Request.blank('/'),
+                         'user-projects', match[0], match[1]),
+            path
+        )
 
     def test_guide_examples(self):
         router = webapp2.Router([
@@ -246,9 +369,11 @@ class TestDomainRoute(test_base.BaseTestCase):
             DomainRoute(r'<:(app-id\.appspot\.com|www\.mydomain\.com)>', [
                 webapp2.Route('/path3', 'Path3', 'path3'),
             ]),
-            DomainRoute(r'<subdomain:(?!www)[^.]+>.<:(app-id\.appspot\.com|mydomain\.com)>', [
-                webapp2.Route('/path4', 'Path4', 'path4'),
-            ]),
+            DomainRoute(
+                r'<subdomain:(?!www)[^.]'
+                r'+>.<:(app-id\.appspot\.com|mydomain\.com)>',
+                [webapp2.Route('/path4', 'Path4', 'path4'), ]
+            ),
         ])
 
         uri1a = 'http://www.mydomain.com/path1'
@@ -275,29 +400,75 @@ class TestDomainRoute(test_base.BaseTestCase):
         uri4f = 'http://sub.app-id.appspot.com/invalid-path'
         uri4g = 'http://sub.mydomain.com/invalid-path'
 
-        self.assertEqual(router.match(webapp2.Request.blank(uri1a))[1:], ((), {}))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri1b))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri1c))
+        self.assertEqual(
+            router.match(webapp2.Request.blank(uri1a))[1:],
+            ((), {})
+        )
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri1b))
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri1c))
 
-        self.assertEqual(router.match(webapp2.Request.blank(uri2a))[1:], ((), {'subdomain': 'sub'}))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri2b))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri2c))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri2d))
+        self.assertEqual(
+            router.match(webapp2.Request.blank(uri2a))[1:],
+            ((), {'subdomain': 'sub'})
+        )
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri2b))
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri2c))
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri2d))
 
-        self.assertEqual(router.match(webapp2.Request.blank(uri3a))[1:], ((), {}))
-        self.assertEqual(router.match(webapp2.Request.blank(uri3b))[1:], ((), {}))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri3c))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri3d))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri3e))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri3f))
+        self.assertEqual(
+            router.match(webapp2.Request.blank(uri3a))[1:],
+            ((), {})
+        )
+        self.assertEqual(
+            router.match(webapp2.Request.blank(uri3b))[1:],
+            ((), {})
+        )
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri3c))
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri3d))
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri3e))
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri3f))
 
-        self.assertEqual(router.match(webapp2.Request.blank(uri4a))[1:], ((), {'subdomain': 'sub'}))
-        self.assertEqual(router.match(webapp2.Request.blank(uri4b))[1:], ((), {'subdomain': 'sub'}))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri4c))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri4d))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri4e))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri4f))
-        self.assertRaises(webapp2.exc.HTTPNotFound, router.match, webapp2.Request.blank(uri4g))
+        self.assertEqual(
+            router.match(webapp2.Request.blank(uri4a))[1:],
+            ((), {'subdomain': 'sub'})
+        )
+        self.assertEqual(
+            router.match(webapp2.Request.blank(uri4b))[1:],
+            ((), {'subdomain': 'sub'})
+        )
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri4c))
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri4d))
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri4e))
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri4f))
+        self.assertRaises(
+            webapp2.exc.HTTPNotFound,
+            router.match, webapp2.Request.blank(uri4g))
 
 if __name__ == '__main__':
     test_base.main()

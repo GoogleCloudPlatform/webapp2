@@ -13,11 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import webapp2
-
-from webapp2_extras import config as app_config
-
 import test_base
+from webapp2_extras import config as app_config
 
 
 class TestConfig(test_base.BaseTestCase):
@@ -146,14 +143,18 @@ class TestConfig(test_base.BaseTestCase):
         self.assertRaises(AssertionError, app_config.Config, 'foo')
 
     def test_init_no_dict_default(self):
-        self.assertRaises(AssertionError, app_config.Config, {}, {'foo': 'bar'})
-        self.assertRaises(AssertionError, app_config.Config, {}, {'foo': None})
-        self.assertRaises(AssertionError, app_config.Config, {}, 'foo')
+        self.assertRaises(
+            AssertionError, app_config.Config, {}, {'foo': 'bar'})
+        self.assertRaises(
+            AssertionError, app_config.Config, {}, {'foo': None})
+        self.assertRaises(
+            AssertionError, app_config.Config, {}, 'foo')
 
     def test_update_no_dict_values(self):
         config = app_config.Config()
 
-        self.assertRaises(AssertionError, config.update, {'foo': 'bar'}, 'baz')
+        self.assertRaises(
+            AssertionError, config.update, {'foo': 'bar'}, 'baz')
         self.assertRaises(AssertionError, config.update, {'foo': None}, 'baz')
         self.assertRaises(AssertionError, config.update, 'foo', 'bar')
 
@@ -184,9 +185,18 @@ class TestLoadConfig(test_base.BaseTestCase):
         from resources.template import default_config as template_config
         from resources.i18n import default_config as i18n_config
 
-        self.assertEqual(config.get_config('resources.template', 'templates_dir'), template_config['templates_dir'])
-        self.assertEqual(config.get_config('resources.i18n', 'locale'), i18n_config['locale'])
-        self.assertEqual(config.get_config('resources.i18n', 'timezone'), i18n_config['timezone'])
+        self.assertEqual(
+            config.get_config('resources.template', 'templates_dir'),
+            template_config['templates_dir']
+        )
+        self.assertEqual(
+            config.get_config('resources.i18n', 'locale'),
+            i18n_config['locale']
+        )
+        self.assertEqual(
+            config.get_config('resources.i18n', 'timezone'),
+            i18n_config['timezone']
+        )
 
     def test_default_config_with_non_existing_key(self):
         config = app_config.Config()
@@ -194,10 +204,17 @@ class TestLoadConfig(test_base.BaseTestCase):
         from resources.i18n import default_config as i18n_config
 
         # In the first time the module config will be loaded normally.
-        self.assertEqual(config.get_config('resources.i18n', 'locale'), i18n_config['locale'])
+        self.assertEqual(
+            config.get_config('resources.i18n', 'locale'),
+            i18n_config['locale']
+        )
 
-        # In the second time it won't be loaded, but won't find the value and then use the default.
-        self.assertEqual(config.get_config('resources.i18n', 'i_dont_exist', 'foo'), 'foo')
+        """In the second time it won't be loaded,
+        but won't find the value and then use the default."""
+        self.assertEqual(
+            config.get_config('resources.i18n', 'i_dont_exist', 'foo'),
+            'foo'
+        )
 
     def test_override_config(self):
         config = app_config.Config({
@@ -210,9 +227,18 @@ class TestLoadConfig(test_base.BaseTestCase):
             },
         })
 
-        self.assertEqual(config.get_config('resources.template', 'templates_dir'), 'apps/templates')
-        self.assertEqual(config.get_config('resources.i18n', 'locale'), 'pt_BR')
-        self.assertEqual(config.get_config('resources.i18n', 'timezone'), 'America/Sao_Paulo')
+        self.assertEqual(
+            config.get_config('resources.template', 'templates_dir'),
+            'apps/templates'
+        )
+        self.assertEqual(
+            config.get_config('resources.i18n', 'locale'),
+            'pt_BR'
+        )
+        self.assertEqual(
+            config.get_config('resources.i18n', 'timezone'),
+            'America/Sao_Paulo'
+        )
 
     def test_override_config2(self):
         config = app_config.Config({
@@ -221,8 +247,14 @@ class TestLoadConfig(test_base.BaseTestCase):
             },
         })
 
-        self.assertEqual(config.get_config('resources.i18n', 'locale'), 'en_US')
-        self.assertEqual(config.get_config('resources.i18n', 'timezone'), 'America/Sao_Paulo')
+        self.assertEqual(
+            config.get_config('resources.i18n', 'locale'),
+            'en_US'
+        )
+        self.assertEqual(
+            config.get_config('resources.i18n', 'timezone'),
+            'America/Sao_Paulo'
+        )
 
     def test_get(self):
         config = app_config.Config({'foo': {
@@ -234,7 +266,10 @@ class TestLoadConfig(test_base.BaseTestCase):
     def test_get_with_default(self):
         config = app_config.Config()
 
-        self.assertEqual(config.get_config('resources.i18n', 'bar', 'baz'), 'baz')
+        self.assertEqual(
+            config.get_config('resources.i18n', 'bar', 'baz'),
+            'baz'
+        )
 
     def test_get_with_default_and_none(self):
         config = app_config.Config({'foo': {
@@ -245,16 +280,24 @@ class TestLoadConfig(test_base.BaseTestCase):
 
     def test_get_with_default_and_module_load(self):
         config = app_config.Config()
-        self.assertEqual(config.get_config('resources.i18n', 'locale'), 'en_US')
-        self.assertEqual(config.get_config('resources.i18n', 'locale', 'foo'), 'en_US')
+        self.assertEqual(
+            config.get_config('resources.i18n', 'locale'),
+            'en_US'
+        )
+        self.assertEqual(
+            config.get_config('resources.i18n', 'locale', 'foo'),
+            'en_US'
+        )
 
     def test_required_config(self):
         config = app_config.Config()
-        self.assertRaises(KeyError, config.get_config, 'resources.i18n', 'foo')
+        self.assertRaises(
+            KeyError, config.get_config, 'resources.i18n', 'foo')
 
     def test_missing_module(self):
         config = app_config.Config()
-        self.assertRaises(KeyError, config.get_config, 'i_dont_exist', 'i_dont_exist')
+        self.assertRaises(
+            KeyError, config.get_config, 'i_dont_exist', 'i_dont_exist')
 
     def test_missing_module2(self):
         config = app_config.Config()
@@ -262,7 +305,8 @@ class TestLoadConfig(test_base.BaseTestCase):
 
     def test_missing_key(self):
         config = app_config.Config()
-        self.assertRaises(KeyError, config.get_config, 'resources.i18n', 'i_dont_exist')
+        self.assertRaises(
+            KeyError, config.get_config, 'resources.i18n', 'i_dont_exist')
 
     def test_missing_default_config(self):
         config = app_config.Config()
@@ -279,9 +323,18 @@ class TestLoadConfigGetItem(test_base.BaseTestCase):
         from resources.template import default_config as template_config
         from resources.i18n import default_config as i18n_config
 
-        self.assertEqual(config['resources.template']['templates_dir'], template_config['templates_dir'])
-        self.assertEqual(config['resources.i18n']['locale'], i18n_config['locale'])
-        self.assertEqual(config['resources.i18n']['timezone'], i18n_config['timezone'])
+        self.assertEqual(
+            config['resources.template']['templates_dir'],
+            template_config['templates_dir']
+        )
+        self.assertEqual(
+            config['resources.i18n']['locale'],
+            i18n_config['locale']
+        )
+        self.assertEqual(
+            config['resources.i18n']['timezone'],
+            i18n_config['timezone']
+        )
 
     def test_default_config_with_non_existing_key(self):
         config = app_config.Config()
@@ -289,10 +342,17 @@ class TestLoadConfigGetItem(test_base.BaseTestCase):
         from resources.i18n import default_config as i18n_config
 
         # In the first time the module config will be loaded normally.
-        self.assertEqual(config['resources.i18n']['locale'], i18n_config['locale'])
+        self.assertEqual(
+            config['resources.i18n']['locale'],
+            i18n_config['locale']
+        )
 
-        # In the second time it won't be loaded, but won't find the value and then use the default.
-        self.assertEqual(config['resources.i18n'].get('i_dont_exist', 'foo'), 'foo')
+        """In the second time it won't be loaded,
+        but won't find the value and then use the default."""
+        self.assertEqual(
+            config['resources.i18n'].get('i_dont_exist', 'foo'),
+            'foo'
+        )
 
     def test_override_config(self):
         config = app_config.Config({
@@ -305,9 +365,15 @@ class TestLoadConfigGetItem(test_base.BaseTestCase):
             },
         })
 
-        self.assertEqual(config['resources.template']['templates_dir'], 'apps/templates')
+        self.assertEqual(
+            config['resources.template']['templates_dir'],
+            'apps/templates'
+        )
         self.assertEqual(config['resources.i18n']['locale'], 'pt_BR')
-        self.assertEqual(config['resources.i18n']['timezone'], 'America/Sao_Paulo')
+        self.assertEqual(
+            config['resources.i18n']['timezone'],
+            'America/Sao_Paulo'
+        )
 
     def test_override_config2(self):
         config = app_config.Config({
@@ -317,7 +383,10 @@ class TestLoadConfigGetItem(test_base.BaseTestCase):
         })
 
         self.assertEqual(config['resources.i18n']['locale'], 'en_US')
-        self.assertEqual(config['resources.i18n']['timezone'], 'America/Sao_Paulo')
+        self.assertEqual(
+            config['resources.i18n']['timezone'],
+            'America/Sao_Paulo'
+        )
 
     def test_get(self):
         config = app_config.Config({'foo': {
@@ -341,12 +410,17 @@ class TestLoadConfigGetItem(test_base.BaseTestCase):
     def test_get_with_default_and_module_load(self):
         config = app_config.Config()
         self.assertEqual(config['resources.i18n']['locale'], 'en_US')
-        self.assertEqual(config['resources.i18n'].get('locale', 'foo'), 'en_US')
+        self.assertEqual(
+            config['resources.i18n'].get('locale', 'foo'),
+            'en_US'
+        )
 
     def test_required_config(self):
         config = app_config.Config()
-        self.assertRaises(KeyError, config['resources.i18n'].__getitem__, 'foo')
-        self.assertRaises(KeyError, config['resources.i18n'].__getitem__, 'required')
+        self.assertRaises(
+            KeyError, config['resources.i18n'].__getitem__, 'foo')
+        self.assertRaises(
+            KeyError, config['resources.i18n'].__getitem__, 'required')
 
     def test_missing_module(self):
         config = app_config.Config()
@@ -354,7 +428,8 @@ class TestLoadConfigGetItem(test_base.BaseTestCase):
 
     def test_missing_key(self):
         config = app_config.Config()
-        self.assertRaises(KeyError, config['resources.i18n'].__getitem__, 'i_dont_exist')
+        self.assertRaises(
+            KeyError, config['resources.i18n'].__getitem__, 'i_dont_exist')
 
 
 if __name__ == '__main__':
