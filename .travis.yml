@@ -6,7 +6,7 @@ install:
 
 script:
 # Disabled until webapp2 passes lint.
-#- nox -s lint
+- nox -s lint
 - nox -s tests
 - nox -s tests_gaesdk
 
