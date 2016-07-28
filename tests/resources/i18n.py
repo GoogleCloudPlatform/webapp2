@@ -7,8 +7,10 @@ default_config = {
     'required': config.REQUIRED_VALUE,
 }
 
+
 def locale_selector(store, request):
     return i18n.get_store().default_locale
+
 
 def timezone_selector(store, request):
     return i18n.get_store().default_timezone
