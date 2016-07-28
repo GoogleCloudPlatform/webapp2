@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import webapp2
-
 import test_base
+
+import webapp2
 
 
 class NoStringOrUnicodeConversion(object):
@@ -165,8 +165,10 @@ class TestResponse(test_base.BaseTestCase):
         rsp.headers.add('Set-Cookie', 'foo=bar;')
         rsp.headers.add('Set-Cookie', 'baz=ding;')
 
-        self.assertEqual(rsp.headers.get_all('set-cookie'),
-            ['foo=bar;', 'baz=ding;'])
+        self.assertEqual(
+            rsp.headers.get_all('set-cookie'),
+            ['foo=bar;', 'baz=ding;']
+        )
 
         rsp = webapp2.Response()
         rsp.headers = {'Set-Cookie': 'foo=bar;'}
@@ -174,16 +176,24 @@ class TestResponse(test_base.BaseTestCase):
 
     def test_add_header(self):
         rsp = webapp2.Response()
-        rsp.headers.add_header('Content-Disposition', 'attachment',
-            filename='bud.gif')
-        self.assertEqual(rsp.headers.get('content-disposition'),
-            'attachment; filename="bud.gif"')
+        rsp.headers.add_header(
+            'Content-Disposition', 'attachment',
+            filename='bud.gif'
+        )
+        self.assertEqual(
+            rsp.headers.get('content-disposition'),
+            'attachment; filename="bud.gif"'
+        )
 
         rsp = webapp2.Response()
-        rsp.headers.add_header('Content-Disposition', 'attachment',
-            filename=None)
-        self.assertEqual(rsp.headers.get('content-disposition'),
-            'attachment; filename')
+        rsp.headers.add_header(
+            'Content-Disposition', 'attachment',
+            filename=None
+        )
+        self.assertEqual(
+            rsp.headers.get('content-disposition'),
+            'attachment; filename'
+        )
 
         rsp = webapp2.Response()
         rsp.headers.add_header('Set-Cookie', '', foo='')
@@ -196,7 +206,7 @@ class TestResponse(test_base.BaseTestCase):
     # Tests from Python source: wsgiref.headers.Headers
     def test_headers_MappingInterface(self):
         rsp = webapp2.Response()
-        test = [('x','y')]
+        test = [('x', 'y')]
         self.assertEqual(len(rsp.headers), 3)
         rsp.headers = test[:]
         self.assertEqual(len(rsp.headers), 1)
@@ -219,17 +229,17 @@ class TestResponse(test_base.BaseTestCase):
             # this doesn't raise an error in wsgiref.headers.Headers
             # self.assertFalse(m('bar'))
 
-        self.assertEqual(h['foo'],'bar')
+        self.assertEqual(h['foo'], 'bar')
         h['foo'] = 'baz'
-        self.assertEqual(h['FOO'],'baz')
-        self.assertEqual(h.get_all('foo'),['baz'])
+        self.assertEqual(h['FOO'], 'baz')
+        self.assertEqual(h.get_all('foo'), ['baz'])
 
-        self.assertEqual(h.get("foo","whee"), "baz")
-        self.assertEqual(h.get("zoo","whee"), "whee")
-        self.assertEqual(h.setdefault("foo","whee"), "baz")
-        self.assertEqual(h.setdefault("zoo","whee"), "whee")
-        self.assertEqual(h["foo"],"baz")
-        self.assertEqual(h["zoo"],"whee")
+        self.assertEqual(h.get("foo", "whee"), "baz")
+        self.assertEqual(h.get("zoo", "whee"), "whee")
+        self.assertEqual(h.setdefault("foo", "whee"), "baz")
+        self.assertEqual(h.setdefault("zoo", "whee"), "whee")
+        self.assertEqual(h["foo"], "baz")
+        self.assertEqual(h["zoo"], "whee")
 
     def test_headers_RequireList(self):
         def set_headers():
@@ -243,17 +253,20 @@ class TestResponse(test_base.BaseTestCase):
         rsp = webapp2.Response()
         rsp.headers = []
         h = rsp.headers
-        self.assertEqual(str(h),'\r\n')
+        self.assertEqual(str(h), '\r\n')
 
-        h.add_header('foo','bar',baz="spam")
+        h.add_header('foo', 'bar', baz="spam")
         self.assertEqual(h['foo'], 'bar; baz="spam"')
-        self.assertEqual(str(h),'foo: bar; baz="spam"\r\n\r\n')
+        self.assertEqual(str(h), 'foo: bar; baz="spam"\r\n\r\n')
 
-        h.add_header('Foo','bar',cheese=None)
-        self.assertEqual(h.get_all('foo'),
-            ['bar; baz="spam"', 'bar; cheese'])
+        h.add_header('Foo', 'bar', cheese=None)
+        self.assertEqual(
+            h.get_all('foo'),
+            ['bar; baz="spam"', 'bar; cheese']
+        )
 
-        self.assertEqual(str(h),
+        self.assertEqual(
+            str(h),
             'foo: bar; baz="spam"\r\n'
             'Foo: bar; cheese\r\n'
             '\r\n'

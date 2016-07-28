@@ -17,13 +17,11 @@
 Tests for webapp2 webapp2.RequestHandler
 """
 import os
-import StringIO
-import sys
 import urllib
 
-import webapp2
-
 import test_base
+
+import webapp2
 
 
 class BareHandler(object):
@@ -62,8 +60,14 @@ class MethodsHandler(HomeHandler):
 
 class RedirectToHandler(webapp2.RequestHandler):
     def get(self, **kwargs):
-        return self.redirect_to('route-test', _fragment='my-anchor', year='2010',
-                                month='07', name='test', foo='bar')
+        return self.redirect_to(
+            'route-test',
+            _fragment='my-anchor',
+            year='2010',
+            month='07',
+            name='test',
+            foo='bar'
+        )
 
 
 class RedirectAbortHandler(webapp2.RequestHandler):
@@ -134,9 +138,11 @@ class AuthorizationHandler(webapp2.RequestHandler):
     def get(self):
         self.response.out.write('nothing here')
 
+
 class HandlerWithEscapedArg(webapp2.RequestHandler):
     def get(self, name):
         self.response.out.write(urllib.unquote_plus(name))
+
 
 def get_redirect_url(handler, **kwargs):
     return handler.uri_for('methods')
@@ -148,12 +154,18 @@ app = webapp2.WSGIApplication([
     webapp2.Route('/methods', MethodsHandler, name='methods'),
     webapp2.Route('/broken', BrokenHandler),
     webapp2.Route('/broken-but-fixed', BrokenButFixedHandler),
-    webapp2.Route('/<year:\d{4}>/<month:\d{1,2}>/<name>', None, name='route-test'),
-    webapp2.Route('/<:\d\d>/<:\d{2}>/<:\w+>', PositionalHandler, name='positional'),
-    webapp2.Route('/redirect-me', webapp2.RedirectHandler, defaults={'_uri': '/broken'}),
-    webapp2.Route('/redirect-me2', webapp2.RedirectHandler, defaults={'_uri': get_redirect_url}),
-    webapp2.Route('/redirect-me3', webapp2.RedirectHandler, defaults={'_uri': '/broken', '_permanent': False}),
-    webapp2.Route('/redirect-me4', webapp2.RedirectHandler, defaults={'_uri': get_redirect_url, '_permanent': False}),
+    webapp2.Route('/<year:\d{4}>/<month:\d{1,2}>/<name>', None,
+                  name='route-test'),
+    webapp2.Route('/<:\d\d>/<:\d{2}>/<:\w+>', PositionalHandler,
+                  name='positional'),
+    webapp2.Route('/redirect-me', webapp2.RedirectHandler,
+                  defaults={'_uri': '/broken'}),
+    webapp2.Route('/redirect-me2', webapp2.RedirectHandler,
+                  defaults={'_uri': get_redirect_url}),
+    webapp2.Route('/redirect-me3', webapp2.RedirectHandler,
+                  defaults={'_uri': '/broken', '_permanent': False}),
+    webapp2.Route('/redirect-me4', webapp2.RedirectHandler,
+                  defaults={'_uri': get_redirect_url, '_permanent': False}),
     webapp2.Route('/redirect-me5', RedirectToHandler),
     webapp2.Route('/redirect-me6', RedirectAbortHandler),
     webapp2.Route('/lazy', 'resources.handlers.LazyHandler'),
@@ -173,6 +185,7 @@ Content-Length: 52
 The resource could not be found.
 
    """
+
 
 class TestHandler(test_base.BaseTestCase):
     def tearDown(self):
@@ -345,15 +358,21 @@ class TestHandler(test_base.BaseTestCase):
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 302)
         self.assertEqual(rsp.body, '')
-        self.assertEqual(rsp.headers['Location'], 'http://localhost/2010/07/test?foo=bar#my-anchor')
+        self.assertEqual(
+            rsp.headers['Location'],
+            'http://localhost/2010/07/test?foo=bar#my-anchor'
+        )
 
     def test_redirect_abort(self):
         req = webapp2.Request.blank('/redirect-me6')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 302)
-        self.assertEqual(rsp.body, """302 Moved Temporarily
-
-The resource was found at http://localhost/somewhere; you should be redirected automatically.  """)
+        self.assertEqual(
+            rsp.body,
+            """302 Moved Temporarily\n\n"""
+            """The resource was found at http://localhost/somewhere; """
+            """you should be redirected automatically.  """
+        )
         self.assertEqual(rsp.headers['Location'], 'http://localhost/somewhere')
         self.assertEqual(rsp.headers['Set-Cookie'], 'a=b')
 
@@ -361,13 +380,13 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         os.environ['REQUEST_METHOD'] = 'GET'
 
         app.run()
-        #self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
+        # self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
 
     def test_run_bare(self):
         os.environ['REQUEST_METHOD'] = 'GET'
         app.run(bare=True)
 
-        #self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
+        # self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
 
     def test_run_debug(self):
         debug = app.debug
@@ -375,8 +394,8 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         os.environ['REQUEST_METHOD'] = 'GET'
         os.environ['PATH_INFO'] = '/'
 
-        res = app.run(bare=True)
-        #self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
+        app.run(bare=True)
+        # self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
 
         app.debug = debug
 
@@ -397,8 +416,13 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
         handler = MethodsHandler(req, None)
         handler.app = app
-        self.assertEqual(handler.get_valid_methods().sort(),
-            ['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'TRACE'].sort())
+        query_methods = [
+            'GET', 'POST', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'TRACE']
+
+        self.assertEqual(
+            handler.get_valid_methods().sort(),
+            query_methods.sort()
+        )
     '''
 
     def test_uri_for(self):
@@ -418,34 +442,124 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         for func in (handler.uri_for,):
             self.assertEqual(func('home'), '/')
             self.assertEqual(func('home', foo='bar'), '/?foo=bar')
-            self.assertEqual(func('home', _fragment='my-anchor', foo='bar'), '/?foo=bar#my-anchor')
-            self.assertEqual(func('home', _fragment='my-anchor'), '/#my-anchor')
-            self.assertEqual(func('home', _full=True), 'http://localhost:80/')
-            self.assertEqual(func('home', _full=True, _fragment='my-anchor'), 'http://localhost:80/#my-anchor')
-            self.assertEqual(func('home', _scheme='https'), 'https://localhost:80/')
-            self.assertEqual(func('home', _scheme='https', _full=False), 'https://localhost:80/')
-            self.assertEqual(func('home', _scheme='https', _fragment='my-anchor'), 'https://localhost:80/#my-anchor')
+            self.assertEqual(func('home', _fragment='my-anchor', foo='bar'),
+                             '/?foo=bar#my-anchor')
+            self.assertEqual(func('home', _fragment='my-anchor'),
+                             '/#my-anchor')
+            self.assertEqual(func('home', _full=True),
+                             'http://localhost:80/')
+            self.assertEqual(func('home', _full=True, _fragment='my-anchor'),
+                             'http://localhost:80/#my-anchor')
+            self.assertEqual(func('home', _scheme='https'),
+                             'https://localhost:80/')
+            self.assertEqual(func('home', _scheme='https', _full=False),
+                             'https://localhost:80/')
+            self.assertEqual(func('home',
+                                  _scheme='https',
+                                  _fragment='my-anchor'),
+                             'https://localhost:80/#my-anchor')
 
             self.assertEqual(func('methods'), '/methods')
             self.assertEqual(func('methods', foo='bar'), '/methods?foo=bar')
-            self.assertEqual(func('methods', _fragment='my-anchor', foo='bar'), '/methods?foo=bar#my-anchor')
-            self.assertEqual(func('methods', _fragment='my-anchor'), '/methods#my-anchor')
-            self.assertEqual(func('methods', _full=True), 'http://localhost:80/methods')
-            self.assertEqual(func('methods', _full=True, _fragment='my-anchor'), 'http://localhost:80/methods#my-anchor')
-            self.assertEqual(func('methods', _scheme='https'), 'https://localhost:80/methods')
-            self.assertEqual(func('methods', _scheme='https', _full=False), 'https://localhost:80/methods')
-            self.assertEqual(func('methods', _scheme='https', _fragment='my-anchor'), 'https://localhost:80/methods#my-anchor')
+            self.assertEqual(func('methods',
+                                  _fragment='my-anchor', foo='bar'),
+                             '/methods?foo=bar#my-anchor')
+            self.assertEqual(
+                func('methods', _fragment='my-anchor'),
+                '/methods#my-anchor'
+            )
+            self.assertEqual(
+                func('methods', _full=True),
+                'http://localhost:80/methods'
+            )
+            self.assertEqual(
+                func('methods', _full=True, _fragment='my-anchor'),
+                'http://localhost:80/methods#my-anchor'
+            )
+            self.assertEqual(
+                func('methods', _scheme='https'),
+                'https://localhost:80/methods'
+            )
+            self.assertEqual(func('methods', _scheme='https', _full=False),
+                             'https://localhost:80/methods')
+            self.assertEqual(
+                func('methods', _scheme='https', _fragment='my-anchor'),
+                'https://localhost:80/methods#my-anchor'
+            )
 
-            self.assertEqual(func('route-test', year='2010', month='0', name='test'), '/2010/0/test')
-            self.assertEqual(func('route-test', year='2010', month='07', name='test'), '/2010/07/test')
-            self.assertEqual(func('route-test', year='2010', month='07', name='test', foo='bar'), '/2010/07/test?foo=bar')
-            self.assertEqual(func('route-test', _fragment='my-anchor', year='2010', month='07', name='test', foo='bar'), '/2010/07/test?foo=bar#my-anchor')
-            self.assertEqual(func('route-test', _fragment='my-anchor', year='2010', month='07', name='test'), '/2010/07/test#my-anchor')
-            self.assertEqual(func('route-test', _full=True, year='2010', month='07', name='test'), 'http://localhost:80/2010/07/test')
-            self.assertEqual(func('route-test', _full=True, _fragment='my-anchor', year='2010', month='07', name='test'), 'http://localhost:80/2010/07/test#my-anchor')
-            self.assertEqual(func('route-test', _scheme='https', year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test')
-            self.assertEqual(func('route-test', _scheme='https', _full=False, year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test')
-            self.assertEqual(func('route-test', _scheme='https', _fragment='my-anchor', year='2010', month='07', name='test'), 'https://localhost:80/2010/07/test#my-anchor')
+            self.assertEqual(
+                func('route-test', year='2010', month='0', name='test'),
+                '/2010/0/test'
+            )
+            self.assertEqual(
+                func('route-test', year='2010', month='07', name='test'),
+                '/2010/07/test'
+            )
+            self.assertEqual(
+                func('route-test',
+                     year='2010', month='07', name='test', foo='bar'),
+                '/2010/07/test?foo=bar'
+            )
+            self.assertEqual(
+                func('route-test',
+                     _fragment='my-anchor',
+                     year='2010',
+                     month='07',
+                     name='test',
+                     foo='bar'),
+                '/2010/07/test?foo=bar#my-anchor'
+            )
+            self.assertEqual(
+                func('route-test',
+                     _fragment='my-anchor',
+                     year='2010',
+                     month='07',
+                     name='test'),
+                '/2010/07/test#my-anchor'
+            )
+            self.assertEqual(
+                func('route-test',
+                     _full=True,
+                     year='2010',
+                     month='07',
+                     name='test'),
+                'http://localhost:80/2010/07/test'
+            )
+            self.assertEqual(
+                func('route-test',
+                     _full=True,
+                     _fragment='my-anchor',
+                     year='2010',
+                     month='07',
+                     name='test'),
+                'http://localhost:80/2010/07/test#my-anchor'
+            )
+            self.assertEqual(
+                func('route-test',
+                     _scheme='https',
+                     year='2010',
+                     month='07',
+                     name='test'),
+                'https://localhost:80/2010/07/test'
+            )
+            self.assertEqual(
+                func('route-test',
+                     _scheme='https',
+                     _full=False,
+                     year='2010',
+                     month='07',
+                     name='test'),
+                'https://localhost:80/2010/07/test'
+            )
+            self.assertEqual(
+                func('route-test',
+                     _scheme='https',
+                     _fragment='my-anchor',
+                     year='2010',
+                     month='07',
+                     name='test'),
+                'https://localhost:80/2010/07/test#my-anchor'
+            )
 
     def test_extra_request_methods(self):
         allowed_methods_backup = app.allowed_methods
@@ -461,7 +575,9 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         # Let's extend ALLOWED_METHODS with some WebDav methods.
         app.allowed_methods = tuple(app.allowed_methods) + webdav_methods
 
-        #self.assertEqual(sorted(webapp2.get_valid_methods(WebDavHandler)), sorted(list(webdav_methods)))
+        # self.assertEqual(
+        # sorted(webapp2.get_valid_methods(WebDavHandler)),
+        # sorted(list(webdav_methods)))
 
         # Now we can use WebDav methods...
         for method in webdav_methods:
@@ -560,7 +676,7 @@ The resource was found at http://localhost/somewhere; you should be redirected a
             webapp2.Route('/', my_view),
             webapp2.Route('/other', other_view),
             webapp2.Route('/one-more/<foo>', one_more_view),
-            #webapp2.Route('/one-more/<foo>', one_more_view),
+            # webapp2.Route('/one-more/<foo>', one_more_view),
         ])
 
         req = webapp2.Request.blank('/')
@@ -600,7 +716,8 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
         app = webapp2.WSGIApplication([
             webapp2.Route('/', MyHandler, handler_method='my_method'),
-            webapp2.Route('/other', MyHandler, handler_method='my_other_method'),
+            webapp2.Route('/other', MyHandler,
+                          handler_method='my_other_method'),
         ])
 
         req = webapp2.Request.blank('/')
@@ -615,8 +732,14 @@ The resource was found at http://localhost/somewhere; you should be redirected a
 
     def test_custom_method_with_string(self):
         app = webapp2.WSGIApplication([
-            webapp2.Route('/', handler='resources.handlers.CustomMethodHandler:custom_method'),
-            webapp2.Route('/bleh', handler='resources.handlers.CustomMethodHandler:custom_method'),
+            webapp2.Route(
+                '/',
+                handler='resources.handlers.CustomMethodHandler:custom_method'
+            ),
+            webapp2.Route(
+                '/bleh',
+                handler='resources.handlers.CustomMethodHandler:custom_method'
+            ),
         ])
 
         req = webapp2.Request.blank('/')
@@ -629,7 +752,11 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'I am a custom method.')
 
-        self.assertRaises(ValueError, webapp2.Route, '/', handler='resources.handlers.CustomMethodHandler:custom_method', handler_method='custom_method')
+        self.assertRaises(
+            ValueError, webapp2.Route, '/',
+            handler='resources.handlers.CustomMethodHandler:custom_method',
+            handler_method='custom_method'
+        )
 
     def test_factory_1(self):
         app.debug = True
@@ -687,12 +814,19 @@ The resource was found at http://localhost/somewhere; you should be redirected a
         # foo with umlauts in the vowels.
         value = 'f\xc3\xb6\xc3\xb6'
 
-        rsp = app.get_response('/', POST={'foo': value},
-            headers=[('Content-Type', 'application/x-www-form-urlencoded; charset=utf-8')])
+        rsp = app.get_response(
+            '/',
+            POST={'foo': value},
+            headers=[('Content-Type',
+                      'application/x-www-form-urlencoded; charset=utf-8')]
+        )
         self.assertEqual(rsp.body, 'föö')
 
-        rsp = app.get_response('/', POST={'foo': value},
-            headers=[('Content-Type', 'application/x-www-form-urlencoded')])
+        rsp = app.get_response(
+            '/',
+            POST={'foo': value},
+            headers=[('Content-Type', 'application/x-www-form-urlencoded')]
+        )
         self.assertEqual(rsp.body, 'föö')
 
 
