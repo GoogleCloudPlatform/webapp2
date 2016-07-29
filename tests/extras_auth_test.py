@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from google.appengine.ext.ndb import model
+
+import test_base
+
 import webapp2
 from webapp2_extras import sessions
 
 from webapp2_extras import auth
 from webapp2_extras.appengine.auth import models
-
-from google.appengine.ext.ndb import model
-
-import test_base
 
 
 class TestAuth(test_base.BaseTestCase):
@@ -119,7 +119,7 @@ class TestAuth(test_base.BaseTestCase):
         })
         req = webapp2.Request.blank('/')
         req.app = app
-        s = auth.get_store(app=app)
+        auth.get_store(app=app)
         a = auth.get_auth(request=req)
         session_store = sessions.get_store(request=req)
 
@@ -131,14 +131,18 @@ class TestAuth(test_base.BaseTestCase):
         # Lets test the cookie max_age when we use remember=True or False.
         rv = a.get_user_by_password('auth_id', 'password', remember=True)
         self.assertEqual(rv['user_id'], user_id)
-        self.assertEqual(session_store.sessions['auth'].session_args['max_age'],
-                         86400 * 7 * 3)
+        self.assertEqual(
+            session_store.sessions['auth'].session_args['max_age'],
+            86400 * 7 * 3
+        )
 
         # Now remember=False.
         rv = a.get_user_by_password('auth_id', 'password')
         self.assertEqual(rv['user_id'], user_id)
-        self.assertEqual(session_store.sessions['auth'].session_args['max_age'],
-                         None)
+        self.assertEqual(
+            session_store.sessions['auth'].session_args['max_age'],
+            None
+        )
 
         # User was set so getting it from session will return the same one.
         rv = a.get_user_by_session()

@@ -13,21 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import StringIO
+import test_base
 
 import webapp2
 
-import test_base
-
 
 def _norm_req(s):
-    return '\r\n'.join(s.strip().replace('\r','').split('\n'))
+    return '\r\n'.join(s.strip().replace('\r', '').split('\n'))
 
 _test_req = """
 POST /webob/ HTTP/1.0
 Accept: */*
 Cache-Control: max-age=0
-Content-Type: multipart/form-data; boundary=----------------------------deb95b63e42a
+Content-Type: multipart/form-data; boundary=%s
 Host: pythonpaste.org
 User-Agent: UserAgent/1.0 (identifier-version) library/7.0 otherlibrary/0.8
 
@@ -42,7 +40,7 @@ Content-type: application/octet-stream
 these are the contents of the file 'bar.txt'
 
 ------------------------------deb95b63e42a--
-"""
+""" % '----------------------------deb95b63e42a'
 
 _test_req2 = """
 POST / HTTP/1.0
@@ -95,7 +93,8 @@ class TestRequest(test_base.BaseTestCase):
             charset = 'utf-8'
         self.assertEqual(charset, 'iso-8859-4')
 
-        match = webapp2._charset_re.search('text/html; charset=  "  ISO-8859-4  "  ')
+        match = webapp2._charset_re.search(
+            'text/html; charset=  "  ISO-8859-4  "  ')
         if match:
             charset = match.group(1).lower().strip().strip('"').strip()
         else:
@@ -127,7 +126,10 @@ class TestRequest(test_base.BaseTestCase):
         req = webapp2.Request.blank('/', headers=[('Cookie', cookie)])
 
         self.assertEqual(req.cookies.get('foo'), value)
-        self.assertEqual(base64.b64decode(req.cookies.get('foo')).decode('utf-8'), u'á')
+        self.assertEqual(
+            base64.b64decode(req.cookies.get('foo')).decode('utf-8'),
+            u'á'
+        )
 
         # Without quote -------------------------------------------------------
 
@@ -167,7 +169,8 @@ class TestRequest(test_base.BaseTestCase):
         self.assertEqual(req.cookies.get('foo'), y)
         # Here is our original value, again. Problem: the value is decoded
         # before we had a chance to unquote it.
-        w = urllib.unquote(req.cookies.get('foo').encode('utf8')).decode('utf8')
+        w = urllib.unquote(
+            req.cookies.get('foo').encode('utf8')).decode('utf8')
         # And it is indeed the same value.
         self.assertEqual(w, x)
 
@@ -182,7 +185,8 @@ class TestRequest(test_base.BaseTestCase):
         req = webapp2.Request.blank('/', headers=[('Cookie', cookie)])
 
         cookie_value = req.cookies.get('foo')
-        unquoted_cookie_value = urllib.unquote(cookie_value.encode('utf8')).decode('utf8')
+        unquoted_cookie_value = urllib.unquote(
+            cookie_value.encode('utf8')).decode('utf8')
         self.assertEqual(cookie_value, quoted_value)
         self.assertEqual(unquoted_cookie_value, value)
 
@@ -270,7 +274,8 @@ class TestRequest(test_base.BaseTestCase):
         req = webapp2.Request.from_string(_test_req)
         self.assertTrue(isinstance(req, webapp2.Request))
         self.assertTrue(not repr(req).endswith('(invalid WSGI environ)>'))
-        self.assertTrue('\n' not in req.http_version or '\r' in req.http_version)
+        self.assertTrue(
+            '\n' not in req.http_version or '\r' in req.http_version)
         self.assertTrue(',' not in req.host)
         self.assertTrue(req.content_length is not None)
         self.assertEqual(req.content_length, 337)

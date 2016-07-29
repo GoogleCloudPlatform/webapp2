@@ -38,8 +38,9 @@ def login_required(handler_method):
     """
     def check_login(self, *args, **kwargs):
         if self.request.method != 'GET':
-            self.abort(400, detail='The login_required decorator '
-                'can only be used for GET requests.')
+            self.abort(400,
+                       detail='The login_required decorator '
+                              'can only be used for GET requests.')
 
         user = users.get_current_user()
         if not user:
@@ -67,8 +68,9 @@ def admin_required(handler_method):
     """
     def check_admin(self, *args, **kwargs):
         if self.request.method != 'GET':
-            self.abort(400, detail='The admin_required decorator '
-                'can only be used for GET requests.')
+            self.abort(400,
+                       detail='The admin_required decorator '
+                              'can only be used for GET requests.')
 
         user = users.get_current_user()
         if not user:

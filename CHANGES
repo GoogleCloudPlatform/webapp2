@@ -272,8 +272,8 @@ Version 1.7 - June 4, 2011
 
 Version 1.6.3 - June 3, 2011
 ============================
-- Added webap2_extras.local_app, with the WSGIApplication previously in
-	webap2_extras.local. This allows using LocalProxy on App Engine, without
+- Added webapp2_extras.local_app, with the WSGIApplication previously in
+	webapp2_extras.local. This allows using LocalProxy on App Engine, without
 	actually monkeypatching the WSGI app for threaded environments.
 
 - Route now raises exc.HTTPMethodNotAllowed if methods are set and the request

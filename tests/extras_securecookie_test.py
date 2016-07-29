@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from webapp2_extras import securecookie
-
 import test_base
+
+from webapp2_extras import securecookie
 
 
 class TestSecureCookie(test_base.BaseTestCase):
@@ -24,7 +24,8 @@ class TestSecureCookie(test_base.BaseTestCase):
         serializer._get_timestamp = lambda: 1
 
         value = ['a', 'b', 'c']
-        result = 'WyJhIiwiYiIsImMiXQ==|1|38837d6af8ac1ded9292b83924fc8521ce76f47e'
+        result = "WyJhIiwiYiIsImMiXQ==|1|38" \
+                 "837d6af8ac1ded9292b83924fc8521ce76f47e"
 
         rv = serializer.serialize('foo', value)
         self.assertEqual(rv, result)

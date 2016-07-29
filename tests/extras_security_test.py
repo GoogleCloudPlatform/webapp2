@@ -15,9 +15,9 @@
 
 import re
 
-from webapp2_extras import security
-
 import test_base
+
+from webapp2_extras import security
 
 
 class TestSecurity(test_base.BaseTestCase):
@@ -47,7 +47,8 @@ class TestSecurity(test_base.BaseTestCase):
         hashval = security.generate_password_hash(password, 'sha1')
         self.assertTrue(security.check_password_hash(password, hashval))
 
-        hashval = security.generate_password_hash(password, 'sha1', pepper='bar')
+        hashval = security.generate_password_hash(password, 'sha1',
+                                                  pepper='bar')
         self.assertTrue(security.check_password_hash(password, hashval,
                                                      pepper='bar'))
 

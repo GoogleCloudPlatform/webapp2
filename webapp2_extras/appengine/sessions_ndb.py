@@ -25,15 +25,15 @@ from google.appengine.api import memcache
 
 try:
     from ndb import model
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     from google.appengine.ext.ndb import model
 
 try:
     from ndb.model import PickleProperty
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     try:
         from google.appengine.ext.ndb.model import PickleProperty
-    except ImportError: # pragma: no cover
+    except ImportError:  # pragma: no cover
         # ndb in SDK 1.6.1 doesn't have PickleProperty.
         import pickle
 
@@ -44,8 +44,8 @@ except ImportError: # pragma: no cover
                 return value
 
             def _db_set_value(self, v, p, value):
-                super(PickleProperty, self)._db_set_value(v, p,
-                    pickle.dumps(value))
+                super(PickleProperty, self)._db_set_value(
+                    v, p, pickle.dumps(value))
 
             def _db_get_value(self, v, p):
                 if not v.has_stringvalue():
@@ -55,6 +55,7 @@ except ImportError: # pragma: no cover
 
 
 from webapp2_extras import sessions
+
 
 class Session(model.Model):
     """A model to store session data."""

@@ -15,9 +15,9 @@
 
 import base64
 
-from webapp2_extras import xsrf
-
 import test_base
+
+from webapp2_extras import xsrf
 
 
 class TestXSRFToken(test_base.BaseTestCase):
@@ -74,7 +74,8 @@ class TestXSRFToken(test_base.BaseTestCase):
                                'secret',
                                current_time=1354160000)
         token_string = token.generate_token_string()
-        test_token, test_time = base64.urlsafe_b64decode(token_string).split('|')
+        test_token, test_time = base64.urlsafe_b64decode(
+            token_string).split('|')
         test_string = base64.urlsafe_b64encode('|'.join([test_token[:-1],
                                                          test_time]))
         self.assertRaises(xsrf.XSRFTokenInvalid,

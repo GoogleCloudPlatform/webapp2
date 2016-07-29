@@ -95,7 +95,7 @@ class SecureCookieSerializer(object):
 
         try:
             return self._decode(parts[0])
-        except Exception, e:
+        except Exception:
             logging.warning('Cookie value failed to be decoded: %r', parts[0])
             return None
 

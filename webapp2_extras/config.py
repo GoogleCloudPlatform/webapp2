@@ -218,11 +218,11 @@ class SubConfig(dict):
             value = dict.__getitem__(self, key)
         except KeyError:
             raise KeyError('Module %r does not have the config key %r' %
-                (self.module, key))
+                           (self.module, key))
 
         if value is REQUIRED_VALUE:
             raise KeyError('Module %r requires the config key %r to be '
-                'set.' % (self.module, key))
+                           'set.' % (self.module, key))
 
         return value
 
@@ -234,6 +234,6 @@ class SubConfig(dict):
 
         if value is REQUIRED_VALUE:
             raise KeyError('Module %r requires the config key %r to be '
-                'set.' % (self.module, key))
+                           'set.' % (self.module, key))
 
         return value

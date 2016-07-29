@@ -13,11 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import test_base
+
 import webapp2
 from webapp2_extras import sessions
-from webapp2_extras import sessions_memcache
-
-import test_base
 
 
 app = webapp2.WSGIApplication(config={
@@ -28,7 +27,7 @@ app = webapp2.WSGIApplication(config={
 
 
 class TestMemcacheSession(test_base.BaseTestCase):
-    #factory = sessions_memcache.MemcacheSessionFactory
+    # factory = sessions_memcache.MemcacheSessionFactory
 
     def test_get_save_session(self):
 

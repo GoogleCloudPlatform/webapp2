@@ -33,41 +33,44 @@ import sys
 import threading
 import traceback
 import urllib
-try:
-    from urlparse import urljoin, urlunsplit
-except ImportError:
-    urljoin = urllib.parse
-    urlunsplit = urllib.parse
 from wsgiref import handlers
 
 import webob
 from webob import exc
 
+try:
+    from urlparse import urljoin, urlunsplit
+except ImportError:
+    urljoin = urllib.parse
+    urlunsplit = urllib.parse
+
+
 _webapp = _webapp_util = _local = None
 
-try: # pragma: no cover
+
+try:  # pragma: no cover
     # WebOb < 1.0 (App Engine Python 2.5).
     from webob.statusreasons import status_reasons
     from webob.headerdict import HeaderDict as BaseResponseHeaders
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     # WebOb >= 1.0.
     from webob.util import status_reasons
     from webob.headers import ResponseHeaders as BaseResponseHeaders
 
 # google.appengine.ext.webapp imports webapp2 in the
 # App Engine Python 2.7 runtime.
-if os.environ.get('APPENGINE_RUNTIME') != 'python27': # pragma: no cover
+if os.environ.get('APPENGINE_RUNTIME') != 'python27':  # pragma: no cover
     try:
         from google.appengine.ext import webapp as _webapp
-    except ImportError: # pragma: no cover
+    except ImportError:  # pragma: no cover
         # Running webapp2 outside of GAE.
         pass
 
-try: # pragma: no cover
+try:  # pragma: no cover
     # Thread-local variables container.
     from webapp2_extras import local
     _local = local.Local()
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     logging.warning("webapp2_extras.local is not available "
                     "so webapp2 won't be thread-safe!")
 
@@ -200,7 +203,7 @@ class Request(webob.Request):
         param_value = self.get_all(argument_name)
         if allow_multiple:
             logging.warning('allow_multiple is a deprecated param. '
-                'Please use the Request.get_all() method instead.')
+                            'Please use the Request.get_all() method instead.')
 
         if len(param_value) > 0:
             if allow_multiple:
@@ -285,7 +288,7 @@ class Request(webob.Request):
 
     @classmethod
     def blank(cls, path, environ=None, base_url=None,
-              headers=None, **kwargs): # pragma: no cover
+              headers=None, **kwargs):  # pragma: no cover
         """Adds parameters compatible with WebOb >= 1.0: POST and **kwargs."""
         try:
             return super(Request, cls).blank(path, environ=environ,
@@ -494,7 +497,7 @@ class Response(webob.Response):
             The WSGI-compatible start_response function.
         """
         if (self.headers.get('Cache-Control') == 'no-cache' and
-            not self.headers.get('Expires')):
+                not self.headers.get('Expires')):
             self.headers['Expires'] = 'Fri, 01 Jan 1990 00:00:00 GMT'
             self.headers['Content-Length'] = str(len(self.body))
 
@@ -1048,24 +1051,26 @@ class Route(BaseRoute):
         for name, regex in _iteritems(variables):
             value = kwargs.pop(name, self.defaults.get(name))
             if value is None:
-                raise KeyError('Missing argument "%s" to build URI.' % \
-                    name.strip('_'))
+                raise KeyError('Missing argument "%s" to build URI.' %
+                               name.strip('_'))
 
             if not isinstance(value, basestring):
                 value = str(value)
 
             if not regex.match(value):
-                raise ValueError('URI buiding error: Value "%s" is not '
-                    'supported for argument "%s".' % (value, name.strip('_')))
+                raise ValueError(
+                    'URI building error: Value "%s" is not supported'
+                    'for argument "%s".' % (value, name.strip('_'))
+                )
 
             values[name] = value
 
-        return (self.reverse_template % values, kwargs)
+        return self.reverse_template % values, kwargs
 
     def __repr__(self):
         return '<Route(%r, %r, name=%r, defaults=%r, build_only=%r)>' % \
-            (self.template, self.handler, self.name, self.defaults,
-            self.build_only)
+               (self.template, self.handler, self.name, self.defaults,
+                self.build_only)
 
 
 class BaseHandlerAdapter(object):
@@ -1331,8 +1336,10 @@ class Router(object):
         return adapter(handler)
 
     def __repr__(self):
-        routes = self.match_routes + [v for k, v in \
-            _iteritems(self.build_routes) if v not in self.match_routes]
+        routes = self.match_routes + [
+            v for k, v in _iteritems(self.build_routes)
+            if v not in self.match_routes
+        ]
 
         return '<Router(%r)>' % routes
 
@@ -1519,18 +1526,18 @@ class WSGIApplication(object):
         :param request:
             A :class:`Request` instance.
         """
-        if _local is not None: # pragma: no cover
+        if _local is not None:  # pragma: no cover
             _local.app = app
             _local.request = request
-        else: # pragma: no cover
+        else:  # pragma: no cover
             WSGIApplication.app = WSGIApplication.active_instance = app
             WSGIApplication.request = request
 
     def clear_globals(self):
         """Clears global variables. See :meth:`set_globals`."""
-        if _local is not None: # pragma: no cover
+        if _local is not None:  # pragma: no cover
             _local.__release_local__()
-        else: # pragma: no cover
+        else:  # pragma: no cover
             WSGIApplication.app = WSGIApplication.active_instance = None
             WSGIApplication.request = None
 
@@ -1639,7 +1646,7 @@ class WSGIApplication(object):
                 _webapp_util.run_bare_wsgi_app(self)
             else:
                 _webapp_util.run_wsgi_app(self)
-        else: # pragma: no cover
+        else:  # pragma: no cover
             handlers.CGIHandler().run(self)
 
     def get_response(self, *args, **kwargs):
@@ -1982,7 +1989,7 @@ def _get_route_variables(match, default_kwargs=None):
     kwargs.update(match.groupdict())
     if kwargs:
         args = tuple(value[1] for value in sorted(
-            (int(key[2:-2]), kwargs.pop(key)) for key in kwargs.keys() \
+            (int(key[2:-2]), kwargs.pop(key)) for key in kwargs.keys()
             if key.startswith('__') and key.endswith('__')))
     else:
         args = ()
@@ -1992,7 +1999,7 @@ def _get_route_variables(match, default_kwargs=None):
 
 def _set_thread_safe_app():
     """Assigns WSGIApplication globals to a proxy pointing to thread-local."""
-    if _local is not None: # pragma: no cover
+    if _local is not None:  # pragma: no cover
         WSGIApplication.app = WSGIApplication.active_instance = _local('app')
         WSGIApplication.request = _local('request')
 
@@ -2009,5 +2016,5 @@ _set_thread_safe_app()
 # runtime imports this module to provide its public interface.
 try:
     from google.appengine.ext.webapp import util as _webapp_util
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     pass

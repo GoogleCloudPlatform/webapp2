@@ -23,9 +23,10 @@ This implementation comes from werkzeug.local.
 """
 try:
     from greenlet import getcurrent as get_current_greenlet
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     try:
         from py.magic import greenlet
+
         get_current_greenlet = greenlet.getcurrent
         del greenlet
     except:
@@ -33,17 +34,17 @@ except ImportError: # pragma: no cover
         get_current_greenlet = int
 try:
     from thread import get_ident as get_current_thread, allocate_lock
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     from dummy_thread import get_ident as get_current_thread, allocate_lock
-
 
 # get the best ident function.  if greenlets are not installed we can
 # safely just use the builtin thread function and save a python methodcall
 # and the cost of calculating a hash.
-if get_current_greenlet is int: # pragma: no cover
+if get_current_greenlet is int:  # pragma: no cover
     get_ident = get_current_thread
 else:
-    get_ident = lambda: (get_current_thread(), get_current_greenlet())
+    def get_ident():
+        return get_current_thread(), get_current_greenlet()
 
 
 class Local(object):
@@ -195,48 +196,137 @@ class LocalProxy(object):
     def __delslice__(self, i, j):
         del self._get_current_object()[i:j]
 
-    __setattr__ = lambda x, n, v: setattr(x._get_current_object(), n, v)
-    __delattr__ = lambda x, n: delattr(x._get_current_object(), n)
-    __str__ = lambda x: str(x._get_current_object())
-    __lt__ = lambda x, o: x._get_current_object() < o
-    __le__ = lambda x, o: x._get_current_object() <= o
-    __eq__ = lambda x, o: x._get_current_object() == o
-    __ne__ = lambda x, o: x._get_current_object() != o
-    __gt__ = lambda x, o: x._get_current_object() > o
-    __ge__ = lambda x, o: x._get_current_object() >= o
-    __cmp__ = lambda x, o: cmp(x._get_current_object(), o)
-    __hash__ = lambda x: hash(x._get_current_object())
-    __call__ = lambda x, *a, **kw: x._get_current_object()(*a, **kw)
-    __len__ = lambda x: len(x._get_current_object())
-    __getitem__ = lambda x, i: x._get_current_object()[i]
-    __iter__ = lambda x: iter(x._get_current_object())
-    __contains__ = lambda x, i: i in x._get_current_object()
-    __getslice__ = lambda x, i, j: x._get_current_object()[i:j]
-    __add__ = lambda x, o: x._get_current_object() + o
-    __sub__ = lambda x, o: x._get_current_object() - o
-    __mul__ = lambda x, o: x._get_current_object() * o
-    __floordiv__ = lambda x, o: x._get_current_object() // o
-    __mod__ = lambda x, o: x._get_current_object() % o
-    __divmod__ = lambda x, o: x._get_current_object().__divmod__(o)
-    __pow__ = lambda x, o: x._get_current_object() ** o
-    __lshift__ = lambda x, o: x._get_current_object() << o
-    __rshift__ = lambda x, o: x._get_current_object() >> o
-    __and__ = lambda x, o: x._get_current_object() & o
-    __xor__ = lambda x, o: x._get_current_object() ^ o
-    __or__ = lambda x, o: x._get_current_object() | o
-    __div__ = lambda x, o: x._get_current_object().__div__(o)
-    __truediv__ = lambda x, o: x._get_current_object().__truediv__(o)
-    __neg__ = lambda x: -(x._get_current_object())
-    __pos__ = lambda x: +(x._get_current_object())
-    __abs__ = lambda x: abs(x._get_current_object())
-    __invert__ = lambda x: ~(x._get_current_object())
-    __complex__ = lambda x: complex(x._get_current_object())
-    __int__ = lambda x: int(x._get_current_object())
-    __long__ = lambda x: long(x._get_current_object())
-    __float__ = lambda x: float(x._get_current_object())
-    __oct__ = lambda x: oct(x._get_current_object())
-    __hex__ = lambda x: hex(x._get_current_object())
-    __index__ = lambda x: x._get_current_object().__index__()
-    __coerce__ = lambda x, o: x.__coerce__(x, o)
-    __enter__ = lambda x: x.__enter__()
-    __exit__ = lambda x, *a, **kw: x.__exit__(*a, **kw)
+    def __setattr__(self, attr, value):
+        setattr(self._get_current_object(), attr, value)
+
+    def __delattr__(self, item):
+        delattr(self._get_current_object(), item)
+
+    def __str__(self):
+        return str(self._get_current_object())
+
+    def __lt__(self, other):
+        return self._get_current_object() < other
+
+    def __le__(self, other):
+        return self._get_current_object() <= other
+
+    def __eq__(self, other):
+        return self._get_current_object() == other
+
+    def __ne__(self, other):
+        return self._get_current_object() != other
+
+    def __gt__(self, other):
+        return self._get_current_object() > other
+
+    def __ge__(self, other):
+        return self._get_current_object() >= other
+
+    def __cmp__(self, other):
+        return cmp(self._get_current_object(), other)
+
+    def __hash__(self):
+        return hash(self._get_current_object())
+
+    def __call__(self, *args, **kwargs):
+        return self._get_current_object()(*args, **kwargs)
+
+    def __len__(self):
+        return len(self._get_current_object())
+
+    def __getitem__(self, item):
+        return self._get_current_object()[item]
+
+    def __iter__(self):
+        return iter(self._get_current_object())
+
+    def __contains__(self, item):
+        return item in self._get_current_object()
+
+    def __getslice__(self, i, j):
+        return self._get_current_object()[i:j]
+
+    def __add__(self, other):
+        return self._get_current_object() + other
+
+    def __sub__(self, other):
+        return self._get_current_object() - other
+
+    def __mul__(self, other):
+        return self._get_current_object() * other
+
+    def __floordiv__(self, other):
+        return self._get_current_object() // other
+
+    def __mod__(self, other):
+        return self._get_current_object() % other
+
+    def __divmod__(self, other):
+        return self._get_current_object().__divmod__(other)
+
+    def __pow__(self, o):
+        return self._get_current_object() ** o
+
+    def __lshift__(self, other):
+        return self._get_current_object() << other
+
+    def __rshift__(self, other):
+        return self._get_current_object() >> other
+
+    def __and__(self, other):
+        return self._get_current_object() & other
+
+    def __xor__(self, other):
+        return self._get_current_object() ^ other
+
+    def __or__(self, other):
+        return self._get_current_object() | other
+
+    def __div__(self, other):
+        return self._get_current_object().__div__(other)
+
+    def __truediv__(self, other):
+        return self._get_current_object().__truediv__(other)
+
+    def __neg__(self):
+        return -(self._get_current_object())
+
+    def __pos__(self):
+        return +(self._get_current_object())
+
+    def __abs__(self):
+        return abs(self._get_current_object())
+
+    def __invert__(self):
+        return ~(self._get_current_object())
+
+    def __complex__(self):
+        return complex(self._get_current_object())
+
+    def __int__(self):
+        return int(self._get_current_object())
+
+    def __long__(self):
+        return long(self._get_current_object())
+
+    def __float__(self):
+        return float(self._get_current_object())
+
+    def __oct__(self):
+        return oct(self._get_current_object())
+
+    def __hex__(self):
+        return hex(self._get_current_object())
+
+    def __index__(self):
+        return self._get_current_object().__index__()
+
+    def __coerce__(self, other):
+        return self.__coerce__(other)
+
+    def __enter__(self):
+        return self.__enter__()
+
+    def __exit__(self, *a, **kw):
+        return self.__exit__(*a, **kw)

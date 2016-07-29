@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from webapp2_extras import json
-
 import test_base
+
+from webapp2_extras import json
 
 
 class TestJson(test_base.BaseTestCase):
@@ -40,12 +40,17 @@ class TestJson(test_base.BaseTestCase):
             '<script>alert("hello")</script>')
 
     def test_quote(self):
-        self.assertEqual(json.quote('<script>alert("hello")</script>'),
-            '%22%3Cscript%3Ealert%28%5C%22hello%5C%22%29%3C%5C/script%3E%22')
+        self.assertEqual(
+            json.quote('<script>alert("hello")</script>'),
+            '%22%3Cscript%3Ealert%28%5C%22hello%5C%22%29%3C%5C/script%3E%22'
+        )
 
     def test_unquote(self):
-        self.assertEqual(json.unquote('%22%3Cscript%3Ealert%28%5C%22hello%5C%22%29%3C%5C/script%3E%22'),
-            '<script>alert("hello")</script>')
+        self.assertEqual(json.unquote(
+            '%22%3Cscript%3Ealert%28%5C%22hello%5C%22%29%3C%5C/script%3E%22'
+        ),
+            '<script>alert("hello")</script>'
+        )
 
 if __name__ == '__main__':
     test_base.main()

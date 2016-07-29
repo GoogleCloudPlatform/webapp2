@@ -15,10 +15,10 @@
 
 import os
 
-import webapp2
-from webapp2_extras import users
-
 import test_base
+
+import webapp2
+from webapp2_extras.appengine import users
 
 
 def set_current_user(email, user_id, is_admin=False):
@@ -67,8 +67,11 @@ class TestUsers(test_base.BaseTestCase):
 
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 302)
-        self.assertEqual(rsp.headers.get('Location'),
-            'https://www.google.com/accounts/Login?continue=http%3A//localhost/login_required')
+        self.assertEqual(
+            rsp.headers.get('Location'),
+            'https://www.google.com/accounts/Login?continue='
+            'http%3A//localhost/login_required'
+        )
 
     def test_login_required_post(self):
         req = webapp2.Request.blank('/login_required')
@@ -97,8 +100,11 @@ class TestUsers(test_base.BaseTestCase):
 
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 302)
-        self.assertEqual(rsp.headers.get('Location'),
-            'https://www.google.com/accounts/Login?continue=http%3A//localhost/admin_required')
+        self.assertEqual(
+            rsp.headers.get('Location'),
+            'https://www.google.com/accounts/Login?continue='
+            'http%3A//localhost/admin_required'
+        )
 
     def test_admin_required_post(self):
         req = webapp2.Request.blank('/admin_required')

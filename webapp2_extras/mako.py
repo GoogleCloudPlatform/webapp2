@@ -72,9 +72,12 @@ class Mako(object):
     config = None
 
     def __init__(self, app, config=None):
-        self.config = config = app.config.load_config(self.config_key,
-            default_values=default_config, user_values=config,
-            required_keys=None)
+        self.config = config = app.config.load_config(
+            self.config_key,
+            default_values=default_config,
+            user_values=config,
+            required_keys=None
+        )
 
         directories = config.get('template_path')
         if isinstance(directories, basestring):

@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import test_base
+
 import webapp2
 from webapp2_extras import local_app
-
-import test_base
 
 
 class TestLocalApp(test_base.BaseTestCase):
