@@ -22,27 +22,26 @@ Taking Google App Engine's webapp to the next level!
 :copyright: 2011 webapp2 AUTHORS.
 :license: Apache Sotware License, see LICENSE for details.
 """
-from __future__ import with_statement
 
 import cgi
 import inspect
 import logging
 import os
 import re
+import six
+from six.moves import urllib
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import unquote
+from six.moves.urllib.parse import quote
+from six.moves.urllib.parse import urljoin
+from six.moves.urllib.parse import urlunsplit
 import sys
 import threading
 import traceback
-import urllib
 from wsgiref import handlers
 
 import webob
 from webob import exc
-
-try:
-    from urlparse import urljoin, urlunsplit
-except ImportError:
-    urljoin = urllib.parse
-    urlunsplit = urllib.parse
 
 
 _webapp = _webapp_util = _local = None
@@ -73,13 +72,6 @@ try:  # pragma: no cover
 except ImportError:  # pragma: no cover
     logging.warning("webapp2_extras.local is not available "
                     "so webapp2 won't be thread-safe!")
-
-
-def _iteritems(d):
-    try:
-        return d.iteritems()
-    except AttributeError:
-        return d.items()
 
 
 __version_info__ = (3, 0, 0)
@@ -133,7 +125,7 @@ _webapp_status_reasons = {
     505: 'HTTP Version not supported',
 }
 status_reasons.update(_webapp_status_reasons)
-for code, message in _iteritems(_webapp_status_reasons):
+for code, message in six.iteritems(_webapp_status_reasons):
     cls = exc.status_map.get(code)
     if cls:
         cls.title = message
@@ -242,7 +234,7 @@ class Request(webob.Request):
         if param_value is None or len(param_value) == 0:
             return default_value
 
-        for i in xrange(len(param_value)):
+        for i in six.moves.range(len(param_value)):
             if isinstance(param_value[i], cgi.FieldStorage):
                 param_value[i] = param_value[i].value
 
@@ -300,14 +292,14 @@ class Request(webob.Request):
 
         data = kwargs.pop('POST', None)
         if data is not None:
-            from cStringIO import StringIO
+            from six.moves import cStringIO
             environ = environ or {}
             environ['REQUEST_METHOD'] = 'POST'
             if hasattr(data, 'items'):
-                data = data.items()
+                data = list(data.items())
             if not isinstance(data, str):
-                data = urllib.urlencode(data)
-            environ['wsgi.input'] = StringIO(data)
+                data = urlencode(data)
+            environ['wsgi.input'] = cStringIO(data)
             environ['webob.is_body_seekable'] = True
             environ['CONTENT_LENGTH'] = str(len(data))
             environ['CONTENT_TYPE'] = 'application/x-www-form-urlencoded'
@@ -401,10 +393,10 @@ class Response(webob.Response):
         """Appends a text to the response body."""
         # webapp uses StringIO as Response.out, so we need to convert anything
         # that is not str or unicode to string to keep same behavior.
-        if not isinstance(text, basestring):
-            text = unicode(text)
+        if not isinstance(text, six.string_types):
+            text = six.text_type(text)
 
-        if isinstance(text, unicode) and not self.charset:
+        if isinstance(text, six.text_type) and not self.charset:
             self.charset = self.default_charset
 
         super(Response, self).write(text)
@@ -413,10 +405,10 @@ class Response(webob.Response):
         """The status string, including code and message."""
         message = None
         # Accept long because urlfetch in App Engine returns codes as longs.
-        if isinstance(value, (int, long)):
+        if isinstance(value, six.integer_types):
             code = int(value)
         else:
-            if isinstance(value, unicode):
+            if isinstance(value, six.text_type):
                 # Status messages have to be ASCII safe, so this is OK.
                 value = str(value)
 
@@ -471,7 +463,7 @@ class Response(webob.Response):
 
     def _set_headers(self, value):
         if hasattr(value, 'items'):
-            value = value.items()
+            value = list(value.items())
         elif not isinstance(value, list):
             raise TypeError('Response headers must be a list or dictionary.')
 
@@ -875,7 +867,7 @@ class SimpleRoute(BaseRoute):
 
         .. seealso:: :meth:`BaseRoute.match`.
         """
-        match = self.regex.match(urllib.unquote(request.path))
+        match = self.regex.match(unquote(request.path))
         if match:
             return self, match.groups(), {}
 
@@ -975,7 +967,7 @@ class Route(BaseRoute):
         self.defaults = defaults or {}
         self.methods = methods
         self.schemes = schemes
-        if isinstance(handler, basestring) and ':' in handler:
+        if isinstance(handler, six.string_types) and ':' in handler:
             if handler_method:
                 raise ValueError(
                     "If handler_method is defined in a Route, handler "
@@ -1002,7 +994,7 @@ class Route(BaseRoute):
 
         .. seealso:: :meth:`BaseRoute.match`.
         """
-        match = self.regex.match(urllib.unquote(request.path))
+        match = self.regex.match(unquote(request.path))
         if not match or self.schemes and request.scheme not in self.schemes:
             return None
 
@@ -1048,13 +1040,13 @@ class Route(BaseRoute):
                     kwargs[key] = value
 
         values = {}
-        for name, regex in _iteritems(variables):
+        for name, regex in six.iteritems(variables):
             value = kwargs.pop(name, self.defaults.get(name))
             if value is None:
                 raise KeyError('Missing argument "%s" to build URI.' %
                                name.strip('_'))
 
-            if not isinstance(value, basestring):
+            if not isinstance(value, six.string_types):
                 value = str(value)
 
             if not regex.match(value):
@@ -1297,7 +1289,7 @@ class Router(object):
 
         if route.handler_adapter is None:
             handler = route.handler
-            if isinstance(handler, basestring):
+            if isinstance(handler, six.string_types):
                 if handler not in self.handlers:
                     self.handlers[handler] = handler = import_string(handler)
                 else:
@@ -1337,7 +1329,7 @@ class Router(object):
 
     def __repr__(self):
         routes = self.match_routes + [
-            v for k, v in _iteritems(self.build_routes)
+            v for k, v in six.iteritems(self.build_routes)
             if v not in self.match_routes
         ]
 
@@ -1621,7 +1613,7 @@ class WSGIApplication(object):
 
         handler = self.error_handlers.get(code)
         if handler:
-            if isinstance(handler, basestring):
+            if isinstance(handler, six.string_types):
                 self.error_handlers[code] = handler = import_string(handler)
 
             return handler(request, response, e)
@@ -1913,17 +1905,17 @@ def _urlunsplit(scheme=None, netloc=None, path=None, query=None,
         netloc = None
 
     if path:
-        path = urllib.quote(_to_utf8(path))
+        path = quote(_to_utf8(path))
 
-    if query and not isinstance(query, basestring):
+    if query and not isinstance(query, six.string_types):
         if isinstance(query, dict):
-            query = _iteritems(query)
+            query = six.iteritems(query)
 
         # Sort args: commonly needed to build signatures for services.
-        query = urllib.urlencode(sorted(query))
+        query = urlencode(sorted(query))
 
     if fragment:
-        fragment = urllib.quote(_to_utf8(fragment))
+        fragment = quote(_to_utf8(fragment))
 
     return urlunsplit((scheme, netloc, path, query, fragment))
 

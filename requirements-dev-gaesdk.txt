@@ -2,6 +2,7 @@
 WebOb==1.2.3
 Jinja2==2.6.0
 # The remaining requirements are defined by webapp2. These are the versions
+six==1.10.0
 # that were used with release 2.5.2, except for babel.
 Mako==0.4.1
 Babel==2.2
