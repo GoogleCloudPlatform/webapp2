@@ -19,25 +19,22 @@ webapp2_extras.json
 
 JSON helpers for webapp2.
 """
-from __future__ import absolute_import
-
 import base64
-import urllib
+import importlib
+import six
+from six.moves.urllib import parse
+
 
 try:
-    # Preference for installed library with updated fixes.
-    # Also available in Google App Engine SDK >= 1.4.2.
-    import simplejson as json
+    # Standard library module in Python >= 2.6.
+    _json = importlib.import_module("json")
 except ImportError:  # pragma: no cover
-    try:
-        # Standard library module in Python >= 2.6.
-        import json
-    except ImportError:  # pragma: no cover
-        raise RuntimeError(
-            'A JSON parser is required, e.g., simplejson at '
-            'http://pypi.python.org/pypi/simplejson/')
+    raise RuntimeError(
+        "You should use Python version >= 2.6 for using python's @json "
+        "standard library"
+    )
 
-assert hasattr(json, 'loads') and hasattr(json, 'dumps'), \
+assert hasattr(_json, 'loads') and hasattr(_json, 'dumps'), \
     'Expected a JSON module with the functions loads() and dumps().'
 
 
@@ -63,7 +60,7 @@ def encode(value, *args, **kwargs):
     # the javascript.  Some json libraries do this escaping by default,
     # although python's standard library does not, so we do it here.
     # See: http://goo.gl/WsXwv
-    return json.dumps(value, *args, **kwargs).replace("</", "<\\/")
+    return _json.dumps(value, *args, **kwargs).replace("</", "<\\/")
 
 
 def decode(value, *args, **kwargs):
@@ -83,8 +80,8 @@ def decode(value, *args, **kwargs):
     if isinstance(value, str):
         value = value.decode('utf-8')
 
-    assert isinstance(value, unicode)
-    return json.loads(value, *args, **kwargs)
+    assert isinstance(value, six.text_type)
+    return _json.loads(value, *args, **kwargs)
 
 
 def b64encode(value, *args, **kwargs):
@@ -104,16 +101,18 @@ def b64decode(value, *args, **kwargs):
 
 
 def quote(value, *args, **kwargs):
-    """Serializes a value to JSON and encodes it using urllib.quote.
+    """Serializes a value to JSON and encodes it
+    using urllib.quote or urllib.parse.quote(PY3).
 
     Parameters and return value are the same from :func:`encode`.
     """
-    return urllib.quote(encode(value, *args, **kwargs))
+    return parse.quote(encode(value, *args, **kwargs))
 
 
 def unquote(value, *args, **kwargs):
-    """Decodes a value using urllib.unquote and deserializes it from JSON.
+    """Decodes a value using urllib.unquote or urllib.parse.unquote(PY3)
+    and deserializes it from JSON.
 
     Parameters and return value are the same from :func:`decode`.
     """
-    return decode(urllib.unquote(value), *args, **kwargs)
+    return decode(parse.unquote(value), *args, **kwargs)

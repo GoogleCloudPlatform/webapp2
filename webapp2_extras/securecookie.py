@@ -19,10 +19,10 @@ webapp2_extras.securecookie
 
 A serializer for signed cookies.
 """
-import Cookie
 import hashlib
 import hmac
 import logging
+from six.moves import http_cookies
 import time
 
 from webapp2_extras import json
@@ -76,7 +76,7 @@ class SecureCookieSerializer(object):
             return None
 
         # Unquote for old WebOb.
-        value = Cookie._unquote(value)
+        value = http_cookies._unquote(value)
 
         parts = value.split('|')
         if len(parts) != 3:

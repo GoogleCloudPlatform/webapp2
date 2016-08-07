@@ -28,6 +28,7 @@ from babel import dates
 from babel import numbers
 from babel import support
 import pytz
+import six
 
 import webapp2
 
@@ -155,7 +156,7 @@ class I18nStore(object):
         if func is None:
             self.locale_selector = self.default_locale_selector
         else:
-            if isinstance(func, basestring):
+            if isinstance(func, six.string_types):
                 func = webapp2.import_string(func)
 
             # Functions are descriptors, so bind it to this instance with
@@ -172,7 +173,7 @@ class I18nStore(object):
         if func is None:
             self.timezone_selector = self.default_timezone_selector
         else:
-            if isinstance(func, basestring):
+            if isinstance(func, six.string_types):
                 func = webapp2.import_string(func)
 
             self.timezone_selector = func.__get__(self, self.__class__)

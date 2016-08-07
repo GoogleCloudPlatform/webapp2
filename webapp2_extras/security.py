@@ -26,6 +26,7 @@ import hashlib
 import hmac
 import math
 import random
+import six
 import string
 
 import webapp2
@@ -34,15 +35,18 @@ _rng = random.SystemRandom()
 
 HEXADECIMAL_DIGITS = string.digits + 'abcdef'
 DIGITS = string.digits
-LOWERCASE_ALPHA = string.lowercase
-UPPERCASE_ALPHA = string.uppercase
-LOWERCASE_ALPHANUMERIC = string.lowercase + string.digits
-UPPERCASE_ALPHANUMERIC = string.uppercase + string.digits
-ALPHA = string.letters
-ALPHANUMERIC = string.letters + string.digits
-ASCII_PRINTABLE = string.letters + string.digits + string.punctuation
+LOWERCASE_ALPHA = string.ascii_lowercase
+UPPERCASE_ALPHA = string.ascii_uppercase
+LOWERCASE_ALPHANUMERIC = string.ascii_lowercase + string.digits
+UPPERCASE_ALPHANUMERIC = string.ascii_uppercase + string.digits
+ALPHA = string.ascii_letters
+ALPHANUMERIC = string.ascii_letters + string.digits
+ASCII_PRINTABLE = string.ascii_letters + string.digits + string.punctuation
 ALL_PRINTABLE = string.printable
 PUNCTUATION = string.punctuation
+
+if six.PY3:
+    long = int
 
 
 def generate_random_string(length=None, entropy=None, pool=ALPHANUMERIC):
@@ -101,7 +105,7 @@ def generate_random_string(length=None, entropy=None, pool=ALPHANUMERIC):
         log_of_2 = 0.6931471805599453
         length = long(math.ceil((log_of_2 / math.log(len(pool))) * entropy))
 
-    return ''.join(_rng.choice(pool) for _ in xrange(length))
+    return ''.join(_rng.choice(pool) for _ in six.moves.range(length))
 
 
 def generate_password_hash(password, method='sha1', length=22, pepper=None):

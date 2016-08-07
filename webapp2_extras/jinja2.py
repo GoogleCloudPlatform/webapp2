@@ -21,11 +21,12 @@ Jinja2 template support for webapp2.
 
 Learn more about Jinja2: http://jinja.pocoo.org/
 """
-from __future__ import absolute_import
-
-import jinja2
+import importlib
 
 import webapp2
+
+_jinja2 = importlib.import_module("jinja2")
+
 
 #: Default configuration values for this module. Keys are:
 #:
@@ -128,13 +129,13 @@ class Jinja2(object):
 
             if compiled_path and use_compiled:
                 # Use precompiled templates loaded from a module or zip.
-                kwargs['loader'] = jinja2.ModuleLoader(compiled_path)
+                kwargs['loader'] = _jinja2.ModuleLoader(compiled_path)
             else:
                 # Parse templates for every new environment instances.
-                kwargs['loader'] = jinja2.FileSystemLoader(template_path)
+                kwargs['loader'] = _jinja2.FileSystemLoader(template_path)
 
         # Initialize the environment.
-        env = jinja2.Environment(**kwargs)
+        env = _jinja2.Environment(**kwargs)
 
         if config['globals']:
             env.globals.update(config['globals'])

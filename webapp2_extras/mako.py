@@ -21,11 +21,13 @@ Mako template support for webapp2.
 
 Learn more about Mako: http://www.makotemplates.org/
 """
-from __future__ import absolute_import
+import importlib
 
-from mako import lookup
-
+import six
 import webapp2
+
+
+lookup = importlib.import_module('mako.lookup')
 
 #: Default configuration values for this module. Keys are:
 #:
@@ -80,7 +82,7 @@ class Mako(object):
         )
 
         directories = config.get('template_path')
-        if isinstance(directories, basestring):
+        if isinstance(directories, six.string_types):
             directories = [directories]
 
         self.environment = lookup.TemplateLookup(directories=directories,

@@ -26,9 +26,10 @@ def session_lint(session):
 
 def run_tests(session, requirements):
     tmpdir = gettempdir()
-    session.interpreter = 'python2.7'
-    session.install(
-        'git+https://github.com/GoogleCloudPlatform/python-repo-tools')
+    session.interpreter = 'python3.5'
+    # session.install(
+    #     'git+https://github.com/GoogleCloudPlatform/python-repo-tools')
+    session.install('git+https://github.com/mymtwcom/python-repo-tools')
     session.install('-r', requirements)
     session.install('-e', '.')
     session.run('gcprepotools', 'download-appengine-sdk', tmpdir)

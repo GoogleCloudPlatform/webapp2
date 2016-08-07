@@ -21,6 +21,8 @@ This module implements thread-local utilities.
 
 This implementation comes from werkzeug.local.
 """
+import six
+
 try:
     from greenlet import getcurrent as get_current_greenlet
 except ImportError:  # pragma: no cover
@@ -33,9 +35,9 @@ except ImportError:  # pragma: no cover
         # catch all, py.* fails with so many different errors.
         get_current_greenlet = int
 try:
-    from thread import get_ident as get_current_thread, allocate_lock
+    from six.moves._thread import get_ident as get_current_thread, allocate_lock
 except ImportError:  # pragma: no cover
-    from dummy_thread import get_ident as get_current_thread, allocate_lock
+    from six.moves._dummy_thread import get_ident as get_current_thread, allocate_lock
 
 # get the best ident function.  if greenlets are not installed we can
 # safely just use the builtin thread function and save a python methodcall
@@ -60,7 +62,7 @@ class Local(object):
         object.__setattr__(self, '__lock__', allocate_lock())
 
     def __iter__(self):
-        return self.__storage__.iteritems()
+        return six.iteritems(self.__storage__)
 
     def __call__(self, proxy):
         """Creates a proxy for a name."""
@@ -102,6 +104,7 @@ class Local(object):
             self.__lock__.release()
 
 
+@six.python_2_unicode_compatible
 class LocalProxy(object):
     """Acts as a proxy for a local object.
 
@@ -161,15 +164,17 @@ class LocalProxy(object):
             return '<%s unbound>' % self.__class__.__name__
         return repr(obj)
 
-    def __nonzero__(self):
+    def __bool__(self):
         try:
             return bool(self._get_current_object())
         except RuntimeError:
             return False
 
-    def __unicode__(self):
+    __nonzero__ = __bool__
+
+    def __str__(self):
         try:
-            return unicode(self._get_current_object())
+            self._get_current_object()
         except RuntimeError:
             return repr(self)
 
@@ -202,9 +207,6 @@ class LocalProxy(object):
     def __delattr__(self, item):
         delattr(self._get_current_object(), item)
 
-    def __str__(self):
-        return str(self._get_current_object())
-
     def __lt__(self, other):
         return self._get_current_object() < other
 
@@ -222,9 +224,6 @@ class LocalProxy(object):
 
     def __ge__(self, other):
         return self._get_current_object() >= other
-
-    def __cmp__(self, other):
-        return cmp(self._get_current_object(), other)
 
     def __hash__(self):
         return hash(self._get_current_object())
@@ -308,7 +307,9 @@ class LocalProxy(object):
         return int(self._get_current_object())
 
     def __long__(self):
-        return long(self._get_current_object())
+        if six.PY2:
+            return long(self._get_current_object())
+        return None
 
     def __float__(self):
         return float(self._get_current_object())

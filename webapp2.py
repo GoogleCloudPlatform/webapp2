@@ -29,7 +29,6 @@ import logging
 import os
 import re
 import six
-from six.moves import urllib
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.parse import unquote
 from six.moves.urllib.parse import quote
@@ -297,7 +296,7 @@ class Request(webob.Request):
             environ['REQUEST_METHOD'] = 'POST'
             if hasattr(data, 'items'):
                 data = list(data.items())
-            if not isinstance(data, str):
+            if not isinstance(data, six.binary_type):
                 data = urlencode(data)
             environ['wsgi.input'] = cStringIO(data)
             environ['webob.is_body_seekable'] = True
@@ -410,9 +409,9 @@ class Response(webob.Response):
         else:
             if isinstance(value, six.text_type):
                 # Status messages have to be ASCII safe, so this is OK.
-                value = str(value)
+                value = six.binary_type(value)
 
-            if not isinstance(value, str):
+            if not isinstance(value, six.binary_type):
                 raise TypeError(
                     'You must set status to a string or integer (not %s)' %
                     type(value))
@@ -1047,7 +1046,7 @@ class Route(BaseRoute):
                                name.strip('_'))
 
             if not isinstance(value, six.string_types):
-                value = str(value)
+                value = six.binary_type(value)
 
             if not regex.match(value):
                 raise ValueError(
@@ -1943,7 +1942,7 @@ def _normalize_handler_method(method):
 
 def _to_utf8(value):
     """Encodes a unicode value to UTF-8 if not yet encoded."""
-    if isinstance(value, str):
+    if isinstance(value, six.binary_type):
         return value
 
     return value.encode('utf-8')
@@ -1980,9 +1979,14 @@ def _get_route_variables(match, default_kwargs=None):
     kwargs = default_kwargs or {}
     kwargs.update(match.groupdict())
     if kwargs:
-        args = tuple(value[1] for value in sorted(
-            (int(key[2:-2]), kwargs.pop(key)) for key in kwargs.keys()
-            if key.startswith('__') and key.endswith('__')))
+        args = tuple(
+            value[1]
+            for value in sorted(
+                (int(key[2:-2]), kwargs.pop(key))
+                for key in kwargs.keys()
+                if key.startswith('__') and key.endswith('__')
+            )
+        )
     else:
         args = ()
 
