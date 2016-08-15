@@ -296,7 +296,7 @@ class Request(webob.Request):
             environ['REQUEST_METHOD'] = 'POST'
             if hasattr(data, 'items'):
                 data = list(data.items())
-            if not isinstance(data, six.binary_type):
+            if not isinstance(data, str):
                 data = urlencode(data)
             environ['wsgi.input'] = cStringIO(data)
             environ['webob.is_body_seekable'] = True
@@ -409,12 +409,12 @@ class Response(webob.Response):
         else:
             if isinstance(value, six.text_type):
                 # Status messages have to be ASCII safe, so this is OK.
-                value = six.binary_type(value)
+                value = str(value)
 
-            if not isinstance(value, six.binary_type):
+            if not isinstance(value, str):
                 raise TypeError(
-                    'You must set status to a string or integer (not %s)' %
-                    type(value))
+                    'You must set status to a string or integer (not %s)'
+                    % type(value))
 
             parts = value.split(' ', 1)
             code = int(parts[0])
@@ -1046,7 +1046,7 @@ class Route(BaseRoute):
                                name.strip('_'))
 
             if not isinstance(value, six.string_types):
-                value = six.binary_type(value)
+                value = str(value)
 
             if not regex.match(value):
                 raise ValueError(
@@ -1900,7 +1900,7 @@ def _urlunsplit(scheme=None, netloc=None, path=None, query=None,
         An assembled absolute or relative URI.
     """
     if not scheme or not netloc:
-        scheme = None
+        scheme = ''
         netloc = None
 
     if path:
@@ -1942,7 +1942,7 @@ def _normalize_handler_method(method):
 
 def _to_utf8(value):
     """Encodes a unicode value to UTF-8 if not yet encoded."""
-    if isinstance(value, six.binary_type):
+    if isinstance(value, str):
         return value
 
     return value.encode('utf-8')
@@ -1979,14 +1979,9 @@ def _get_route_variables(match, default_kwargs=None):
     kwargs = default_kwargs or {}
     kwargs.update(match.groupdict())
     if kwargs:
-        args = tuple(
-            value[1]
-            for value in sorted(
-                (int(key[2:-2]), kwargs.pop(key))
-                for key in kwargs.keys()
-                if key.startswith('__') and key.endswith('__')
-            )
-        )
+        args = tuple(value[1] for value in sorted(
+            (int(key[2:-2]), kwargs.pop(key)) for key in list(kwargs.keys())
+            if key.startswith('__') and key.endswith('__')))
     else:
         args = ()
 

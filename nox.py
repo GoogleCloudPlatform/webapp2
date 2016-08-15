@@ -26,10 +26,9 @@ def session_lint(session):
 
 def run_tests(session, requirements):
     tmpdir = gettempdir()
-    session.interpreter = 'python3.5'
-    # session.install(
-    #     'git+https://github.com/GoogleCloudPlatform/python-repo-tools')
-    session.install('git+https://github.com/mymtwcom/python-repo-tools')
+    session.interpreter = 'python2.7'
+    session.install(
+        'git+https://github.com/GoogleCloudPlatform/python-repo-tools')
     session.install('-r', requirements)
     session.install('-e', '.')
     session.run('gcprepotools', 'download-appengine-sdk', tmpdir)
@@ -39,6 +38,26 @@ def run_tests(session, requirements):
         '--cov=webapp2',
         '--cov=webapp2_extras',
         *(['tests'] or session.posargs))
+
+
+def run_tests_outside_gaesdk(session, requirements):
+    tmpdir = gettempdir()
+    session.interpreter = 'python2.7'
+    # session.install(
+    #     'git+https://github.com/GoogleCloudPlatform/python-repo-tools')
+    session.install('-r', requirements)
+    session.install('-e', '.')
+    # session.run('gcprepotools', 'download-appengine-sdk', tmpdir)
+    # session.env['PYTHONPATH'] = os.path.join(tmpdir, 'google_appengine')
+    session.run(
+        'py.test',
+        '--cov=webapp2',
+        '--cov=webapp2_extras',
+        *(['tests'] or session.posargs))
+
+
+def session_tests_outside_gaesdk(session):
+    run_tests_outside_gaesdk(session, 'requirements-dev.txt')
 
 
 def session_tests(session):

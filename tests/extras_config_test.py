@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
+import unittest
 from webapp2_extras import config as app_config
 
 
-class TestConfig(test_base.BaseTestCase):
+class TestConfig(unittest.TestCase):
     def tearDown(self):
         pass
 
@@ -175,7 +175,7 @@ class TestConfig(test_base.BaseTestCase):
         self.assertRaises(AssertionError, setitem, 'foo', None)
 
 
-class TestLoadConfig(test_base.BaseTestCase):
+class TestLoadConfig(unittest.TestCase):
     def tearDown(self):
         pass
 
@@ -313,7 +313,7 @@ class TestLoadConfig(test_base.BaseTestCase):
         self.assertRaises(KeyError, config.get_config, 'tipfy', 'foo')
 
 
-class TestLoadConfigGetItem(test_base.BaseTestCase):
+class TestLoadConfigGetItem(unittest.TestCase):
     def tearDown(self):
         pass
 
@@ -433,4 +433,4 @@ class TestLoadConfigGetItem(test_base.BaseTestCase):
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

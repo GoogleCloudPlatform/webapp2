@@ -14,8 +14,7 @@
 # limitations under the License.
 
 import os
-
-import test_base
+import unittest
 
 import webapp2
 from webapp2_extras import mako
@@ -25,7 +24,7 @@ current_dir = os.path.abspath(os.path.dirname(__file__))
 template_path = os.path.join(current_dir, 'resources', 'mako_templates')
 
 
-class TestMako(test_base.BaseTestCase):
+class TestMako(unittest.TestCase):
     def test_render_template(self):
         app = webapp2.WSGIApplication(config={
             'webapp2_extras.mako': {
@@ -57,4 +56,4 @@ class TestMako(test_base.BaseTestCase):
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

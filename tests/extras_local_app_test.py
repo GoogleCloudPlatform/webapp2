@@ -13,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
+import unittest
 
 import webapp2
 from webapp2_extras import local_app
 
 
-class TestLocalApp(test_base.BaseTestCase):
+class TestLocalApp(unittest.TestCase):
     def test_dispatch(self):
         def hello_handler(request, *args, **kwargs):
             return webapp2.Response('Hello, World!')
@@ -31,4 +31,4 @@ class TestLocalApp(test_base.BaseTestCase):
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

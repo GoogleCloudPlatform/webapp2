@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
+# import os
+# import sys
+#
+# from gcp.testing import appengine
 
-from gcp.testing import appengine
-
-
-def pytest_configure():
-    appengine.pytest_configure()
-
-    # Prune the SDK's webapp2 path from sys.path to prevent loading the SDK's
-    # bundled webapp2.
-    import dev_appserver
-    gae_path = os.path.dirname(dev_appserver.__file__)
-    gae_webapp2_path = os.path.join(gae_path, 'lib', 'webapp2')
-
-    sys.path = [path for path in sys.path if gae_webapp2_path not in path]
+#
+# def pytest_configure():
+#     appengine.pytest_configure()
+#
+#     # Prune the SDK's webapp2 path from sys.path to prevent loading the SDK's
+#     # bundled webapp2.
+#     import dev_appserver
+#     gae_path = os.path.dirname(dev_appserver.__file__)
+#     gae_webapp2_path = os.path.join(gae_path, 'lib', 'webapp2')
+#
+#     sys.path = [path for path in sys.path if gae_webapp2_path not in path]

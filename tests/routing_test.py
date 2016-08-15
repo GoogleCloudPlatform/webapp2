@@ -14,13 +14,13 @@
 # limitations under the License.
 
 import random
+import unittest
 
-import test_base
 import webapp2
 from webapp2 import BaseRoute, Request, Route, Router
 
 
-class TestRoute(test_base.BaseTestCase):
+class TestRoute(unittest.TestCase):
     def test_no_variable(self):
         route = Route(r'/hello', None)
         route, args, kwargs = route.match(Request.blank('/hello'))
@@ -158,7 +158,8 @@ class TestRoute(test_base.BaseTestCase):
     def test_build_default_keyword(self):
         route = Route(r'/<year:\d{4}>/<month:\d{2}>', None,
                       defaults={'month': 10})
-        url = route.build(Request.blank('/'), (), dict(year='2010'))
+        r = Request.blank('/')
+        url = route.build(r, (), dict(year='2010'))
         self.assertEqual(url, '/2010/10')
 
         route = Route(r'/<year:\d{4}>/<month:\d{2}>', None,
@@ -168,7 +169,8 @@ class TestRoute(test_base.BaseTestCase):
 
     def test_build_extra_keyword(self):
         route = Route(r'/<year:\d{4}>', None)
-        url = route.build(Request.blank('/'), (), dict(year='2010', foo='bar'))
+        r = Request.blank('/')
+        url = route.build(r, (), dict(year='2010', foo='bar'))
         self.assertEqual(url, '/2010?foo=bar')
         # Arguments are sorted.
         url = route.build(
@@ -367,12 +369,13 @@ class TestRoute(test_base.BaseTestCase):
         def myhandler(request, *args, **kwargs):
             return webapp2.Response('hello')
 
+        # import pudb;pudb.set_trace()
         app = webapp2.WSGIApplication([('/', myhandler)])
         app.router.set_adapter(custom_adapter)
 
         rsp = app.get_response('/')
         self.assertEqual(rsp.status_int, 200)
-        self.assertEqual(rsp.body, 'hello my adapter')
+        self.assertEqual(rsp.body, b'hello my adapter')
 
     def test_methods(self):
         route = Route(r'/', methods=['GET', 'POST'])
@@ -399,7 +402,7 @@ class TestRoute(test_base.BaseTestCase):
         self.assertTrue(route.match(req) is None)
 
 
-class TestSimpleRoute(test_base.BaseTestCase):
+class TestSimpleRoute(unittest.TestCase):
     def test_no_variable(self):
         router = webapp2.Router([(r'/', 'my_handler')])
 
@@ -433,4 +436,4 @@ class TestSimpleRoute(test_base.BaseTestCase):
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

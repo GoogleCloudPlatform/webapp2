@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
+import unittest
 
 from webapp2_extras import json
 
 
-class TestJson(test_base.BaseTestCase):
+class TestJson(unittest.TestCase):
     def test_encode(self):
         self.assertEqual(json.encode(
             '<script>alert("hello")</script>'),
@@ -52,5 +52,6 @@ class TestJson(test_base.BaseTestCase):
             '<script>alert("hello")</script>'
         )
 
+
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

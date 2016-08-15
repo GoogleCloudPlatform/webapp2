@@ -174,7 +174,7 @@ class LocalProxy(object):
 
     def __str__(self):
         try:
-            self._get_current_object()
+            return self._get_current_object()
         except RuntimeError:
             return repr(self)
 

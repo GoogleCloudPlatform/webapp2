@@ -14,13 +14,13 @@
 # limitations under the License.
 
 import re
-
-import test_base
+import six
+import unittest
 
 from webapp2_extras import security
 
 
-class TestSecurity(test_base.BaseTestCase):
+class TestSecurity(unittest.TestCase):
     def test_generate_random_string(self):
         self.assertRaises(ValueError, security.generate_random_string, None)
         self.assertRaises(ValueError, security.generate_random_string, 0)
@@ -61,16 +61,16 @@ class TestSecurity(test_base.BaseTestCase):
         hashval = security.generate_password_hash(password, 'plain')
         self.assertFalse(security.check_password_hash(password, ''))
 
-        hashval1 = security.hash_password(unicode(password), 'sha1', u'bar')
-        hashval2 = security.hash_password(unicode(password), 'sha1', u'bar')
+        hashval1 = security.hash_password(six.text_type(password), 'sha1', u'bar')
+        hashval2 = security.hash_password(six.text_type(password), 'sha1', u'bar')
         self.assertTrue(hashval1 is not None)
         self.assertEqual(hashval1, hashval2)
 
-        hashval1 = security.hash_password(unicode(password), 'md5', None)
-        hashval2 = security.hash_password(unicode(password), 'md5', None)
+        hashval1 = security.hash_password(six.text_type(password), 'md5', None)
+        hashval2 = security.hash_password(six.text_type(password), 'md5', None)
         self.assertTrue(hashval1 is not None)
         self.assertEqual(hashval1, hashval2)
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

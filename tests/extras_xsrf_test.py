@@ -14,13 +14,12 @@
 # limitations under the License.
 
 import base64
-
-import test_base
+import unittest
 
 from webapp2_extras import xsrf
 
 
-class TestXSRFToken(test_base.BaseTestCase):
+class TestXSRFToken(unittest.TestCase):
     def test_verify_timeout(self):
         token = xsrf.XSRFToken('user@example.com',
                                'secret',
@@ -106,5 +105,6 @@ class TestXSRFToken(test_base.BaseTestCase):
             token.verify_token_string,
             base64.b64encode('NODE|NOTINT'))
 
+
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

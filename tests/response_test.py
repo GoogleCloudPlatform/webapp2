@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
-
+import unittest
 import webapp2
 
 
@@ -32,7 +31,7 @@ class UnicodeConversion(object):
         return 'bar'.decode('utf-8')
 
 
-class TestResponse(test_base.BaseTestCase):
+class TestResponse(unittest.TestCase):
     def test_write(self):
         var_1 = NoStringOrUnicodeConversion()
         var_2 = StringConversion()
@@ -144,7 +143,7 @@ class TestResponse(test_base.BaseTestCase):
 
         rsp = webapp2.Response(status=res[0], body=res[2], headers=res[1])
         self.assertEqual(rsp.status, '404 Not Found')
-        self.assertEqual(rsp.body, 'Page not found!')
+        self.assertEqual(rsp.body, b'Page not found!')
 
         '''
         # webob >= 1.0
@@ -210,11 +209,11 @@ class TestResponse(test_base.BaseTestCase):
         self.assertEqual(len(rsp.headers), 3)
         rsp.headers = test[:]
         self.assertEqual(len(rsp.headers), 1)
-        self.assertEqual(rsp.headers.keys(), ['x'])
-        self.assertEqual(rsp.headers.values(), ['y'])
-        self.assertEqual(rsp.headers.items(), test)
+        self.assertEqual(list(rsp.headers.keys()), ['x'])
+        self.assertEqual(list(rsp.headers.values()), ['y'])
+        self.assertEqual(list(rsp.headers.items()), test)
         rsp.headers = test
-        self.assertFalse(rsp.headers.items() is test)  # must be copy!
+        self.assertFalse(list() is test)  # must be copy!
 
         rsp = webapp2.Response()
         h = rsp.headers
@@ -273,7 +272,7 @@ class TestResponse(test_base.BaseTestCase):
         )
 
 
-class TestReturnResponse(test_base.BaseTestCase):
+class TestReturnResponse(unittest.TestCase):
     def test_function_that_returns_response(self):
         def myfunction(request, *args, **kwargs):
             return webapp2.Response('Hello, custom response world!')
@@ -285,7 +284,7 @@ class TestReturnResponse(test_base.BaseTestCase):
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 200)
-        self.assertEqual(rsp.body, 'Hello, custom response world!')
+        self.assertEqual(rsp.body, b'Hello, custom response world!')
 
     def test_function_that_returns_string(self):
         def myfunction(request, *args, **kwargs):
@@ -304,7 +303,7 @@ class TestReturnResponse(test_base.BaseTestCase):
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 200)
-        self.assertEqual(rsp.body, 'Hello, custom response world!')
+        self.assertEqual(rsp.body, b'Hello, custom response world!')
 
     def test_function_that_returns_tuple(self):
         def myfunction(request, *args, **kwargs):
@@ -323,7 +322,7 @@ class TestReturnResponse(test_base.BaseTestCase):
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 404)
-        self.assertEqual(rsp.body, 'Hello, custom response world!')
+        self.assertEqual(rsp.body, b'Hello, custom response world!')
 
     def test_handle_exception_that_returns_response(self):
         class HomeHandler(webapp2.RequestHandler):
@@ -338,7 +337,7 @@ class TestReturnResponse(test_base.BaseTestCase):
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 200)
-        self.assertEqual(rsp.body, 'Hello, custom response world!')
+        self.assertEqual(rsp.body, b'Hello, custom response world!')
 
     def test_return_is_not_wsgi_app(self):
         class HomeHandler(webapp2.RequestHandler):
@@ -355,4 +354,4 @@ class TestReturnResponse(test_base.BaseTestCase):
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

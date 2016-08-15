@@ -80,7 +80,7 @@ class DomainRoute(MultiRoute):
         app = WSGIApplication([
             DomainRoute('<subdomain>.app-id.appspot.com', [
                 Route('/foo', 'FooHandler', 'subdomain-thing'),
-            ]),d
+            ]),
             Route('/bar', 'BarHandler', 'normal-thing'),
         ])
 

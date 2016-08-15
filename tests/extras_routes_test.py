@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
+import unittest
 
 import webapp2
-
 from webapp2_extras.routes import DomainRoute
 from webapp2_extras.routes import HandlerPrefixRoute
 from webapp2_extras.routes import NamePrefixRoute
@@ -51,7 +50,7 @@ app = webapp2.WSGIApplication([
 ])
 
 
-class TestRedirectRoute(test_base.BaseTestCase):
+class TestRedirectRoute(unittest.TestCase):
     def test_route_redirect_to(self):
         route = RedirectRoute('/foo', redirect_to='/bar')
         router = webapp2.Router([route])
@@ -103,12 +102,12 @@ class TestRedirectRoute(test_base.BaseTestCase):
         req = webapp2.Request.blank('/strict-foo')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 200)
-        self.assertEqual(rsp.body, 'home sweet home')
+        self.assertEqual(rsp.body, b'home sweet home')
 
         req = webapp2.Request.blank('/strict-bar/')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 200)
-        self.assertEqual(rsp.body, 'home sweet home')
+        self.assertEqual(rsp.body, b'home sweet home')
 
         # Now the non-strict...
 
@@ -142,7 +141,7 @@ class TestRedirectRoute(test_base.BaseTestCase):
                           handler=HomeHandler, build_only=True)
 
 
-class TestPrefixRoutes(test_base.BaseTestCase):
+class TestPrefixRoutes(unittest.TestCase):
     def test_simple(self):
         router = webapp2.Router([
             PathPrefixRoute('/a', [
@@ -265,7 +264,7 @@ class TestPrefixRoutes(test_base.BaseTestCase):
         )
 
 
-class TestDomainRoute(test_base.BaseTestCase):
+class TestDomainRoute(unittest.TestCase):
     def test_simple(self):
         router = webapp2.Router([
             DomainRoute('<subdomain>.<:.*>', [
@@ -470,5 +469,6 @@ class TestDomainRoute(test_base.BaseTestCase):
             webapp2.exc.HTTPNotFound,
             router.match, webapp2.Request.blank(uri4g))
 
+
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

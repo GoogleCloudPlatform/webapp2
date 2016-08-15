@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
+import unittest
 
 from webapp2_extras import securecookie
 
 
-class TestSecureCookie(test_base.BaseTestCase):
+class TestSecureCookie(unittest.TestCase):
     def test_secure_cookie_serializer(self):
         serializer = securecookie.SecureCookieSerializer('secret-key')
         serializer._get_timestamp = lambda: 1
@@ -58,4 +58,4 @@ class TestSecureCookie(test_base.BaseTestCase):
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

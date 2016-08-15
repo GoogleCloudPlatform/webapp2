@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
+import six
+import unittest
 
 import webapp2
 
@@ -52,7 +53,17 @@ _test_req = _norm_req(_test_req)
 _test_req2 = _norm_req(_test_req2) + '\r\n'
 
 
-class TestRequest(test_base.BaseTestCase):
+class BaseTestCase(unittest.TestCase):
+
+    def tearDown(self):
+        # Clear thread-local variables.
+        self.clear_globals()
+
+    def clear_globals(self):
+        webapp2._local.__release_local__()
+
+
+class TestRequest(BaseTestCase):
     def test_charset(self):
         req = webapp2.Request.blank('/', environ={
             'CONTENT_TYPE': 'text/html; charset=ISO-8859-4',
@@ -106,15 +117,16 @@ class TestRequest(test_base.BaseTestCase):
 
         res = req.GET.get('1')
         self.assertEqual(res, '2')
-        self.assertTrue(isinstance(res, unicode))
+        self.assertTrue(isinstance(res, six.text_type))
 
         res = req.POST.get('3')
         self.assertEqual(res, '4')
-        self.assertTrue(isinstance(res, unicode))
+        self.assertTrue(isinstance(res, six.text_type))
 
     def test_cookie_unicode(self):
-        import urllib
         import base64
+        from six.moves.urllib.parse import unquote
+        from six.moves.urllib.parse import quote
 
         # With base64 ---------------------------------------------------------
 
@@ -150,11 +162,11 @@ class TestRequest(test_base.BaseTestCase):
         # Here is our test value.
         x = u'föö'
         # We must store cookies quoted. To quote unicode, we need to encode it.
-        y = urllib.quote(x.encode('utf8'))
+        y = quote(x.encode('utf8'))
         # The encoded, quoted string looks ugly.
         self.assertEqual(y, 'f%C3%B6%C3%B6')
         # But it is easy to get it back to our initial value.
-        z = urllib.unquote(y).decode('utf8')
+        z = unquote(y).decode('utf8')
         # And it is indeed the same value.
         self.assertEqual(z, x)
 
@@ -169,7 +181,7 @@ class TestRequest(test_base.BaseTestCase):
         self.assertEqual(req.cookies.get('foo'), y)
         # Here is our original value, again. Problem: the value is decoded
         # before we had a chance to unquote it.
-        w = urllib.unquote(
+        w = unquote(
             req.cookies.get('foo').encode('utf8')).decode('utf8')
         # And it is indeed the same value.
         self.assertEqual(w, x)
@@ -177,7 +189,7 @@ class TestRequest(test_base.BaseTestCase):
         # With quote, easy way ------------------------------------------------
 
         value = u'föö=bär; föo, bär, bäz=dïng;'
-        quoted_value = urllib.quote(value.encode('utf8'))
+        quoted_value = quote(value.encode('utf8'))
         rsp = webapp2.Response()
         rsp.set_cookie('foo', quoted_value)
 
@@ -185,7 +197,7 @@ class TestRequest(test_base.BaseTestCase):
         req = webapp2.Request.blank('/', headers=[('Cookie', cookie)])
 
         cookie_value = req.cookies.get('foo')
-        unquoted_cookie_value = urllib.unquote(
+        unquoted_cookie_value = unquote(
             cookie_value.encode('utf8')).decode('utf8')
         self.assertEqual(cookie_value, quoted_value)
         self.assertEqual(unquoted_cookie_value, value)
@@ -325,4 +337,4 @@ class TestRequest(test_base.BaseTestCase):
     '''
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

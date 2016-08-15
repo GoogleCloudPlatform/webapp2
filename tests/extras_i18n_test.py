@@ -14,20 +14,18 @@
 # limitations under the License.
 
 import datetime
-
 from decimal import Decimal
 
 from babel.numbers import NumberFormatError
-
 from pytz.gae import pytz
 
-import test_base
+import unittest
 
 import webapp2
 from webapp2_extras import i18n
 
 
-class I18nTestCase(test_base.BaseTestCase):
+class I18nTestCase(unittest.TestCase):
 
     def setUp(self):
         super(I18nTestCase, self).setUp()
@@ -576,5 +574,6 @@ class I18nTestCase(test_base.BaseTestCase):
         i18n.get_store().set_timezone_selector(
             'resources.i18n.timezone_selector')
 
+
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

@@ -14,8 +14,8 @@
 # limitations under the License.
 
 import os
+import unittest
 
-import test_base
 import webapp2
 from webapp2_extras import jinja2
 
@@ -26,7 +26,7 @@ compiled_path = os.path.join(current_dir, 'resources',
                              'jinja2_templates_compiled')
 
 
-class TestJinja2(test_base.BaseTestCase):
+class TestJinja2(unittest.TestCase):
     def test_render_template_with_i18n(self):
         app = webapp2.WSGIApplication(config={
             'webapp2_extras.jinja2': {
@@ -108,4 +108,4 @@ class TestJinja2(test_base.BaseTestCase):
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

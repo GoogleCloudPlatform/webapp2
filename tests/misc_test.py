@@ -13,15 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
-
-import webapp2
+import unittest
 
 import webob
 import webob.exc
 
+import webapp2
 
-class TestMiscellaneous(test_base.BaseTestCase):
+
+class TestMiscellaneous(unittest.TestCase):
 
     def test_abort(self):
         self.assertRaises(webob.exc.HTTPOk, webapp2.abort, 200)
@@ -143,7 +143,7 @@ class TestMiscellaneous(test_base.BaseTestCase):
         app.set_globals(app=app, request=req)
         rsp = webapp2.redirect('http://www.google.com/', code=301, body='Weee')
         self.assertEqual(rsp.status_int, 301)
-        self.assertEqual(rsp.body, 'Weee')
+        self.assertEqual(rsp.body, b'Weee')
         self.assertEqual(rsp.headers.get('Location'), 'http://www.google.com/')
 
     def test_redirect_to(self):
@@ -156,9 +156,9 @@ class TestMiscellaneous(test_base.BaseTestCase):
 
         rsp = webapp2.redirect_to('home', _code=301, _body='Weee')
         self.assertEqual(rsp.status_int, 301)
-        self.assertEqual(rsp.body, 'Weee')
+        self.assertEqual(rsp.body, b'Weee')
         self.assertEqual(rsp.headers.get('Location'), 'http://localhost/home')
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()
