@@ -85,6 +85,14 @@ class TestResponse(test_base.BaseTestCase):
         self.assertEqual(rsp.body, b'foo')
         self.assertEqual(rsp.charset, 'utf-8')
 
+        # test for python's 3 write bytestring
+        rsp = webapp2.Response()
+        rsp.charset = None
+        rsp.write(b'foo')
+
+        self.assertEqual(rsp.body, b'foo')
+        self.assertEqual(rsp.charset, 'utf-8')
+
     def test_status(self):
         rsp = webapp2.Response()
 
