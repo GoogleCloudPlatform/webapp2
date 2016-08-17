@@ -13,7 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import unittest
+from tests import test_base
+
 import webapp2
 
 
@@ -23,15 +26,16 @@ class NoStringOrUnicodeConversion(object):
 
 class StringConversion(object):
     def __str__(self):
-        return 'foo'.encode('utf-8')
+        return 'foo' if six.PY3 else 'foo'.encode('utf-8')
 
 
+@six.python_2_unicode_compatible
 class UnicodeConversion(object):
-    def __unicode__(self):
-        return 'bar'.decode('utf-8')
+    def __str__(self):
+        return 'bar'
 
 
-class TestResponse(unittest.TestCase):
+class TestResponse(test_base.BaseTestCase):
     def test_write(self):
         var_1 = NoStringOrUnicodeConversion()
         var_2 = StringConversion()
@@ -41,44 +45,44 @@ class TestResponse(unittest.TestCase):
         rsp.write(var_1)
         rsp.write(var_2)
         rsp.write(var_3)
-        self.assertEqual(rsp.body, '%rfoobar' % var_1)
+        self.assertEqual(rsp.body, b'%rfoobar' % var_1)
 
         rsp = webapp2.Response()
         rsp.write(var_1)
         rsp.write(var_3)
         rsp.write(var_2)
-        self.assertEqual(rsp.body, '%rbarfoo' % var_1)
+        self.assertEqual(rsp.body, b'%rbarfoo' % var_1)
 
         rsp = webapp2.Response()
         rsp.write(var_2)
         rsp.write(var_1)
         rsp.write(var_3)
-        self.assertEqual(rsp.body, 'foo%rbar' % var_1)
+        self.assertEqual(rsp.body, b'foo%rbar' % var_1)
 
         rsp = webapp2.Response()
         rsp.write(var_2)
         rsp.write(var_3)
         rsp.write(var_1)
-        self.assertEqual(rsp.body, 'foobar%r' % var_1)
+        self.assertEqual(rsp.body, b'foobar%r' % var_1)
 
         rsp = webapp2.Response()
         rsp.write(var_3)
         rsp.write(var_1)
         rsp.write(var_2)
-        self.assertEqual(rsp.body, 'bar%rfoo' % var_1)
+        self.assertEqual(rsp.body, b'bar%rfoo' % var_1)
 
         rsp = webapp2.Response()
         rsp.write(var_3)
         rsp.write(var_2)
         rsp.write(var_1)
-        self.assertEqual(rsp.body, 'barfoo%r' % var_1)
+        self.assertEqual(rsp.body, b'barfoo%r' % var_1)
 
     def test_write2(self):
         rsp = webapp2.Response()
         rsp.charset = None
         rsp.write(u'foo')
 
-        self.assertEqual(rsp.body, u'foo')
+        self.assertEqual(rsp.body, b'foo')
         self.assertEqual(rsp.charset, 'utf-8')
 
     def test_status(self):
@@ -332,7 +336,7 @@ class TestReturnResponse(unittest.TestCase):
         app = webapp2.WSGIApplication([
             webapp2.Route('/', HomeHandler, name='home'),
         ])
-        app.error_handlers[500] = 'resources.handlers.handle_exception'
+        app.error_handlers[500] = 'tests.resources.handlers.handle_exception'
 
         req = webapp2.Request.blank('/')
         rsp = req.get_response(app)

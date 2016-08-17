@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from tests.test_base import BaseTestCase
 import unittest
 
 import webapp2
@@ -50,7 +51,7 @@ app = webapp2.WSGIApplication([
 ])
 
 
-class TestRedirectRoute(unittest.TestCase):
+class TestRedirectRoute(BaseTestCase):
     def test_route_redirect_to(self):
         route = RedirectRoute('/foo', redirect_to='/bar')
         router = webapp2.Router([route])
@@ -64,7 +65,7 @@ class TestRedirectRoute(unittest.TestCase):
         req = webapp2.Request.blank('/redirect-me-easily')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 301)
-        self.assertEqual(rsp.body, '')
+        self.assertEqual(rsp.body, b'')
         self.assertEqual(
             rsp.headers['Location'],
             'http://localhost/i-was-redirected-easily'
@@ -73,7 +74,7 @@ class TestRedirectRoute(unittest.TestCase):
         req = webapp2.Request.blank('/redirect-me-easily2')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 302)
-        self.assertEqual(rsp.body, '')
+        self.assertEqual(rsp.body, b'')
         self.assertEqual(
             rsp.headers['Location'],
             'http://localhost/i-was-redirected-easily'
@@ -82,7 +83,7 @@ class TestRedirectRoute(unittest.TestCase):
         req = webapp2.Request.blank('/redirect-me-easily3')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 302)
-        self.assertEqual(rsp.body, '')
+        self.assertEqual(rsp.body, b'')
         self.assertEqual(
             rsp.headers['Location'],
             'http://localhost/i-was-redirected-easily'
@@ -92,7 +93,7 @@ class TestRedirectRoute(unittest.TestCase):
         req = webapp2.Request.blank('/redirect-to-name')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 301)
-        self.assertEqual(rsp.body, '')
+        self.assertEqual(rsp.body, b'')
         self.assertEqual(
             rsp.headers['Location'],
             'http://localhost/redirect-to-name-destination'
@@ -114,7 +115,7 @@ class TestRedirectRoute(unittest.TestCase):
         req = webapp2.Request.blank('/strict-foo/')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 301)
-        self.assertEqual(rsp.body, '')
+        self.assertEqual(rsp.body, b'')
         self.assertEqual(
             rsp.headers['Location'],
             'http://localhost/strict-foo'
@@ -123,7 +124,7 @@ class TestRedirectRoute(unittest.TestCase):
         req = webapp2.Request.blank('/strict-bar')
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 301)
-        self.assertEqual(rsp.body, '')
+        self.assertEqual(rsp.body, b'')
         self.assertEqual(
             rsp.headers['Location'],
             'http://localhost/strict-bar/'
@@ -141,7 +142,7 @@ class TestRedirectRoute(unittest.TestCase):
                           handler=HomeHandler, build_only=True)
 
 
-class TestPrefixRoutes(unittest.TestCase):
+class TestPrefixRoutes(BaseTestCase):
     def test_simple(self):
         router = webapp2.Router([
             PathPrefixRoute('/a', [
@@ -264,7 +265,7 @@ class TestPrefixRoutes(unittest.TestCase):
         )
 
 
-class TestDomainRoute(unittest.TestCase):
+class TestDomainRoute(BaseTestCase):
     def test_simple(self):
         router = webapp2.Router([
             DomainRoute('<subdomain>.<:.*>', [

@@ -14,13 +14,14 @@
 # limitations under the License.
 
 import random
+from tests.test_base import BaseTestCase
 import unittest
 
 import webapp2
 from webapp2 import BaseRoute, Request, Route, Router
 
 
-class TestRoute(unittest.TestCase):
+class TestRoute(BaseTestCase):
     def test_no_variable(self):
         route = Route(r'/hello', None)
         route, args, kwargs = route.match(Request.blank('/hello'))
@@ -369,7 +370,6 @@ class TestRoute(unittest.TestCase):
         def myhandler(request, *args, **kwargs):
             return webapp2.Response('hello')
 
-        # import pudb;pudb.set_trace()
         app = webapp2.WSGIApplication([('/', myhandler)])
         app.router.set_adapter(custom_adapter)
 
@@ -402,7 +402,7 @@ class TestRoute(unittest.TestCase):
         self.assertTrue(route.match(req) is None)
 
 
-class TestSimpleRoute(unittest.TestCase):
+class TestSimpleRoute(BaseTestCase):
     def test_no_variable(self):
         router = webapp2.Router([(r'/', 'my_handler')])
 

@@ -151,6 +151,9 @@ class Request(webob.Request):
     registry = None
     # Attributes from webapp.
     request_body_tempfile_limit = 0
+    #: Charset provided in requests @CONTENT_TYPE.
+    _request_charset = None
+
     uri = property(lambda self: self.url)
     query = property(lambda self: self.query_string)
 
@@ -166,10 +169,11 @@ class Request(webob.Request):
             # default charset is required for backwards compatibility.
             match = _charset_re.search(environ.get('CONTENT_TYPE', ''))
             if match:
-                charset = match.group(1).lower().strip().strip('"').strip()
-            else:
-                charset = 'utf-8'
-            kwargs['charset'] = charset
+                self._request_charset = (match
+                                         .group(1)
+                                         .lower().strip().strip('"').strip())
+
+        kwargs['charset'] = 'utf-8'
 
         super(Request, self).__init__(environ, *args, **kwargs)
         self.registry = {}
@@ -282,9 +286,15 @@ class Request(webob.Request):
               headers=None, **kwargs):  # pragma: no cover
         """Adds parameters compatible with WebOb >= 1.0: POST and **kwargs."""
         try:
-            return super(Request, cls).blank(path, environ=environ,
-                                             base_url=base_url,
-                                             headers=headers, **kwargs)
+            request = super(Request, cls).blank(path,
+                                                environ=environ,
+                                                base_url=base_url,
+                                                headers=headers, **kwargs)
+
+            if cls._request_charset and not cls._request_charset == 'utf-8':
+                return request.decode(cls._request_charset)
+            return request
+
         except TypeError:
             if not kwargs:
                 raise
@@ -477,7 +487,7 @@ class Response(webob.Response):
 
     def clear(self):
         """Clears all data written to the output stream so that it is empty."""
-        self.body = ''
+        self.body = b''
 
     def wsgi_write(self, start_response):
         """Writes this response using using the given WSGI function.

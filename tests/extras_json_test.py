@@ -32,7 +32,7 @@ class TestJson(unittest.TestCase):
     def test_b64encode(self):
         self.assertEqual(json.b64encode(
             '<script>alert("hello")</script>'),
-            'IjxzY3JpcHQ+YWxlcnQoXCJoZWxsb1wiKTxcL3NjcmlwdD4i')
+            b'IjxzY3JpcHQ+YWxlcnQoXCJoZWxsb1wiKTxcL3NjcmlwdD4i')
 
     def test_b64decode(self):
         self.assertEqual(json.b64decode(

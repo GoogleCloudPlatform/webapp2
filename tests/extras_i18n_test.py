@@ -17,7 +17,7 @@ import datetime
 from decimal import Decimal
 
 from babel.numbers import NumberFormatError
-from pytz.gae import pytz
+import pytz
 
 import unittest
 
@@ -568,11 +568,11 @@ class I18nTestCase(unittest.TestCase):
 
     def test_set_locale_selector(self):
         i18n.get_store().set_locale_selector(
-            'resources.i18n.locale_selector')
+            'tests.resources.i18n.locale_selector')
 
     def test_set_timezone_selector(self):
         i18n.get_store().set_timezone_selector(
-            'resources.i18n.timezone_selector')
+            'tests.resources.i18n.timezone_selector')
 
 
 if __name__ == '__main__':

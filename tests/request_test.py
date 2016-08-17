@@ -15,6 +15,7 @@
 
 import six
 import unittest
+from tests.test_base import BaseTestCase
 
 import webapp2
 
@@ -53,16 +54,6 @@ _test_req = _norm_req(_test_req)
 _test_req2 = _norm_req(_test_req2) + '\r\n'
 
 
-class BaseTestCase(unittest.TestCase):
-
-    def tearDown(self):
-        # Clear thread-local variables.
-        self.clear_globals()
-
-    def clear_globals(self):
-        webapp2._local.__release_local__()
-
-
 class TestRequest(BaseTestCase):
     def test_charset(self):
         req = webapp2.Request.blank('/', environ={
@@ -74,6 +65,7 @@ class TestRequest(BaseTestCase):
         req = webapp2.Request.blank('/', environ={
             'CONTENT_TYPE': 'application/json; charset="ISO-8859-1"',
         })
+
         self.assertEqual(req.content_type, 'application/json')
         self.assertEqual(req.charset.lower(), 'iso-8859-1')
 

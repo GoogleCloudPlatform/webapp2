@@ -18,6 +18,7 @@ Tests for webapp2 webapp2.RequestHandler
 """
 import os
 from six.moves.urllib.parse import unquote_plus
+from tests.test_base import BaseTestCase
 import unittest
 
 import webapp2
@@ -167,7 +168,7 @@ app = webapp2.WSGIApplication([
                   defaults={'_uri': get_redirect_url, '_permanent': False}),
     webapp2.Route('/redirect-me5', RedirectToHandler),
     webapp2.Route('/redirect-me6', RedirectAbortHandler),
-    webapp2.Route('/lazy', 'resources.handlers.LazyHandler'),
+    webapp2.Route('/lazy', 'tests.resources.handlers.LazyHandler'),
     webapp2.Route('/error', HandlerWithError),
     webapp2.Route('/initialize', InitializeHandler),
     webapp2.Route('/webdav', WebDavHandler),
@@ -186,7 +187,7 @@ The resource could not be found.
    """
 
 
-class TestHandler(unittest.TestCase):
+class TestHandler(BaseTestCase):
     def tearDown(self):
         super(TestHandler, self).tearDown()
         app.error_handlers = {}
@@ -733,11 +734,11 @@ class TestHandler(unittest.TestCase):
         app = webapp2.WSGIApplication([
             webapp2.Route(
                 '/',
-                handler='resources.handlers.CustomMethodHandler:custom_method'
+                handler='tests.resources.handlers.CustomMethodHandler:custom_method'
             ),
             webapp2.Route(
                 '/bleh',
-                handler='resources.handlers.CustomMethodHandler:custom_method'
+                handler='tests.resources.handlers.CustomMethodHandler:custom_method'
             ),
         ])
 
@@ -753,7 +754,7 @@ class TestHandler(unittest.TestCase):
 
         self.assertRaises(
             ValueError, webapp2.Route, '/',
-            handler='resources.handlers.CustomMethodHandler:custom_method',
+            handler='tests.resources.handlers.CustomMethodHandler:custom_method',
             handler_method='custom_method'
         )
 

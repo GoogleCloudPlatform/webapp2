@@ -77,8 +77,11 @@ def decode(value, *args, **kwargs):
     :returns:
         The deserialized value.
     """
-    if isinstance(value, str):
+    if six.PY2 and isinstance(value, str):
         value = value.decode('utf-8')
+
+    if six.PY3 and isinstance(value, bytes):
+        value = str(value, 'utf-8')
 
     assert isinstance(value, six.text_type)
     return _json.loads(value, *args, **kwargs)
@@ -89,7 +92,7 @@ def b64encode(value, *args, **kwargs):
 
     Parameters and return value are the same from :func:`encode`.
     """
-    return base64.b64encode(encode(value, *args, **kwargs))
+    return base64.b64encode(encode(value, *args, **kwargs).encode('ascii'))
 
 
 def b64decode(value, *args, **kwargs):
