@@ -51,6 +51,10 @@ else:
         return get_current_thread(), get_current_greenlet()
 
 
+if six.PY3:  # pragma: no cover
+    long = int
+
+
 class Local(object):
     """A container for thread-local objects.
 
