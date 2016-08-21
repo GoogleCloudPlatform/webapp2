@@ -38,7 +38,6 @@ def run_tests(session, requirements):
         'py.test',
         '--cov=webapp2',
         '--cov=webapp2_extras',
-        '--capture=no',
         *(['tests/gae'] or session.posargs))
 
 
