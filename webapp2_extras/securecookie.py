@@ -22,9 +22,10 @@ A serializer for signed cookies.
 import hashlib
 import hmac
 import logging
-from six.moves import http_cookies
 import time
 
+from six.moves import http_cookies
+import webapp2
 from webapp2_extras import json
 from webapp2_extras import security
 
@@ -42,7 +43,7 @@ class SecureCookieSerializer(object):
             A random string to be used as the HMAC secret for the cookie
             signature.
         """
-        self.secret_key = secret_key
+        self.secret_key = webapp2._to_utf8(secret_key)
 
     def serialize(self, name, value):
         """Serializes a signed cookie value.
@@ -54,10 +55,11 @@ class SecureCookieSerializer(object):
         :returns:
             A serialized value ready to be stored in a cookie.
         """
-        timestamp = str(self._get_timestamp())
+        name = webapp2._to_utf8(name)
+        timestamp = webapp2._to_utf8(str(self._get_timestamp()))
         value = self._encode(value)
         signature = self._get_signature(name, value, timestamp)
-        return '|'.join([value, timestamp, signature])
+        return b'|'.join([value, timestamp, signature])
 
     def deserialize(self, name, value, max_age=None):
         """Deserializes a signed cookie value.
@@ -75,10 +77,13 @@ class SecureCookieSerializer(object):
         if not value:
             return None
 
+        name = webapp2._to_utf8(name)
+        value = webapp2._to_utf8(value)
+
         # Unquote for old WebOb.
         value = http_cookies._unquote(value)
 
-        parts = value.split('|')
+        parts = value.split(b'|')
         if len(parts) != 3:
             return None
 
@@ -111,5 +116,5 @@ class SecureCookieSerializer(object):
     def _get_signature(self, *parts):
         """Generates an HMAC signature."""
         signature = hmac.new(self.secret_key, digestmod=hashlib.sha1)
-        signature.update('|'.join(parts))
-        return signature.hexdigest()
+        signature.update(b'|'.join(parts))
+        return webapp2._to_utf8(signature.hexdigest())

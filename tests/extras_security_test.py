@@ -14,9 +14,9 @@
 # limitations under the License.
 
 import re
-import six
 import unittest
 
+import six
 from webapp2_extras import security
 
 
@@ -56,13 +56,16 @@ class TestSecurity(unittest.TestCase):
         self.assertTrue(security.check_password_hash(password, hashval))
 
         hashval = security.generate_password_hash(password, 'plain')
-        self.assertTrue(security.check_password_hash(password, hashval))
+        v = security.check_password_hash(password, hashval)
+        self.assertTrue(v)
 
         hashval = security.generate_password_hash(password, 'plain')
         self.assertFalse(security.check_password_hash(password, ''))
 
-        hashval1 = security.hash_password(six.text_type(password), 'sha1', u'bar')
-        hashval2 = security.hash_password(six.text_type(password), 'sha1', u'bar')
+        hashval1 = security.hash_password(
+            six.text_type(password), 'sha1', u'bar')
+        hashval2 = security.hash_password(
+            six.text_type(password), 'sha1', u'bar')
         self.assertTrue(hashval1 is not None)
         self.assertEqual(hashval1, hashval2)
 

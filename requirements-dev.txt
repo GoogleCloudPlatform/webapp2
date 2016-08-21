@@ -1,4 +1,4 @@
-WebOb==1.6.0
+WebOb==1.6.1
 Jinja2==2.8
 Mako==1.0.4
 Babel==2.3.4

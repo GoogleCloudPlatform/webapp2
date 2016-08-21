@@ -21,21 +21,11 @@ JSON helpers for webapp2.
 """
 import base64
 import importlib
-import six
 from six.moves.urllib import parse
 
+import webapp2
 
-try:
-    # Standard library module in Python >= 2.6.
-    _json = importlib.import_module("json")
-except ImportError:  # pragma: no cover
-    raise RuntimeError(
-        "You should use Python version >= 2.6 for using python's @json "
-        "standard library"
-    )
-
-assert hasattr(_json, 'loads') and hasattr(_json, 'dumps'), \
-    'Expected a JSON module with the functions loads() and dumps().'
+_json = importlib.import_module("json")
 
 
 def encode(value, *args, **kwargs):
@@ -77,14 +67,7 @@ def decode(value, *args, **kwargs):
     :returns:
         The deserialized value.
     """
-    if six.PY2 and isinstance(value, str):
-        value = value.decode('utf-8')
-
-    if six.PY3 and isinstance(value, bytes):
-        value = str(value, 'utf-8')
-
-    assert isinstance(value, six.text_type)
-    return _json.loads(value, *args, **kwargs)
+    return _json.loads(webapp2._to_basestring(value), *args, **kwargs)
 
 
 def b64encode(value, *args, **kwargs):

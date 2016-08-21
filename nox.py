@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import nox
 import os
 from tempfile import gettempdir
 
@@ -37,22 +38,22 @@ def run_tests(session, requirements):
         'py.test',
         '--cov=webapp2',
         '--cov=webapp2_extras',
-        *(['tests'] or session.posargs))
+        '--capture=no',
+        *(['tests/gae'] or session.posargs))
 
 
-def run_tests_outside_gaesdk(session, requirements):
-    session.interpreter = 'python3.5'
-    session.install('-r', requirements)
+@nox.parametrize('python_version', ['2.7', '3.5'])
+def session_tests_outside_gaesdk(session, python_version):
+    session.interpreter = 'python' + python_version
+    session.install('-r', 'requirements-dev.txt')
     session.install('-e', '.')
     session.run(
         'py.test',
         '--cov=webapp2',
         '--cov=webapp2_extras',
+        '--capture=no',
+        '--ignore=tests/gae',
         *(['tests'] or session.posargs))
-
-
-def session_tests_outside_gaesdk(session):
-    run_tests_outside_gaesdk(session, 'requirements-dev.txt')
 
 
 def session_tests(session):

@@ -28,16 +28,17 @@ import inspect
 import logging
 import os
 import re
+import sys
+import threading
+import traceback
+from wsgiref import handlers
+
 import six
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.parse import unquote
 from six.moves.urllib.parse import quote
 from six.moves.urllib.parse import urljoin
 from six.moves.urllib.parse import urlunsplit
-import sys
-import threading
-import traceback
-from wsgiref import handlers
 
 import webob
 from webob import exc
@@ -54,6 +55,13 @@ except ImportError:  # pragma: no cover
     # WebOb >= 1.0.
     from webob.util import status_reasons
     from webob.headers import ResponseHeaders as BaseResponseHeaders
+
+
+try:
+    import html
+except ImportError:
+    html = cgi
+
 
 # google.appengine.ext.webapp imports webapp2 in the
 # App Engine Python 2.7 runtime.
@@ -184,6 +192,12 @@ class Request(webob.Request):
         We parse the query string and POST payload lazily, so this will be a
         slower operation on the first call.
 
+        TODO:
+            May be we should use webob.getone method for this
+            ("https://github.com/Pylons/webob"
+            "/blob/39ac465c84c4c33b1c3c7b9700d6da5dfbf84692/"
+            "webob/multidict.py#L120")
+
         :param argument_name:
             The name of the query or POST argument.
         :param default_value:
@@ -226,7 +240,7 @@ class Request(webob.Request):
         :returns:
             A (possibly empty) list of values.
         """
-        if self.charset:
+        if self.charset and not six.PY3:
             argument_name = argument_name.encode(self.charset)
 
         if default_value is None:
@@ -246,9 +260,9 @@ class Request(webob.Request):
     def arguments(self):
         """Returns a list of the arguments provided in the query and/or POST.
 
-        The return value is a list of strings.
+        The return value is an ordered list of strings.
         """
-        return list(set(self.params.keys()))
+        return sorted(set(self.params.keys()))
 
     def get_range(self, name, min_value=None, max_value=None, default=0):
         """Parses the given int argument, limiting it to the given range.
@@ -284,7 +298,7 @@ class Request(webob.Request):
     @classmethod
     def blank(cls, path, environ=None, base_url=None,
               headers=None, **kwargs):  # pragma: no cover
-        """Adds parameters compatible with WebOb >= 1.0: POST and **kwargs."""
+        """Adds parameters compatible with WebOb > 1.2: POST and **kwargs."""
         try:
             request = super(Request, cls).blank(path,
                                                 environ=environ,
@@ -1588,8 +1602,9 @@ class WSGIApplication(object):
         logging.exception(exception)
         if self.debug:
             lines = ''.join(traceback.format_exception(*sys.exc_info()))
-            html = _debug_template % (cgi.escape(lines, quote=True))
-            return Response(body=html, status=500)
+            # TODO: use six here when it will add escape method support
+            body = _debug_template % html.escape(lines, quote=True)
+            return Response(body=body, status=500)
 
         return exc.HTTPInternalServerError()
 
@@ -1881,7 +1896,6 @@ def import_string(import_name, silent=False):
     :returns:
         The imported object.
     """
-    import_name = _to_utf8(import_name)
     try:
         if '.' in import_name:
             module, obj = import_name.rsplit('.', 1)
@@ -1945,7 +1959,7 @@ def _get_handler_methods(handler):
         if getattr(handler, _normalize_handler_method(method), None):
             methods.append(method)
 
-    return methods
+    return sorted(methods)
 
 
 def _normalize_handler_method(method):
@@ -1954,11 +1968,37 @@ def _normalize_handler_method(method):
 
 
 def _to_utf8(value):
-    """Encodes a unicode value to UTF-8 if not yet encoded."""
-    if isinstance(value, str):
+    """Converts a string argument to a byte string.
+    If the argument is already a byte string or None, it is returned unchanged.
+    Otherwise it must be a unicode string and is encoded as utf8.
+    """
+    if isinstance(value, (bytes, type(None))):
         return value
+    if not isinstance(value, six.text_type):
+        raise TypeError(
+            "Expected bytes, unicode, or None; got %r" % type(value)
+        )
+    return value.encode("utf-8")
 
-    return value.encode('utf-8')
+
+def _to_basestring(value):
+    """Converts a string argument to a subclass of basestring.
+
+    This comes from `Tornado`_.
+
+    In python2, byte and unicode strings are mostly interchangeable,
+    so functions that deal with a user-supplied argument in combination
+    with ascii string constants can use either and should return the type
+    the user supplied.  In python3, the two types are not interchangeable,
+    so this method is needed to convert byte strings to unicode.
+    """
+    if isinstance(value, six.string_types):
+        return value
+    if not isinstance(value, bytes):
+        raise TypeError(
+            "Expected bytes, unicode, or None; got %r" % type(value)
+        )
+    return value.decode("utf-8")
 
 
 def _parse_route_template(template, default_sufix=''):

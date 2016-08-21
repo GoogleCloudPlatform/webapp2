@@ -35,9 +35,11 @@ except ImportError:  # pragma: no cover
         # catch all, py.* fails with so many different errors.
         get_current_greenlet = int
 try:
-    from six.moves._thread import get_ident as get_current_thread, allocate_lock
+    from six.moves._thread import allocate_lock
+    from six.moves._thread import get_ident as get_current_thread
 except ImportError:  # pragma: no cover
-    from six.moves._dummy_thread import get_ident as get_current_thread, allocate_lock
+    from six.moves._dummy_thread import allocate_lock
+    from six.moves._dummy_thread import get_ident as get_current_thread
 
 # get the best ident function.  if greenlets are not installed we can
 # safely just use the builtin thread function and save a python methodcall

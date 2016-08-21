@@ -13,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
-from tests.test_base import BaseTestCase
 import unittest
+import six
 
+from tests.test_base import BaseTestCase
+import webapp2
 import webob
 import webob.exc
-import webapp2
 
 
 class TestMiscellaneous(BaseTestCase):
@@ -96,10 +96,10 @@ class TestMiscellaneous(BaseTestCase):
     def test_to_utf8(self):
         res = webapp2._to_utf8('ábcdéf'.decode('utf-8')
                                if six.PY2 else 'ábcdéf')
-        self.assertIsInstance(res, str, True)
+        self.assertIsInstance(res, six.binary_type, True)
 
         res = webapp2._to_utf8('abcdef')
-        self.assertIsInstance(res, str, True)
+        self.assertIsInstance(res, six.binary_type, True)
 
     '''
     # removed to simplify the codebase.

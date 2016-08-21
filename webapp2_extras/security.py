@@ -26,9 +26,9 @@ import hashlib
 import hmac
 import math
 import random
-import six
 import string
 
+import six
 import webapp2
 
 _rng = random.SystemRandom()
@@ -49,7 +49,7 @@ if six.PY3:
     long = int
 
 
-def generate_random_string(length=None, entropy=None, pool=ALPHANUMERIC):
+def generate_random_string(length=0, entropy=0, pool=ALPHANUMERIC):
     """Generates a random string using the given sequence pool.
 
     To generate stronger passwords, use ASCII_PRINTABLE as pool.
@@ -97,6 +97,9 @@ def generate_random_string(length=None, entropy=None, pool=ALPHANUMERIC):
 
     if length and entropy:
         raise ValueError('Use length or entropy, not both.')
+
+    if (length and entropy) is None:
+        raise ValueError('Use digit value for length and entropy, not None.')
 
     if length <= 0 and entropy <= 0:
         raise ValueError('Length or entropy must be greater than 0.')
@@ -184,9 +187,10 @@ def hash_password(password, method, salt=None, pepper=None):
 
     This function was ported and adapted from `Werkzeug`_.
     """
-    password = webapp2._to_utf8(password)
     if method == 'plain':
         return password
+
+    password = webapp2._to_utf8(password)
 
     method = getattr(hashlib, method, None)
     if not method:
@@ -198,7 +202,8 @@ def hash_password(password, method, salt=None, pepper=None):
         h = method(password)
 
     if pepper:
-        h = hmac.new(webapp2._to_utf8(pepper), h.hexdigest(), method)
+        h = hmac.new(
+            webapp2._to_utf8(pepper), webapp2._to_utf8(h.hexdigest()), method)
 
     return h.hexdigest()
 
@@ -220,7 +225,9 @@ def compare_hashes(a, b):
         return False
 
     result = 0
-    for x, y in zip(a, b):
+    for x, y in zip(
+            webapp2._to_basestring(a),
+            webapp2._to_basestring(b)):
         result |= ord(x) ^ ord(y)
 
     return result == 0

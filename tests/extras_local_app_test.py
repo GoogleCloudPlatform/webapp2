@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tests.test_base import BaseTestCase
 import unittest
+
+from tests.test_base import BaseTestCase
 
 import webapp2
 from webapp2_extras import local_app

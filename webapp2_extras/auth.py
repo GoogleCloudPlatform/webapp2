@@ -20,8 +20,8 @@ webapp2_extras.auth
 Utilities for authentication and authorization.
 """
 import logging
-import six
 import time
+import six
 
 import webapp2
 

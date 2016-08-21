@@ -17,9 +17,11 @@
 Tests for webapp2 webapp2.RequestHandler
 """
 import os
-from six.moves.urllib.parse import unquote_plus
-from tests.test_base import BaseTestCase
 import unittest
+
+from six.moves.urllib.parse import unquote_plus
+
+from tests.test_base import BaseTestCase
 
 import webapp2
 
@@ -370,15 +372,14 @@ class TestHandler(BaseTestCase):
         self.assertEqual(
             rsp.body,
             b"""302 Moved Temporarily\n\n"""
-            """The resource was found at http://localhost/somewhere; """
-            """you should be redirected automatically.  """
+            b"""The resource was found at http://localhost/somewhere; """
+            b"""you should be redirected automatically.  """
         )
         self.assertEqual(rsp.headers['Location'], 'http://localhost/somewhere')
         self.assertEqual(rsp.headers['Set-Cookie'], 'a=b')
 
     def test_run(self):
         os.environ['REQUEST_METHOD'] = 'GET'
-
         app.run()
         # self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
 
@@ -585,7 +586,7 @@ class TestHandler(BaseTestCase):
             req.method = method
             rsp = req.get_response(app)
             self.assertEqual(rsp.status_int, 200)
-            self.assertEqual(rsp.body, b'Method: %s' % method)
+            self.assertEqual(rsp.body, webapp2._to_utf8('Method: %s' % method))
 
         # Restore initial values.
         app.allowed_methods = allowed_methods_backup
@@ -611,7 +612,7 @@ class TestHandler(BaseTestCase):
         req, handler = get_req(uri)
         rsp = req.get_response(app)
         self.assertEqual(rsp.status_int, 200)
-        self.assertEqual(rsp.body, 'with plus')
+        self.assertEqual(rsp.body, b'with plus')
 
         req, handler = get_req('http://localhost:80/')
         uri = webapp2.uri_for('escape', name='with/slash')
@@ -731,15 +732,11 @@ class TestHandler(BaseTestCase):
         self.assertEqual(rsp.body, b'Hello again, custom method world!')
 
     def test_custom_method_with_string(self):
+        handler = 'tests.resources.handlers.CustomMethodHandler:custom_method'
+
         app = webapp2.WSGIApplication([
-            webapp2.Route(
-                '/',
-                handler='tests.resources.handlers.CustomMethodHandler:custom_method'
-            ),
-            webapp2.Route(
-                '/bleh',
-                handler='tests.resources.handlers.CustomMethodHandler:custom_method'
-            ),
+            webapp2.Route('/', handler=handler),
+            webapp2.Route('/bleh', handler=handler),
         ])
 
         req = webapp2.Request.blank('/')
@@ -754,7 +751,7 @@ class TestHandler(BaseTestCase):
 
         self.assertRaises(
             ValueError, webapp2.Route, '/',
-            handler='tests.resources.handlers.CustomMethodHandler:custom_method',
+            handler=handler,
             handler_method='custom_method'
         )
 
@@ -812,7 +809,7 @@ class TestHandler(BaseTestCase):
         ], debug=True)
 
         # foo with umlauts in the vowels.
-        value = 'f\xc3\xb6\xc3\xb6'
+        value = b'f\xc3\xb6\xc3\xb6'
 
         rsp = app.get_response(
             '/',
@@ -820,14 +817,16 @@ class TestHandler(BaseTestCase):
             headers=[('Content-Type',
                       'application/x-www-form-urlencoded; charset=utf-8')]
         )
-        self.assertEqual(rsp.body, b'föö')
+        self.assertEqual(rsp.unicode_body, u'föö')
+        self.assertEqual(rsp.body, value)
 
         rsp = app.get_response(
             '/',
             POST={'foo': value},
             headers=[('Content-Type', 'application/x-www-form-urlencoded')]
         )
-        self.assertEqual(rsp.body, b'föö')
+        self.assertEqual(rsp.unicode_body, u'föö')
+        self.assertEqual(rsp.body, value)
 
 
 if __name__ == '__main__':

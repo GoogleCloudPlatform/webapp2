@@ -21,9 +21,9 @@ Configuration object for webapp2.
 
 This module is deprecated. See :class:`webapp2.WSGIApplication.config`.
 """
-import six
 import warnings
 
+import six
 import webapp2
 
 warnings.warn(DeprecationWarning(

@@ -24,6 +24,7 @@ import base64
 import hashlib
 import hmac
 import time
+import webapp2
 
 
 class XSRFException(Exception):
@@ -43,7 +44,7 @@ class XSRFTokenInvalid(XSRFException):
 
 
 class XSRFToken(object):
-    _DELIMITER = '|'
+    _DELIMITER = b'|'
 
     def __init__(self, user_id, secret, current_time=None):
         """Initializes the XSRFToken object.
@@ -58,12 +59,14 @@ class XSRFToken(object):
             used by `verify_token_string` to check for token expiry. If `None`
             then the current time will be used.
         """
-        self.user_id = user_id
-        self.secret = secret
+        self.user_id = webapp2._to_utf8(user_id)
+        self.secret = webapp2._to_utf8(secret)
         if current_time is None:
             self.current_time = int(time.time())
         else:
             self.current_time = int(current_time)
+
+        self.current_time = webapp2._to_utf8(str(self.current_time))
 
     def _digest_maker(self):
         return hmac.new(self.secret, digestmod=hashlib.sha1)
@@ -84,13 +87,16 @@ class XSRFToken(object):
         digest_maker.update(self.user_id)
         digest_maker.update(self._DELIMITER)
         if action:
-            digest_maker.update(action)
+            digest_maker.update(webapp2._to_utf8(action))
             digest_maker.update(self._DELIMITER)
 
-        digest_maker.update(str(self.current_time))
+        digest_maker.update(self.current_time)
         return base64.urlsafe_b64encode(
-            self._DELIMITER.join([digest_maker.hexdigest(),
-                                  str(self.current_time)]))
+            self._DELIMITER.join([
+                webapp2._to_utf8(digest_maker.hexdigest()),
+                self.current_time
+            ])
+        )
 
     def verify_token_string(self,
                             token_string,
@@ -117,9 +123,12 @@ class XSRFToken(object):
             XSRFTokenInvalid if the given token string does not match the
             contents of the `XSRFToken`.
         """
+        import binascii
+
         try:
-            decoded_token_string = base64.urlsafe_b64decode(token_string)
-        except TypeError:
+            decoded_token_string = base64.urlsafe_b64decode(
+                webapp2._to_utf8(token_string))
+        except (TypeError, binascii.Error):
             raise XSRFTokenMalformed()
 
         split_token = decoded_token_string.split(self._DELIMITER)
@@ -147,7 +156,9 @@ class XSRFToken(object):
 
         # Compare the two strings in constant time to prevent timing attacks.
         different = 0
-        for a, b in zip(token_string, expected_token_string):
+        for a, b in zip(
+                webapp2._to_basestring(token_string),
+                webapp2._to_basestring(expected_token_string)):
             different |= ord(a) ^ ord(b)
         if different:
             raise XSRFTokenInvalid()

@@ -14,9 +14,9 @@
 # limitations under the License.
 
 import random
-from tests.test_base import BaseTestCase
 import unittest
 
+from tests.test_base import BaseTestCase
 import webapp2
 from webapp2 import BaseRoute, Request, Route, Router
 

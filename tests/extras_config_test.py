@@ -306,7 +306,11 @@ class TestLoadConfig(unittest.TestCase):
     def test_missing_key(self):
         config = app_config.Config()
         self.assertRaises(
-            KeyError, config.get_config, 'tests.resources.i18n', 'i_dont_exist')
+            KeyError,
+            config.get_config,
+            'tests.resources.i18n',
+            'i_dont_exist'
+        )
 
     def test_missing_default_config(self):
         config = app_config.Config()
@@ -398,7 +402,8 @@ class TestLoadConfigGetItem(unittest.TestCase):
     def test_get_with_default(self):
         config = app_config.Config()
 
-        self.assertEqual(config['tests.resources.i18n'].get('bar', 'baz'), 'baz')
+        self.assertEqual(
+            config['tests.resources.i18n'].get('bar', 'baz'), 'baz')
 
     def test_get_with_default_and_none(self):
         config = app_config.Config({'foo': {
@@ -429,7 +434,10 @@ class TestLoadConfigGetItem(unittest.TestCase):
     def test_missing_key(self):
         config = app_config.Config()
         self.assertRaises(
-            KeyError, config['tests.resources.i18n'].__getitem__, 'i_dont_exist')
+            KeyError,
+            config['tests.resources.i18n'].__getitem__,
+            'i_dont_exist'
+        )
 
 
 if __name__ == '__main__':

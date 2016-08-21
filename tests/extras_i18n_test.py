@@ -15,14 +15,17 @@
 
 import datetime
 from decimal import Decimal
+import unittest
 
 from babel.numbers import NumberFormatError
 import pytz
-
-import unittest
-
+import six
 import webapp2
 from webapp2_extras import i18n
+
+
+if six.PY3:
+    long = int
 
 
 class I18nTestCase(unittest.TestCase):
@@ -108,7 +111,7 @@ class I18nTestCase(unittest.TestCase):
     # ==========================================================================
 
     def test_format_date(self):
-        value = datetime.datetime(2009, 11, 10, 16, 36, 05)
+        value = datetime.datetime(2009, 11, 10, 16, 36, 5)
 
         self.assertEqual(i18n.format_date(value, format='short'), u'11/10/09')
         self.assertEqual(
@@ -123,7 +126,7 @@ class I18nTestCase(unittest.TestCase):
         )
 
     def test_format_date_no_format(self):
-        value = datetime.datetime(2009, 11, 10, 16, 36, 05)
+        value = datetime.datetime(2009, 11, 10, 16, 36, 5)
         self.assertEqual(i18n.format_date(value), u'Nov 10, 2009')
 
     '''
@@ -156,7 +159,7 @@ class I18nTestCase(unittest.TestCase):
         local.request = request = Request.from_values('/')
         request.app = app
 
-        value = datetime.datetime(2009, 11, 10, 16, 36, 05)
+        value = datetime.datetime(2009, 11, 10, 16, 36, 5)
         self.assertEqual(
             i18n.format_date(value),
             u'Tuesday, November 10, 2009'
@@ -165,7 +168,7 @@ class I18nTestCase(unittest.TestCase):
 
     def test_format_date_pt_BR(self):
         i18n.get_i18n().set_locale('pt_BR')
-        value = datetime.datetime(2009, 11, 10, 16, 36, 05)
+        value = datetime.datetime(2009, 11, 10, 16, 36, 5)
 
         self.assertEqual(
             i18n.format_date(value, format='short'),
@@ -183,7 +186,7 @@ class I18nTestCase(unittest.TestCase):
         )
 
     def test_format_datetime(self):
-        value = datetime.datetime(2009, 11, 10, 16, 36, 05)
+        value = datetime.datetime(2009, 11, 10, 16, 36, 5)
 
         self.assertEqual(
             i18n.format_datetime(value, format='short'),
@@ -213,7 +216,7 @@ class I18nTestCase(unittest.TestCase):
         )
 
     def test_format_datetime_no_format(self):
-        value = datetime.datetime(2009, 11, 10, 16, 36, 05)
+        value = datetime.datetime(2009, 11, 10, 16, 36, 5)
         self.assertEqual(
             i18n.format_datetime(value),
             u'Nov 10, 2009, 4:36:05 PM'
@@ -221,7 +224,7 @@ class I18nTestCase(unittest.TestCase):
 
     def test_format_datetime_pt_BR(self):
         i18n.get_i18n().set_locale('pt_BR')
-        value = datetime.datetime(2009, 11, 10, 16, 36, 05)
+        value = datetime.datetime(2009, 11, 10, 16, 36, 5)
 
         self.assertEqual(
             i18n.format_datetime(value, format='short'),
@@ -246,7 +249,7 @@ class I18nTestCase(unittest.TestCase):
         )
 
     def test_format_time(self):
-        value = datetime.datetime(2009, 11, 10, 16, 36, 05)
+        value = datetime.datetime(2009, 11, 10, 16, 36, 5)
 
         self.assertEqual(i18n.format_time(value, format='short'), u'4:36 PM')
         self.assertEqual(
@@ -264,12 +267,12 @@ class I18nTestCase(unittest.TestCase):
         )
 
     def test_format_time_no_format(self):
-        value = datetime.datetime(2009, 11, 10, 16, 36, 05)
+        value = datetime.datetime(2009, 11, 10, 16, 36, 5)
         self.assertEqual(i18n.format_time(value), u'4:36:05 PM')
 
     def test_format_time_pt_BR(self):
         i18n.get_i18n().set_locale('pt_BR')
-        value = datetime.datetime(2009, 11, 10, 16, 36, 05)
+        value = datetime.datetime(2009, 11, 10, 16, 36, 5)
 
         self.assertEqual(i18n.format_time(value, format='short'), u'16:36')
         self.assertEqual(
@@ -362,7 +365,7 @@ class I18nTestCase(unittest.TestCase):
         )
 
     def test_format_iso(self):
-        value = datetime.datetime(2009, 11, 10, 16, 36, 05)
+        value = datetime.datetime(2009, 11, 10, 16, 36, 5)
 
         self.assertEqual(i18n.format_date(value, format='iso'), u'2009-11-10')
         self.assertEqual(i18n.format_time(value, format='iso'), u'16:36:05')
@@ -500,10 +503,10 @@ class I18nTestCase(unittest.TestCase):
 
     def test_parse_number(self):
         i18n.get_i18n().set_locale('en_US')
-        self.assertEqual(i18n.parse_number('1,099'), 1099L)
+        self.assertEqual(i18n.parse_number('1,099'), long(1099))
 
         i18n.get_i18n().set_locale('de_DE')
-        self.assertEqual(i18n.parse_number('1.099'), 1099L)
+        self.assertEqual(i18n.parse_number('1.099'), long(1099))
 
     def test_parse_number2(self):
         i18n.get_i18n().set_locale('de')

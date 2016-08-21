@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
 import unittest
+
+import six
+
 from tests import test_base
 
 import webapp2
@@ -91,7 +93,12 @@ class TestResponse(test_base.BaseTestCase):
         rsp.write(b'foo')
 
         self.assertEqual(rsp.body, b'foo')
-        self.assertEqual(rsp.charset, 'utf-8')
+
+        rsp = webapp2.Response()
+        rsp.charset = None
+        rsp.write(u'föö')
+
+        self.assertEqual(rsp.body, u'föö'.encode('utf-8'))
 
     def test_status(self):
         rsp = webapp2.Response()
