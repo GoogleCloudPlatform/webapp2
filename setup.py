@@ -26,7 +26,8 @@ REQUIREMENTS = [
 EXTRA_REQUIREMENTS = {
     'jinja2>=2.4',
     'Babel>=2.2',
-    'gaepytz>=2011h'
+    'six>=1.10.0',
+    'pytz>=2016.6.1'
 }
 
 setup(

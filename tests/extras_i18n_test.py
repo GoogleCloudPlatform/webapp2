@@ -19,13 +19,8 @@ import unittest
 
 from babel.numbers import NumberFormatError
 import pytz
-import six
 import webapp2
 from webapp2_extras import i18n
-
-
-if six.PY3:
-    long = int
 
 
 class I18nTestCase(unittest.TestCase):
@@ -503,10 +498,10 @@ class I18nTestCase(unittest.TestCase):
 
     def test_parse_number(self):
         i18n.get_i18n().set_locale('en_US')
-        self.assertEqual(i18n.parse_number('1,099'), long(1099))
+        self.assertEqual(i18n.parse_number('1,099'), 1099)
 
         i18n.get_i18n().set_locale('de_DE')
-        self.assertEqual(i18n.parse_number('1.099'), long(1099))
+        self.assertEqual(i18n.parse_number('1.099'), 1099)
 
     def test_parse_number2(self):
         i18n.get_i18n().set_locale('de')

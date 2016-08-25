@@ -24,6 +24,7 @@ Taking Google App Engine's webapp to the next level!
 """
 
 import cgi
+from collections import OrderedDict
 import inspect
 import logging
 import os
@@ -34,6 +35,7 @@ import traceback
 from wsgiref import handlers
 
 import six
+from six.moves import cStringIO
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.parse import unquote
 from six.moves.urllib.parse import quote
@@ -57,7 +59,7 @@ except ImportError:  # pragma: no cover
     from webob.headers import ResponseHeaders as BaseResponseHeaders
 
 
-try:
+try:  # pragma no cover
     import html
 except ImportError:
     html = cgi
@@ -177,9 +179,8 @@ class Request(webob.Request):
             # default charset is required for backwards compatibility.
             match = _charset_re.search(environ.get('CONTENT_TYPE', ''))
             if match:
-                self._request_charset = (match
-                                         .group(1)
-                                         .lower().strip().strip('"').strip())
+                self._request_charset = (
+                    match.group(1).lower().strip().strip('"').strip())
 
         kwargs['charset'] = 'utf-8'
 
@@ -191,12 +192,6 @@ class Request(webob.Request):
 
         We parse the query string and POST payload lazily, so this will be a
         slower operation on the first call.
-
-        TODO:
-            May be we should use webob.getone method for this
-            ("https://github.com/Pylons/webob"
-            "/blob/39ac465c84c4c33b1c3c7b9700d6da5dfbf84692/"
-            "webob/multidict.py#L120")
 
         :param argument_name:
             The name of the query or POST argument.
@@ -262,7 +257,7 @@ class Request(webob.Request):
 
         The return value is an ordered list of strings.
         """
-        return sorted(set(self.params.keys()))
+        return list(OrderedDict.fromkeys(self.params.keys()))
 
     def get_range(self, name, min_value=None, max_value=None, default=0):
         """Parses the given int argument, limiting it to the given range.
@@ -300,10 +295,13 @@ class Request(webob.Request):
               headers=None, **kwargs):  # pragma: no cover
         """Adds parameters compatible with WebOb > 1.2: POST and **kwargs."""
         try:
-            request = super(Request, cls).blank(path,
-                                                environ=environ,
-                                                base_url=base_url,
-                                                headers=headers, **kwargs)
+            request = super(Request, cls).blank(
+                path,
+                environ=environ,
+                base_url=base_url,
+                headers=headers,
+                **kwargs
+            )
 
             if cls._request_charset and not cls._request_charset == 'utf-8':
                 return request.decode(cls._request_charset)
@@ -315,7 +313,6 @@ class Request(webob.Request):
 
         data = kwargs.pop('POST', None)
         if data is not None:
-            from six.moves import cStringIO
             environ = environ or {}
             environ['REQUEST_METHOD'] = 'POST'
             if hasattr(data, 'items'):
@@ -1602,7 +1599,6 @@ class WSGIApplication(object):
         logging.exception(exception)
         if self.debug:
             lines = ''.join(traceback.format_exception(*sys.exc_info()))
-            # TODO: use six here when it will add escape method support
             body = _debug_template % html.escape(lines, quote=True)
             return Response(body=body, status=500)
 
