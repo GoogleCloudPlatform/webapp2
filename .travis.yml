@@ -1,19 +1,12 @@
 language: python
-python:
-  - "2.7"
-  - "3.5"
-
 sudo: false
 
 install:
 - pip install nox-automation codecov
 
 script:
-# Disabled until webapp2 passes lint.
 - nox -s lint
-- nox -s tests_outside_gaesdk
 - nox -s tests
-- nox -s tests_gaesdk
 
 after_success:
 - codecov
