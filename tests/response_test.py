@@ -47,37 +47,37 @@ class TestResponse(test_base.BaseTestCase):
         rsp.write(var_1)
         rsp.write(var_2)
         rsp.write(var_3)
-        self.assertEqual(rsp.body, b'%rfoobar' % var_1)
+        self.assertEqual(rsp.body, webapp2._to_utf8('%rfoobar' % var_1))
 
         rsp = webapp2.Response()
         rsp.write(var_1)
         rsp.write(var_3)
         rsp.write(var_2)
-        self.assertEqual(rsp.body, b'%rbarfoo' % var_1)
+        self.assertEqual(rsp.body, webapp2._to_utf8('%rbarfoo' % var_1))
 
         rsp = webapp2.Response()
         rsp.write(var_2)
         rsp.write(var_1)
         rsp.write(var_3)
-        self.assertEqual(rsp.body, b'foo%rbar' % var_1)
+        self.assertEqual(rsp.body, webapp2._to_utf8('foo%rbar' % var_1))
 
         rsp = webapp2.Response()
         rsp.write(var_2)
         rsp.write(var_3)
         rsp.write(var_1)
-        self.assertEqual(rsp.body, b'foobar%r' % var_1)
+        self.assertEqual(rsp.body, webapp2._to_utf8('foobar%r' % var_1))
 
         rsp = webapp2.Response()
         rsp.write(var_3)
         rsp.write(var_1)
         rsp.write(var_2)
-        self.assertEqual(rsp.body, b'bar%rfoo' % var_1)
+        self.assertEqual(rsp.body, webapp2._to_utf8('bar%rfoo' % var_1))
 
         rsp = webapp2.Response()
         rsp.write(var_3)
         rsp.write(var_2)
         rsp.write(var_1)
-        self.assertEqual(rsp.body, b'barfoo%r' % var_1)
+        self.assertEqual(rsp.body, webapp2._to_utf8('barfoo%r' % var_1))
 
     def test_write2(self):
         rsp = webapp2.Response()

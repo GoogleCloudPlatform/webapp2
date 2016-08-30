@@ -17,6 +17,7 @@
 Tests for webapp2 webapp2.RequestHandler
 """
 import os
+import sys
 import unittest
 
 from six.moves.urllib.parse import unquote_plus
@@ -24,6 +25,12 @@ from six.moves.urllib.parse import unquote_plus
 from tests.test_base import BaseTestCase
 
 import webapp2
+
+
+try:
+    import mock
+except ImportError:
+    from unittest import mock
 
 
 class BareHandler(object):
@@ -380,13 +387,40 @@ class TestHandler(BaseTestCase):
 
     def test_run(self):
         os.environ['REQUEST_METHOD'] = 'GET'
-        app.run()
+
+        with mock.patch('webapp2.handlers.sys.stdin') as patched_stdin:
+            with mock.patch('webapp2.handlers.sys.stdout') as patched_stdout:
+                patched_stdin.return_value = getattr(
+                    sys.stdin,
+                    'buffer',
+                    sys.stdin
+                )
+                patched_stdout.return_value = getattr(
+                    sys.stdout,
+                    'buffer',
+                    sys.stdout
+                )
+
+                app.run()
         # self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
 
     def test_run_bare(self):
         os.environ['REQUEST_METHOD'] = 'GET'
-        app.run(bare=True)
 
+        with mock.patch('webapp2.handlers.sys.stdin') as patched_stdin:
+            with mock.patch('webapp2.handlers.sys.stdout') as patched_stdout:
+                patched_stdin.return_value = getattr(
+                    sys.stdin,
+                    'buffer',
+                    sys.stdin
+                )
+                patched_stdout.return_value = getattr(
+                    sys.stdout,
+                    'buffer',
+                    sys.stdout
+                )
+
+                app.run(bare=True)
         # self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
 
     def test_run_debug(self):
@@ -395,7 +429,20 @@ class TestHandler(BaseTestCase):
         os.environ['REQUEST_METHOD'] = 'GET'
         os.environ['PATH_INFO'] = '/'
 
-        app.run(bare=True)
+        with mock.patch('webapp2.handlers.sys.stdin') as patched_stdin:
+            with mock.patch('webapp2.handlers.sys.stdout') as patched_stdout:
+                patched_stdin.return_value = getattr(
+                    sys.stdin,
+                    'buffer',
+                    sys.stdin
+                )
+                patched_stdout.return_value = getattr(
+                    sys.stdout,
+                    'buffer',
+                    sys.stdout
+                )
+
+                app.run(bare=True)
         # self.assertEqual(sys.stdout.read(), DEFAULT_RESPONSE)
 
         app.debug = debug
