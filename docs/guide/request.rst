@@ -208,4 +208,4 @@ for a detailed API reference and examples.
 
 
 .. _WebOb: http://docs.webob.org/
-.. _MultiDict: http://pythonpaste.org/webob/class-webob.multidict.MultiDict.html
+.. _MultiDict: http://docs.webob.org/en/stable/api/multidict.html
