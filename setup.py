@@ -21,13 +21,13 @@ LONG_DESCRIPTION = open('README.rst', 'r', encoding='utf-8').read()
 
 REQUIREMENTS = [
     'webob>=1.2.0',
+    'six>=1.10.0'
 ]
 
 EXTRA_REQUIREMENTS = {
     'jinja2>=2.4',
     'Babel>=2.2',
-    'six>=1.10.0',
-    'pytz>=2016.6.1'
+    'pytz>=2015.7'
 }
 
 setup(
