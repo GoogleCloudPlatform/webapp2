@@ -22,9 +22,9 @@ Taking Google App Engine's webapp to the next level!
 :copyright: 2011 webapp2 AUTHORS.
 :license: Apache Sotware License, see LICENSE for details.
 """
-from __future__ import with_statement
 
 import cgi
+from collections import OrderedDict
 import inspect
 import logging
 import os
@@ -32,17 +32,18 @@ import re
 import sys
 import threading
 import traceback
-import urllib
 from wsgiref import handlers
+
+import six
+from six.moves import cStringIO
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import unquote
+from six.moves.urllib.parse import quote
+from six.moves.urllib.parse import urljoin
+from six.moves.urllib.parse import urlunsplit
 
 import webob
 from webob import exc
-
-try:
-    from urlparse import urljoin, urlunsplit
-except ImportError:
-    urljoin = urllib.parse
-    urlunsplit = urllib.parse
 
 
 _webapp = _webapp_util = _local = None
@@ -56,6 +57,13 @@ except ImportError:  # pragma: no cover
     # WebOb >= 1.0.
     from webob.util import status_reasons
     from webob.headers import ResponseHeaders as BaseResponseHeaders
+
+
+try:  # pragma no cover
+    import html
+except ImportError:
+    html = cgi
+
 
 # google.appengine.ext.webapp imports webapp2 in the
 # App Engine Python 2.7 runtime.
@@ -73,13 +81,6 @@ try:  # pragma: no cover
 except ImportError:  # pragma: no cover
     logging.warning("webapp2_extras.local is not available "
                     "so webapp2 won't be thread-safe!")
-
-
-def _iteritems(d):
-    try:
-        return d.iteritems()
-    except AttributeError:
-        return d.items()
 
 
 __version_info__ = (3, 0, 0)
@@ -133,7 +134,7 @@ _webapp_status_reasons = {
     505: 'HTTP Version not supported',
 }
 status_reasons.update(_webapp_status_reasons)
-for code, message in _iteritems(_webapp_status_reasons):
+for code, message in six.iteritems(_webapp_status_reasons):
     cls = exc.status_map.get(code)
     if cls:
         cls.title = message
@@ -160,6 +161,9 @@ class Request(webob.Request):
     registry = None
     # Attributes from webapp.
     request_body_tempfile_limit = 0
+    #: Charset provided in requests @CONTENT_TYPE.
+    _request_charset = None
+
     uri = property(lambda self: self.url)
     query = property(lambda self: self.query_string)
 
@@ -175,10 +179,10 @@ class Request(webob.Request):
             # default charset is required for backwards compatibility.
             match = _charset_re.search(environ.get('CONTENT_TYPE', ''))
             if match:
-                charset = match.group(1).lower().strip().strip('"').strip()
-            else:
-                charset = 'utf-8'
-            kwargs['charset'] = charset
+                self._request_charset = (
+                    match.group(1).lower().strip().strip('"').strip())
+
+        kwargs['charset'] = 'utf-8'
 
         super(Request, self).__init__(environ, *args, **kwargs)
         self.registry = {}
@@ -231,7 +235,7 @@ class Request(webob.Request):
         :returns:
             A (possibly empty) list of values.
         """
-        if self.charset:
+        if self.charset and not six.PY3:
             argument_name = argument_name.encode(self.charset)
 
         if default_value is None:
@@ -242,7 +246,7 @@ class Request(webob.Request):
         if param_value is None or len(param_value) == 0:
             return default_value
 
-        for i in xrange(len(param_value)):
+        for i in six.moves.range(len(param_value)):
             if isinstance(param_value[i], cgi.FieldStorage):
                 param_value[i] = param_value[i].value
 
@@ -251,9 +255,9 @@ class Request(webob.Request):
     def arguments(self):
         """Returns a list of the arguments provided in the query and/or POST.
 
-        The return value is a list of strings.
+        The return value is an ordered list of strings.
         """
-        return list(set(self.params.keys()))
+        return list(OrderedDict.fromkeys(self.params.keys()))
 
     def get_range(self, name, min_value=None, max_value=None, default=0):
         """Parses the given int argument, limiting it to the given range.
@@ -289,25 +293,33 @@ class Request(webob.Request):
     @classmethod
     def blank(cls, path, environ=None, base_url=None,
               headers=None, **kwargs):  # pragma: no cover
-        """Adds parameters compatible with WebOb >= 1.0: POST and **kwargs."""
+        """Adds parameters compatible with WebOb > 1.2: POST and **kwargs."""
         try:
-            return super(Request, cls).blank(path, environ=environ,
-                                             base_url=base_url,
-                                             headers=headers, **kwargs)
+            request = super(Request, cls).blank(
+                path,
+                environ=environ,
+                base_url=base_url,
+                headers=headers,
+                **kwargs
+            )
+
+            if cls._request_charset and not cls._request_charset == 'utf-8':
+                return request.decode(cls._request_charset)
+            return request
+
         except TypeError:
             if not kwargs:
                 raise
 
         data = kwargs.pop('POST', None)
         if data is not None:
-            from cStringIO import StringIO
             environ = environ or {}
             environ['REQUEST_METHOD'] = 'POST'
             if hasattr(data, 'items'):
-                data = data.items()
+                data = list(data.items())
             if not isinstance(data, str):
-                data = urllib.urlencode(data)
-            environ['wsgi.input'] = StringIO(data)
+                data = urlencode(data)
+            environ['wsgi.input'] = cStringIO(data)
             environ['webob.is_body_seekable'] = True
             environ['CONTENT_LENGTH'] = str(len(data))
             environ['CONTENT_TYPE'] = 'application/x-www-form-urlencoded'
@@ -401,10 +413,13 @@ class Response(webob.Response):
         """Appends a text to the response body."""
         # webapp uses StringIO as Response.out, so we need to convert anything
         # that is not str or unicode to string to keep same behavior.
-        if not isinstance(text, basestring):
-            text = unicode(text)
+        if six.PY3 and isinstance(text, bytes):
+            text = text.decode(self.default_charset)
 
-        if isinstance(text, unicode) and not self.charset:
+        if not isinstance(text, six.string_types):
+            text = six.text_type(text)
+
+        if isinstance(text, six.text_type) and not self.charset:
             self.charset = self.default_charset
 
         super(Response, self).write(text)
@@ -413,17 +428,17 @@ class Response(webob.Response):
         """The status string, including code and message."""
         message = None
         # Accept long because urlfetch in App Engine returns codes as longs.
-        if isinstance(value, (int, long)):
+        if isinstance(value, six.integer_types):
             code = int(value)
         else:
-            if isinstance(value, unicode):
+            if isinstance(value, six.text_type):
                 # Status messages have to be ASCII safe, so this is OK.
                 value = str(value)
 
             if not isinstance(value, str):
                 raise TypeError(
-                    'You must set status to a string or integer (not %s)' %
-                    type(value))
+                    'You must set status to a string or integer (not %s)'
+                    % type(value))
 
             parts = value.split(' ', 1)
             code = int(parts[0])
@@ -471,7 +486,7 @@ class Response(webob.Response):
 
     def _set_headers(self, value):
         if hasattr(value, 'items'):
-            value = value.items()
+            value = list(value.items())
         elif not isinstance(value, list):
             raise TypeError('Response headers must be a list or dictionary.')
 
@@ -486,7 +501,7 @@ class Response(webob.Response):
 
     def clear(self):
         """Clears all data written to the output stream so that it is empty."""
-        self.body = ''
+        self.body = b''
 
     def wsgi_write(self, start_response):
         """Writes this response using using the given WSGI function.
@@ -875,7 +890,7 @@ class SimpleRoute(BaseRoute):
 
         .. seealso:: :meth:`BaseRoute.match`.
         """
-        match = self.regex.match(urllib.unquote(request.path))
+        match = self.regex.match(unquote(request.path))
         if match:
             return self, match.groups(), {}
 
@@ -975,7 +990,7 @@ class Route(BaseRoute):
         self.defaults = defaults or {}
         self.methods = methods
         self.schemes = schemes
-        if isinstance(handler, basestring) and ':' in handler:
+        if isinstance(handler, six.string_types) and ':' in handler:
             if handler_method:
                 raise ValueError(
                     "If handler_method is defined in a Route, handler "
@@ -1002,7 +1017,7 @@ class Route(BaseRoute):
 
         .. seealso:: :meth:`BaseRoute.match`.
         """
-        match = self.regex.match(urllib.unquote(request.path))
+        match = self.regex.match(unquote(request.path))
         if not match or self.schemes and request.scheme not in self.schemes:
             return None
 
@@ -1048,13 +1063,13 @@ class Route(BaseRoute):
                     kwargs[key] = value
 
         values = {}
-        for name, regex in _iteritems(variables):
+        for name, regex in six.iteritems(variables):
             value = kwargs.pop(name, self.defaults.get(name))
             if value is None:
                 raise KeyError('Missing argument "%s" to build URI.' %
                                name.strip('_'))
 
-            if not isinstance(value, basestring):
+            if not isinstance(value, six.string_types):
                 value = str(value)
 
             if not regex.match(value):
@@ -1297,7 +1312,7 @@ class Router(object):
 
         if route.handler_adapter is None:
             handler = route.handler
-            if isinstance(handler, basestring):
+            if isinstance(handler, six.string_types):
                 if handler not in self.handlers:
                     self.handlers[handler] = handler = import_string(handler)
                 else:
@@ -1337,7 +1352,7 @@ class Router(object):
 
     def __repr__(self):
         routes = self.match_routes + [
-            v for k, v in _iteritems(self.build_routes)
+            v for k, v in six.iteritems(self.build_routes)
             if v not in self.match_routes
         ]
 
@@ -1584,8 +1599,8 @@ class WSGIApplication(object):
         logging.exception(exception)
         if self.debug:
             lines = ''.join(traceback.format_exception(*sys.exc_info()))
-            html = _debug_template % (cgi.escape(lines, quote=True))
-            return Response(body=html, status=500)
+            body = _debug_template % html.escape(lines, quote=True)
+            return Response(body=body, status=500)
 
         return exc.HTTPInternalServerError()
 
@@ -1621,7 +1636,7 @@ class WSGIApplication(object):
 
         handler = self.error_handlers.get(code)
         if handler:
-            if isinstance(handler, basestring):
+            if isinstance(handler, six.string_types):
                 self.error_handlers[code] = handler = import_string(handler)
 
             return handler(request, response, e)
@@ -1877,7 +1892,6 @@ def import_string(import_name, silent=False):
     :returns:
         The imported object.
     """
-    import_name = _to_utf8(import_name)
     try:
         if '.' in import_name:
             module, obj = import_name.rsplit('.', 1)
@@ -1909,21 +1923,21 @@ def _urlunsplit(scheme=None, netloc=None, path=None, query=None,
         An assembled absolute or relative URI.
     """
     if not scheme or not netloc:
-        scheme = None
+        scheme = ''
         netloc = None
 
     if path:
-        path = urllib.quote(_to_utf8(path))
+        path = quote(_to_utf8(path))
 
-    if query and not isinstance(query, basestring):
+    if query and not isinstance(query, six.string_types):
         if isinstance(query, dict):
-            query = _iteritems(query)
+            query = six.iteritems(query)
 
         # Sort args: commonly needed to build signatures for services.
-        query = urllib.urlencode(sorted(query))
+        query = urlencode(sorted(query))
 
     if fragment:
-        fragment = urllib.quote(_to_utf8(fragment))
+        fragment = quote(_to_utf8(fragment))
 
     return urlunsplit((scheme, netloc, path, query, fragment))
 
@@ -1941,7 +1955,7 @@ def _get_handler_methods(handler):
         if getattr(handler, _normalize_handler_method(method), None):
             methods.append(method)
 
-    return methods
+    return sorted(methods)
 
 
 def _normalize_handler_method(method):
@@ -1950,11 +1964,37 @@ def _normalize_handler_method(method):
 
 
 def _to_utf8(value):
-    """Encodes a unicode value to UTF-8 if not yet encoded."""
-    if isinstance(value, str):
+    """Converts a string argument to a byte string.
+    If the argument is already a byte string or None, it is returned unchanged.
+    Otherwise it must be a unicode string and is encoded as utf8.
+    """
+    if isinstance(value, (bytes, type(None))):
         return value
+    if not isinstance(value, six.text_type):
+        raise TypeError(
+            "Expected bytes, unicode, or None; got %r" % type(value)
+        )
+    return value.encode("utf-8")
 
-    return value.encode('utf-8')
+
+def _to_basestring(value):
+    """Converts a string argument to a subclass of basestring.
+
+    This comes from `Tornado`_.
+
+    In python2, byte and unicode strings are mostly interchangeable,
+    so functions that deal with a user-supplied argument in combination
+    with ascii string constants can use either and should return the type
+    the user supplied.  In python3, the two types are not interchangeable,
+    so this method is needed to convert byte strings to unicode.
+    """
+    if isinstance(value, six.string_types):
+        return value
+    if not isinstance(value, bytes):
+        raise TypeError(
+            "Expected bytes, unicode, or None; got %r" % type(value)
+        )
+    return value.decode("utf-8")
 
 
 def _parse_route_template(template, default_sufix=''):
@@ -1989,7 +2029,7 @@ def _get_route_variables(match, default_kwargs=None):
     kwargs.update(match.groupdict())
     if kwargs:
         args = tuple(value[1] for value in sorted(
-            (int(key[2:-2]), kwargs.pop(key)) for key in kwargs.keys()
+            (int(key[2:-2]), kwargs.pop(key)) for key in list(kwargs.keys())
             if key.startswith('__') and key.endswith('__')))
     else:
         args = ()

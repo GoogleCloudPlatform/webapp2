@@ -21,6 +21,7 @@ Utilities for authentication and authorization.
 """
 import logging
 import time
+import six
 
 import webapp2
 
@@ -140,7 +141,7 @@ class AuthStore(object):
     def user_model(self):
         """Configured user model."""
         cls = self.config['user_model']
-        if isinstance(cls, basestring):
+        if isinstance(cls, six.string_types):
             cls = self.config['user_model'] = webapp2.import_string(cls)
 
         return cls

@@ -28,24 +28,28 @@ import math
 import random
 import string
 
+import six
 import webapp2
 
 _rng = random.SystemRandom()
 
 HEXADECIMAL_DIGITS = string.digits + 'abcdef'
 DIGITS = string.digits
-LOWERCASE_ALPHA = string.lowercase
-UPPERCASE_ALPHA = string.uppercase
-LOWERCASE_ALPHANUMERIC = string.lowercase + string.digits
-UPPERCASE_ALPHANUMERIC = string.uppercase + string.digits
-ALPHA = string.letters
-ALPHANUMERIC = string.letters + string.digits
-ASCII_PRINTABLE = string.letters + string.digits + string.punctuation
+LOWERCASE_ALPHA = string.ascii_lowercase
+UPPERCASE_ALPHA = string.ascii_uppercase
+LOWERCASE_ALPHANUMERIC = string.ascii_lowercase + string.digits
+UPPERCASE_ALPHANUMERIC = string.ascii_uppercase + string.digits
+ALPHA = string.ascii_letters
+ALPHANUMERIC = string.ascii_letters + string.digits
+ASCII_PRINTABLE = string.ascii_letters + string.digits + string.punctuation
 ALL_PRINTABLE = string.printable
 PUNCTUATION = string.punctuation
 
+if six.PY3:
+    long = int
 
-def generate_random_string(length=None, entropy=None, pool=ALPHANUMERIC):
+
+def generate_random_string(length=0, entropy=0, pool=ALPHANUMERIC):
     """Generates a random string using the given sequence pool.
 
     To generate stronger passwords, use ASCII_PRINTABLE as pool.
@@ -94,6 +98,9 @@ def generate_random_string(length=None, entropy=None, pool=ALPHANUMERIC):
     if length and entropy:
         raise ValueError('Use length or entropy, not both.')
 
+    if (length and entropy) is None:
+        raise ValueError('Use digit value for length and entropy, not None.')
+
     if length <= 0 and entropy <= 0:
         raise ValueError('Length or entropy must be greater than 0.')
 
@@ -101,7 +108,7 @@ def generate_random_string(length=None, entropy=None, pool=ALPHANUMERIC):
         log_of_2 = 0.6931471805599453
         length = long(math.ceil((log_of_2 / math.log(len(pool))) * entropy))
 
-    return ''.join(_rng.choice(pool) for _ in xrange(length))
+    return ''.join(_rng.choice(pool) for _ in six.moves.range(length))
 
 
 def generate_password_hash(password, method='sha1', length=22, pepper=None):
@@ -180,9 +187,10 @@ def hash_password(password, method, salt=None, pepper=None):
 
     This function was ported and adapted from `Werkzeug`_.
     """
-    password = webapp2._to_utf8(password)
     if method == 'plain':
         return password
+
+    password = webapp2._to_utf8(password)
 
     method = getattr(hashlib, method, None)
     if not method:
@@ -194,7 +202,8 @@ def hash_password(password, method, salt=None, pepper=None):
         h = method(password)
 
     if pepper:
-        h = hmac.new(webapp2._to_utf8(pepper), h.hexdigest(), method)
+        h = hmac.new(
+            webapp2._to_utf8(pepper), webapp2._to_utf8(h.hexdigest()), method)
 
     return h.hexdigest()
 
@@ -216,7 +225,9 @@ def compare_hashes(a, b):
         return False
 
     result = 0
-    for x, y in zip(a, b):
+    for x, y in zip(
+            webapp2._to_basestring(a),
+            webapp2._to_basestring(b)):
         result |= ord(x) ^ ord(y)
 
     return result == 0

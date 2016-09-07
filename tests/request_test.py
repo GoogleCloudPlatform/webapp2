@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
+import unittest
+import six
+from tests.test_base import BaseTestCase
 
 import webapp2
 
@@ -52,7 +54,7 @@ _test_req = _norm_req(_test_req)
 _test_req2 = _norm_req(_test_req2) + '\r\n'
 
 
-class TestRequest(test_base.BaseTestCase):
+class TestRequest(BaseTestCase):
     def test_charset(self):
         req = webapp2.Request.blank('/', environ={
             'CONTENT_TYPE': 'text/html; charset=ISO-8859-4',
@@ -63,6 +65,7 @@ class TestRequest(test_base.BaseTestCase):
         req = webapp2.Request.blank('/', environ={
             'CONTENT_TYPE': 'application/json; charset="ISO-8859-1"',
         })
+
         self.assertEqual(req.content_type, 'application/json')
         self.assertEqual(req.charset.lower(), 'iso-8859-1')
 
@@ -106,19 +109,20 @@ class TestRequest(test_base.BaseTestCase):
 
         res = req.GET.get('1')
         self.assertEqual(res, '2')
-        self.assertTrue(isinstance(res, unicode))
+        self.assertTrue(isinstance(res, six.text_type))
 
         res = req.POST.get('3')
         self.assertEqual(res, '4')
-        self.assertTrue(isinstance(res, unicode))
+        self.assertTrue(isinstance(res, six.text_type))
 
     def test_cookie_unicode(self):
-        import urllib
         import base64
+        from six.moves.urllib.parse import unquote
+        from six.moves.urllib.parse import quote
 
         # With base64 ---------------------------------------------------------
 
-        value = base64.b64encode(u'á'.encode('utf-8'))
+        value = webapp2._to_basestring(base64.b64encode(u'á'.encode('utf-8')))
         rsp = webapp2.Response()
         rsp.set_cookie('foo', value)
 
@@ -126,15 +130,13 @@ class TestRequest(test_base.BaseTestCase):
         req = webapp2.Request.blank('/', headers=[('Cookie', cookie)])
 
         self.assertEqual(req.cookies.get('foo'), value)
+
         self.assertEqual(
             base64.b64decode(req.cookies.get('foo')).decode('utf-8'),
             u'á'
         )
 
         # Without quote -------------------------------------------------------
-
-        # Most recent WebOb versions take care of quoting.
-        # (not the version available on App Engine though)
 
         value = u'föö=bär; föo, bär, bäz=dïng;'
         rsp = webapp2.Response()
@@ -150,11 +152,14 @@ class TestRequest(test_base.BaseTestCase):
         # Here is our test value.
         x = u'föö'
         # We must store cookies quoted. To quote unicode, we need to encode it.
-        y = urllib.quote(x.encode('utf8'))
+        y = quote(x.encode('utf8'))
         # The encoded, quoted string looks ugly.
         self.assertEqual(y, 'f%C3%B6%C3%B6')
         # But it is easy to get it back to our initial value.
-        z = urllib.unquote(y).decode('utf8')
+        z = unquote(y)
+        if not six.PY3:
+            z = z.decode('utf8')
+
         # And it is indeed the same value.
         self.assertEqual(z, x)
 
@@ -169,15 +174,19 @@ class TestRequest(test_base.BaseTestCase):
         self.assertEqual(req.cookies.get('foo'), y)
         # Here is our original value, again. Problem: the value is decoded
         # before we had a chance to unquote it.
-        w = urllib.unquote(
-            req.cookies.get('foo').encode('utf8')).decode('utf8')
+
+        # w = unquote(req.cookies.get('foo').encode('utf8')).decode('utf8')
+        if six.PY2:
+            w = unquote(req.cookies.get('foo').encode('utf8')).decode('utf8')
+        else:
+            w = unquote(req.cookies.get('foo'))
         # And it is indeed the same value.
         self.assertEqual(w, x)
 
         # With quote, easy way ------------------------------------------------
 
         value = u'föö=bär; föo, bär, bäz=dïng;'
-        quoted_value = urllib.quote(value.encode('utf8'))
+        quoted_value = quote(value.encode('utf8'))
         rsp = webapp2.Response()
         rsp.set_cookie('foo', quoted_value)
 
@@ -185,8 +194,12 @@ class TestRequest(test_base.BaseTestCase):
         req = webapp2.Request.blank('/', headers=[('Cookie', cookie)])
 
         cookie_value = req.cookies.get('foo')
-        unquoted_cookie_value = urllib.unquote(
-            cookie_value.encode('utf8')).decode('utf8')
+
+        if six.PY2:
+            unquoted_cookie_value = unquote(
+                cookie_value.encode('utf8')).decode('utf8')
+        else:
+            unquoted_cookie_value = unquote(cookie_value)
         self.assertEqual(cookie_value, quoted_value)
         self.assertEqual(unquoted_cookie_value, value)
 
@@ -209,8 +222,7 @@ class TestRequest(test_base.BaseTestCase):
         self.assertEqual(res, '9')
 
     def test_get_with_POST(self):
-        req = webapp2.Request.blank('/?1=2&1=3&3=4', POST={5: 6, 7: 8},
-                                    unicode_errors='ignore')
+        req = webapp2.Request.blank('/?1=2&1=3&3=4', POST={5: 6, 7: 8})
 
         res = req.get('1')
         self.assertEqual(res, '2')
@@ -325,4 +337,4 @@ class TestRequest(test_base.BaseTestCase):
     '''
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

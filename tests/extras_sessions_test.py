@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
+import unittest
+
+from tests.test_base import BaseTestCase
 
 import webapp2
 from webapp2_extras import sessions
@@ -26,7 +28,7 @@ app = webapp2.WSGIApplication(config={
 })
 
 
-class TestSecureCookieSession(test_base.BaseTestCase):
+class TestSecureCookieSession(BaseTestCase):
     factory = sessions.SecureCookieSessionFactory
 
     def test_config(self):
@@ -231,4 +233,4 @@ class TestSecureCookieSession(test_base.BaseTestCase):
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

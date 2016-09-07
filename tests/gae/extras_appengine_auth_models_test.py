@@ -13,9 +13,7 @@
 # limitations under the License.
 
 from google.appengine.ext.ndb import model
-
-import test_base
-
+from tests.gae import test_base
 from webapp2_extras import auth
 from webapp2_extras.appengine.auth import models
 

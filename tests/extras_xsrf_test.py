@@ -14,13 +14,12 @@
 # limitations under the License.
 
 import base64
-
-import test_base
+import unittest
 
 from webapp2_extras import xsrf
 
 
-class TestXSRFToken(test_base.BaseTestCase):
+class TestXSRFToken(unittest.TestCase):
     def test_verify_timeout(self):
         token = xsrf.XSRFToken('user@example.com',
                                'secret',
@@ -75,8 +74,8 @@ class TestXSRFToken(test_base.BaseTestCase):
                                current_time=1354160000)
         token_string = token.generate_token_string()
         test_token, test_time = base64.urlsafe_b64decode(
-            token_string).split('|')
-        test_string = base64.urlsafe_b64encode('|'.join([test_token[:-1],
+            token_string).split(b'|')
+        test_string = base64.urlsafe_b64encode(b'|'.join([test_token[:-1],
                                                          test_time]))
         self.assertRaises(xsrf.XSRFTokenInvalid,
                           token.verify_token_string,
@@ -96,7 +95,7 @@ class TestXSRFToken(test_base.BaseTestCase):
         self.assertRaises(
             xsrf.XSRFTokenMalformed,
             token.verify_token_string,
-            base64.b64encode('NODELIMITER'))
+            base64.b64encode(b'NODELIMITER'))
 
     def test_verify_time_not_int(self):
         token = xsrf.XSRFToken('user@example.com',
@@ -104,7 +103,8 @@ class TestXSRFToken(test_base.BaseTestCase):
         self.assertRaises(
             xsrf.XSRFTokenMalformed,
             token.verify_token_string,
-            base64.b64encode('NODE|NOTINT'))
+            base64.b64encode(b'NODE|NOTINT'))
+
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

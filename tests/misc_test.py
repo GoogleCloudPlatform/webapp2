@@ -13,15 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
+import unittest
+import six
 
+from tests.test_base import BaseTestCase
 import webapp2
-
 import webob
 import webob.exc
 
 
-class TestMiscellaneous(test_base.BaseTestCase):
+class TestMiscellaneous(BaseTestCase):
 
     def test_abort(self):
         self.assertRaises(webob.exc.HTTPOk, webapp2.abort, 200)
@@ -93,11 +94,12 @@ class TestMiscellaneous(test_base.BaseTestCase):
             webapp2.ImportStringError, webapp2.import_string, 'webob.asdfg')
 
     def test_to_utf8(self):
-        res = webapp2._to_utf8('ábcdéf'.decode('utf-8'))
-        self.assertEqual(isinstance(res, str), True)
+        res = webapp2._to_utf8('ábcdéf'.decode('utf-8')
+                               if six.PY2 else 'ábcdéf')
+        self.assertIsInstance(res, six.binary_type, True)
 
         res = webapp2._to_utf8('abcdef')
-        self.assertEqual(isinstance(res, str), True)
+        self.assertIsInstance(res, six.binary_type, True)
 
     '''
     # removed to simplify the codebase.
@@ -143,7 +145,7 @@ class TestMiscellaneous(test_base.BaseTestCase):
         app.set_globals(app=app, request=req)
         rsp = webapp2.redirect('http://www.google.com/', code=301, body='Weee')
         self.assertEqual(rsp.status_int, 301)
-        self.assertEqual(rsp.body, 'Weee')
+        self.assertEqual(rsp.body, b'Weee')
         self.assertEqual(rsp.headers.get('Location'), 'http://www.google.com/')
 
     def test_redirect_to(self):
@@ -156,9 +158,9 @@ class TestMiscellaneous(test_base.BaseTestCase):
 
         rsp = webapp2.redirect_to('home', _code=301, _body='Weee')
         self.assertEqual(rsp.status_int, 301)
-        self.assertEqual(rsp.body, 'Weee')
+        self.assertEqual(rsp.body, b'Weee')
         self.assertEqual(rsp.headers.get('Location'), 'http://localhost/home')
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

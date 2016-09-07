@@ -19,7 +19,8 @@ webapp2_extras.routes
 
 Extra route classes for webapp2.
 """
-import urllib
+import six
+from six.moves.urllib import parse
 
 import webapp2
 from webob import exc
@@ -63,7 +64,7 @@ class MultiRoute(object):
                 for n, r in route.get_build_routes():
                     self.build_children[n] = r
 
-        for rv in self.build_children.iteritems():
+        for rv in six.iteritems(self.build_children):
             yield rv
 
     get_routes = get_children
@@ -220,7 +221,7 @@ class PathPrefixRoute(NamePrefixRoute):
         yield self
 
     def match(self, request):
-        if not self.regex.match(urllib.unquote(request.path)):
+        if not self.regex.match(parse.unquote(request.path)):
             return None
 
         return _match_routes(self.get_match_children, request)

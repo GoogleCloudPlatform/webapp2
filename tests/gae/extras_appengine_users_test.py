@@ -15,8 +15,7 @@
 
 import os
 
-import test_base
-
+from tests.gae import test_base
 import webapp2
 from webapp2_extras.appengine import users
 

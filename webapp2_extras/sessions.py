@@ -20,6 +20,7 @@ webapp2_extras.sessions
 Lightweight but flexible session support for webapp2.
 """
 import re
+import six
 
 import webapp2
 
@@ -338,7 +339,7 @@ class SessionStore(object):
         """
         backends = self.config['backends']
         backend = backends[name]
-        if isinstance(backend, basestring):
+        if isinstance(backend, six.string_types):
             backend = backends[name] = webapp2.import_string(backend)
 
         return backend

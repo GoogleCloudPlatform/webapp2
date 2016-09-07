@@ -13,49 +13,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import test_base
+import unittest
 
 from webapp2_extras import securecookie
 
 
-class TestSecureCookie(test_base.BaseTestCase):
+class TestSecureCookie(unittest.TestCase):
     def test_secure_cookie_serializer(self):
-        serializer = securecookie.SecureCookieSerializer('secret-key')
+        serializer = securecookie.SecureCookieSerializer(b'secret-key')
         serializer._get_timestamp = lambda: 1
 
         value = ['a', 'b', 'c']
-        result = "WyJhIiwiYiIsImMiXQ==|1|38" \
-                 "837d6af8ac1ded9292b83924fc8521ce76f47e"
+        result = b"WyJhIiwiYiIsImMiXQ==|1|38" \
+                 b"837d6af8ac1ded9292b83924fc8521ce76f47e"
 
-        rv = serializer.serialize('foo', value)
+        rv = serializer.serialize(b'foo', value)
         self.assertEqual(rv, result)
 
-        rv = serializer.deserialize('foo', result)
+        rv = serializer.deserialize(b'foo', result)
         self.assertEqual(rv, value)
 
         # no value
-        rv = serializer.deserialize('foo', None)
+        rv = serializer.deserialize(b'foo', None)
         self.assertEqual(rv, None)
 
         # not 3 parts
-        rv = serializer.deserialize('foo', 'a|b')
+        rv = serializer.deserialize(b'foo', b'a|b')
         self.assertEqual(rv, None)
 
         # bad signature
-        rv = serializer.deserialize('foo', result + 'foo')
+        rv = serializer.deserialize(b'foo', result + b'foo')
         self.assertEqual(rv, None)
 
         # too old
-        rv = serializer.deserialize('foo', result, max_age=-86400)
+        rv = serializer.deserialize(b'foo', result, max_age=-86400)
         self.assertEqual(rv, None)
 
         # not correctly encoded
-        serializer2 = securecookie.SecureCookieSerializer('foo')
-        serializer2._encode = lambda x: 'foo'
-        result2 = serializer2.serialize('foo', value)
-        rv2 = serializer2.deserialize('foo', result2)
+        serializer2 = securecookie.SecureCookieSerializer(b'foo')
+        serializer2._encode = lambda x: b'foo'
+        result2 = serializer2.serialize(b'foo', value)
+        rv2 = serializer2.deserialize(b'foo', result2)
         self.assertEqual(rv2, None)
 
 
 if __name__ == '__main__':
-    test_base.main()
+    unittest.main()

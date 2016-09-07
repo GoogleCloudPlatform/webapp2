@@ -1,14 +1,24 @@
 language: python
 sudo: false
 
+matrix:
+  include:
+  - python: 2.7
+    env: NOX_SESSION="lint"
+  - python: 2.7
+    env: NOX_SESSION="tests(interpreter='python2.7')"
+  - python: 3.4
+    env: NOX_SESSION="tests(interpreter='python3.4')"
+  - python: 3.5
+    env: NOX_SESSION="tests(interpreter='python3.5')"
+  - python: 2.7
+    env: NOX_SESSION="tests_gaesdk"
+
 install:
 - pip install nox-automation codecov
 
 script:
-# Disabled until webapp2 passes lint.
-- nox -s lint
-- nox -s tests
-- nox -s tests_gaesdk
+- nox -s "$NOX_SESSION"
 
 after_success:
-- codecov
+- if [[ "${NOX_SESSION}" == "tests_gaesdk" ]]; then codecov; fi
