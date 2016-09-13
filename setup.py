@@ -32,7 +32,7 @@ EXTRA_REQUIREMENTS = {
 
 setup(
     name='webapp2',
-    version='3.0.0',
+    version='3.0.0b1',
     license='Apache Software License',
     url='http://webapp2.readthedocs.org',
     description="Taking Google App Engine's webapp to the next level!",

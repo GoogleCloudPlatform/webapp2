@@ -1,3 +1,31 @@
+Version 3.0.0b1
+---------------
+
+This is the first release of this project under the new maintainers.
+
+Breaking changes:
+- Removed all deprecrated items.
+	- `webapp2_extras.config`, replaced by `WSGIApplication.config`.
+	- `webapp2_extras.local_app`, replaced by automatic behavior provided by `webapp2_extras.local`.
+	- `webapp2_extras.sessions_memcache`, moved to webapp2_extras.appengine.sessions_memcache`.
+	- `webapp2_extras.sessions_ndb`, moved to `webapp2_extras.appengine.sessions_ndb`.
+	- `webapp2_extras.users`, moved to `webapp2_extras.appengine.users`.
+	- `return_multiple` argument to `Request.get`, replaced by `Request.get_all`.
+- Updated most dependencies while attempting to maintain backwards compatibility.
+- Added dependency on `six`.
+
+Other changes:
+- Provisional support for Python 3 (#117)
+- Made codebase compliant with pep8.
+- Various documentation link fixes.
+- Send request headers (cookies) with abort=True requests too. (#112)
+- `webapp2_extras.appengine.auth.models.User.validate_token` now returns `UserToken` or `None` instead of `True/False`. (#109)
+- Fixed various issues that prevented the package from being built.
+- Removed the `experimental` directory.
+- Switched test runner to py.test and added coverage reporting.
+- Removed vendored-in third-party libraries used for testing.
+
+
 Version 2.5.1 - February 07, 2012
 ---------------------------------
 - Bug fix release related to request charset in old versions of
