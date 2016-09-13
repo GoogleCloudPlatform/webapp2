@@ -709,12 +709,6 @@ class TestHandler(BaseTestCase):
         def other_view(request, *args, **kwargs):
             return webapp2.Response('Hello again, function world!')
 
-        '''
-        def one_more_view(request, response):
-            self.assertEqual(request.route_args, ())
-            self.assertEqual(request.route_kwargs, {'foo': 'bar'})
-            response.write('Hello you too, deprecated arguments world!')
-        '''
         def one_more_view(request, *args, **kwargs):
             self.assertEqual(args, ())
             self.assertEqual(kwargs, {'foo': 'bar'})
@@ -723,8 +717,7 @@ class TestHandler(BaseTestCase):
         app = webapp2.WSGIApplication([
             webapp2.Route('/', my_view),
             webapp2.Route('/other', other_view),
-            webapp2.Route('/one-more/<foo>', one_more_view),
-            # webapp2.Route('/one-more/<foo>', one_more_view),
+            webapp2.Route('/one-more/<foo>', one_more_view)
         ])
 
         req = webapp2.Request.blank('/')

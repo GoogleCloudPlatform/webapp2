@@ -1,10 +1,8 @@
-from webapp2_extras import config
 from webapp2_extras import i18n
 
 default_config = {
     'locale': 'en_US',
-    'timezone': 'America/Chicago',
-    'required': config.REQUIRED_VALUE,
+    'timezone': 'America/Chicago'
 }
 
 

@@ -200,24 +200,15 @@ class Request(webob.Request):
         :param allow_multiple:
             Return a list of values with the given name (deprecated).
         :returns:
-            If allow_multiple is False (which it is by default), we return
-            the first value with the given name given in the request. If it
-            is True, we always return a list.
+            Return the value with the given name given in the request. If there
+            are multiple values, this will only return the first one. Use
+            `get_all()` to get multiple values.
         """
         param_value = self.get_all(argument_name)
-        if allow_multiple:
-            logging.warning('allow_multiple is a deprecated param. '
-                            'Please use the Request.get_all() method instead.')
 
         if len(param_value) > 0:
-            if allow_multiple:
-                return param_value
-
             return param_value[0]
         else:
-            if allow_multiple and not default_value:
-                return []
-
             return default_value
 
     def get_all(self, argument_name, default_value=None):
