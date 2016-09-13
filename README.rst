@@ -25,13 +25,19 @@ Quick links
 
 - `User Guide <https://webapp2.readthedocs.org/>`_
 - `Repository <https://github.com/GoogleCloudPlatform/webapp2>`_
-- `Discussion Group <https://groups.google.com/forum/#!forum/webapp2>`_
-- `@webapp2 <https://twitter.com/#!/webapp2>`_
+- `Discussion Group <https://groups.google.com/forum/#!forum/google-appengine>`_
 
 .. _webapp: http://code.google.com/appengine/docs/python/tools/webapp/
 .. _webapp2: https://github.com/GoogleCloudPlatform/webapp2
 .. _webapp2_extras: https://webapp2.readthedocs.org/#api-reference-webapp2-extras
 .. _webapp2 features: https://webapp2.readthedocs.org/features.html
+
+Status
+------
+
+Webapp2 is currently maintained by Google Cloud Platform Developer Relations. It
+is not an official Google product, but is hosted by Google to allow the webapp2
+community to continue to maintain the project.
 
 Contributing changes
 --------------------
