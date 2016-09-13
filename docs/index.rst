@@ -33,9 +33,14 @@ Quick links
 -----------
 - `Package Index Page <https://pypi.python.org/pypi/webapp2>`_
 - `Github <https://github.com/GoogleCloudPlatform/webapp2>`_
-- `Discussion Group <http://groups.google.com/group/webapp2>`_
-- `@webapp2 <https://twitter.com/#!/webapp2>`_
+- `Discussion Group <https://groups.google.com/forum/#!forum/google-appengine>`_
 
+Status
+------
+
+Webapp2 is currently maintained by Google Cloud Platform Developer Relations. It
+is not an official Google product, but is hosted by Google to allow the webapp2
+community to continue to maintain the project.
 
 Tutorials
 ---------
@@ -168,8 +173,6 @@ webapp2 has code ported from `Werkzeug`_ and `Tipfy`_.
 webapp2_extras has code ported from Werkzeug, Tipfy and `Tornado Web Server`_.
 
 The `Sphinx`_ theme mimics the App Engine documentation.
-
-This library was not created and is not maintained by Google.
 
 
 Contribute
