@@ -55,6 +55,11 @@ passed to the handler as positional arguments. In the example above, the last
 route defines a group, so the handler will receive the matched value when the
 route matches (one or more digits in this case).
 
+Important note: If the route includes a regex group, all handler methods that 
+receive requests from that route must include a parameter for the positional 
+arguments; otherwise the application will attempt to pass an argument to the 
+handler with no matching parameter and an exception will occur.
+
 The `handler` part is a callable as explained in :ref:`guide.handlers`, and
 can also be a string in dotted notation to be lazily imported when needed
 (see explanation below in :ref:`Lazy Handlers <guide.routing.lazy-handlers>`).
