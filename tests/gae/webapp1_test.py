@@ -24,6 +24,7 @@ class NewStyleHandler(webapp2.RequestHandler):
     def get(self, text):
         self.response.out.write(text)
 
+
 app = webapp.WSGIApplication([
     (r'/test/(.*)', NewStyleHandler),
 ])
@@ -47,6 +48,7 @@ class OldStyleHandlerWithError(webapp.RequestHandler):
     def handle_exception(self, e, debug):
         self.response.set_status(500)
         self.response.out.write('ValueError!')
+
 
 app2 = webapp2.WSGIApplication([
     (r'/test/error', OldStyleHandlerWithError),
