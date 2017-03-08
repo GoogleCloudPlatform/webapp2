@@ -60,7 +60,7 @@ can define a method for each action in the same class.
 The code for the ``post()`` method gets the form data from ``self.request``.
 Before displaying it back to the user, it uses ``cgi.escape()`` to escape
 HTML special characters to their character entity equivalents. ``cgi`` is a
-module in the standard Python library; see `the documentation for cgi <http://www.python.org/doc/2.5.2/lib/module-cgi.html>`_
+module in the standard Python library; see `the documentation for cgi <https://docs.python.org/2/library/cgi.html>`_
 for more information.
 
 .. note::
