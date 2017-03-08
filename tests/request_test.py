@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import unittest
+
 import six
 from tests.test_base import BaseTestCase
 
@@ -22,6 +23,7 @@ import webapp2
 
 def _norm_req(s):
     return '\r\n'.join(s.strip().replace('\r', '').split('\n'))
+
 
 _test_req = """
 POST /webob/ HTTP/1.0
@@ -335,6 +337,7 @@ class TestRequest(BaseTestCase):
         self.assertTrue(isinstance(fieldStorage, cgi.FieldStorage))
         self.assertEqual(fieldStorage.type, 'application/octet-stream')
     '''
+
 
 if __name__ == '__main__':
     unittest.main()

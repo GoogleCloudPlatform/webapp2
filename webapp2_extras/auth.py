@@ -21,8 +21,8 @@ Utilities for authentication and authorization.
 """
 import logging
 import time
-import six
 
+import six
 import webapp2
 
 from webapp2_extras import sessions

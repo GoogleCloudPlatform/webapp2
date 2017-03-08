@@ -21,8 +21,8 @@ JSON helpers for webapp2.
 """
 import base64
 import importlib
-from six.moves.urllib import parse
 
+from six.moves.urllib import parse
 import webapp2
 
 _json = importlib.import_module("json")
