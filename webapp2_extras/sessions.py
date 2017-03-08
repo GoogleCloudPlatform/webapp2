@@ -20,8 +20,8 @@ webapp2_extras.sessions
 Lightweight but flexible session support for webapp2.
 """
 import re
-import six
 
+import six
 import webapp2
 
 from webapp2_extras import securecookie

@@ -145,5 +145,6 @@ class TestMemcacheSession(test_base.BaseTestCase):
         flashes = session.get_flashes()
         self.assertEqual(flashes, [])
 
+
 if __name__ == '__main__':
     test_base.main()
