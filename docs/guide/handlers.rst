@@ -255,7 +255,7 @@ attributes of the handler. For example::
 
 Overriding dispatch()
 ---------------------
-One of the advantadges of webapp2 over webapp is that you can wrap the
+One of the advantages of webapp2 over webapp is that you can wrap the
 dispatching process of :class:`webapp2.RequestHandler` to perform actions
 before and/or after the requested method is dispatched. You can do this
 overriding the :meth:`webapp2.RequestHandler.dispatch` method. This can be
@@ -279,5 +279,5 @@ In this case, if the requirements were not met, the method won't ever be
 dispatched and a "403 Forbidden" response will be returned instead.
 
 There are several possibilities to explore overriding ``dispatch()``, like
-performing common checkings, setting common attributes or post-processing the
+performing common checking, setting common attributes or post-processing the
 response.
