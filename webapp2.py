@@ -36,9 +36,9 @@ from wsgiref import handlers
 
 import six
 from six.moves import cStringIO
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.parse import unquote
 from six.moves.urllib.parse import quote
+from six.moves.urllib.parse import unquote
+from six.moves.urllib.parse import urlencode
 from six.moves.urllib.parse import urljoin
 from six.moves.urllib.parse import urlunsplit
 
