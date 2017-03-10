@@ -46,7 +46,7 @@ Also edit ``app.yaml`` and replace its contents with the following:
 
    handlers:
    - url: /.*
-     script: helloworld.app
+     script: helloworld.application
 
 Reload `http://localhost:8080/ <http://localhost:8080/>`_ in your browser to
 see the new version in action (if you stopped your web server, restart it by
