@@ -20,7 +20,7 @@ webapp2
 Taking Google App Engine's webapp to the next level!
 
 :copyright: 2011 webapp2 AUTHORS.
-:license: Apache Sotware License, see LICENSE for details.
+:license: Apache Software License, see LICENSE for details.
 """
 
 import cgi
@@ -495,7 +495,7 @@ class Response(webob.Response):
         self.body = b''
 
     def wsgi_write(self, start_response):
-        """Writes this response using using the given WSGI function.
+        """Writes this response using the given WSGI function.
 
         This is only here for compatibility with ``webapp.WSGIApplication``.
 
@@ -1518,12 +1518,12 @@ class WSGIApplication(object):
     def set_globals(self, app=None, request=None):
         """Registers the global variables for app and request.
 
-        If :mod:`webapp2_extras.local` is available the app and request
+        If :mod:`webapp2_extras.local` is available, the app and request
         class attributes are assigned to a proxy object that returns them
         using thread-local, making the application thread-safe. This can also
         be used in environments that don't support threading.
 
-        If :mod:`webapp2_extras.local` is not available app and request will
+        If :mod:`webapp2_extras.local` is not available, app and request will
         be assigned directly as class attributes. This should only be used in
         non-threaded environments (e.g., App Engine Python 2.5).
 

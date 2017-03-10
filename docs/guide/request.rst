@@ -65,7 +65,7 @@ Examples::
     # All values for a key: ['a', 'b']
     check_values = request.GET.getall('check')
 
-    # An iterable with alll items in the MultiDict:
+    # An iterable with all items in the MultiDict:
     # [('check', 'a'), ('check', 'b'), ('name', 'Bob')]
     request.GET.items()
 
@@ -98,11 +98,11 @@ Examples::
     # All values for a key: ['a', 'b']
     check_values = request.POST.getall('check')
 
-    # An iterable with alll items in the MultiDict:
+    # An iterable with all items in the MultiDict:
     # [('check', 'a'), ('check', 'b'), ('name', 'Bob')]
     request.POST.items()
 
-Like ``GET``, the name ``POST`` is a somewjat misleading, but has historical
+Like ``GET``, the name ``POST`` is a somewhat misleading, but has historical
 reasons: they are also available when the HTTP method is PUT, and not only
 POST.
 

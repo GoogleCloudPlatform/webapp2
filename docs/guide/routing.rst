@@ -5,7 +5,7 @@ URI routing
 `URI routing` is the process of taking the requested URI and deciding which
 application handler will handle the current request. For this, we initialize
 the :class:`WSGIApplication` defining a list of `routes`: each `route`
-analyses the current request and, if it matches certain criterias, returns
+analyses the current request and, if it matches certain criteria, returns
 the handler and optional variables extracted from the URI.
 
 webapp2 offers a powerful and extensible system to match and build URIs,
@@ -55,9 +55,9 @@ passed to the handler as positional arguments. In the example above, the last
 route defines a group, so the handler will receive the matched value when the
 route matches (one or more digits in this case).
 
-Important note: If the route includes a regex group, all handler methods that 
-receive requests from that route must include a parameter for the positional 
-arguments; otherwise the application will attempt to pass an argument to the 
+Important note: If the route includes a regex group, all handler methods that
+receive requests from that route must include a parameter for the positional
+arguments; otherwise the application will attempt to pass an argument to the
 handler with no matching parameter and an exception will occur.
 
 The `handler` part is a callable as explained in :ref:`guide.handlers`, and
@@ -81,7 +81,7 @@ additional features:
   route will continue to point to the correct URI. This is less error prone and
   easier to maintain.
 - **Keyword arguments:** handlers can receive keyword arguments from the
-  matched URIs. This is easier to use and also more maintanable than positional
+  matched URIs. This is easier to use and also more maintainable than positional
   arguments.
 - **Nested routes:** routes can be extended to match more than the request
   path. We will see below a route class that can also match domains and
@@ -253,7 +253,7 @@ but if the regex didn't define any named groups, nothing would be added.
 Matching only www, or anything except www
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 A common need is to set some routes for the main subdomain (``www``) and
-different routes for other submains. The webapp2 routing system can handle
+different routes for other subdomains. The webapp2 routing system can handle
 this easily.
 
 To match only the ``www`` subdomain, simple set the domain template to a fixed
