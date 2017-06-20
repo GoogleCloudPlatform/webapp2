@@ -211,6 +211,18 @@ class Request(webob.Request):
         else:
             return default_value
 
+    def __getitem__(self, argument_name):
+        """Provides dict-like access to attributes.
+
+        :param argument_name:
+            The name of the query or POST argument.
+        :returns:
+            Return the value with the given name given in the request. If there
+            are multiple values, this will only return the first one. Use
+            `get_all()` to get multiple values.
+        """
+        return self.get(argument_name)
+
     def get_all(self, argument_name, default_value=None):
         """Returns a list of query or POST arguments with the given name.
 
