@@ -241,6 +241,44 @@ class TestRequest(BaseTestCase):
         res = req.get('8', default_value='9')
         self.assertEqual(res, '9')
 
+    def test_getitem(self):
+        req = webapp2.Request.blank('/?1=2&1=3&3=4', POST='5=6&7=8')
+
+        res = req['1']
+        self.assertEqual(res, '2')
+
+        res = req['8']
+        self.assertEqual(res, '')
+
+    def test_getitem_with_POST(self):
+        req = webapp2.Request.blank('/?1=2&1=3&3=4', POST={5: 6, 7: 8})
+
+        res = req['1']
+        self.assertEqual(res, '2')
+
+        res = req['8']
+        self.assertEqual(res, '')
+
+    def test_getitem_with_square_brackets(self):
+        req = webapp2.Request.blank('/endpoint?x[1]=3&a=1&a=2&b=0')
+
+        res = req['x']
+        self.assertEqual(res, '')
+
+        res = req['x[1]']
+        self.assertEqual(res, '3')
+
+    def test_setitem(self):
+        req = webapp2.Request.blank('/?1=2&1=3&3=4', POST='5=6&7=8')
+
+        # Existing key
+        with self.assertRaises(TypeError):
+            req['1'] = '7'
+
+        # New key
+        with self.assertRaises(TypeError):
+            req['8'] = '7'
+
     def test_arguments(self):
         req = webapp2.Request.blank('/?1=2&3=4', POST='5=6&7=8')
 
