@@ -15,7 +15,7 @@
 import os
 import sys
 
-from gcp.testing import appengine
+from gcp_devrel.testing import appengine
 import six
 
 

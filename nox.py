@@ -16,9 +16,6 @@ import nox
 import os
 from tempfile import gettempdir
 
-GCP_REPO_TOOLS_REQ = (
-    'git+https://github.com/GoogleCloudPlatform/python-repo-tools')
-
 
 def session_lint(session):
     session.install('flake8', 'flake8-import-order')
@@ -29,13 +26,12 @@ def session_lint(session):
 
 
 def run_tests(session, requirements, gae=False):
-    session.install(GCP_REPO_TOOLS_REQ)
     session.install('-r', requirements)
     session.install('-e', '.')
 
     if gae:
         tmpdir = gettempdir()
-        session.run('gcprepotools', 'download-appengine-sdk', tmpdir)
+        session.run('gcp-devrel-py-tools', 'download-appengine-sdk', tmpdir)
         session.env['GAE_SDK_PATH'] = os.path.join(tmpdir, 'google_appengine')
 
     session.run(
