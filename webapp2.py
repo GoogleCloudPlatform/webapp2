@@ -572,6 +572,8 @@ class RequestHandler(object):
             A :class:`Response` instance.
         """
         self.initialize(request, response)
+        super(RequestHandler, self).__init__()
+
 
     def initialize(self, request, response):
         """Initializes this request handler with the given WSGI application,
