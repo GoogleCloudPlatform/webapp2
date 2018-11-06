@@ -935,8 +935,8 @@ class Route(BaseRoute):
               Format             Example
               =================  ==================================
               ``<name>``         ``'/blog/<year>/<month>'``
-              ``<:regex>``       ``'/blog/<:\d{4}>/<:\d{2}>'``
-              ``<name:regex>``   ``'/blog/<year:\d{4}>/<month:\d{2}>'``
+              ``<:regex>``       ``r'/blog/<:\d{4}>/<:\d{2}>'``
+              ``<name:regex>``   ``r'/blog/<year:\d{4}>/<month:\d{2}>'``
               =================  ==================================
 
             The same template can mix parts with name, regular expression or

@@ -61,11 +61,11 @@ from webapp2_extras import sessions
 #      The user object must provide all of them as attributes.
 #:     Default is an empty list.
 default_config = {
-    'user_model':      'webapp2_extras.appengine.auth.models.User',
+    'user_model': 'webapp2_extras.appengine.auth.models.User',
     'session_backend': 'securecookie',
-    'cookie_name':     'auth',
-    'token_max_age':   86400 * 7 * 3,
-    'token_new_age':   86400,
+    'cookie_name': 'auth',
+    'token_max_age': 86400 * 7 * 3,
+    'token_new_age': 86400,
     'token_cache_age': 3600,
     'user_attributes': [],
 }
@@ -418,9 +418,9 @@ class Auth(object):
             A user dict or None.
         """
         if self._user is not None:
-            assert (self._user is not _anon and
-                    self._user['user_id'] == user_id and
-                    self._user['token'] == token)
+            assert (self._user is not _anon
+                    and self._user['user_id'] == user_id
+                    and self._user['token'] == token)
             return self._user_or_none()
 
         if cache and cache_ts:
@@ -518,7 +518,7 @@ class Auth(object):
         # the session metadata (token, timestamps etc). This is easier to test.
         # But we could store only user_id and custom user attributes instead.
         user.update({
-            'token':    token,
+            'token': token,
             'token_ts': token_ts,
             'cache_ts': cache_ts,
             'remember': int(remember),

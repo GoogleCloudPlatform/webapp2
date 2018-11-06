@@ -151,9 +151,9 @@ class Jinja2(object):
                 lambda s, p, n: i18n.ngettext(s, p, n),
                 newstyle=True)
             env.filters.update({
-                'format_date':      i18n.format_date,
-                'format_time':      i18n.format_time,
-                'format_datetime':  i18n.format_datetime,
+                'format_date': i18n.format_date,
+                'format_time': i18n.format_time,
+                'format_datetime': i18n.format_datetime,
                 'format_timedelta': i18n.format_timedelta,
             })
 
