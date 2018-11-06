@@ -13,35 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.appengine.ext import webapp
-
 import test_base
 import webapp2
 
 
-# Old WSGIApplication, new RequestHandler.
+# WSGIApplication and RequestHandler of webapp2
+# webapp1 is not supported anymore
 class NewStyleHandler(webapp2.RequestHandler):
     def get(self, text):
         self.response.out.write(text)
 
 
-app = webapp.WSGIApplication([
-    (r'/test/(.*)', NewStyleHandler),
-])
-
-
-# New WSGIApplication, old RequestHandler.
-class OldStyleHandler(webapp.RequestHandler):
-    def get(self, text):
-        self.response.out.write(text)
-
-
-class OldStyleHandler2(webapp.RequestHandler):
-    def get(self, text=None):
-        self.response.out.write(text)
-
-
-class OldStyleHandlerWithError(webapp.RequestHandler):
+class NewStyleHandlerWithError(webapp2.RequestHandler):
     def get(self, text):
         raise ValueError()
 
@@ -51,27 +34,14 @@ class OldStyleHandlerWithError(webapp.RequestHandler):
 
 
 app2 = webapp2.WSGIApplication([
-    (r'/test/error', OldStyleHandlerWithError),
-    (r'/test/(.*)', OldStyleHandler),
-    webapp2.Route(r'/test2/<text>', OldStyleHandler2),
+    (r'/test/error', NewStyleHandlerWithError),
+    (r'/test/(.*)', NewStyleHandler),
+    webapp2.Route(r'/test2/<text>', NewStyleHandler),
 ])
 
 
-class TestWebapp1(test_base.BaseTestCase):
-    def test_old_app_new_handler(self):
-        req = webapp2.Request.blank('/test/foo')
-        rsp = req.get_response(app)
-        self.assertEqual(rsp.status_int, 200)
-        self.assertEqual(rsp.body, 'foo')
-
-        req = webapp2.Request.blank('/test/bar')
-        rsp = req.get_response(app)
-        self.assertEqual(rsp.status_int, 200)
-        self.assertEqual(rsp.body, 'bar')
-
-        self.assertTrue(issubclass(OldStyleHandler, webapp.RequestHandler))
-
-    def test_new_app_old_handler(self):
+class TestWebapp2(test_base.BaseTestCase):
+    def test_app_handler(self):
         req = webapp2.Request.blank('/test/foo')
         rsp = req.get_response(app2)
         self.assertEqual(rsp.status_int, 200)
@@ -82,33 +52,46 @@ class TestWebapp1(test_base.BaseTestCase):
         self.assertEqual(rsp.status_int, 200)
         self.assertEqual(rsp.body, 'bar')
 
-    def test_new_app_old_handler_405(self):
+        self.assertTrue(issubclass(NewStyleHandler, webapp2.RequestHandler))
+
+    def test_handler_200(self):
+        req = webapp2.Request.blank('/test/foo')
+        rsp = req.get_response(app2)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'foo')
+
+        req = webapp2.Request.blank('/test/bar')
+        rsp = req.get_response(app2)
+        self.assertEqual(rsp.status_int, 200)
+        self.assertEqual(rsp.body, 'bar')
+
+    def test_handler_405(self):
         req = webapp2.Request.blank('/test/foo')
         req.method = 'POST'
         rsp = req.get_response(app2)
         self.assertEqual(rsp.status_int, 405)
-        self.assertEqual(rsp.headers.get('Allow'), None)
+        self.assertEqual(rsp.headers.get('Allow'), 'GET')
 
-    def test_new_app_old_handler_501(self):
+    def test_handler_405_new_method(self):
         app2.allowed_methods = list(app2.allowed_methods) + ['NEW_METHOD']
         req = webapp2.Request.blank('/test/foo')
         req.method = 'NEW_METHOD'
         rsp = req.get_response(app2)
-        self.assertEqual(rsp.status_int, 501)
+        self.assertEqual(rsp.status_int, 405)
 
-    def test_new_app_old_handler_501_2(self):
+    def test_handler_501(self):
         req = webapp2.Request.blank('/test/foo')
         req.method = 'WHATMETHODISTHIS'
         rsp = req.get_response(app2)
         self.assertEqual(rsp.status_int, 501)
 
-    def test_new_app_old_handler_with_error(self):
+    def test_handler_with_error(self):
         req = webapp2.Request.blank('/test/error')
         rsp = req.get_response(app2)
         self.assertEqual(rsp.status_int, 500)
         self.assertEqual(rsp.body, 'ValueError!')
 
-    def test_new_app_old_kwargs(self):
+    def test_kwargs(self):
         req = webapp2.Request.blank('/test2/foo')
         rsp = req.get_response(app2)
         self.assertEqual(rsp.status_int, 200)
@@ -126,11 +109,11 @@ class TestWebapp1(test_base.BaseTestCase):
         # So we have to do it.
         quoted_value = urllib.quote(initial_value.encode('utf-8'))
 
-        rsp = webapp.Response()
+        rsp = webapp2.Response()
         rsp.headers['Set-Cookie'] = 'app=%s; Path=/' % quoted_value
 
         cookie = rsp.headers.get('Set-Cookie')
-        req = webapp.Request.blank('/', headers=[('Cookie', cookie)])
+        req = webapp2.Request.blank('/', headers=[('Cookie', cookie)])
 
         # The stored value is the same quoted value from before.
         stored_value = req.cookies.get('app')
