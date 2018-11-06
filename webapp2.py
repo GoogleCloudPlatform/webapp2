@@ -514,8 +514,8 @@ class Response(webob.Response):
         :param start_response:
             The WSGI-compatible start_response function.
         """
-        if (self.headers.get('Cache-Control') == 'no-cache' and
-                not self.headers.get('Expires')):
+        if (self.headers.get('Cache-Control') == 'no-cache'
+                and not self.headers.get('Expires')):
             self.headers['Expires'] = 'Fri, 01 Jan 1990 00:00:00 GMT'
             self.headers['Content-Length'] = str(len(self.body))
 
@@ -924,7 +924,7 @@ class Route(BaseRoute):
     def __init__(self, template, handler=None, name=None, defaults=None,
                  build_only=False, handler_method=None, methods=None,
                  schemes=None):
-        """Initializes this route.
+        r"""Initializes this route.
 
         :param template:
             A route template to match against the request path. A template
@@ -935,8 +935,8 @@ class Route(BaseRoute):
               Format             Example
               =================  ==================================
               ``<name>``         ``'/blog/<year>/<month>'``
-              ``<:regex>``       ``'/blog/<:\d{4}>/<:\d{2}>'``
-              ``<name:regex>``   ``'/blog/<year:\d{4}>/<month:\d{2}>'``
+              ``<:regex>``       ``r'/blog/<:\d{4}>/<:\d{2}>'``
+              ``<name:regex>``   ``r'/blog/<year:\d{4}>/<month:\d{2}>'``
               =================  ==================================
 
             The same template can mix parts with name, regular expression or
@@ -951,7 +951,7 @@ class Route(BaseRoute):
 
                 Route('/<user_id>/settings', handler=SettingsHandler,
                       name='user-settings')
-                Route('/<user_id:[^/]+>/settings', handler=SettingsHandler,
+                Route(r'/<user_id:[^/]+>/settings', handler=SettingsHandler,
                       name='user-settings')
 
             .. note::

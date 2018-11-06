@@ -67,22 +67,22 @@ from webapp2_extras import security
 #:     A dictionary of available session backend classes used by
 #:     :meth:`SessionStore.get_session`.
 default_config = {
-    'secret_key':      None,
-    'cookie_name':     'session',
+    'secret_key': None,
+    'cookie_name': 'session',
     'session_max_age': None,
     'cookie_args': {
-        'max_age':     None,
-        'domain':      None,
-        'path':        '/',
-        'secure':      None,
-        'httponly':    False,
+        'max_age': None,
+        'domain': None,
+        'path': '/',
+        'secure': None,
+        'httponly': False,
     },
     'backends': {
         'securecookie': 'webapp2_extras.sessions.SecureCookieSessionFactory',
-        'datastore':    'webapp2_extras.appengine.sessions_ndb.'
-                        'DatastoreSessionFactory',
-        'memcache':     'webapp2_extras.appengine.sessions_memcache.'
-                        'MemcacheSessionFactory',
+        'datastore': 'webapp2_extras.appengine.sessions_ndb.'
+                     'DatastoreSessionFactory',
+        'memcache': 'webapp2_extras.appengine.sessions_memcache.'
+                    'MemcacheSessionFactory',
     },
 }
 

@@ -121,19 +121,19 @@ class DomainRoute(MultiRoute):
     def regex(self):
         regex, reverse_template, args_count, kwargs_count, variables = \
             webapp2._parse_route_template(self.template,
-                                          default_sufix='[^\.]+')
+                                          default_sufix=r'[^\.]+')
         return regex
 
 
 class NamePrefixRoute(MultiRoute):
-    """The idea of this route is to set a base name for other routes::
+    r"""The idea of this route is to set a base name for other routes::
 
         app = WSGIApplication([
             NamePrefixRoute('user-', [
-                Route('/users/<user:\w+>/', UserOverviewHandler, 'overview'),
-                Route('/users/<user:\w+>/profile', UserProfileHandler,
+                Route(r'/users/<user:\w+>/', UserOverviewHandler, 'overview'),
+                Route(r'/users/<user:\w+>/profile', UserProfileHandler,
                       'profile'),
-                Route('/users/<user:\w+>/projects', UserProjectsHandler,
+                Route(r'/users/<user:\w+>/projects', UserProjectsHandler,
                       'projects'),
             ]),
         ])
@@ -142,10 +142,10 @@ class NamePrefixRoute(MultiRoute):
     convenient as you can reuse the name prefix::
 
         app = WSGIApplication([
-            Route('/users/<user:\w+>/', UserOverviewHandler, 'user-overview'),
-            Route('/users/<user:\w+>/profile', UserProfileHandler,
+            Route(r'/users/<user:\w+>/', UserOverviewHandler, 'user-overview'),
+            Route(r'/users/<user:\w+>/profile', UserProfileHandler,
                   'user-profile'),
-            Route('/users/<user:\w+>/projects', UserProjectsHandler,
+            Route(r'/users/<user:\w+>/projects', UserProjectsHandler,
                   'user-projects'),
         ])
     """
@@ -174,23 +174,23 @@ class HandlerPrefixRoute(NamePrefixRoute):
 
 
 class PathPrefixRoute(NamePrefixRoute):
-    """Same as :class:`NamePrefixRoute`, but prefixes the route path.
+    r"""Same as :class:`NamePrefixRoute`, but prefixes the route path.
 
     For example, imagine we have these routes::
 
         app = WSGIApplication([
-            Route('/users/<user:\w+>/', UserOverviewHandler,
+            Route(r'/users/<user:\w+>/', UserOverviewHandler,
                   'user-overview'),
-            Route('/users/<user:\w+>/profile', UserProfileHandler,
+            Route(r'/users/<user:\w+>/profile', UserProfileHandler,
                   'user-profile'),
-            Route('/users/<user:\w+>/projects', UserProjectsHandler,
+            Route(r'/users/<user:\w+>/projects', UserProjectsHandler,
                   'user-projects'),
         ])
 
     We could refactor them to reuse the common path prefix::
 
         app = WSGIApplication([
-            PathPrefixRoute('/users/<user:\w+>', [
+            PathPrefixRoute(r'/users/<user:\w+>', [
                 Route('/', UserOverviewHandler, 'user-overview'),
                 Route('/profile', UserProfileHandler, 'user-profile'),
                 Route('/projects', UserProjectsHandler, 'user-projects'),

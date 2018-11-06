@@ -1,0 +1,15 @@
+[flake8]
+# flake8 added error class "I" that we need to ignore in this project
+# as they contradict import grouping as suggested by Google Python Style Guide,
+# https://github.com/google/styleguide/blob/gh-pages/pyguide.md#313-imports-formatting
+#
+# I100: Your import statements are in the wrong order.
+# I101: The names in your from import are in the wrong order.
+# I201: Missing newline between import groups.
+# I202: Additional newline in a group of imports.
+# W503:	line break before binary operator - see updated PEP8 (01-Aug-2013)
+# DEFAULTS: E121, E123, E126, E133, E226, E241, E242, E704, W503, W504 and W505
+# are ignored because they are not rules unanimously accepted
+#
+# ATTENTION: Replaces all default ignores:
+ignore = I100,I101,I201,I202,E121,E123,E126,E133,E226,E241,E242,E704,W503,W505
