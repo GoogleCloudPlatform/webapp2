@@ -924,7 +924,7 @@ class Route(BaseRoute):
     def __init__(self, template, handler=None, name=None, defaults=None,
                  build_only=False, handler_method=None, methods=None,
                  schemes=None):
-        """Initializes this route.
+        r"""Initializes this route.
 
         :param template:
             A route template to match against the request path. A template
@@ -951,7 +951,7 @@ class Route(BaseRoute):
 
                 Route('/<user_id>/settings', handler=SettingsHandler,
                       name='user-settings')
-                Route('/<user_id:[^/]+>/settings', handler=SettingsHandler,
+                Route(r'/<user_id:[^/]+>/settings', handler=SettingsHandler,
                       name='user-settings')
 
             .. note::

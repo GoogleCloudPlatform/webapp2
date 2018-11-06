@@ -209,7 +209,7 @@ class TestRoute(BaseTestCase):
 
     def test_router_build_error(self):
         router = Router(None)
-        router.add(Route('/<year:\d{4}>', None, name='year-page'))
+        router.add(Route(r'/<year:\d{4}>', None, name='year-page'))
 
         url = router.build(
             Request.blank('/'), 'year-page', (), dict(year='2010'))
@@ -233,7 +233,7 @@ class TestRoute(BaseTestCase):
         # Access route.regex just to set the lazy properties.
         self.assertEqual(route.reverse_template, '/foo/%(bar)s')
 
-        route = Route('/foo/<bar>/<baz:\d>', None)
+        route = Route(r'/foo/<bar>/<baz:\d>', None)
         route.regex
         # Access route.regex just to set the lazy properties.
         self.assertEqual(route.reverse_template, '/foo/%(bar)s/%(baz)s')
@@ -259,7 +259,7 @@ class TestRoute(BaseTestCase):
         )
 
     def test_positions(self):
-        template = '/<:\d+>' * 98
+        template = r'/<:\d+>' * 98
         args = tuple(str(i) for i in range(98))
         url_res = '/' + '/'.join(args)
 
