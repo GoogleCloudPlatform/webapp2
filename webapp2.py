@@ -514,8 +514,8 @@ class Response(webob.Response):
         :param start_response:
             The WSGI-compatible start_response function.
         """
-        if (self.headers.get('Cache-Control') == 'no-cache' and
-                not self.headers.get('Expires')):
+        if (self.headers.get('Cache-Control') == 'no-cache'
+                and not self.headers.get('Expires')):
             self.headers['Expires'] = 'Fri, 01 Jan 1990 00:00:00 GMT'
             self.headers['Content-Length'] = str(len(self.body))
 
