@@ -46,7 +46,7 @@ import webob
 from webob import exc
 
 
-_webapp = _webapp_util = _local = None
+_local = None
 
 
 try:  # pragma: no cover
@@ -64,15 +64,6 @@ try:  # pragma no cover
 except ImportError:
     html = cgi
 
-
-# google.appengine.ext.webapp imports webapp2 in the
-# App Engine Python 2.7 runtime.
-if os.environ.get('APPENGINE_RUNTIME') != 'python27':  # pragma: no cover
-    try:
-        from google.appengine.ext import webapp as _webapp
-    except ImportError:  # pragma: no cover
-        # Running webapp2 outside of GAE.
-        pass
 
 try:  # pragma: no cover
     # Thread-local variables container.
@@ -1341,12 +1332,18 @@ class Router(object):
             A wrapped handler callable.
         """
         if inspect.isclass(handler):
-            if _webapp and issubclass(handler, _webapp.RequestHandler):
-                # Compatible with webapp.RequestHandler.
-                adapter = WebappHandlerAdapter
-            else:
-                # Default, compatible with webapp2.RequestHandler.
-                adapter = Webapp2HandlerAdapter
+            # Default, compatible with webapp2.RequestHandler.
+            adapter = Webapp2HandlerAdapter
+            try:
+                # There is an import cycle between webapp and webapp2.
+                # We import webapp lazily so the cycle doesn't cause problems
+                # during module initialization.
+                from google.appengine.ext import webapp as _webapp
+                if issubclass(handler, _webapp.RequestHandler):
+                    # Compatible with webapp.RequestHandler.
+                    adapter = WebappHandlerAdapter
+            except ImportError:  # pragma: no cover
+                pass
         else:
             # A "view" function.
             adapter = BaseHandlerAdapter
@@ -1659,12 +1656,16 @@ class WSGIApplication(object):
             If True, doesn't add registered WSGI middleware: use
             ``run_bare_wsgi_app`` instead of ``run_wsgi_app``.
         """
-        if _webapp_util:
+        try:
+            # There is an import cycle between webapp and webapp2.
+            # We import webapp lazily so the cycle doesn't cause problems
+            # during module initialization.
+            from google.appengine.ext.webapp import util as _webapp_util
             if bare:
                 _webapp_util.run_bare_wsgi_app(self)
             else:
                 _webapp_util.run_wsgi_app(self)
-        else:  # pragma: no cover
+        except ImportError:  # pragma: no cover
             handlers.CGIHandler().run(self)
 
     def get_response(self, *args, **kwargs):
@@ -2053,11 +2054,3 @@ Response.RequestClass = Request
 _abort = abort
 # Thread-safety support.
 _set_thread_safe_app()
-
-# Defer importing google.appengine.ext.webapp.util until every public symbol
-# has been defined since google.appengine.ext.webapp in App Engine Python 2.7
-# runtime imports this module to provide its public interface.
-try:
-    from google.appengine.ext.webapp import util as _webapp_util
-except ImportError:  # pragma: no cover
-    pass
