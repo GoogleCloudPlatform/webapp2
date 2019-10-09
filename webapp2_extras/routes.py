@@ -108,9 +108,7 @@ class DomainRoute(MultiRoute):
         yield self
 
     def match(self, request):
-        # Use SERVER_NAME to ignore port number that comes with request.host?
-        # host_match = self.regex.match(request.host.split(':', 1)[0])
-        host_match = self.regex.match(request.environ['SERVER_NAME'])
+        host_match = self.regex.match(request.domain)
 
         if host_match:
             args, kwargs = webapp2._get_route_variables(host_match)
