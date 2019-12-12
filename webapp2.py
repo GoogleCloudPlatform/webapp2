@@ -41,7 +41,6 @@ from six.moves.urllib.parse import unquote
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.parse import urljoin
 from six.moves.urllib.parse import urlunsplit
-
 import webob
 from webob import exc
 
@@ -924,7 +923,7 @@ class Route(BaseRoute):
     def __init__(self, template, handler=None, name=None, defaults=None,
                  build_only=False, handler_method=None, methods=None,
                  schemes=None):
-        """Initializes this route.
+        r"""Initializes this route.
 
         :param template:
             A route template to match against the request path. A template

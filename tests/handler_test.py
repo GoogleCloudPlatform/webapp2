@@ -21,9 +21,7 @@ import sys
 import unittest
 
 from six.moves.urllib.parse import unquote_plus
-
 from tests.test_base import BaseTestCase
-
 import webapp2
 
 
@@ -163,9 +161,9 @@ app = webapp2.WSGIApplication([
     webapp2.Route('/methods', MethodsHandler, name='methods'),
     webapp2.Route('/broken', BrokenHandler),
     webapp2.Route('/broken-but-fixed', BrokenButFixedHandler),
-    webapp2.Route('/<year:\d{4}>/<month:\d{1,2}>/<name>', None,
+    webapp2.Route(r'/<year:\d{4}>/<month:\d{1,2}>/<name>', None,
                   name='route-test'),
-    webapp2.Route('/<:\d\d>/<:\d{2}>/<:\w+>', PositionalHandler,
+    webapp2.Route(r'/<:\d\d>/<:\d{2}>/<:\w+>', PositionalHandler,
                   name='positional'),
     webapp2.Route('/redirect-me', webapp2.RedirectHandler,
                   defaults={'_uri': '/broken'}),

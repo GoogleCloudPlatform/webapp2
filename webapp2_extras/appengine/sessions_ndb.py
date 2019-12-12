@@ -22,6 +22,7 @@ Extended sessions stored in datastore using the ndb library.
 from __future__ import absolute_import
 
 from google.appengine.api import memcache
+from webapp2_extras import sessions
 
 try:
     from ndb import model
@@ -52,9 +53,6 @@ except ImportError:  # pragma: no cover
                     return None
 
                 return pickle.loads(v.stringvalue())
-
-
-from webapp2_extras import sessions
 
 
 class Session(model.Model):

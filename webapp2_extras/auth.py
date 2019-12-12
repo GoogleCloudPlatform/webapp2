@@ -24,7 +24,6 @@ import time
 
 import six
 import webapp2
-
 from webapp2_extras import sessions
 
 #: Default configuration values for this module. Keys are:

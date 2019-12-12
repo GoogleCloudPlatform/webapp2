@@ -17,7 +17,6 @@ import unittest
 
 import six
 from tests.test_base import BaseTestCase
-
 import webapp2
 
 
