@@ -23,7 +23,6 @@ import re
 
 import six
 import webapp2
-
 from webapp2_extras import securecookie
 from webapp2_extras import security
 

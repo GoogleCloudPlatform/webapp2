@@ -21,9 +21,7 @@ import sys
 import unittest
 
 from six.moves.urllib.parse import unquote_plus
-
 from tests.test_base import BaseTestCase
-
 import webapp2
 
 

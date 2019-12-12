@@ -41,7 +41,6 @@ from six.moves.urllib.parse import unquote
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.parse import urljoin
 from six.moves.urllib.parse import urlunsplit
-
 import webob
 from webob import exc
 

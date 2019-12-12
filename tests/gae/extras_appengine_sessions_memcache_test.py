@@ -14,7 +14,6 @@
 # limitations under the License.
 
 from tests.gae import test_base
-
 import webapp2
 from webapp2_extras import sessions
 

@@ -16,7 +16,6 @@
 import unittest
 
 from tests.test_base import BaseTestCase
-
 import webapp2
 from webapp2_extras import sessions
 

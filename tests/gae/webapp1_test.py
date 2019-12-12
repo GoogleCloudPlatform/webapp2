@@ -14,7 +14,6 @@
 # limitations under the License.
 
 from google.appengine.ext import webapp
-
 import test_base
 import webapp2
 
