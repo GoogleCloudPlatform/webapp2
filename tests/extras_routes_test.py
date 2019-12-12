@@ -225,7 +225,7 @@ class TestPrefixRoutes(BaseTestCase):
 
     def test_with_variables_name_and_handler(self):
         router = webapp2.Router([
-            PathPrefixRoute('/user/<username:\w+>', [
+            PathPrefixRoute(r'/user/<username:\w+>', [
                 HandlerPrefixRoute('apps.users.', [
                     NamePrefixRoute('user-', [
                         webapp2.Route('/', 'UserOverviewHandler', 'overview'),
@@ -301,7 +301,7 @@ class TestDomainRoute(BaseTestCase):
     def test_with_variables_name_and_handler(self):
         router = webapp2.Router([
             DomainRoute('<subdomain>.<:.*>', [
-                PathPrefixRoute('/user/<username:\w+>', [
+                PathPrefixRoute(r'/user/<username:\w+>', [
                     HandlerPrefixRoute('apps.users.', [
                         NamePrefixRoute('user-', [
                             webapp2.Route(

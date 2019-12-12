@@ -31,7 +31,7 @@ except ImportError:  # pragma: no cover
 
         get_current_greenlet = greenlet.getcurrent
         del greenlet
-    except:
+    except Exception:
         # catch all, py.* fails with so many different errors.
         get_current_greenlet = int
 try:

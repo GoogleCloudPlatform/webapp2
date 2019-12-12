@@ -121,12 +121,12 @@ class DomainRoute(MultiRoute):
     def regex(self):
         regex, reverse_template, args_count, kwargs_count, variables = \
             webapp2._parse_route_template(self.template,
-                                          default_sufix='[^\.]+')
+                                          default_sufix=r'[^\.]+')
         return regex
 
 
 class NamePrefixRoute(MultiRoute):
-    """The idea of this route is to set a base name for other routes::
+    r"""The idea of this route is to set a base name for other routes::
 
         app = WSGIApplication([
             NamePrefixRoute('user-', [
@@ -174,7 +174,7 @@ class HandlerPrefixRoute(NamePrefixRoute):
 
 
 class PathPrefixRoute(NamePrefixRoute):
-    """Same as :class:`NamePrefixRoute`, but prefixes the route path.
+    r"""Same as :class:`NamePrefixRoute`, but prefixes the route path.
 
     For example, imagine we have these routes::
 
