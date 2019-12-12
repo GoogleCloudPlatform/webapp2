@@ -88,12 +88,12 @@ class TestWebapp1(test_base.BaseTestCase):
         self.assertEqual(rsp.status_int, 405)
         self.assertEqual(rsp.headers.get('Allow'), 'GET')
 
-    def test_new_app_old_handler_501(self):
+    def test_new_app_old_handler_405_2(self):
         app2.allowed_methods = list(app2.allowed_methods) + ['NEW_METHOD']
         req = webapp2.Request.blank('/test/foo')
         req.method = 'NEW_METHOD'
         rsp = req.get_response(app2)
-        self.assertEqual(rsp.status_int, 501)
+        self.assertEqual(rsp.status_int, 405)
 
     def test_new_app_old_handler_501_2(self):
         req = webapp2.Request.blank('/test/foo')
