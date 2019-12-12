@@ -86,7 +86,7 @@ class TestWebapp1(test_base.BaseTestCase):
         req.method = 'POST'
         rsp = req.get_response(app2)
         self.assertEqual(rsp.status_int, 405)
-        self.assertEqual(rsp.headers.get('Allow'), None)
+        self.assertEqual(rsp.headers.get('Allow'), 'GET')
 
     def test_new_app_old_handler_501(self):
         app2.allowed_methods = list(app2.allowed_methods) + ['NEW_METHOD']
