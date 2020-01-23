@@ -63,6 +63,9 @@ from webapp2_extras import security
 #:
 #:     - httponly: Disallow JavaScript to access the cookie.
 #:
+#:     - samesite: Strict or Lax. Whether to allow cookies when serving inside a
+#:       frame on another domain.
+#:
 #: backends
 #:     A dictionary of available session backend classes used by
 #:     :meth:`SessionStore.get_session`.
@@ -76,6 +79,7 @@ default_config = {
         'path':        '/',
         'secure':      None,
         'httponly':    False,
+        'samesite':    'Strict'
     },
     'backends': {
         'securecookie': 'webapp2_extras.sessions.SecureCookieSessionFactory',
