@@ -1,6 +1,6 @@
 # These requirements versions match what's provided by the app engine sdk.
 WebOb==1.2.3
-Jinja2==2.6.0
+Jinja2==2.11.3
 # The remaining requirements are defined by webapp2. These are the versions
 # that were used with release 2.5.2, except for babel.
 six==1.10.0
